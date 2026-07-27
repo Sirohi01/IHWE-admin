@@ -95,8 +95,7 @@
 //         <div className="flex items-center gap-3">
 //           {/* LOGO */}
 //           <div className="w-9 h-9 rounded-lg bg-[#FFF4EE] flex items-center justify-center">
-//             <img
-//               src="/images/logo.png"
+//             <img loading="lazy" decoding="async" //               src="/images/logo.png"
 //               alt="Design House"
 //               className="w-6 h-6 object-contain"
 //             />
@@ -356,8 +355,7 @@
 //           <div className="flex items-center gap-3">
 //             {/* LOGO */}
 //             <div className="w-9 h-9 rounded-lg flex items-center justify-center">
-//               <img
-//                 src="/images/logo.png"
+//               <img loading="lazy" decoding="async" //                 src="/images/logo.png"
 //                 alt="Design House Logo"
 //                 className="w-10 h-10 object-contain"
 //               />
@@ -453,8 +451,7 @@
 
 //           {/* Logo + Brand */}
 //           {/* <div className="flex items-center gap-3">
-//             <img
-//               src="/images/logo.png"
+//             <img loading="lazy" decoding="async" //               src="/images/logo.png"
 //               alt="Design House"
 //               className="h-12 w-auto"
 //             />
@@ -512,8 +509,7 @@
 //             onClick={() => setProfileOpen(!profileOpen)}
 //             className="flex items-center gap-2 p-1.5 rounded-full hover:bg-[#FFF4EE] transition"
 //           >
-//             <img
-//               src="/images/avatar.png"
+//             <img loading="lazy" decoding="async" //               src="/images/avatar.png"
 //               alt="user"
 //               className="w-8 h-8 rounded-full border"
 //             />
@@ -692,8 +688,7 @@
 //           <div className="flex items-center justify-between">
 //             {/* Logo + Brand */}
 //             <div className={`flex items-center gap-3 transition-all duration-300 ${!sidebarOpen && "lg:justify-center"}`}>
-//               <img
-//                 src="/images/logo.png"
+//               <img loading="lazy" decoding="async" //                 src="/images/logo.png"
 //                 alt="Design House"
 //                 className={`h-12 w-auto transition-all duration-300 ${!sidebarOpen && "lg:h-10"}`}
 //               />
@@ -963,7 +958,7 @@
 //         <div className="p-4 border-b border-[#93C5FD] bg-gradient-to-r from-white to-[#EFF6FF]">
 //           <div className="flex items-center justify-between">
 //             <div className="flex items-center gap-3 overflow-hidden">
-//               <img src="/images/logo.png" alt="Design House" className="h-15" />
+//               <img loading="lazy" decoding="async" src="/images/logo.png" alt="Design House" className="h-15" />
 //               {sidebarOpen && (
 //                 <div>
 //                   <h1 className="text-[12px] font-bold text-gray-800">

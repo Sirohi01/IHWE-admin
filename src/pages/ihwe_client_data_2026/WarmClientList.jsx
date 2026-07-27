@@ -1,954 +1,620 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchCompanies } from "../../features/company/companySlice";
+import useDashboardStats from "../../hooks/useDashboardStats";
+import BaseLeadPage from "../../layout/BaseLeadPage";
+import { motion } from "framer-motion";
 import {
-  Search,
-  Plus,
-  Upload,
-  MessageCircle,
-  CalendarDays,
-  Clock3,
-  AlertCircle,
-  TrendingUp,
-  Users,
-  Phone,
-  Mail,
-  Bell,
-  Filter,
-  ChevronDown,
-  MoreVertical,
-  ArrowRight,
+  Search, Plus, Upload, MessageCircle, CalendarDays, Clock3, Filter, ChevronDown, MoreVertical, ArrowRight, Bell, Phone, Mail
 } from "lucide-react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-} from "recharts";
+import { FaWhatsapp, FaStar, FaRegStar } from 'react-icons/fa';
+
+// Hook: animate number from 0 to target when element enters viewport
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
+
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+
+
 const WarmClientList = () => {
-  const [search, setSearch] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const stats = [
-    {
-      title: "Total Follow-Ups",
-      value: "12",
-      subtitle: "Pending",
-      icon: CalendarDays,
-      bg: "bg-[#F3F7FF]",
-      iconBg: "bg-[#E7F0FF]",
-      iconColor: "text-[#2563EB]",
-    },
-    {
-      title: "Due Today",
-      value: "05",
-      subtitle: "Follow-ups",
-      icon: CalendarDays,
-      bg: "bg-[#FFF8EE]",
-      iconBg: "bg-[#FFE8C7]",
-      iconColor: "text-[#F97316]",
-    },
-    {
-      title: "Overdue",
-      value: "02",
-      subtitle: "Follow-ups",
-      icon: Clock3,
-      bg: "bg-[#FFF2F4]",
-      iconBg: "bg-[#FFDDE3]",
-      iconColor: "text-[#EF4444]",
-    },
-    {
-      title: "Due This Week",
-      value: "07",
-      subtitle: "Follow-ups",
-      icon: CalendarDays,
-      bg: "bg-[#F1FBF5]",
-      iconBg: "bg-[#DDF7E6]",
-      iconColor: "text-[#16A34A]",
-    },
-    {
-      title: "Due This Month",
-      value: "10",
-      subtitle: "Follow-ups",
-      icon: CalendarDays,
-      bg: "bg-[#F8F3FF]",
-      iconBg: "bg-[#EBDDFF]",
-      iconColor: "text-[#7C3AED]",
-    },
-  ];
+  // State
+  const [searchTerm, setSearchTerm] = useState('');
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [filterSource, setFilterSource] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  const leads = [
-    { company: "ABC Organics", source: "IndiaMart", status: "Due Today", date: "29 May 2026" },
-    { company: "Green Foods", source: "JustDial", status: "Overdue", date: "28 May 2026" },
-    { company: "Nature Export", source: "Website", status: "Due Today", date: "29 May 2026" },
-    { company: "Healthy Farm", source: "Referral", status: "Upcoming", date: "30 May 2026" },
-    { company: "Organic World", source: "IndiaMart", status: "Due Today", date: "29 May 2026" },
-    { company: "ABC Organics", source: "IndiaMart", status: "Due Today", date: "29 May 2026" },
-    { company: "Green Foods", source: "JustDial", status: "Overdue", date: "28 May 2026" },
-    { company: "Nature Export", source: "Website", status: "Due Today", date: "29 May 2026" },
-    { company: "Healthy Farm", source: "Referral", status: "Upcoming", date: "30 May 2026" },
-    { company: "Organic World", source: "IndiaMart", status: "Due Today", date: "29 May 2026" },
-  ];
-const overviewData = [
-  {
-    name: "Due Today",
-    value: 5,
-    percentage: "42%",
-    color: "#FF7A1A",
-  },
-  {
-    name: "Due Tomorrow",
-    value: 2,
-    percentage: "17%",
-    color: "#FACC15",
-  },
-  {
-    name: "Due This Week",
-    value: 5,
-    percentage: "41%",
-    color: "#3B82F6",
-  },
-  {
-    name: "Overdue",
-    value: 2,
-    percentage: "17%",
-    color: "#EF4444",
-  },
-];
-const overdueLeads = [
-  {
-    company: "ABC Organics",
-    date: "25 May 2026",
-    days: "4 days overdue",
-  },
-  {
-    company: "Green Foods",
-    date: "27 May 2026",
-    days: "2 days overdue",
-  },
-];
-  return (
-    <div className="min-h-screen bg-[#f5f7fb] p-6">
-      <div className="grid grid-cols-12 gap-6">
+  // Auth State
+  const { user } = useSelector(state => state.auth);
 
-        <div className="col-span-9">
+  // Redux data
+  const companiesState = useSelector((state) => state.companies);
+  const allCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
+  const isLoading = companiesState?.loading ?? false;
+  const pagination = companiesState?.pagination;
 
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-6 gap-4">
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      dispatch(fetchCompanies({
+        page,
+        limit,
+        search: searchTerm,
+        status: filterStatus || 'Follow-Up Call',
+        source: filterSource,
+      }));
+    }, 400);
+    return () => clearTimeout(delayDebounceFn);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus]);
 
-            {/* Left Side */}
-            <div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-[24px] font-bold">
-                  My Follow-Ups
-                </h2>
-                <span className="px-3 py-1 bg-red-100 text-red-700 text-sm font-semibold rounded-full">
-                  12
-                </span>
-              </div>
-              <p className="text-gray-800 font-medium mt-1">
-                Leads with pending follow-ups
-              </p>
+  const {
+    totalLeads: hookTotal, pendingFollowUpsCount, thisWeekLeads, thisMonthLeads,
+    overviewData, overdueLeads
+  } = useDashboardStats('Follow');
+
+  const circumference = 2 * Math.PI * 32;
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setTimeout(() => setMounted(true), 250);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const element = document.getElementById('followup-donut-chart-container');
+    if (element) {
+      observer.observe(element);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
+  const overviewTotal = overviewData?.reduce((acc, curr) => acc + curr.value, 0) || 0;
+
+  const totalLeads = pagination?.total || allCompanies.length;
+  const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
+
+  const onSelectAll = (e) => {
+    if (e.target.checked) setSelectedIds(allCompanies.map(r => r._id));
+    else setSelectedIds([]);
+  };
+
+  const onSelectRow = (id) => {
+    setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
+  const uniqueStatuses = [...new Set(allCompanies.map(r => r.companyStatus).filter(Boolean))];
+
+  const getSourceStyle = (source) => {
+    const s = (source || "").toLowerCase();
+    if (s.includes('website')) return "text-blue-600 bg-blue-50";
+    if (s.includes('referral')) return "text-purple-600 bg-purple-50";
+    if (s.includes('trade show')) return "text-orange-600 bg-orange-50";
+    if (s.includes('social media')) return "text-pink-600 bg-pink-50";
+    if (s.includes('google')) return "text-emerald-600 bg-emerald-50";
+    if (s.includes('email')) return "text-sky-600 bg-sky-50";
+    return "text-slate-600 bg-slate-50";
+  };
+
+  const getStatusStyle = (status) => {
+    const s = (status || "").toLowerCase();
+    if (s.includes('today')) return "bg-orange-50 text-orange-700 border-orange-100 dot-orange-500";
+    if (s.includes('overdue')) return "bg-red-50 text-red-700 border-red-100 dot-red-500";
+    if (s.includes('upcoming')) return "bg-blue-50 text-blue-700 border-blue-100 dot-blue-500";
+    if (s.includes('follow-up')) return "bg-cyan-50 text-cyan-700 border-cyan-100 dot-cyan-500";
+    return "bg-slate-50 text-slate-700 border-slate-200 dot-slate-500";
+  };
+
+  // Header Actions
+  const headerActions = (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <Link to="/ihweClientData2026/addNewClients" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <Plus size={12} /> Add Lead
+      </Link>
+      <Link to="/ihweClientData2026/uploadExhibitor" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <Upload size={12} /> Import Leads
+      </Link>
+      <button className="px-2.5 py-1.5 bg-[#0D530E] text-white rounded-md text-[10px] font-bold hover:bg-[#093a0a] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <FaWhatsapp size={12} /> Send Bulk WhatsApp
+      </button>
+    </div>
+  );
+
+  // Stat Cards
+  const dueTodayCount = overviewData?.[0]?.value || 0;
+  const overdueCount = overviewData?.[3]?.value || 0;
+
+  function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+    const { ref, count } = useCountUp(rawValue);
+    return (
+      <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className={`w-9 h-9 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+              {icon}
             </div>
-
-            {/* Right Side */}
-            <div className="flex flex-wrap gap-3">
-
-              <button className="h-11 px-5 bg-green-600 hover:bg-green-700 text-white rounded-xl flex items-center gap-2 transition-all">
-                <Plus size={18} />
-                Add Lead
-              </button>
-
-              <button className="h-11 px-5 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl flex items-center gap-2 transition-all">
-                <Upload size={18} />
-                Import Leads
-              </button>
-
-              <button className="h-11 px-5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl flex items-center gap-2 transition-all">
-                <MessageCircle size={18} />
-                Send Bulk WhatsApp
-              </button>
-
+            <div className="flex flex-col min-w-0">
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                {displayValue(count)}
+              </span>
+              <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
             </div>
-
           </div>
+          <div style={{ fontSize: '9.5px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{subLabel}</div>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-3 mb-6">
-            {stats.map((item, index) => {
-              const Icon = item.icon;
+  const statCards = (
+    <>
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+        gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+        rawValue={pendingFollowUpsCount}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL FOLLOW-UPS"
+        subLabel="Pending" subColor="#059669"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
+        gradientTo="to-orange-50" iconBg="bg-orange-100"
+        rawValue={dueTodayCount}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="DUE TODAY"
+        subLabel="Follow-ups" subColor="#ea580c"
+      />
+      <AnimatedStatCard
+        icon={<Clock3 className="w-5 h-5 text-red-600" strokeWidth={2.5} />}
+        gradientTo="to-red-50" iconBg="bg-red-100"
+        rawValue={overdueCount}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="OVERDUE"
+        subLabel="Follow-ups" subColor="#dc2626"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+        gradientTo="to-blue-50" iconBg="bg-blue-100"
+        rawValue={thisWeekLeads}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="DUE THIS WEEK"
+        subLabel="Follow-ups" subColor="#2563eb"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
+        gradientTo="to-purple-50" iconBg="bg-purple-100"
+        rawValue={thisMonthLeads}
+        displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
+        label="DUE THIS MONTH"
+        subLabel="Follow-ups" subColor="#9333ea"
+      />
+    </>
+  );
 
-              return (
-                <div
-                  key={index}
-                  className={`
-          ${item.bg}
-          rounded-[8px]
-          border border-gray-200
-          px-5
-          py-5
-          min-h-[104px]
-        `}
-                >
-                  <div className="flex items-center gap-4">
+  // Filter Bar
+  const filterBar = (
+    <>
+      <div className="relative shrink-0 w-[140px]">
+        <Search className="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400" size={10} />
+        <input
+          type="text"
+          placeholder="Search within follow-ups..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+          className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
+        />
+      </div>
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        Follow-Up Date <CalendarDays size={10} className="text-slate-500" />
+      </button>
+      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
+        <option value="">Status</option>
+        {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
+      </select>
+      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
+        <option value="">Source</option>
+        {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
+      </select>
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        Lead Owner: Me <ChevronDown size={10} className="text-slate-500" />
+      </button>
+      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
+        <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
+      </button>
+    </>
+  );
 
-                    {/* LEFT ICON */}
-                    <div
-                      className={`
-                            w-12 h-12
-                            rounded-full
-                            flex items-center justify-center
-                            ${item.iconBg}
-                          `}
-                    >
-                      <Icon
-                        size={24}
-                        strokeWidth={2}
-                        className={item.iconColor}
-                      />
-                    </div>
+  // Table Headers
+  const tableHeaders = (
+    <>
+      <th className="px-2 py-2 font-medium">Company Name</th>
+      <th className="px-2 py-2 font-medium">Source</th>
+      <th className="px-2 py-2 font-medium">Lead Score</th>
+      <th className="px-2 py-2 font-medium text-center">Status</th>
+      <th className="px-2 py-2 font-medium">Follow-Up Date</th>
+      <th className="px-2 py-2 font-medium">Last Conversation</th>
+      <th className="px-2 py-2 w-10 text-center">Action</th>
+    </>
+  );
 
-                    {/* RIGHT TEXT */}
-                    <div>
-
-                      <p className="text-[12px] font-semibold text-[#0F172A]">
-                        {item.title}
-                      </p>
-
-                      <h3 className="text-[20px] leading-none font-bold text-[#0F172A] mt-2">
-                        {item.value}
-                      </h3>
-
-                      <p className="text-[12px] text-[#475569] mt-1">
-                        {item.subtitle}
-                      </p>
-
-                    </div>
-
+  const tableBody = (
+    <>
+      {isLoading ? (
+        <tr><td colSpan="8" className="text-center py-8 text-slate-500">Loading leads...</td></tr>
+      ) : allCompanies.length === 0 ? (
+        <tr>
+          <td colSpan="8" className="px-2 py-4 text-center text-slate-500 font-medium">No results found</td>
+        </tr>
+      ) : allCompanies.map((row, i) => {
+        const isSelected = selectedIds.includes(row._id);
+        const source = row.dataSource || "Website";
+        const status = row.companyStatus || "Due Today";
+        const style = getStatusStyle(status);
+        const statusBg = style.split(' ')[0];
+        const statusText = style.split(' ')[1];
+        const statusDot = style.split(' ')[3]?.replace('dot-', 'bg-') || "bg-slate-500";
+        return (
+          <tr key={row._id || i} className={`hover:bg-slate-50 transition-colors bg-white border-b border-slate-100 ${isSelected ? 'bg-blue-50/30' : ''}`}>
+              <td className="px-2 py-2 text-center">
+                <input
+                  type="checkbox"
+                  className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
+                  checked={isSelected}
+                  onChange={() => onSelectRow(row._id)}
+                />
+              </td>
+              <td className="px-2 py-2">
+                <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
+                  <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                </div>
+              </td>
+              <td className="px-2 py-2">
+                <span className={`px-1.5 py-0.5 rounded font-bold text-[9px] ${getSourceStyle(source)}`} style={{ color: '#443199' }}>
+                  @{toTitleCase(source)}
+                </span>
+              </td>
+              <td className="px-2 py-1.5">
+                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
+                  <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 70}</span>
+                </div>
+              </td>
+              <td className="px-2 py-2 text-center">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
+                  <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
+                  {toTitleCase(status)}
+                </span>
+              </td>
+              <td className="px-2 py-1.5">
+                <span className="text-[10px] font-medium whitespace-nowrap">
+                  {row.updatedAt ? (
+                    <>
+                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                      <span className="text-slate-400">, </span>
+                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                    </>
+                  ) : "-"}
+                </span>
+              </td>
+              <td className="px-2 py-1.5">
+                <div className="flex items-start gap-1.5">
+                  <div className="shrink-0 p-1 bg-slate-100 rounded-full mt-0.5">
+                    <MessageCircle size={12} className="text-emerald-500" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-medium whitespace-nowrap">
+                      {row.updatedAt ? (
+                        <>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                          <span className="text-slate-400">, </span>
+                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                        </>
+                      ) : "-"}
+                    </span>
+                    <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
                   </div>
                 </div>
-              );
-            })}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-4 mb-5">
-
-            {/* Search */}
-            <div className="relative flex-1 min-w-[280px] max-w-[350px]">
-              <Search
-                size={18}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-              />
-
-              <input
-                type="text"
-                placeholder="Search within follow-ups..."
-                className="
-        w-full
-        h-12
-        pl-11
-        pr-4
-        bg-white
-        border
-        border-gray-200
-        rounded-xl
-        text-sm
-        focus:outline-none
-      "
-              />
-            </div>
-
-            {/* Follow Up Date */}
-            <button
-              className="
-      h-12
-      px-4
-      bg-white
-      border border-gray-200
-      rounded-xl
-      flex items-center gap-3
-      text-sm font-medium
-      text-[#0F172A]
-    "
-            >
-              Follow-Up Date
-              <CalendarDays size={18} />
-            </button>
-
-            {/* Status */}
-            <button
-              className="
-      h-12
-      px-4
-      bg-white
-      border border-gray-200
-      rounded-xl
-      flex items-center gap-3
-      text-sm font-medium
-    "
-            >
-              Status
-              <ChevronDown size={16} />
-            </button>
-
-            {/* Source */}
-            <button
-              className="
-      h-12
-      px-4
-      bg-white
-      border border-gray-200
-      rounded-xl
-      flex items-center gap-3
-      text-sm font-medium
-    "
-            >
-              Source
-              <ChevronDown size={16} />
-            </button>
-
-            {/* Lead Owner */}
-            <button
-              className="
-      h-12
-      px-4
-      bg-white
-      border border-gray-200
-      rounded-xl
-      flex items-center gap-3
-      text-sm font-medium
-    "
-            >
-              Lead Owner: Me
-              <ChevronDown size={16} />
-            </button>
-
-            {/* More Filters */}
-            <button
-              className="
-      h-12
-      px-4
-      bg-white
-      border border-gray-200
-      rounded-xl
-      flex items-center gap-3
-      text-sm font-medium
-    "
-            >
-              <Filter size={16} />
-              More Filters
-              <ChevronDown size={16} />
-            </button>
-
-          </div>
-
-          <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
-
-            <table className="w-full">
-
-              <thead className="bg-[#082A84] text-white">
-
-                <tr className="h-14">
-                  
-                  <th className="">
-                    <input type="checkbox" />
-                  </th>
-                  
-                  <th className="text-left text-sm font-medium">
-                    Company Name
-                  </th>
-                  <th className="text-left text-sm font-medium">
-                    Source
-                  </th>
-                  <th className="text-left text-sm font-medium">
-                    Lead Score
-                  </th>
-                  <th className="text-left text-sm font-medium">
-                    Status
-                  </th>
-                  <th className="text-left text-sm font-medium">
-                    Follow-Up Date
-                  </th>
-                  <th className="text-left text-sm font-medium">
-                    Handled By / Last Conversation
-                  </th>
-                  <th className="text-left text-sm font-medium">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-
-                {leads.map((lead, index) => (
-
-                  <tr
-                    key={index}
-                    className="
-                      border-b
-                      border-gray-100
-                      hover:bg-gray-50
-                      transition
-                    ">
-                    <td className="pl-4 py-4">
-                      <input type="checkbox" />
-                    </td>
-                    <td className="py-4">
-
-                      <h4 className="font-semibold text-[#0F172A]">
-                        {lead.company}
-                      </h4>
-
-                    </td>
-
-                    <td>
-
-                      <span
-                        className="
-      px-3 py-1
-      rounded-full
-      text-xs
-      bg-blue-100
-      text-blue-700
-      font-medium
-    "
-                      >
-                        {lead.source}
-                      </span>
-
-                    </td>
-
-                    <td>
-
-                      <div className="flex items-center gap-2">
-
-                        <div className="flex text-green-500">
-                          ★★★★☆
-                        </div>
-
-                        <span className="text-sm font-medium">
-                          70
-                        </span>
-
-                      </div>
-
-                    </td>
-
-                    <td>
-
-                      <span
-                        className="
-      px-3 py-1
-      rounded-lg
-      text-xs
-      bg-orange-100
-      text-orange-700
-      font-medium
-    "
-                      >
-                        Due Today
-                      </span>
-
-                    </td>
-
-                    <td>
-
-                      <div className="flex flex-col">
-
-                        <span className="font-medium">
-                          27 May 2026
-                        </span>
-
-                        <span className="text-xs text-gray-500">
-                          11:00 AM
-                        </span>
-
-                      </div>
-
-                    </td>
-
-                    <td>
-
-                      <div className="flex gap-3">
-
-                        <MessageCircle
-                          size={16}
-                          className="text-green-500"
-                        />
-
-                        <div>
-
-                          <p className="text-sm font-medium">
-                            27 May 2026, 10:15 AM
-                          </p>
-
-                          <p className="text-xs text-gray-500">
-                            WhatsApp
-                          </p>
-
-                        </div>
-
-                      </div>
-
-                    </td>
-
-                    <td>
-
-                      <div className="flex items-center gap-4">
-
-                        <Phone
-                          size={17}
-                          className="text-green-600 cursor-pointer"
-                        />
-
-                        <MessageCircle
-                          size={17}
-                          className="text-green-600 cursor-pointer"
-                        />
-
-                        <MoreVertical
-                          size={17}
-                          className="cursor-pointer"
-                        />
-
-                      </div>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-            </table>
-            <div className="flex items-center justify-between px-6 py-4 bg-white">
-
-  <p className="text-sm text-gray-500">
-    Showing 1 to 12 of 12 follow-ups
-  </p>
-
-  <div className="flex items-center gap-2">
-
-    <button className="w-10 h-10 border rounded-lg">
-      ‹
-    </button>
-
-    <button className="w-10 h-10 bg-[#082A84] text-white rounded-lg">
-      1
-    </button>
-
-    <button className="w-10 h-10 border rounded-lg">
-      ›
-    </button>
-
-  </div>
-
-  <div className="flex items-center gap-2">
-
-    <span className="text-sm">
-      Rows per page:
-    </span>
-
-    <select className="border rounded-lg px-2 py-1">
-      <option>10</option>
-    </select>
-
-  </div>
-
-</div>
-          </div>
-        </div>
-
-        <div className="col-span-3 space-y-5">
-
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-
-  <h3 className="text-[20px] font-semibold text-[#0F172A] mb-5">
-    Follow-Up Overview
-  </h3>
-
-  <div className="flex items-center justify-between">
-
-    {/* Donut Chart */}
-
-    <div className="relative w-[120px] h-[120px]">
-
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-
-          <Pie
-            data={overviewData}
-            cx="50%"
-            cy="50%"
-            innerRadius={35}
-            outerRadius={50}
-            dataKey="value"
-            stroke="none"
-          >
-            {overviewData.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={entry.color}
-              />
-            ))}
-          </Pie>
-
-        </PieChart>
-      </ResponsiveContainer>
-
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-
-        <h3 className="text-[18px] font-bold text-[#0F172A]">
-          12
-        </h3>
-
-        <p className="text-sm text-gray-500">
-          Total
-        </p>
-
-      </div>
-
-    </div>
-
-    {/* Legend */}
-
-    <div className="space-y-4">
-
-      {overviewData.map((item) => (
-
-        <div
-          key={item.name}
-          className="flex items-center justify-between gap-6"
-        >
-
-          <div className="flex items-center gap-3">
-
-            <span
-              className="w-3 h-3 rounded-full"
-              style={{
-                background: item.color,
-              }}
-            />
-
-            <span className="text-sm font-medium text-[#0F172A]">
-              {item.name}
-            </span>
-
-          </div>
-
-          <span className="text-sm font-semibold text-[#0F172A]">
-            {item.value} ({item.percentage})
+              </td>
+              <td className="px-2 py-1.5 text-right">
+                <button className="text-slate-400 hover:text-slate-700">
+                  <MoreVertical size={14} />
+                </button>
+              </td>
+            </tr>
+        );
+      })}
+    </>
+  );
+
+  const rightSidebar = (
+    <>
+      {/* Follow-Up Overview */}
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Follow-Up Overview</h3>
+          <span className="text-[10px] font-bold text-slate-500">
+            Total: <strong className="font-bold text-[#15173D]">{overviewTotal}</strong>
           </span>
-
         </div>
+        <div className="flex items-center justify-between gap-2 my-2">
+          {/* Pure SVG Donut Chart (Left) */}
+          <div id="followup-donut-chart-container" className="relative flex-shrink-0 flex items-center justify-center" style={{ width: '85px', height: '85px' }}>
+            <svg viewBox="0 0 85 85" width="85" height="85" xmlns="http://www.w3.org/2000/svg" style={{ transform: 'rotate(-90deg)' }}>
+              {/* Background track */}
+              <circle cx="42.5" cy="42.5" r="32" fill="none" stroke="#f1f5f9" strokeWidth="14" />
+              {/* Segments */}
+              {(() => {
+                if (overviewTotal === 0) {
+                  return <circle cx="42.5" cy="42.5" r="32" fill="none" stroke="#e2e8f0" strokeWidth="14" />;
+                }
+                const gap = 0;
+                let cumulativeAngle = 0;
+                return overviewData?.filter(d => d.value > 0).map((d, i) => {
+                  const segLen = (d.value / overviewTotal) * circumference - gap;
+                  const duration = (d.value / overviewTotal) * 2.0; 
+                  const delay = (cumulativeAngle / 360) * 2.0;
+                  const currentAngle = cumulativeAngle;
+                  
+                  cumulativeAngle += (d.value / overviewTotal) * 360;
+                  
+                  return (
+                    <g key={i} style={{ transform: `rotate(${currentAngle}deg)`, transformOrigin: 'center' }}>
+                      <circle
+                        cx="42.5" cy="42.5" r="32"
+                        fill="none"
+                        stroke={d.color}
+                        strokeWidth="14"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={mounted ? circumference - Math.max(segLen, 0) : circumference}
+                        strokeLinecap="butt"
+                        style={{ 
+                          transition: `stroke-dashoffset ${duration}s linear ${delay}s` 
+                        }}
+                      />
+                    </g>
+                  );
+                });
+              })()}
+            </svg>
+            <div className="absolute text-center mt-0.5">
+              <p className="text-base font-bold text-[#15173D] tracking-tight leading-none mb-0.5">{overviewTotal}</p>
+              <span className="text-[10px] font-bold text-[#15173D] tracking-tight leading-none block">Total</span>
+            </div>
+          </div>
 
-      ))}
-
-    </div>
-
-  </div>
-
-</div>
-
-         <div className="bg-white rounded-2xl border border-gray-100 p-5">
-
-  <div className="flex items-center justify-between mb-4">
-
-    <h3 className="text-[16px] font-semibold text-[#0F172A]">
-      Overdue Follow-Ups
-    </h3>
-
-    <button className="text-sm text-[#2563EB] font-medium">
-      View All
-    </button>
-
-  </div>
-
-  <div className="space-y-4">
-
-    {overdueLeads.map((lead, index) => (
-      <div
-        key={index}
-        className={`
-          flex
-          items-center
-          justify-between
-          pb-4
-          ${index !== overdueLeads.length - 1 ? "border-b border-gray-100" : ""}
-        `}
-      >
-        <div>
-
-          <h4 className="text-sm font-semibold text-[#0F172A]">
-            {lead.company}
-          </h4>
-
-          <p className="text-xs text-gray-500 mt-1">
-            Due: {lead.date}
-          </p>
-
+          {/* Legend (Right) */}
+          <div className="flex-1 space-y-2 text-[11px] font-semibold text-slate-600 pl-1 min-w-0">
+            {overviewData?.map((d, i) => (
+              <motion.div 
+                key={i} 
+                initial={{ opacity: 0, x: 10 }}
+                animate={mounted ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
+                transition={{ delay: 0.1 + (i * 0.1), duration: 0.3 }}
+                className="flex items-center gap-1.5 min-w-0"
+              >
+                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: d.color }} />
+                <div className="flex items-center justify-between w-full min-w-0 gap-0.5">
+                  <span className="text-[#15173D] font-bold whitespace-nowrap text-[9px]">{d.name}</span>
+                  <span className="text-[#093C5D] font-bold flex-shrink-0 text-[9px]">
+                    {d.value} <span style={{ color: d.color }}>({d.percentage})</span>
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        <span
-          className="
-            min-w-[36px]
-            h-8
-            px-2
-            rounded-full
-            bg-red-100
-            text-red-600
-            text-xs
-            font-semibold
-            flex
-            items-center
-            justify-center
-          "
-        >
-          {lead.days}
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Overdue Follow-Ups</h3>
+          <button className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline">View All</button>
+        </div>
+        <div className="space-y-3">
+          {overdueLeads?.length === 0 ? <p className="text-xs text-slate-400">No overdue follow-ups.</p> : overdueLeads?.map((lead, index) => (
+            <div key={index} className={`flex items-start justify-between pb-3 ${index !== overdueLeads.length - 1 ? "border-b border-gray-100" : ""}`}>
+              <div>
+                <h4 className="text-[10px] font-bold leading-tight mb-0.5" style={{ color: '#5E0006' }}>{lead.company}</h4>
+                <p className="text-[10px] font-bold" style={{ color: '#093C5D' }}>Due: <span style={{ color: '#15173D' }}>{lead.date}</span></p>
+              </div>
+              <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-600 text-[9px] font-bold uppercase tracking-wider flex items-center justify-center text-center leading-tight">
+                {lead.days}
+              </span>
+            </div>
+          ))}
+          {overdueLeads?.length > 0 && (
+            <button className="w-full flex items-center justify-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline transition-all pt-1">
+              <span>View All Overdue ({overdueLeads.length})</span>
+              <ArrowRight size={10} />
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Quick Actions</h3>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <button className="h-[40px] rounded-lg bg-[#F8F1FF] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
+            <CalendarDays size={14} className="text-purple-600 shrink-0" />
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Schedule<br />Follow-Up</span>
+          </button>
+          <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
+            <Phone size={14} className="text-green-600 shrink-0" />
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Log Call</span>
+          </button>
+          <button className="h-[40px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
+            <MessageCircle size={14} className="text-green-600 shrink-0" />
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Send<br />WhatsApp</span>
+          </button>
+          <button className="h-[40px] rounded-lg bg-[#F4F7FF] flex items-center justify-center gap-1.5 hover:opacity-90 px-2">
+            <Mail size={14} className="text-blue-600 shrink-0" />
+            <span className="text-[10px] font-bold text-[#15173D] leading-tight text-left">Send Email</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Reminder Settings</h3>
+        </div>
+        <div className="flex items-start gap-2 mb-3">
+          <Bell size={16} className="text-[#15173D] mt-0.5 shrink-0" />
+          <div>
+            <p className="text-[10px] font-bold text-slate-500 mt-0.5 leading-none">Get reminded before follow-up is due</p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] font-bold text-[#15173D]">Enable Reminders</span>
+          <label className="relative inline-flex cursor-pointer">
+            <input type="checkbox" defaultChecked className="sr-only peer" />
+            <div className="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:bg-green-500 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:w-3 after:h-3 after:rounded-full after:transition-all peer-checked:after:translate-x-4" />
+          </label>
+        </div>
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-[10px] font-bold text-[#15173D]">Remind me</span>
+          <select className="border border-gray-200 rounded-lg px-2 py-1 text-[10px] font-bold outline-none">
+            <option>1 Hour Before</option>
+            <option>2 Hours Before</option>
+            <option>1 Day Before</option>
+          </select>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold text-[#15173D]">Send via</span>
+          <div className="flex items-center gap-4">
+            <label className="flex items-center gap-1.5 text-[10px] font-bold cursor-pointer">
+              <input type="checkbox" defaultChecked className="accent-blue-600 w-3 h-3" /> WhatsApp
+            </label>
+            <label className="flex items-center gap-1.5 text-[10px] font-bold cursor-pointer">
+              <input type="checkbox" defaultChecked className="accent-blue-600 w-3 h-3" /> Email
+            </label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+
+  const getPageNumbers = () => {
+    const paginationTotalPages = pagination?.totalPages || 1;
+    const pages = [];
+    if (paginationTotalPages <= 7) {
+      for (let i = 1; i <= paginationTotalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      for (let i = Math.max(2, page - 1); i <= Math.min(paginationTotalPages - 1, page + 1); i++) pages.push(i);
+      if (page < paginationTotalPages - 2) pages.push('...');
+      pages.push(paginationTotalPages);
+    }
+    return pages;
+  };
+
+  const paginationTotalPages = pagination?.totalPages || 1;
+
+  const paginationBar = (
+    <>
+      <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Showing</span>
+        <span className="text-[11px] font-black px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-100" style={{ color: '#016B61' }}>
+          {totalLeads === 0 ? 0 : (page - 1) * limit + 1}–{Math.min(page * limit, totalLeads)}
         </span>
-
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>of</span>
+        <span className="text-[11px] font-black" style={{ color: '#15173D' }}>{totalLeads}</span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>follow-ups</span>
       </div>
-    ))}
-    <div className="mt-4 pt-4 border-t border-gray-100">
+      <div className="flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <button onClick={() => setPage(1)} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>«</button>
+        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>‹</button>
+        {getPageNumbers().map((p, i) =>
+          p === '...' ? (
+            <span key={`dot-${i}`} className="w-7 h-7 flex items-center justify-center text-[11px] text-slate-400 font-bold">…</span>
+          ) : (
+            <button key={p} onClick={() => setPage(p)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black border transition-all duration-200" style={p === page ? { backgroundColor: '#016B61', color: '#fff', borderColor: '#016B61', boxShadow: '0 2px 8px rgba(1,107,97,0.3)' } : { backgroundColor: '#fff', color: '#15173D', borderColor: '#e2e8f0' }}>{p}</button>
+          )
+        )}
+        <button onClick={() => setPage(p => Math.min(paginationTotalPages, p + 1))} disabled={page >= paginationTotalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>›</button>
+        <button onClick={() => setPage(paginationTotalPages)} disabled={page >= paginationTotalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>»</button>
+      </div>
+      <div className="flex items-center gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Rows:</span>
+        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border rounded-lg py-1 px-2 bg-white outline-none cursor-pointer text-[11px] font-bold" style={{ borderColor: '#e2e8f0', color: '#15173D', fontFamily: 'Inter, sans-serif' }}>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
+    </>
+  );
 
-  <button
-    className="
-      w-full
-      flex
-      items-center
-      justify-between
-      text-sm
-      font-medium
-      text-[#2563EB]
-      hover:text-[#1D4ED8]
-      transition-all
-    "
-  >
-    <span>
-      View All Overdue ({overdueLeads.length})
-    </span>
-
-    <ArrowRight size={16} />
-  </button>
-
-</div>
-  </div>
-
-</div>
-
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-
-  <h3 className="text-[16px] font-semibold text-[#0F172A] mb-2">
-    Quick Actions
-  </h3>
-
-  <div className="grid grid-cols-2 gap-4">
-
-    <button
-      className="
-        h-[55px]
-        rounded-xl
-        bg-[#F8F1FF]
-        flex
-        items-center
-        px-3
-        gap-2
-        hover:opacity-90
-      "
-    >
-      <CalendarDays
-        size={22}
-        className="text-purple-600"
-      />
-
-      <span className="text-sm font-medium text-[#0F172A]">
-        Schedule Follow-Up
-      </span>
-    </button>
-
-    <button
-      className="
-        h-[70px]
-        rounded-xl
-        bg-[#EEF9F2]
-        flex
-        items-center
-        px-3
-        gap-2
-      "
-    >
-      <Phone
-        size={22}
-        className="text-green-600"
-      />
-
-      <span className="text-sm font-medium text-[#0F172A]">
-        Log Call
-      </span>
-    </button>
-
-    <button
-      className="
-        h-[55px]
-        rounded-xl
-        bg-[#EEF9F2]
-        flex
-        items-center
-        px-3
-        gap-2
-      "
-    >
-      <MessageCircle
-        size={22}
-        className="text-green-600"
-      />
-
-      <span className="text-sm font-medium text-[#0F172A]">
-        Send WhatsApp
-      </span>
-    </button>
-
-    <button
-      className="
-        h-[55px]
-        rounded-xl
-        bg-[#F4F7FF]
-        flex
-        items-center
-        px-3
-        gap-2
-      "
-    >
-      <Mail
-        size={22}
-        className="text-blue-600"
-      />
-
-      <span className="text-sm font-medium text-[#0F172A]">
-        Send Email
-      </span>
-    </button>
-
-  </div>
-
-</div>
-
-          <div className="bg-white rounded-2xl border border-gray-100 p-5">
-
-  <div className="flex items-start gap-3 mb-5">
-
-    <Bell
-      size={20}
-      className="text-[#0F172A] mt-1"
+  return (
+    <BaseLeadPage
+      title="My Follow-Ups"
+      subtitle="Leads with pending follow-ups"
+      badgeCount={totalLeads}
+      headerActions={headerActions}
+      statCards={statCards}
+      filterBar={filterBar}
+      tableHeaders={tableHeaders}
+      tableBody={tableBody}
+      rightSidebar={rightSidebar}
+      pagination={paginationBar}
+      isAllSelected={isAllSelected}
+      onSelectAll={onSelectAll}
+      cardsInRow={5}
+      onReset={() => {
+        setSearchTerm('');
+        setFilterSource('');
+        setFilterStatus('');
+        setPage(1);
+        setSelectedIds([]);
+      }}
     />
-
-    <div>
-      <h3 className="text-[16px] font-semibold text-[#0F172A]">
-        Reminder Settings
-      </h3>
-
-      <p className="text-xs text-gray-500 mt-1">
-        Get reminded before follow-up is due
-      </p>
-    </div>
-
-  </div>
-
-  {/* Enable Reminder */}
-
-  <div className="flex items-center justify-between mb-5">
-
-    <span className="text-sm font-medium text-[#0F172A]">
-      Enable Reminders
-    </span>
-
-    <label className="relative inline-flex cursor-pointer">
-
-      <input
-        type="checkbox"
-        defaultChecked
-        className="sr-only peer"
-      />
-
-      <div
-        className="
-          w-11 h-6
-          bg-gray-200
-          rounded-full
-          peer
-          peer-checked:bg-green-500
-          after:content-['']
-          after:absolute
-          after:top-[2px]
-          after:left-[2px]
-          after:bg-white
-          after:w-5
-          after:h-5
-          after:rounded-full
-          after:transition-all
-          peer-checked:after:translate-x-5
-        "
-      />
-    </label>
-
-  </div>
-
-  {/* Remind Me */}
-
-  <div className="flex items-center justify-between mb-5">
-
-    <span className="text-sm font-medium text-[#0F172A]">
-      Remind me
-    </span>
-
-    <select
-      className="
-        border
-        border-gray-200
-        rounded-lg
-        px-3
-        py-2
-        text-sm
-      "
-    >
-      <option>1 Hour Before</option>
-      <option>2 Hours Before</option>
-      <option>1 Day Before</option>
-    </select>
-
-  </div>
-
-  {/* Send Via */}
-
-  <div>
-
-    <p className="text-sm font-medium text-[#0F172A] mb-3">
-      Send reminder via
-    </p>
-
-    <div className="flex items-center gap-6">
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          defaultChecked
-          className="accent-blue-600"
-        />
-        WhatsApp
-      </label>
-
-      <label className="flex items-center gap-2 text-sm">
-        <input
-          type="checkbox"
-          defaultChecked
-          className="accent-blue-600"
-        />
-        Email
-      </label>
-
-    </div>
-
-  </div>
-
-</div>
-        </div>
-      </div>
-    </div>
   );
 };
 

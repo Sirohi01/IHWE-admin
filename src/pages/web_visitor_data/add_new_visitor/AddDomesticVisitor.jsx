@@ -73,6 +73,7 @@ const getInitialFormData = () => ({
     companyName: "",
     companyWebsite: "",
     industry: "",
+    otherIndustry: "",
     companySize: "",
     country: "",
     state: "",
@@ -312,11 +313,12 @@ const AddDomesticVisitor = () => {
 
         if (visitorType === "corporate") {
             if (!formData.companyName.trim()) return "Company name is required.";
-            if (!formData.companyWebsite.trim()) return "Company website is required.";
-            if (!formData.companyWebsite.includes('.')) {
-                return "Please enter a valid company website URL.";
-            }
+            // if (!formData.companyWebsite.trim()) return "Company website is required.";
+            // if (!formData.companyWebsite.includes('.')) {
+            //     return "Please enter a valid company website URL.";
+            // }
             if (!formData.industry) return "Industry/Sector is required.";
+            if (formData.industry?.toLowerCase() === 'others' && !formData.otherIndustry.trim()) return "Please specify the other industry.";
             if (!formData.companySize) return "Company size is required.";
             if (!formData.b2bMeeting) return "Please select if you want to schedule B2B meetings.";
         }
@@ -338,7 +340,7 @@ const AddDomesticVisitor = () => {
         gender: formData.gender,
         companyName: formData.companyName,
         designation: formData.designation,
-        industrySector: formData.industry,
+        industrySector: formData.industry?.toLowerCase() === 'others' ? formData.otherIndustry : formData.industry,
         country: formData.country,
         state: formData.state,
         city: formData.city,
@@ -359,7 +361,7 @@ const AddDomesticVisitor = () => {
         designation: formData.designation,
         companyName: formData.companyName,
         companyWebsite: formData.companyWebsite,
-        industrySector: formData.industry,
+        industrySector: formData.industry?.toLowerCase() === 'others' ? formData.otherIndustry : formData.industry,
         companySize: formData.companySize,
         country: formData.country,
         state: formData.state,
@@ -415,50 +417,15 @@ const AddDomesticVisitor = () => {
     };
 
     return (
-        <div className="mt-6 min-h-screen animate-fadeIn bg-white p-6 font-inter shadow-md">
-            <div className="flex flex-col items-center justify-between border-b border-gray-100 pb-4 sm:flex-row">
-                <div className="flex flex-col gap-1">
-                    <h1 className="text-xl font-bold uppercase leading-none tracking-tight text-slate-500">
-                        COMPANY DETAILS
-                    </h1>
-                    <p className="mt-1 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                        Client Registration Portal
-                    </p>
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 sm:mt-0">
-                    <button
-                        type="button"
-                        onClick={() => navigate("/ihweClientData2026/uploadExhibitor")}
-                        className="flex items-center gap-1.5 rounded-[2px] bg-[#3598dc] px-3 py-1.5 text-[11px] font-bold uppercase text-white shadow-sm transition-colors hover:bg-[#286090]"
-                    >
-                        <Upload size={12} /> Upload Exhibitor
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate("/ihweClientData2026/masterData")}
-                        className="flex items-center gap-1.5 rounded-[2px] bg-[#3598dc] px-3 py-1.5 text-[11px] font-bold uppercase text-white shadow-sm transition-colors hover:bg-[#286090]"
-                    >
-                        <LayoutGrid size={12} /> Master List
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => navigate("/ihweClientData2026/confirmClientList")}
-                        className="flex items-center gap-1.5 rounded-[2px] bg-[#3598dc] px-3 py-1.5 text-[11px] font-bold uppercase text-white shadow-sm transition-colors hover:bg-[#286090]"
-                    >
-                        <UserCheck size={12} /> Exhibitor List
-                    </button>
-                </div>
-            </div>
-
+        <div className="min-h-screen animate-fadeIn ">
             <div className="mx-auto rounded-sm border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-8 py-5">
-                    <h1 className="text-2xl font-bold text-[#23471d]">Add Domestic Visitor</h1>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Visitor registration form connected to the existing visitor APIs.
-                    </p>
-                </div>
-
-                <form onSubmit={handleSubmit} className="space-y-4 p-8 font-inter">
+                <div className="flex justify-between  border-b border-slate-200 px-6 py-1.5">
+                    <div>
+                        <h1 className="text-xl font-semibold text-[#23471d]">Add Domestic Visitor</h1>
+                        <p className=" text-sm text-slate-500">
+                            Visitor registration form connected to the existing visitor APIs.
+                        </p>
+                    </div>
                     <div className="flex flex-wrap items-center gap-12">
                         <div className="flex flex-wrap gap-10">
                             <label className="flex cursor-pointer items-center space-x-3">
@@ -470,7 +437,7 @@ const AddDomesticVisitor = () => {
                                     onChange={(e) => setVisitorType(e.target.value)}
                                     className="h-5 w-5 border-slate-400 text-[#23471d] focus:ring-[#23471d]"
                                 />
-                                <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                                <span className="flex items-center gap-2 text-[13px] font-semibold text-slate-700">
                                     Corporate Visitor
                                 </span>
                             </label>
@@ -483,7 +450,7 @@ const AddDomesticVisitor = () => {
                                     onChange={(e) => setVisitorType(e.target.value)}
                                     className="h-5 w-5 border-slate-400 text-[#23471d] focus:ring-[#23471d]"
                                 />
-                                <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
+                                <span className="flex items-center gap-2 text-[13px] font-semibold text-slate-700">
                                     General Visitor
                                 </span>
                             </label>
@@ -508,6 +475,10 @@ const AddDomesticVisitor = () => {
                             </select>
                         </div>
                     </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-4 px-6 py-3 font-inter">
+
 
                     <div>
                         <h3
@@ -574,8 +545,8 @@ const AddDomesticVisitor = () => {
                                         <input name="companyName" value={formData.companyName} onChange={handleInputChange} required placeholder="Enter Company Name.." className={inputClasses} />
                                     </div>
                                     <div>
-                                        <label className={labelClasses}>COMPANY WEBSITE *</label>
-                                        <input name="companyWebsite" value={formData.companyWebsite} onChange={handleInputChange} required placeholder="Enter Company Website.." className={inputClasses} />
+                                        <label className={labelClasses}>COMPANY WEBSITE</label>
+                                        <input name="companyWebsite" value={formData.companyWebsite} onChange={handleInputChange} placeholder="Enter Company Website.." className={inputClasses} />
                                     </div>
                                     <div>
                                         <label className={labelClasses}>INDUSTRY/SECTOR *</label>
@@ -586,8 +557,17 @@ const AddDomesticVisitor = () => {
                                                     {industry}
                                                 </option>
                                             ))}
+                                            {!industryOptions.some(opt => opt?.toLowerCase() === 'others') && (
+                                                <option value="Others">Others</option>
+                                            )}
                                         </select>
                                     </div>
+                                    {formData.industry?.toLowerCase() === 'others' && (
+                                        <div>
+                                            <label className={labelClasses}>PLEASE SPECIFY INDUSTRY *</label>
+                                            <input name="otherIndustry" value={formData.otherIndustry} onChange={handleInputChange} required placeholder="Enter your industry.." className={inputClasses} />
+                                        </div>
+                                    )}
                                     <div>
                                         <label className={labelClasses}>COMPANY SIZE *</label>
                                         <select name="companySize" value={formData.companySize} onChange={handleInputChange} className={inputClasses}>
@@ -635,8 +615,8 @@ const AddDomesticVisitor = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClasses}>Pincode *</label>
-                                <input name="companyPincode" value={formData.companyPincode} onChange={handleInputChange} required placeholder="Enter Pincode" className={inputClasses} />
+                                <label className={labelClasses}>Pincode</label>
+                                <input name="companyPincode" value={formData.companyPincode} onChange={handleInputChange} placeholder="Enter Pincode" className={inputClasses} />
                             </div>
                         </div>
                     </div>

@@ -275,8 +275,7 @@ const WhatWeDo = () => {
             key: "image",
             label: "IMAGE",
             render: (row) => (
-                <img
-                    src={`${SERVER_URL}${row.image}`}
+                <img loading="lazy" decoding="async"                     src={`${SERVER_URL}${row.image}`}
                     alt={row.title}
                     className="w-12 h-12 rounded-full object-cover border border-gray-200 shadow-sm"
                 />
@@ -313,7 +312,7 @@ const WhatWeDo = () => {
     ];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="WHAT WE DO MANAGEMENT"
                 description="Manage Expertise section and service cards"
@@ -484,7 +483,7 @@ const WhatWeDo = () => {
                                             />
                                             {cardImagePreview ? (
                                                 <div className="relative w-full">
-                                                    <img src={cardImagePreview} alt="Preview" className="w-full h-32 object-cover rounded shadow-sm" />
+                                                    <img loading="lazy" decoding="async" src={cardImagePreview} alt="Preview" className="w-full h-32 object-cover rounded shadow-sm" />
                                                     <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded">
                                                         <span className="text-white text-xs font-bold uppercase tracking-wider">Change Image</span>
                                                     </div>

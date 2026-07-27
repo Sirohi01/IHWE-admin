@@ -165,7 +165,7 @@ const FreeHealthCampForm = ({
     if (!validate()) return;
     try {
       await dispatch(createHealthCampVisitor(healthCampData)).unwrap();
-      
+
       // Log the activity
       const userId = sessionStorage.getItem("user_id");
       if (userId) {
@@ -195,17 +195,17 @@ const FreeHealthCampForm = ({
   };
 
   const inputClass = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
-  const labelClass = "text-[11px] font-bold text-slate-800 mb-1 block capitalize font-inter";
-  const sectionHeaderClass = "text-[16px] font-bold text-[#23471d] pb-1 border-b border-slate-100 mb-6 font-inter flex items-center gap-2";
+  const labelClass = "text-[11px] font-semibold text-slate-700 mb-1 block capitalize font-inter";
+  const sectionHeaderClass = "text-[13px] font-semibold text-[#23471d] pb-1 border-b border-slate-200 mb-2 font-inter flex items-center gap-2";
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10 animate-fadeIn">
+    <form onSubmit={handleSubmit} className="space-y-3 animate-fadeIn">
       {/* SECTION 1: PERSONAL DETAILS */}
       <section>
         <h3 className={sectionHeaderClass}>
           <User className="w-5 h-5 text-[#d26019]" /> Patient Information
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-2">
           <div>
             <label className={labelClass}>Event Name <span className="text-red-500">*</span></label>
             <select
@@ -335,19 +335,19 @@ const FreeHealthCampForm = ({
         <h3 className={sectionHeaderClass}>
           <Heart className="w-5 h-5 text-[#d26019]" /> Medical Background
         </h3>
-        <div className="space-y-6 bg-slate-50 p-6 border border-slate-200">
+        <div className="space-y-3 bg-slate-50 px-6 py-3 border border-slate-200">
           {[
             { label: "Existing Medical Conditions?", key: "existingMedicalConditions", area: "existingMedicalConditions" },
             { label: "Currently taking medications?", key: "isTakingMedications", area: "medicationNames" },
             { label: "Do you have any allergies?", key: "hasAllergies", area: "allergyDetails" },
             { label: "Experiencing any symptoms currently?", key: "isExperiencingSymptoms", area: "symptomDetails" }
           ].map(({ label, key, area }) => (
-            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              <div className="md:col-span-1">
-                <label className="text-[13px] font-bold text-gray-700 uppercase">{label}</label>
-                <div className="flex gap-4 mt-2">
+            <div key={key} className="grid grid-cols-1 md:grid-cols-3 gap-2 items-start">
+              <div className="">
+                <label className="text-[12px] font-semibold text-gray-700 uppercase">{label}</label>
+                <div className="flex gap-4 mt-1">
                   {["yes", "no"].map(val => (
-                    <label key={val} className="flex items-center gap-2 cursor-pointer text-[12px] font-bold text-gray-600 uppercase">
+                    <label key={val} className="flex items-center gap-2 cursor-pointer text-[11px] font-semibold text-gray-600 uppercase">
                       <input
                         type="radio"
                         name={key}
@@ -362,7 +362,7 @@ const FreeHealthCampForm = ({
               <div className="md:col-span-2">
                 {healthCampData[key] === "yes" && (
                   <textarea
-                    className="w-full h-16 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none shadow-inner"
+                    className="w-full h-10 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none shadow-inner"
                     placeholder="Provide details here..."
                     value={healthCampData[area]}
                     onChange={(e) => setHealthCampData({ ...healthCampData, [area]: e.target.value })}
@@ -408,7 +408,7 @@ const FreeHealthCampForm = ({
           <h3 className={sectionHeaderClass}>
             <Calendar className="w-5 h-5 text-[#d26019]" /> Appointment Schedule
           </h3>
-          <div className="space-y-5 bg-slate-50 p-6 border border-slate-200">
+          <div className="space-y-5 bg-slate-50 px-6 py-4 rounded border border-slate-200">
             <div>
               <label className={labelClass}>Preferred Date <span className="text-red-500">*</span></label>
               <input
@@ -433,14 +433,14 @@ const FreeHealthCampForm = ({
       </div>
 
       {/* SECTION 4: CONSENT & SUBMISSION */}
-      <section className="bg-orange-50 p-6 border-l-4 border-[#d26019] space-y-6">
+      <section className="bg-orange-50 p-6 border-l-4 border-[#d26019] space-y-3">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="space-y-4">
+          <div className="space-y-3">
             <div>
-              <label className="text-[13px] font-bold text-gray-700 uppercase block mb-2 leading-tight">Consent to share medical data for analysis? <span className="text-red-500">*</span></label>
+              <label className="text-[12px] font-semibold text-gray-700 uppercase block mb-1 leading-tight">Consent to share medical data for analysis? <span className="text-red-500">*</span></label>
               <div className="flex gap-6">
                 {["yes", "no"].map(val => (
-                  <label key={val} className="flex items-center gap-2 cursor-pointer text-[13px] font-bold text-gray-700 uppercase">
+                  <label key={val} className="flex items-center gap-2 cursor-pointer text-[11px] font-medium text-gray-700 uppercase">
                     <input
                       type="radio"
                       name="consent"
@@ -453,10 +453,10 @@ const FreeHealthCampForm = ({
               </div>
             </div>
             <div>
-              <label className="text-[13px] font-bold text-gray-700 uppercase block mb-2 leading-tight">Agree to health updates & reminders? <span className="text-red-500">*</span></label>
+              <label className="text-[12px] font-semibold text-gray-700 uppercase block mb-1 leading-tight">Agree to health updates & reminders? <span className="text-red-500">*</span></label>
               <div className="flex gap-6">
                 {["yes", "no"].map(val => (
-                  <label key={val} className="flex items-center gap-2 cursor-pointer text-[13px] font-bold text-gray-700 uppercase">
+                  <label key={val} className="flex items-center gap-2 cursor-pointer text-[11px] font-medium text-gray-700 uppercase">
                     <input
                       type="radio"
                       name="updates"
@@ -472,7 +472,7 @@ const FreeHealthCampForm = ({
           <div>
             <label className={labelClass}>Specific health concerns or questions?</label>
             <textarea
-              className="w-full h-24 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none"
+              className="w-full h-18 p-2 border border-slate-400 focus:border-[#23471d] outline-none text-[12.5px] rounded-[2px] bg-white resize-none"
               placeholder="Mention any specific concerns for the doctors..."
               value={healthCampData.specificHealthConcerns}
               onChange={(e) => setHealthCampData({ ...healthCampData, specificHealthConcerns: e.target.value })}
@@ -480,7 +480,7 @@ const FreeHealthCampForm = ({
           </div>
         </div>
         <div className="pt-4 border-t border-orange-100">
-           <label className="flex items-center gap-3 cursor-pointer group">
+          <label className="flex items-center gap-3 cursor-pointer group">
             <input
               type="checkbox"
               checked={healthCampData.subscribe}
@@ -493,23 +493,23 @@ const FreeHealthCampForm = ({
       </section>
 
       {/* FOOTER ACTIONS ── STICKY VIBE */}
-      <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center mt-12 bg-white pb-6">
+      <div className="py-6 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center  bg-white ">
         <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2 mb-4 sm:mb-0">
           <ShieldCheck size={14} className="text-[#23471d]" />
           SECURE VISITOR PORTAL
         </p>
         <div className="flex gap-4">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={resetForm}
-            className="px-10 py-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
+            className="px-10 py-1.5 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px] shadow-sm"
           >
             Reset Form
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={loading}
-            className="px-12 py-2.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
+            className="px-12 py-1.5 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-3 group"
           >
             {loading ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

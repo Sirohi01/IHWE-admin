@@ -163,7 +163,7 @@ const AddGalleryImages = () => {
                                     <div className="aspect-[4/3] relative">
                                         {img.preview ? (
                                             <div className="w-full h-full relative group/img">
-                                                <img src={img.preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={img.preview} alt={`Preview ${index}`} className="w-full h-full object-cover" />
                                                 <div className="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-all gap-3">
                                                     <label className="bg-white text-black px-4 py-2 rounded-full text-[10px] font-bold cursor-pointer hover:bg-gray-100 transition-transform hover:scale-105 shadow-lg uppercase">
                                                         Change

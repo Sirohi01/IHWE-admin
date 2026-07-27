@@ -1,0 +1,98 @@
+import { useState, useEffect } from "react";
+
+export default function TargetGaugeCard({ targetMetrics }) {
+  // Arc length of the semicircle path (π × radius = π × 82 ≈ 257.6)
+  const arcLength = 257.6;
+  const achieved = Math.min(Number(targetMetrics.pct) || 0, 100);
+  const achievedLen = (achieved / 100) * arcLength;
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          setTimeout(() => setMounted(true), 250);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const element = document.getElementById('gauge-chart-container');
+    if (element) {
+      observer.observe(element);
+    }
+    
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="bg-white rounded-lg p-2.5 lg:col-span-3 col-span-1 flex flex-col justify-between" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
+      <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-2 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Target vs Achievement</h3>
+      </div>
+
+      {/* Pure SVG half-donut gauge */}
+      <div id="gauge-chart-container" className="flex flex-col items-center mt-1">
+        <div className="relative" style={{ width: '110px', height: '60px' }}>
+          <svg
+            viewBox="0 0 200 110"
+            width="110" height="60"
+            xmlns="http://www.w3.org/2000/svg"
+            style={{ overflow: 'visible' }}
+          >
+            {/* Grey background track */}
+            <path
+              d="M 18,100 A 82,82 0 0,1 182,100"
+              fill="none"
+              stroke="#e2e8f0"
+              strokeWidth="20"
+              strokeLinecap="round"
+            />
+            {/* Green achieved arc */}
+            <path
+              d="M 18,100 A 82,82 0 0,1 182,100"
+              fill="none"
+              stroke="#10b981"
+              strokeWidth="20"
+              strokeLinecap="round"
+              strokeDasharray={`${arcLength} ${arcLength}`}
+              strokeDashoffset={mounted ? arcLength - achievedLen : arcLength}
+              style={{ transition: 'stroke-dashoffset 2s cubic-bezier(0.2, 0.8, 0.2, 1)' }}
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-end pb-2">
+            <p className="text-lg font-black text-[#112E81] leading-none">{targetMetrics.pct}%</p>
+            <span className="text-[9px] font-bold text-slate-900 uppercase tracking-widest mt-0.5 block">Achieved</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Details Row */}
+      <div className="grid grid-cols-3 gap-2 border-t border-slate-100 pt-2 mt-2 text-center">
+        <div>
+          <p className="text-[9px] font-bold text-slate-900 uppercase tracking-wider mb-1">Target</p>
+          <h5 className="text-xs font-bold text-red-600 leading-none">₹ {targetMetrics.target} L</h5>
+        </div>
+        <div>
+          <p className="text-[9px] font-bold text-slate-900 uppercase tracking-wider mb-1">Achieved</p>
+          <h5 className="text-xs font-bold text-emerald-600 leading-none">₹ {targetMetrics.achieved} L</h5>
+        </div>
+        <div>
+          <p className="text-[9px] font-bold text-slate-900 uppercase tracking-wider mb-1">Remaining</p>
+          <h5 className="text-xs font-bold text-amber-500 leading-none">₹ {targetMetrics.remaining} L</h5>
+        </div>
+      </div>
+
+      {/* Status badge */}
+      <div className="flex items-center gap-2 bg-red-50/70 border border-red-100 rounded-xl p-2.5 mt-1 shadow-inner overflow-hidden">
+        <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+        <span className="text-[10px] font-semibold text-red-600 leading-snug whitespace-nowrap truncate tracking-tighter">
+          You are on track! Keep pushing to achieve your target.
+        </span>
+      </div>
+    </div>
+  );
+}
+

@@ -243,8 +243,7 @@ const GalleryCategory = () => {
       label: "Main Image",
       render: (row) => (
         <div className="w-16 h-10 rounded overflow-hidden border shadow-sm">
-          <img
-            src={`${SERVER_URL}${row.mainImage}`}
+          <img loading="lazy" decoding="async"             src={`${SERVER_URL}${row.mainImage}`}
             alt={row.mainImageAltText}
             className="w-full h-full object-cover"
             onError={(e) => { e.target.src = "https://via.placeholder.com/100x60?text=No+Image"; }}
@@ -419,7 +418,7 @@ const GalleryCategory = () => {
                 <div className="relative group border-2 border-dashed border-gray-300 rounded-xl overflow-hidden aspect-video flex items-center justify-center bg-white hover:border-[#1A3263] transition-all">
                   {formData.imagePreview ? (
                     <>
-                      <img src={formData.imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                      <img loading="lazy" decoding="async" src={formData.imagePreview} alt="Preview" className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                         <label className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold cursor-pointer hover:scale-105 transition-all">
                           Change Image

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Link as LinkIcon } from 'lucide-react';
+import { Link as LinkIcon, Type } from 'lucide-react';
 
 const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isCodeEditor = false, showColorPicker = true, fontSize }) => {
     const editorRef = useRef(null);
@@ -13,6 +13,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         insertUnorderedList: false,
         insertOrderedList: false,
         formatBlock: 'p',
+        fontSize: '3',
         link: false,
         color: '#333333'
     });
@@ -26,22 +27,34 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
 
     const updateActiveFormats = useCallback(() => {
         if (!isCodeEditor && editorRef.current) {
+            const selection = window.getSelection();
             const formatBlockValue = document.queryCommandValue("formatBlock");
             
-            // Check if selection is inside a link
-            const selection = window.getSelection();
+            // Get computed font size of selection
+            let computedFontSize = "16";
             let isLink = false;
+            
             if (selection.rangeCount > 0) {
                 let container = selection.getRangeAt(0).startContainer;
                 if (container.nodeType === 3) container = container.parentNode;
                 
-                let temp = container;
-                while (temp && temp !== editorRef.current) {
-                    if (temp.tagName === 'A') {
-                        isLink = true;
+                // Traverse up to find a span with font-size if any
+                let current = container;
+                while (current && current !== editorRef.current) {
+                    if (current.tagName === 'SPAN' && current.style.fontSize) {
+                        computedFontSize = current.style.fontSize.replace('px', '');
                         break;
                     }
-                    temp = temp.parentNode;
+                    if (current.tagName === 'A') {
+                        isLink = true;
+                    }
+                    current = current.parentNode;
+                }
+                
+                // Fallback to computed style if no span found
+                if (computedFontSize === "16") {
+                    const style = window.getComputedStyle(container);
+                    computedFontSize = Math.round(parseFloat(style.fontSize)).toString();
                 }
             }
 
@@ -55,6 +68,7 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 insertUnorderedList: document.queryCommandState("insertUnorderedList"),
                 insertOrderedList: document.queryCommandState("insertOrderedList"),
                 formatBlock: formatBlockValue || 'p',
+                fontSize: computedFontSize,
                 link: isLink,
                 color: document.queryCommandValue("foreColor")
             });
@@ -131,13 +145,59 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
         execCommand(command, val);
     };
 
+    useEffect(() => {
+        // Force browser to use <span> with styles instead of <font> tags for standard commands
+        document.execCommand('styleWithCSS', false, true);
+    }, []);
+
+    // Custom Font Size Applier
+    const applyPixelFontSize = (size) => {
+        if (!size) return;
+        
+        const selection = window.getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) {
+            setActiveFormats(prev => ({ ...prev, fontSize: size }));
+            return;
+        }
+
+        // We use a dummy command to let the browser handle the selection/wrapping logic
+        // then we immediately convert the browser's tags to our custom pixel spans
+        const dummyColor = "#000001";
+        document.execCommand('foreColor', false, dummyColor);
+        
+        // Find all spans with our dummy color
+        const coloredSpans = editorRef.current.querySelectorAll(`span[style*="color: rgb(0, 0, 1)"], span[style*="color: #000001"]`);
+        
+        coloredSpans.forEach(span => {
+            // Apply the font size
+            span.style.fontSize = `${size}px`;
+            // Remove the dummy color (restoring original or letting it be inherited)
+            span.style.color = "";
+            if (span.getAttribute('style') === "") span.removeAttribute('style');
+        });
+
+        handleInput();
+        setActiveFormats(prev => ({ ...prev, fontSize: size }));
+        
+        // Final cleanup of any empty styles
+        const allSpans = editorRef.current.querySelectorAll('span');
+        allSpans.forEach(s => {
+            if (!s.getAttribute('style') && s.childNodes.length > 0) {
+                // Keep the content but remove the useless span
+                const parent = s.parentNode;
+                while (s.firstChild) parent.insertBefore(s.firstChild, s);
+                parent.removeChild(s);
+            }
+        });
+    };
+
     // Styling for active state
     const getActiveStyle = (isActive) => isActive 
         ? "bg-blue-100 border-blue-400 text-blue-700 active:bg-blue-200" 
         : "bg-white border-gray-300 active:bg-gray-100";
 
     return (
-        <div className="border-2 border-gray-200 rounded overflow-hidden shadow-inner bg-white">
+        <div className="border-2 border-gray-200 rounded overflow-hidden shadow-inner bg-white font-inter">
             {/* Standardized Toolbar - Hidden in code mode or customized if needed */}
             {!isCodeEditor && (
                 <div className="bg-gray-50 p-2 border-b-2 border-gray-200 flex flex-wrap gap-1 items-center">
@@ -228,6 +288,36 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                         <option value="h6">Heading 6</option>
                     </select>
 
+                    <div className="w-px h-6 bg-gray-300 mx-1"></div>
+
+                    {/* Arbitrary Font Size Input with +/- */}
+                    <div className="flex items-center gap-0.5 border-2 border-gray-300 rounded px-0.5 h-9 bg-white shadow-sm hover:border-blue-400 transition-colors">
+                        <Type size={14} className="text-gray-400 mx-1" />
+                        <button
+                            type="button"
+                            onClick={() => applyPixelFontSize(Math.max(1, parseInt(activeFormats.fontSize || 16) - 1))}
+                            className="w-5 h-7 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded text-xs font-bold transition-colors"
+                        >
+                            -
+                        </button>
+                        <input
+                            type="number"
+                            value={activeFormats.fontSize}
+                            onChange={(e) => applyPixelFontSize(e.target.value)}
+                            onFocus={(e) => e.target.select()}
+                            className="w-10 h-full border-0 text-[11px] font-bold text-center focus:outline-none bg-transparent"
+                            placeholder="px"
+                        />
+                        <button
+                            type="button"
+                            onClick={() => applyPixelFontSize(parseInt(activeFormats.fontSize || 16) + 1)}
+                            className="w-5 h-7 flex items-center justify-center bg-gray-50 hover:bg-gray-200 rounded text-xs font-bold transition-colors"
+                        >
+                            +
+                        </button>
+                        <span className="text-[9px] font-bold text-gray-400 mx-1">PX</span>
+                    </div>
+
                     <button
                         type="button"
                         onMouseDown={insertLink}
@@ -263,10 +353,11 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 onMouseUp={updateActiveFormats}
                 onKeyUp={updateActiveFormats}
                 onFocus={updateActiveFormats}
-                className={`p-6 focus:outline-none max-w-none text-gray-700 bg-white overflow-y-auto leading-relaxed ${isCodeEditor ? 'font-mono text-sm' : 'prose'}`}
+                className={`p-6 focus:outline-none max-w-none text-gray-700 bg-white overflow-y-auto leading-relaxed ${isCodeEditor ? 'font-mono text-sm' : 'prose'} ${fontSize ? 'has-custom-font-master' : ''}`}
                 style={{
                     minHeight: minHeight,
-                    fontSize: fontSize ? `${fontSize}px` : undefined
+                    fontSize: fontSize ? `${fontSize}px` : undefined,
+                    '--master-font-size': fontSize ? `${fontSize}px` : 'inherit'
                 }}
                 placeholder={placeholder}
             ></div>
@@ -276,12 +367,11 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 __html: `
                 [contenteditable] {
                     outline: none;
-                    color: #333333 !important;
                     text-align: justify !important;
                     line-height: 1.6 !important;
                 }
-                [contenteditable] p, [contenteditable] li, [contenteditable] span {
-                    color: #333333 !important;
+                [contenteditable] p {
+                    margin: 0.5rem 0 !important;
                 }
                 [contenteditable] a {
                     color: #2563eb !important;
@@ -308,23 +398,47 @@ const RichTextEditor = ({ value, onChange, placeholder, minHeight = "300px", isC
                 }
                 [contenteditable] b, [contenteditable] strong {
                     font-weight: 800 !important;
-                    color: #000000 !important;
                 }
                 [contenteditable] i, [contenteditable] em {
                     font-style: italic !important;
-                    color: #333333 !important;
                 }
                 [contenteditable] h1, [contenteditable] h2, [contenteditable] h3, [contenteditable] h4, [contenteditable] h5, [contenteditable] h6 {
-                    color: #000000 !important;
                     font-weight: 800 !important;
                     margin-top: 1rem !important;
                     margin-bottom: 0.5rem !important;
+                }
+                [contenteditable] h1 {
+                    font-size: 2rem !important;
                 }
                 [contenteditable] h2 {
                     font-size: 1.5rem !important;
                 }
                 [contenteditable] h3 {
                     font-size: 1.25rem !important;
+                }
+                [contenteditable] h4 {
+                    font-size: 1.1rem !important;
+                }
+                [contenteditable] h5 {
+                    font-size: 1rem !important;
+                }
+                [contenteditable] h6 {
+                    font-size: 0.9rem !important;
+                }
+                /* No more master overrides, editor content is the absolute truth */
+                [contenteditable].has-custom-font-master {
+                    font-size: var(--master-font-size);
+                }
+                
+                /* AGGRESSIVE SHADOW REMOVAL */
+                [contenteditable], 
+                [contenteditable] *,
+                .prose,
+                .prose * {
+                    text-shadow: none !important;
+                    filter: none !important;
+                    -webkit-filter: none !important;
+                    box-shadow: none !important;
                 }
             ` }} />
         </div>

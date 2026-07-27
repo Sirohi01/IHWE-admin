@@ -1,8 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-// const API_URL = "http://localhost:5000/api/estimates"; // 🟢 change if needed
-const BASE_URL = import.meta.env.VITE_API_URL;
+import api from "../../lib/api";
 
 // -------------------- 🧠 Async Thunks --------------------
 
@@ -18,12 +15,29 @@ const BASE_URL = import.meta.env.VITE_API_URL;
 //     }
 //   }
 // );
+// ✅ Get ALL estimates (global list for Master Data)
+export const fetchAllGlobalEstimates = createAsyncThunk(
+  "estimates/fetchGlobalAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await api.get(`/api/estimates`);
+      if (res.data.success) {
+        return res.data.data;
+      } else {
+        return rejectWithValue(res.data.message || "Failed to fetch all estimates");
+      }
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 // ✅ Get grouped estimates by companyId
 export const fetchEstimates = createAsyncThunk(
   "estimates/fetchAll",
   async (companyId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/estimates/grouped/${companyId}`);
+      const res = await api.get(`/api/estimates/grouped/${companyId}`);
 
       // API returns: { success, count, data: [...] }
       if (res.data.success) {
@@ -42,7 +56,7 @@ export const fetchEstimateById = createAsyncThunk(
   "estimates/fetchById",
   async (id, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/estimates/${id}`);
+      const res = await api.get(`/api/estimates/${id}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -55,7 +69,7 @@ export const addEstimate = createAsyncThunk(
   "estimates/add",
   async (formData, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${BASE_URL}/estimates`, formData);
+      const res = await api.post(`/api/estimates`, formData);
       return res.data.data; // since backend returns {message, data: estimate}
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -68,7 +82,7 @@ export const updateEstimate = createAsyncThunk(
   "estimates/update",
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const res = await axios.put(`${BASE_URL}/estimates/${id}`, updatedData);
+      const res = await api.put(`/api/estimates/${id}`, updatedData);
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -81,7 +95,7 @@ export const deleteEstimate = createAsyncThunk(
   "estimates/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await axios.delete(`${BASE_URL}/estimates/${id}`);
+      await api.delete(`/api/estimates/${id}`);
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -95,7 +109,7 @@ export const fetchNextEstimateNo = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // Assuming your new route is /api/estimates/next-number
-      const res = await axios.get(`${BASE_URL}/estimates/next-number`);
+      const res = await api.get(`/api/estimates/next-number`);
       return res.data.est_no;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -205,6 +219,18 @@ const estimateSlice = createSlice({
         state.nextEstimateNo = action.payload;
       })
       .addCase(fetchNextEstimateNo.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // 🟢 FETCH ALL GLOBAL
+      .addCase(fetchAllGlobalEstimates.pending, (state) => {
+          state.loading = true;
+        })
+      .addCase(fetchAllGlobalEstimates.fulfilled, (state, action) => {
+        state.loading = false;
+        state.estimates = action.payload; // Map the global list into the same state array
+      })
+      .addCase(fetchAllGlobalEstimates.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       });

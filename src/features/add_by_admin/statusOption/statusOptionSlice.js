@@ -1,16 +1,13 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
 import { createActivityLogThunk } from "../../activityLog/activityLogSlice";
-import { API_URL } from "../../../lib/api";
-
-const BASE_URL = API_URL;
+import api from "../../../lib/api";
 
 // ✅ Fetch All Status Options
 export const fetchStatusOptions = createAsyncThunk(
   "statusOptions/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/status-option`);
+      const res = await api.get("/api/status-option");
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -23,7 +20,7 @@ export const createStatusOption = createAsyncThunk(
   "statusOptions/create",
   async (data, { dispatch, rejectWithValue }) => {
     try {
-      const res = await axios.post(`${BASE_URL}/status-option`, data, {
+      const res = await api.post("/api/status-option", data, {
         headers: {
           "Content-Type": "application/json",
         },
@@ -65,15 +62,16 @@ export const updateStatusOption = createAsyncThunk(
       const user = userStr ? JSON.parse(userStr) : {};
       const userId = sessionStorage.getItem("user_id") || user._id;
       const userName = user.name || "User";
+      const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
+      const updatedByName = adminInfo.fullName || adminInfo.name || adminInfo.username || userName || "Admin";
 
-      // ✅ updated_by add karo
       const dataWithUser = {
         ...data,
-        updated_by: userId || null,
+        updated_by: updatedByName,
       };
 
-      const res = await axios.put(
-        `${BASE_URL}/status-option/${id}`,
+      const res = await api.put(
+        `/api/status-option/${id}`,
         dataWithUser,
         {
           headers: {
@@ -111,7 +109,7 @@ export const deleteStatusOption = createAsyncThunk(
       const { statusOptions } = getState().statusOptions;
       const statusToDelete = statusOptions.find((s) => s._id === id);
 
-      await axios.delete(`${BASE_URL}/status-option/${id}`);
+      await api.delete(`/api/status-option/${id}`);
 
       const userStr = sessionStorage.getItem("user");
       const user = userStr ? JSON.parse(userStr) : {};

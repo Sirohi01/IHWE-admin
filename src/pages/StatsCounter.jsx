@@ -314,7 +314,7 @@ const StatsCounter = () => {
                                 />
                                 {imagePreview && (
                                     <div className="mt-4">
-                                        <img src={imagePreview} alt="Preview" className="h-32 w-auto border-2 border-gray-300 shadow-lg object-cover" />
+                                        <img loading="lazy" decoding="async" src={imagePreview} alt="Preview" className="h-32 w-auto border-2 border-gray-300 shadow-lg object-cover" />
                                     </div>
                                 )}
                             </div>

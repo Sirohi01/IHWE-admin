@@ -154,7 +154,7 @@ const ImageGalleryManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="IMAGE GALLERY MANAGEMENT"
                 description="Manage your photo gallery images, titles, and descriptions"
@@ -168,17 +168,16 @@ const ImageGalleryManagement = () => {
                             {isEditing ? <Edit className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                             {isEditing ? 'Edit Image Entry' : 'Add New Image Entry'}
                         </h2>
-                        
+
                         <div className="space-y-4">
                             {/* Image Upload Area */}
                             <div>
                                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Gallery Image</label>
                                 {imagePreview ? (
                                     <div className="relative h-48 border-2 border-gray-200 overflow-hidden mb-2 bg-gray-50">
-                                        <img 
-                                            src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`} 
-                                            className="w-full h-full object-contain" 
-                                            alt="Preview" 
+                                        <img loading="lazy" decoding="async"                                             src={imagePreview.startsWith('blob:') ? imagePreview : `${SERVER_URL}${imagePreview}`}
+                                            className="w-full h-full object-contain"
+                                            alt="Preview"
                                         />
                                         <button
                                             onClick={() => {
@@ -196,12 +195,12 @@ const ImageGalleryManagement = () => {
                                     <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-gray-300 cursor-pointer hover:border-[#23471d] hover:bg-gray-50 transition-all group">
                                         <ImageIcon className="w-10 h-10 text-gray-400 mb-2 group-hover:text-[#23471d]" />
                                         <span className="text-xs text-gray-400 group-hover:text-[#23471d]">Click to upload gallery photo</span>
-                                        <input 
-                                            ref={fileInputRef} 
-                                            type="file" 
-                                            className="hidden" 
-                                            onChange={handleImageChange} 
-                                            accept="image/*" 
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            className="hidden"
+                                            onChange={handleImageChange}
+                                            accept="image/*"
                                         />
                                     </label>
                                 )}
@@ -255,8 +254,8 @@ const ImageGalleryManagement = () => {
                                     )}
                                 </button>
                                 {isEditing && (
-                                    <button 
-                                        onClick={resetForm} 
+                                    <button
+                                        onClick={resetForm}
                                         className="px-6 py-3 border-2 border-gray-300 text-gray-600 font-bold hover:bg-gray-50 transition-colors text-sm"
                                     >
                                         Cancel
@@ -278,7 +277,7 @@ const ImageGalleryManagement = () => {
                                 {items.length} IMAGES
                             </span>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
@@ -309,10 +308,9 @@ const ImageGalleryManagement = () => {
                                             <td className="py-3 px-4 text-center font-bold text-gray-400 text-xs">{idx + 1}</td>
                                             <td className="py-3 px-4">
                                                 <div className="w-16 h-12 bg-gray-100 border border-gray-200 rounded overflow-hidden">
-                                                    <img 
-                                                        src={`${SERVER_URL}${item.image}`} 
-                                                        alt={item.imageAlt} 
-                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                                    <img loading="lazy" decoding="async"                                                         src={`${SERVER_URL}${item.image}`}
+                                                        alt={item.imageAlt}
+                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                                                     />
                                                 </div>
                                             </td>
@@ -329,9 +327,9 @@ const ImageGalleryManagement = () => {
                                                         {item.updatedBy || 'System'}
                                                     </span>
                                                     <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', { 
-                                                            day: '2-digit', month: 'short', year: 'numeric', 
-                                                            hour: '2-digit', minute: '2-digit', hour12: true 
+                                                        {item.updatedAt ? new Date(item.updatedAt).toLocaleString('en-GB', {
+                                                            day: '2-digit', month: 'short', year: 'numeric',
+                                                            hour: '2-digit', minute: '2-digit', hour12: true
                                                         }) : 'N/A'}
                                                     </span>
                                                 </div>
@@ -339,15 +337,15 @@ const ImageGalleryManagement = () => {
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center justify-center gap-3">
 
-                                                    <button 
-                                                        onClick={() => startEdit(item)} 
+                                                    <button
+                                                        onClick={() => startEdit(item)}
                                                         className="text-blue-500 hover:text-blue-700 transition-colors p-1"
                                                         title="Edit Entry"
                                                     >
                                                         <Edit size={16} />
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleDelete(item._id)} 
+                                                    <button
+                                                        onClick={() => handleDelete(item._id)}
                                                         className="text-red-400 hover:text-red-600 transition-colors p-1"
                                                         title="Delete Entry"
                                                     >

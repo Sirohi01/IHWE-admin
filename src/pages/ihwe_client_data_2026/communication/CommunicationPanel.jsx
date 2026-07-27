@@ -1,0 +1,186 @@
+import React, { useState } from "react";
+import { Phone, Mail, Activity, FolderOpen, MessageCircleMore } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
+import WhatsAppModal from "./WhatsAppModal";
+import EmailModal from "./EmailModal";
+import CallLogModal from "./CallLogModal";
+import FullHistoryModal from "./FullHistoryModal";
+
+const TYPE_CONFIG = {
+  whatsapp:    { icon: FaWhatsapp, color: "text-green-600",  bg: "bg-green-50",  label: "WhatsApp" },
+  call:        { icon: Phone,      color: "text-teal-600",   bg: "bg-teal-50",   label: "Call" },
+  email:       { icon: Mail,       color: "text-blue-600",   bg: "bg-blue-50",   label: "Email Sent" },
+  email_reply: { icon: Mail,       color: "text-indigo-600", bg: "bg-indigo-50", label: "Email Reply" },
+  status:      { icon: Activity,   color: "text-orange-500", bg: "bg-orange-50", label: "Status" },
+  log:         { icon: FolderOpen, color: "text-purple-600", bg: "bg-purple-50", label: "Log" },
+};
+
+const formatDateTime = (dt) => {
+  if (!dt) return "";
+  return new Date(dt).toLocaleString("en-IN", {
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: true,
+  });
+};
+
+const TABS = ["All", "WhatsApp", "Calls", "Emails", "Logs/Status"];
+const TAB_TYPE_MAP = {
+  All: null, WhatsApp: "whatsapp", Calls: "call",
+  Emails: ["email", "email_reply"], "Logs/Status": ["status", "log"],
+};
+
+const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail, onCall, onOpenFullHistory }) => {
+  const [activeTab, setActiveTab] = useState("All");
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [showCall, setShowCall] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+
+  // Allow parent (action cards) to trigger modals
+  React.useEffect(() => { if (onWhatsApp) setShowWhatsApp(true); }, [onWhatsApp]);
+  React.useEffect(() => { if (onEmail) setShowEmail(true); }, [onEmail]);
+  React.useEffect(() => { if (onCall) setShowCall(true); }, [onCall]);
+  const filtered = (reviews || []).filter((r) => {
+    const typeFilter = TAB_TYPE_MAP[activeTab];
+    if (!typeFilter) return true;
+    if (Array.isArray(typeFilter)) return typeFilter.includes(r.type);
+    return r.type === typeFilter;
+  });
+
+  const sorted = [...filtered].sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+
+  const displayed = sorted.slice(0, 8);
+
+  return (
+    <>
+      <div className="bg-white rounded-lg p-2.5 flex flex-col h-full" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+        {/* Header */}
+        <div className="flex items-center justify-between -mx-2.5 -mt-2.5 mb-3 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
+          <h2 className="text-[12px] font-bold text-[#15173D] tracking-tight">CHAT & COMMUNICATION</h2>
+        </div>
+
+        {/* Action Buttons */}
+
+        {/* Tabs */}
+        <div className="flex flex-nowrap gap-1.5 mb-3 px-1">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`h-7 px-3 rounded text-[10px] font-bold whitespace-nowrap transition-colors shadow-sm ${
+                activeTab === tab
+                  ? "bg-[#15173D] text-white"
+                  : "bg-white text-slate-600 hover:bg-slate-50 border border-slate-200"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Feed */}
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-2 px-1">
+          {displayed.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <MessageCircleMore size={36} className="mb-2 opacity-30" />
+              <p className="text-[11px] font-bold">No communication records yet.</p>
+            </div>
+          ) : (
+            displayed.map((item, idx) => {
+              const cfg = TYPE_CONFIG[item.type] || TYPE_CONFIG.log;
+              const Icon = cfg.icon;
+
+              let label = cfg.label;
+              let text = item.re_msg;
+              if ((item.type === 'log' || item.type === 'status') && text && text.startsWith('[')) {
+                const endIdx = text.indexOf(']');
+                if (endIdx > 0) {
+                  label = text.substring(1, endIdx);
+                  text = text.substring(endIdx + 1).trim();
+                }
+              }
+
+              return (
+                <div key={idx} className="flex gap-2 group">
+                  <div className={`w-7 h-7 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5 border border-white group-hover:border-slate-200 transition-colors`}>
+                    <Icon size={12} className={cfg.color} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className={`rounded-lg px-2.5 py-2 ${cfg.bg} border border-transparent group-hover:border-slate-200 transition-colors`}>
+                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                        <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0 tracking-wider`}>{label}</span>
+                        <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">{formatDateTime(item.createdAt)}</span>
+                      </div>
+                      {(item.status_short || item.email_subject || text) && (
+                        <p className="text-[10px] font-bold text-[#15173D] truncate mt-0.5 leading-relaxed">
+                          {item.status_short && (
+                            <span className="inline-block px-1.5 py-[1px] rounded bg-orange-100 text-orange-600 text-[9px] font-bold uppercase tracking-wider mr-1.5 align-middle">
+                              {item.status_short}
+                            </span>
+                          )}
+                          {item.email_subject && <span className="mr-1 text-slate-700 align-middle">📧 {item.email_subject}</span>}
+                          {item.email_subject && text && <span className="text-slate-300 mx-1 align-middle">|</span>}
+                          {text && <span className="align-middle">{text.replace(/\n/g, ' - ').split(/(' to ')/g).map((part, i) => 
+                            part === "' to '" 
+                              ? <span key={i}>' <span className="text-[#093C5D] mx-0.5">TO</span> '</span> 
+                              : part
+                          )}</span>}
+                        </p>
+                      )}                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="mt-3 px-1 pb-1">
+          <button
+            onClick={() => {
+              if (onOpenFullHistory) onOpenFullHistory();
+              setShowHistory(true);
+            }}
+            className="w-full h-8 bg-slate-100 hover:bg-slate-200 text-[#15173D] rounded font-bold text-[10px] transition-colors shadow-sm"
+          >
+            View Full Communication History
+          </button>
+        </div>
+      </div>
+
+      {/* Modals */}
+      {showWhatsApp && (
+        <WhatsAppModal
+          company={company}
+          onClose={() => setShowWhatsApp(false)}
+          onSend={onSendEntry}
+        />
+      )}
+      {showEmail && (
+        <EmailModal
+          company={company}
+          onClose={() => setShowEmail(false)}
+          onSend={onSendEntry}
+        />
+      )}
+      {showCall && (
+        <CallLogModal
+          company={company}
+          onClose={() => setShowCall(false)}
+          onSave={onSendEntry}
+        />
+      )}
+      {showHistory && (
+        <FullHistoryModal
+          reviews={reviews || []}
+          companyName={company?.companyName}
+          onClose={() => setShowHistory(false)}
+        />
+      )}
+    </>
+  );
+};
+
+export default CommunicationPanel;

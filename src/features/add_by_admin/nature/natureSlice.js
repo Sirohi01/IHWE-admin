@@ -219,7 +219,7 @@ const natureSlice = createSlice({
         const updatedNature = action.payload?.data || action.payload;
         if (!updatedNature?._id) return;
 
-        const index = state.natures.findIndex((n) => n._id === updatedEvent._id);
+        const index = state.natures.findIndex((n) => n._id === updatedNature._id);
         if (index !== -1) state.natures[index] = updatedNature;
       })
       .addCase(updateNature.rejected, (state, action) => {

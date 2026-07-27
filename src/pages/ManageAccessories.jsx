@@ -8,12 +8,22 @@ const EMPTY = {
     length: '', width: '', height: '', dimensionUnit: 'ft',
     price: '', gstPercent: 18, unit: '',
     hsnCode: '', sacCode: '',
-    category: 'General', includedQty: 1, availableQty: 0,
+    category: 'Furniture', includedQty: 1, availableQty: 0,
     isActive: true, sortOrder: 0,
+    allocationMode: 'fixed', ratioQty: 1, ratioArea: 9, roundingMode: 'floor',
 };
 
 const iCls = "w-full h-9 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
 const lCls = "text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block";
+
+const PREVIEW_STALL_SIZES = [9, 12, 15, 18, 20, 24, 27, 28, 32, 36];
+const ROUND_FN = { floor: Math.floor, round: Math.round, ceil: Math.ceil };
+const computeEntitlementPreview = (form, stallArea) => {
+    const ratioArea = Number(form.ratioArea);
+    if (!stallArea || !ratioArea) return 0;
+    const roundFn = ROUND_FN[form.roundingMode] || Math.floor;
+    return roundFn(stallArea / ratioArea) * (Number(form.ratioQty) || 0);
+};
 
 export default function ManageAccessories() {
     const [items, setItems] = useState([]);
@@ -26,6 +36,8 @@ export default function ManageAccessories() {
     const [tab, setTab] = useState('all');
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 10;
 
     const load = async () => {
         setLoading(true);
@@ -104,6 +116,8 @@ export default function ManageAccessories() {
     };
 
     const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
+    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
+    const paginatedItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
     return (
         <div className="p-6 min-h-screen bg-gray-50 font-inter">
@@ -143,7 +157,7 @@ export default function ManageAccessories() {
             {/* Tabs */}
             <div className="flex gap-1 mb-4 bg-white border border-gray-200 p-1 w-fit shadow-sm">
                 {[['all', 'All'], ['complimentary', 'Complimentary'], ['purchasable', 'Purchasable']].map(([v, l]) => (
-                    <button key={v} onClick={() => setTab(v)}
+                    <button key={v} onClick={() => { setTab(v); setCurrentPage(1); }}
                         className={`px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${tab === v ? 'bg-[#23471d] text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
                         {l}
                     </button>
@@ -172,13 +186,13 @@ export default function ManageAccessories() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {filtered.map((item, i) => (
+                                {paginatedItems.map((item, i) => (
                                     <tr key={item._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
                                         <td className="py-2.5 px-4">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded border border-gray-100 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
                                                     {item.imageUrl
-                                                        ? <img src={item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`} alt="" className="w-full h-full object-cover" />
+                                                        ? <img loading="lazy" decoding="async" src={item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`} alt="" className="w-full h-full object-cover" />
                                                         : <Package size={16} className="text-gray-300" />}
                                                 </div>
                                                 <div className="min-w-0">
@@ -205,7 +219,16 @@ export default function ManageAccessories() {
                                             </div>
                                         </td>
                                         <td className="py-2.5 px-4">
-                                            {item.type === 'complimentary' ? <span className="text-[10px] font-black text-emerald-600 uppercase">Included</span> : (
+                                            {item.type === 'complimentary' ? (
+                                                item.allocationMode === 'perArea' ? (
+                                                    <>
+                                                        <p className="text-[10px] font-black text-emerald-600 uppercase">Per Area</p>
+                                                        <p className="text-[9px] text-gray-400 font-bold">{item.ratioQty} per {item.ratioArea} sqm</p>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-[10px] font-black text-emerald-600 uppercase">Included ({item.includedQty})</span>
+                                                )
+                                            ) : (
                                                 <>
                                                     <p className="text-xs font-black text-[#23471d]">₹{Number(item.price || 0).toLocaleString('en-IN')}</p>
                                                     <p className="text-[10px] text-gray-400 font-bold">GST {item.gstPercent}%</p>
@@ -238,13 +261,35 @@ export default function ManageAccessories() {
                                 ))}
                             </tbody>
                         </table>
+                        
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between bg-white">
+                                <p className="text-[11px] font-bold text-gray-500">
+                                    Showing <span className="text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="text-gray-900">{filtered.length}</span> results
+                                </p>
+                                <div className="flex items-center gap-1">
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-2 py-1 text-[11px] font-bold border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                    >Prev</button>
+                                    <span className="text-[11px] font-bold px-2 text-gray-600">Page {currentPage} of {totalPages}</span>
+                                    <button 
+                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-2 py-1 text-[11px] font-bold border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
+                                    >Next</button>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
             {/* Form Modal */}
             {showForm && (
-                <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+                <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
                     <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl rounded-sm">
                         <div className="flex items-center justify-between px-6 py-4 bg-[#23471d] sticky top-0 z-10">
                             <div className="flex items-center gap-3">
@@ -267,7 +312,7 @@ export default function ManageAccessories() {
                                         <div className="relative aspect-square w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center group overflow-hidden rounded-sm hover:border-[#23471d]/30 transition-colors">
                                             {previewUrl ? (
                                                 <>
-                                                    <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                                                    <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                                                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
                                                         <button type="button" onClick={() => document.getElementById('accImg').click()} className="p-2 bg-white rounded-full text-[#23471d] shadow-lg">
                                                             <ImageIcon size={18} />
@@ -299,7 +344,16 @@ export default function ManageAccessories() {
                                         </div>
                                         <div>
                                             <label className={lCls}>Item Category</label>
-                                            <input value={form.category} onChange={e => inp('category', e.target.value)} className={iCls} placeholder="Furniture, Power, etc." />
+                                            <select value={form.category} onChange={e => inp('category', e.target.value)} className={iCls}>
+                                                <option value="Furniture">Furniture</option>
+                                                <option value="Electrical">Electrical</option>
+                                                <option value="Branding">Branding</option>
+                                                <option value="Technology">Technology</option>
+                                                <option value="Utilities">Utilities</option>
+                                                <option value="Hospitality">Hospitality</option>
+                                                <option value="Manpower">Manpower</option>
+                                                <option value="Others">Others</option>
+                                            </select>
                                         </div>
                                         <div>
                                             <label className={lCls}>Billing Type</label>
@@ -370,15 +424,68 @@ export default function ManageAccessories() {
                                                 </div>
                                             </>
                                         )}
-                                        <div>
-                                            <label className={lCls}>{form.type === 'complimentary' ? 'Included Qty' : 'Min Order Qty'}</label>
-                                            <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
-                                        </div>
+                                        {form.type === 'complimentary' ? (
+                                            <div className="col-span-2">
+                                                <label className={lCls}>Allocation Mode</label>
+                                                <select value={form.allocationMode} onChange={e => inp('allocationMode', e.target.value)} className={iCls}>
+                                                    <option value="fixed">Fixed Qty (same for every exhibitor)</option>
+                                                    <option value="perArea">Per Stall Area (auto-scales by stall size)</option>
+                                                </select>
+                                            </div>
+                                        ) : (
+                                            <div>
+                                                <label className={lCls}>Min Order Qty</label>
+                                                <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                                            </div>
+                                        )}
+
+                                        {form.type === 'complimentary' && form.allocationMode === 'fixed' && (
+                                            <div>
+                                                <label className={lCls}>Included Qty</label>
+                                                <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                                            </div>
+                                        )}
+
+                                        {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
+                                            <>
+                                                <div>
+                                                    <label className={lCls}>Give Qty</label>
+                                                    <input type="number" value={form.ratioQty} onChange={e => inp('ratioQty', e.target.value)} className={iCls} min={0} step="0.5" />
+                                                </div>
+                                                <div>
+                                                    <label className={lCls}>Per Stall Area (sqm)</label>
+                                                    <input type="number" value={form.ratioArea} onChange={e => inp('ratioArea', e.target.value)} className={iCls} min={0.1} step="0.5" />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className={lCls}>Rounding Rule</label>
+                                                    <select value={form.roundingMode} onChange={e => inp('roundingMode', e.target.value)} className={iCls}>
+                                                        <option value="floor">Floor (round down — never over-allocate)</option>
+                                                        <option value="round">Nearest (round off)</option>
+                                                        <option value="ceil">Ceil (round up)</option>
+                                                    </select>
+                                                </div>
+                                            </>
+                                        )}
+
                                         <div>
                                             <label className={lCls}>Available Stock</label>
                                             <input type="number" value={form.availableQty} onChange={e => inp('availableQty', e.target.value)} className={iCls} placeholder="0" />
                                         </div>
                                     </div>
+
+                                    {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
+                                        <div className="bg-emerald-50 border border-emerald-200 rounded-[2px] p-3">
+                                            <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-2">Live Preview — Qty exhibitor gets by stall size</p>
+                                            <div className="flex flex-wrap gap-3">
+                                                {PREVIEW_STALL_SIZES.map(size => (
+                                                    <div key={size} className="flex items-center gap-1.5 bg-white border border-emerald-100 rounded-[2px] px-2.5 py-1">
+                                                        <span className="text-[10px] font-bold text-slate-500">{size} sqm →</span>
+                                                        <span className="text-xs font-black text-emerald-700">{computeEntitlementPreview(form, size)} {form.unit || 'unit'}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

@@ -27,11 +27,11 @@ const NativeEditor = ({ value, onChange }) => {
                 <button type="button" onMouseDown={(e) => handleCommand(e, 'formatBlock', 'H3')} className="px-3 py-1 font-bold bg-white border-2 border-gray-300 hover:bg-gray-100 rounded text-xs shadow-sm" title="Sub Heading">H3</button>
                 <button type="button" onMouseDown={(e) => handleCommand(e, 'formatBlock', 'P')} className="px-3 py-1 bg-white border-2 border-gray-300 hover:bg-gray-100 rounded text-xs shadow-sm" title="Paragraph">Text</button>
             </div>
-            <div 
-                className="p-4 outline-none min-h-[400px] text-xs text-gray-700 leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 bg-gray-50/50" 
-                contentEditable 
-                dangerouslySetInnerHTML={{__html: value}}
-                onBlur={(e) => onChange(e.currentTarget.innerHTML)} 
+            <div
+                className="p-4 outline-none min-h-[400px] text-xs text-gray-700 leading-relaxed [&_ul]:list-disc [&_ul]:pl-6 [&_ol]:list-decimal [&_ol]:pl-6 bg-gray-50/50"
+                contentEditable
+                dangerouslySetInnerHTML={{ __html: value }}
+                onBlur={(e) => onChange(e.currentTarget.innerHTML)}
                 placeholder="Enter policy content here..."
             />
         </div>
@@ -47,7 +47,9 @@ const PolicyManager = () => {
     const policies = [
         { label: "Privacy Policy", value: "privacy-policy" },
         { label: "Terms of Service", value: "terms-of-service" },
-        { label: "Refund Policy", value: "refund-policy" }
+        { label: "Refund Policy", value: "refund-policy" },
+        // { label: "Payment Policy", value: "payment-policy" },
+        // { label: "Cancellation Policy", value: "cancellation-policy" }
     ];
 
     // Fetch existing policy when page changes
@@ -124,9 +126,9 @@ const PolicyManager = () => {
     return (
         <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter">
             <div className="w-full">
-                <PageHeader 
-                    title="POLICY MANAGER" 
-                    description="Manage website legal policies like Privacy Policy and Terms of Service" 
+                <PageHeader
+                    title="POLICY MANAGER"
+                    description="Manage website legal policies like Privacy Policy and Terms of Service"
                 />
 
                 <div className="bg-white border-2 border-gray-200 p-6 mb-6 shadow-lg">

@@ -3,7 +3,7 @@ import axios from "axios";
 const getBaseUrl = () => {
   // Always prioritize the ENV value if present
   if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL.replace(/\/api$/, "");
+    return import.meta.env.VITE_API_URL.trim().replace(/\/api$/, "");
   }
 
   // Fallback for local development or subdomains
@@ -18,6 +18,11 @@ const getBaseUrl = () => {
 export const SERVER_URL = getBaseUrl();
 export const API_URL = `${SERVER_URL}/api`;
 
+// Determine Frontend URL (Main Website)
+export const FRONTEND_URL = (import.meta.env.VITE_FRONTEND_URL ||
+  (window.location.hostname === "localhost" ? "http://localhost:8080" : window.location.origin.replace(/:\/\/admin\./, "://"))
+).replace(/\/$/, "");
+
 const api = axios.create({
   baseURL: SERVER_URL,
 });
@@ -25,25 +30,21 @@ const api = axios.create({
 // ✅ REQUEST INTERCEPTOR
 api.interceptors.request.use(
   (config) => {
+    config.headers["ngrok-skip-browser-warning"] = "true";
+
     const token =
       localStorage.getItem("adminToken") ||
       sessionStorage.getItem("adminToken");
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log("✅ Token Added");
-    } else {
-      if (!config.url.includes("/login") && !config.url.includes("/register")) {
-        console.warn("ℹ️ No token found");
-      }
     }
-
-    console.log("📤 API Request:", config.method.toUpperCase(), config.url);
 
     return config;
   },
   (error) => Promise.reject(error),
 );
+
 
 // ✅ RESPONSE INTERCEPTOR (FIXED)
 api.interceptors.response.use(
@@ -70,6 +71,20 @@ api.interceptors.response.use(
 );
 
 const unwrapApiResponse = (response) => response?.data ?? response;
+
+export const heroApi = {
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/hero/all"));
+    return payload.success ? payload.data : [];
+  },
+};
+
+export const settingsApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/settings"));
+    return payload.success ? payload.data : null;
+  },
+};
 
 export const heroBackgroundApi = {
   getAll: async () => {
@@ -121,12 +136,37 @@ export const buyerRegistrationApi = {
   },
 };
 
+export const internationalBuyerApi = {
+  submit: async (payload) => {
+    const isFormData = payload instanceof FormData;
+    const response = await api.post("/api/international-buyer/register", payload, {
+      headers: isFormData
+        ? { "Content-Type": "multipart/form-data" }
+        : { "Content-Type": "application/json" },
+    });
+    return unwrapApiResponse(response);
+  },
+  getAll: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/international-buyer"));
+    return payload.success ? payload.data : [];
+  },
+  delete: async (id) => {
+    const response = await api.delete(`/api/international-buyer/${id}`);
+    return unwrapApiResponse(response);
+  },
+  getConfig: async () => {
+    const response = await api.get("/api/international-buyer/config");
+    return unwrapApiResponse(response);
+  },
+};
+
 export const otpApi = {
-  request: async (identifier, type, name) => {
+  request: async (identifier, type, name, source) => {
     const response = await api.post("/api/otp/request", {
       identifier,
       type,
       name,
+      source,
     });
     return unwrapApiResponse(response);
   },
@@ -164,4 +204,117 @@ export const crmApi = {
   },
 };
 
+export const socialMediaApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/social-media"));
+    return payload.success ? payload.data : null;
+  },
+};
+
+export const printingBrandingPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/printing-branding-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.put("/api/printing-branding-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/printing-branding-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const logisticPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/logistic-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.put("/api/logistic-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/logistic-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const hospitalityPartnerApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/hospitality-partner"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const payload = unwrapApiResponse(await api.put("/api/hospitality-partner", data));
+    return payload.success ? payload.data : null;
+  },
+  uploadImage: async (formData) => {
+    const payload = unwrapApiResponse(await api.post("/api/hospitality-partner/upload", formData, {
+      headers: { "Content-Type": "multipart/form-data" }
+    }));
+    return payload;
+  }
+};
+
+export const aiVerificationSettingsApi = {
+  get: async () => {
+    const payload = unwrapApiResponse(await api.get("/api/ai-verification-settings"));
+    return payload.success ? payload.data : null;
+  },
+  save: async (data) => {
+    const response = await api.put("/api/ai-verification-settings", data);
+    return unwrapApiResponse(response);
+  },
+  testConnection: async (data) => {
+    const response = await api.post("/api/ai-verification-settings/test", data);
+    return unwrapApiResponse(response);
+  },
+  testDocument: async (formData) => {
+    const response = await api.post("/api/ai-verification-settings/test-document", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return unwrapApiResponse(response);
+  },
+};
+
+export const pmsApi = {
+  getById: async (id) => {
+    const payload = unwrapApiResponse(await api.get(`/api/msme-pms-scheme/${id}`));
+    return payload.success ? payload.data : null;
+  },
+  updateStatus: async (id, status, reason) => {
+    const response = await api.patch(`/api/msme-pms-scheme/${id}/status`, {
+      status,
+      ...(reason ? { reason } : {}),
+    });
+    return unwrapApiResponse(response);
+  },
+  saveStepById: async (id, step, data) => {
+    const payload = unwrapApiResponse(await api.put(`/api/msme-pms-scheme/${id}/step/${step}`, data));
+    return payload.success ? payload.data : null;
+  },
+  getForEdit: async (id) => {
+    const payload = unwrapApiResponse(await api.get(`/api/msme-pms-scheme/${id}/edit`));
+    return payload.success ? payload.data : null;
+  },
+  uploadDocumentById: async (id, documentType, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const payload = unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/documents/${documentType}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }));
+    return payload.success ? payload.data : null;
+  },
+  deleteDocumentById: async (id, documentType) => {
+    const payload = unwrapApiResponse(await api.delete(`/api/msme-pms-scheme/${id}/documents/${documentType}`));
+    return payload.success ? payload.data : null;
+  },
+  submitById: async (id) => unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/submit`)),
+};
 export default api;

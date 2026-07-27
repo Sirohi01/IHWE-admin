@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Save, Mail, MessageSquare, Info, 
-    Briefcase, CalendarCheck, PhoneCall, Eye, 
+import {
+    Save, Mail, MessageSquare, Info,
+    Briefcase, CalendarCheck, PhoneCall, Eye,
     ChevronRight, Copy, Layout, Trash2, Edit,
     Users, Ticket, GraduationCap, Building2,
     RefreshCw, Type, Smartphone, List, CheckCircle,
@@ -53,13 +53,17 @@ const ResponseTemplates = () => {
         whatsappBody: '',
         headerImage: null,
         footerImage: null,
+        smallLogo: null,
     });
     const [headerImageFile, setHeaderImageFile] = useState(null);
     const [footerImageFile, setFooterImageFile] = useState(null);
+    const [smallLogoFile, setSmallLogoFile] = useState(null);
     const [headerImagePreview, setHeaderImagePreview] = useState('');
     const [footerImagePreview, setFooterImagePreview] = useState('');
+    const [smallLogoPreview, setSmallLogoPreview] = useState('');
     const [removeHeaderImage, setRemoveHeaderImage] = useState(false);
     const [removeFooterImage, setRemoveFooterImage] = useState(false);
+    const [removeSmallLogo, setRemoveSmallLogo] = useState(false);
     const [allTemplates, setAllTemplates] = useState([]);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
@@ -90,26 +94,32 @@ const ResponseTemplates = () => {
                     whatsappBody: d.whatsappBody || '',
                     headerImage: d.headerImage || null,
                     footerImage: d.footerImage || null,
+                    smallLogo: d.smallLogo || null,
                 });
                 setHeaderImagePreview(d.headerImage ? `${SERVER_URL}${d.headerImage}` : '');
                 setFooterImagePreview(d.footerImage ? `${SERVER_URL}${d.footerImage}` : '');
+                setSmallLogoPreview(d.smallLogo ? `${SERVER_URL}${d.smallLogo}` : '');
             } else {
-                setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null });
+                setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null, smallLogo: null });
                 setHeaderImagePreview('');
                 setFooterImagePreview('');
+                setSmallLogoPreview('');
             }
         } catch (error) {
-            setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null });
+            setTemplate({ emailSubject: '', emailBody: '', whatsappBody: '', headerImage: null, footerImage: null, smallLogo: null });
             setHeaderImagePreview('');
             setFooterImagePreview('');
+            setSmallLogoPreview('');
         } finally {
             setLoading(false);
         }
         // Reset file inputs on type change
         setHeaderImageFile(null);
         setFooterImageFile(null);
+        setSmallLogoFile(null);
         setRemoveHeaderImage(false);
         setRemoveFooterImage(false);
+        setRemoveSmallLogo(false);
     };
 
     useEffect(() => {
@@ -122,8 +132,8 @@ const ResponseTemplates = () => {
 
     const handleSave = async () => {
         if (!template.emailSubject || !template.emailBody) {
-             Swal.fire({ icon: 'warning', title: 'Missing Info', text: 'Email Subject and Body are required.' });
-             return;
+            Swal.fire({ icon: 'warning', title: 'Missing Info', text: 'Email Subject and Body are required.' });
+            return;
         }
 
         setSaving(true);
@@ -135,8 +145,10 @@ const ResponseTemplates = () => {
             formData.append('whatsappBody', template.whatsappBody || '');
             if (headerImageFile) formData.append('headerImage', headerImageFile);
             if (footerImageFile) formData.append('footerImage', footerImageFile);
+            if (smallLogoFile) formData.append('smallLogo', smallLogoFile);
             if (removeHeaderImage) formData.append('removeHeaderImage', 'true');
             if (removeFooterImage) formData.append('removeFooterImage', 'true');
+            if (removeSmallLogo) formData.append('removeSmallLogo', 'true');
 
             const response = await api.post('/api/message-templates/upsert', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
@@ -146,8 +158,10 @@ const ResponseTemplates = () => {
                 Swal.fire({ icon: 'success', title: 'Saved!', text: 'Response template updated successfully.', timer: 1500, showConfirmButton: false });
                 setHeaderImageFile(null);
                 setFooterImageFile(null);
+                setSmallLogoFile(null);
                 setRemoveHeaderImage(false);
                 setRemoveFooterImage(false);
+                setRemoveSmallLogo(false);
                 fetchAllTemplates();
                 fetchTemplate(selectedType);
             }
@@ -167,10 +181,14 @@ const ResponseTemplates = () => {
                 setHeaderImageFile(file);
                 setHeaderImagePreview(reader.result);
                 setRemoveHeaderImage(false);
-            } else {
+            } else if (field === 'footer') {
                 setFooterImageFile(file);
                 setFooterImagePreview(reader.result);
                 setRemoveFooterImage(false);
+            } else if (field === 'smallLogo') {
+                setSmallLogoFile(file);
+                setSmallLogoPreview(reader.result);
+                setRemoveSmallLogo(false);
             }
         };
         reader.readAsDataURL(file);
@@ -181,10 +199,14 @@ const ResponseTemplates = () => {
             setHeaderImageFile(null);
             setHeaderImagePreview('');
             setRemoveHeaderImage(true);
-        } else {
+        } else if (field === 'footer') {
             setFooterImageFile(null);
             setFooterImagePreview('');
             setRemoveFooterImage(true);
+        } else if (field === 'smallLogo') {
+            setSmallLogoFile(null);
+            setSmallLogoPreview('');
+            setRemoveSmallLogo(true);
         }
     };
 
@@ -233,10 +255,10 @@ const ResponseTemplates = () => {
 
     const renderEmailPreview = () => {
         const headerSection = headerImagePreview
-            ? `<div style="line-height:0;"><img src="${headerImagePreview}" alt="Header" style="width:100%;display:block;" /></div>`
+            ? `<div style="line-height:0;"><img loading="lazy" decoding="async" src="${headerImagePreview}" alt="Header" style="width:100%;display:block;" /></div>`
             : `<div style="background:linear-gradient(135deg,#23471d,#3d6b33);padding:30px;text-align:center;color:white;"><h1 style="margin:0;font-size:22px;">IHWE 2026</h1></div>`;
         const footerSection = footerImagePreview
-            ? `<div style="line-height:0;"><img src="${footerImagePreview}" alt="Footer" style="width:100%;display:block;" /></div>`
+            ? `<div style="line-height:0;"><img loading="lazy" decoding="async" src="${footerImagePreview}" alt="Footer" style="width:100%;display:block;" /></div>`
             : `<div style="background:#f9fafb;padding:20px;text-align:center;font-size:12px;color:#6b7280;border-top:1px solid #f3f4f6;"><p>&copy; 2026 IHWE | Global Health Connect. All rights reserved.</p></div>`;
 
         const shell = `
@@ -245,9 +267,13 @@ const ResponseTemplates = () => {
             <head>
                 <style>
                     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
-                    .container { max-width: 600px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+                    .container { max-width: 800px; margin: 0 auto; border: 1px solid #e1e1e1; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
                     .content { padding: 40px; background: #ffffff; }
                     .qr-section { text-align:center; margin:24px 0; padding:20px; background:#f9fafb; border-radius:8px; border:1px dashed #d1d5db; }
+                    @media print {
+                        .container { width: 100% !important; max-width: 100% !important; border: none !important; box-shadow: none !important; }
+                        body { background: white !important; }
+                    }
                 </style>
             </head>
             <body>
@@ -255,7 +281,8 @@ const ResponseTemplates = () => {
                     ${headerSection}
                     <div class="content">
                         ${template.emailBody || '<p style="color: #999; font-style: italic;">No body content defined...</p>'}
-                        ${selectedType === 'corporate-visitor' ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:150px;height:150px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IHWE/CV/100001</p></div>` : ''}
+                        ${smallLogoPreview ? `<div><img loading="lazy" decoding="async" src="${smallLogoPreview}" alt="Logo" width="200" style="display:block; max-width:200px; height:auto; border:0;" /></div>` : ''}
+                        ${(selectedType === 'corporate-visitor' || selectedType === 'general-visitor') ? `<div class="qr-section"><p style="font-weight:700;color:#23471d;margin:0 0 12px;font-size:14px;text-transform:uppercase;letter-spacing:1px;">QR Code will appear here</p><div style="width:120px;height:120px;background:#f3f4f6;border:2px dashed #d1d5db;margin:0 auto;display:flex;align-items:center;justify-content:center;border-radius:8px;"><span style="font-size:11px;color:#9ca3af;">QR CODE</span></div><p style="margin:10px 0 0;font-size:12px;color:#6b7280;">Registration ID: NGT/IHWE/CV/100001</p></div>` : ''}
                     </div>
                     ${footerSection}
                 </div>
@@ -268,23 +295,23 @@ const ResponseTemplates = () => {
     const currentForm = FORM_TYPES.find(f => f.id === selectedType);
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
-            <PageHeader 
-                title="RESPONSE TEMPLATES MANAGEMENT" 
+        <div className="bg-white shadow-md  p-6 min-h-screen">
+            <PageHeader
+                title="RESPONSE TEMPLATES MANAGEMENT"
                 description="Manage automated confirmation messages for all website forms"
             />
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
-                
+
                 {/* LEFT: Editor & Placeholders (1/3) */}
                 <div className="lg:col-span-1 space-y-6">
-                    
+
                     {/* Template Editor card */}
                     <div className="bg-white border-2 border-gray-200 p-6 shadow-sm">
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2 text-[#23471d]">
                             <Edit className="w-5 h-5 text-[#d26019]" /> Edit Message Template
                         </h2>
-                        
+
                         <div className="bg-gray-50 p-3 mb-6 border border-gray-200 flex items-center gap-3">
                             <div className={`p-2 rounded-lg ${currentForm?.bg}`}>
                                 {currentForm && <currentForm.icon className={currentForm.color} size={20} />}
@@ -303,7 +330,7 @@ const ResponseTemplates = () => {
                                 <input
                                     type="text"
                                     value={template.emailSubject}
-                                    onChange={(e) => setTemplate({...template, emailSubject: e.target.value})}
+                                    onChange={(e) => setTemplate({ ...template, emailSubject: e.target.value })}
                                     className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm font-medium"
                                     placeholder="Enter email subject line..."
                                 />
@@ -314,9 +341,9 @@ const ResponseTemplates = () => {
                                     <Mail size={14} className="text-[#d26019]" /> Email Body (Rich Text)
                                 </label>
                                 <div className="border border-gray-200 rounded overflow-hidden">
-                                     <RichTextEditor 
+                                    <RichTextEditor
                                         value={template.emailBody}
-                                        onChange={(val) => setTemplate({...template, emailBody: val})}
+                                        onChange={(val) => setTemplate({ ...template, emailBody: val })}
                                         minHeight="300px"
                                         placeholder="Compose your dynamic email body..."
                                     />
@@ -329,7 +356,7 @@ const ResponseTemplates = () => {
                                 </label>
                                 <textarea
                                     value={template.whatsappBody}
-                                    onChange={(e) => setTemplate({...template, whatsappBody: e.target.value})}
+                                    onChange={(e) => setTemplate({ ...template, whatsappBody: e.target.value })}
                                     rows={5}
                                     className="w-full px-4 py-2 border-2 border-gray-200 focus:border-green-600 outline-none text-sm shadow-sm transition-all"
                                     placeholder="Enter whatsapp message text..."
@@ -344,7 +371,7 @@ const ResponseTemplates = () => {
                                 <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-blue-400 transition-colors">
                                     {headerImagePreview ? (
                                         <div className="relative">
-                                            <img src={headerImagePreview} alt="Header" className="w-full h-20 object-cover rounded" />
+                                            <img loading="lazy" decoding="async" src={headerImagePreview} alt="Header" className="w-full h-20 object-cover rounded" />
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage('header')}
@@ -374,7 +401,7 @@ const ResponseTemplates = () => {
                                 <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-orange-400 transition-colors">
                                     {footerImagePreview ? (
                                         <div className="relative">
-                                            <img src={footerImagePreview} alt="Footer" className="w-full h-20 object-cover rounded" />
+                                            <img loading="lazy" decoding="async" src={footerImagePreview} alt="Footer" className="w-full h-20 object-cover rounded" />
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveImage('footer')}
@@ -396,6 +423,36 @@ const ResponseTemplates = () => {
                                 </div>
                             </div>
 
+                            {/* Small Logo Upload */}
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-tight flex items-center gap-2">
+                                    <ImageIcon size={14} className="text-blue-600" /> Small Logo (Under Body)
+                                </label>
+                                <div className="border-2 border-dashed border-gray-200 rounded p-3 relative group hover:border-blue-400 transition-colors">
+                                    {smallLogoPreview ? (
+                                        <div className="relative">
+                                            <img loading="lazy" decoding="async" src={smallLogoPreview} alt="Small Logo" className="w-auto h-20 object-contain rounded" />
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveImage('smallLogo')}
+                                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600"
+                                            >
+                                                <X size={12} />
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <label className="flex flex-col items-center cursor-pointer py-2">
+                                            <ImageIcon size={24} className="text-gray-300 mb-1" />
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest text-center px-2">Upload small logo<br />(e.g., Namo Gange Logo)</span>
+                                            <input type="file" accept="image/*" className="hidden" onChange={(e) => handleImageSelect('smallLogo', e)} />
+                                        </label>
+                                    )}
+                                    {!smallLogoPreview && (
+                                        <input type="file" accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleImageSelect('smallLogo', e)} />
+                                    )}
+                                </div>
+                            </div>
+
                             <div className="pt-4 border-t border-gray-100 flex gap-2">
                                 <button
                                     onClick={handleSave}
@@ -405,7 +462,7 @@ const ResponseTemplates = () => {
                                     {saving ? <RefreshCw className="animate-spin w-5 h-5" /> : <Save className="w-5 h-5" />}
                                     {saving ? 'Saving...' : 'Save Template'}
                                 </button>
-                                
+
                                 <button
                                     onClick={() => handleDelete(selectedType)}
                                     disabled={loading || saving}
@@ -444,7 +501,7 @@ const ResponseTemplates = () => {
 
                 {/* RIGHT: Table of all templates (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
-                    
+
                     {/* List Table Card */}
                     <div className="bg-white border-2 border-gray-200 shadow-sm overflow-hidden">
                         <div className="bg-[#23471d] px-5 py-4 flex items-center justify-between">
@@ -455,7 +512,7 @@ const ResponseTemplates = () => {
                                 {FORM_TYPES.length} FORMS
                             </span>
                         </div>
-                        
+
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead>
@@ -472,8 +529,8 @@ const ResponseTemplates = () => {
                                     {FORM_TYPES.map((form, idx) => {
                                         const status = getTemplateStatus(form.id);
                                         return (
-                                            <tr 
-                                                key={form.id} 
+                                            <tr
+                                                key={form.id}
                                                 className={`hover:bg-gray-50 transition-colors cursor-pointer ${selectedType === form.id ? 'bg-green-50/50' : ''}`}
                                                 onClick={() => setSelectedType(form.id)}
                                             >
@@ -505,7 +562,7 @@ const ResponseTemplates = () => {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                     <div className="flex flex-col gap-0.5">
+                                                    <div className="flex flex-col gap-0.5">
                                                         <span className="font-bold text-[#d26019] text-[9px] uppercase">
                                                             {status.data?.lastUpdatedBy?.username || '--'}
                                                         </span>
@@ -516,13 +573,13 @@ const ResponseTemplates = () => {
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex items-center justify-end gap-3">
-                                                        <button 
+                                                        <button
                                                             className={`p-2 rounded-lg transition-all ${selectedType === form.id ? 'bg-[#23471d] text-white' : 'text-blue-600 hover:bg-blue-50'}`}
                                                             title="Edit Template"
                                                         >
                                                             <Edit size={16} />
                                                         </button>
-                                                        <button 
+                                                        <button
                                                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-all"
                                                             onClick={(e) => { e.stopPropagation(); handleDelete(form.id); }}
                                                             title="Delete Template"
@@ -546,13 +603,13 @@ const ResponseTemplates = () => {
                                 <Eye size={18} className="text-[#d26019]" /> Live Template Preview
                             </h3>
                             <div className="flex bg-gray-200 p-1 rounded-lg">
-                                <button 
+                                <button
                                     onClick={() => setPreviewMode('email')}
                                     className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'email' ? 'bg-white shadow-sm text-[#23471d]' : 'text-gray-500'}`}
                                 >
                                     Email
                                 </button>
-                                <button 
+                                <button
                                     onClick={() => setPreviewMode('whatsapp')}
                                     className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${previewMode === 'whatsapp' ? 'bg-white shadow-sm text-green-600' : 'text-gray-500'}`}
                                 >
@@ -564,15 +621,15 @@ const ResponseTemplates = () => {
                         <div className="p-8 bg-gray-100 flex justify-center">
                             {previewMode === 'email' ? (
                                 <div className="w-full max-w-[500px] h-[600px] bg-white border-8 border-gray-800 rounded-[2.5rem] overflow-hidden shadow-2xl relative">
-                                     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
-                                     <div className="p-4 bg-gray-50 border-b border-gray-100 pt-8">
-                                          <p className="text-[10px] font-black text-gray-300 uppercase">Sub: {template.emailSubject || '---'}</p>
-                                     </div>
-                                     <iframe 
+                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-gray-800 rounded-b-2xl z-10"></div>
+                                    <div className="p-4 bg-gray-50 border-b border-gray-100 pt-8">
+                                        <p className="text-[10px] font-black text-gray-300 uppercase">Sub: {template.emailSubject || '---'}</p>
+                                    </div>
+                                    <iframe
                                         title="Email Preview"
                                         srcDoc={renderEmailPreview()}
                                         className="w-full h-full border-none bg-white"
-                                     />
+                                    />
                                 </div>
                             ) : (
                                 <div className="w-[320px] h-[550px] bg-[#e5ddd5] border-8 border-gray-800 rounded-[2.5rem] overflow-hidden shadow-2xl relative flex flex-col">

@@ -26,15 +26,31 @@ import api, { API_URL, SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
 import Table from '../components/table/Table';
 import PageHeader from '../components/PageHeader';
+import MsmeLogosManager from '../components/MsmeLogosManager';
 
 const Settings = () => {
+    // Website selection state
+    const [selectedWebsite, setSelectedWebsite] = useState('9th IHWE');
+
     // Logo state
     const [logo, setLogo] = useState(null);
     const [logoPreview, setLogoPreview] = useState('');
 
+    // Email Logo state (separate logo used only in email receipts)
+    const [emailLogo, setEmailLogo] = useState(null);
+    const [emailLogoPreview, setEmailLogoPreview] = useState('');
+
     // Brochure state
     const [brochureFile, setBrochureFile] = useState(null);
     const [brochurePreview, setBrochurePreview] = useState('');
+    const [domesticFormFile, setDomesticFormFile] = useState(null);
+    const [domesticFormPreview, setDomesticFormPreview] = useState('');
+    const [internationalFormFile, setInternationalFormFile] = useState(null);
+    const [internationalFormPreview, setInternationalFormPreview] = useState('');
+    const [sponsorshipDeckFile, setSponsorshipDeckFile] = useState(null);
+    const [sponsorshipDeckPreview, setSponsorshipDeckPreview] = useState('');
+    const [downloadBrochureFile, setDownloadBrochureFile] = useState(null);
+    const [downloadBrochurePreview, setDownloadBrochurePreview] = useState('');
 
     // Topbar state
     const [marqueeText, setMarqueeText] = useState("• 150+ Speakers confirmed • Early Bird discount ending soon! • Join 8,000+ Professionals from 25+ Countries");
@@ -46,6 +62,11 @@ const Settings = () => {
     const [companyAddress, setCompanyAddress] = useState("12/29, Site-II, Loni Road, Industrial Area, Mohan Nagar, Ghaziabad, India");
     const [companyGst, setCompanyGst] = useState("");
     const [companyCin, setCompanyCin] = useState("");
+    const [receiptContactPhone, setReceiptContactPhone] = useState("+91 96549 00525");
+    const [receiptContactEmail, setReceiptContactEmail] = useState("info@namogangewellness.com");
+    const [receiptContactWebsite, setReceiptContactWebsite] = useState("www.namogangewellness.com");
+    const [receiptContactPerson, setReceiptContactPerson] = useState("Vijay Sharma");
+    const [receiptContactDesignation, setReceiptContactDesignation] = useState("Managing Director");
     const [fullPaymentDiscount, setFullPaymentDiscount] = useState(5);
     const [availableTdsRates, setAvailableTdsRates] = useState([1, 2, 10]);
     const [signatureFile, setSignatureFile] = useState(null);
@@ -53,6 +74,17 @@ const Settings = () => {
     const [stampFile, setStampFile] = useState(null);
     const [stampPreview, setStampPreview] = useState("");
 
+    // MSME Logo state
+    const [msmeLogo, setMsmeLogo] = useState(null);
+    const [msmeLogoPreview, setMsmeLogoPreview] = useState('');
+    const [msmeLogoTitle, setMsmeLogoTitle] = useState('Supported by');
+    const [isMsmeLogoActive, setIsMsmeLogoActive] = useState(true);
+
+    // Multiple MSME Logos state
+    const [msmeLogos, setMsmeLogos] = useState([]);
+    const [showBrochurePopUp, setShowBrochurePopUp] = useState(true);
+    const [brochurePopUpDelay, setBrochurePopUpDelay] = useState(7);
+    const [showGovtPmsScheme, setShowGovtPmsScheme] = useState(true);
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -95,7 +127,7 @@ const Settings = () => {
     const [newLinkHref, setNewLinkHref] = useState('');
     const [editMode, setEditMode] = useState(false);
     const [currentLinkId, setCurrentLinkId] = useState(null);
- 
+
     // Exhibition Links state
     const [exhibitionLinks, setExhibitionLinks] = useState([
         { id: 1, label: 'Why Exhibit', href: '/exhibition', isEditing: false },
@@ -108,31 +140,55 @@ const Settings = () => {
     const [newExLinkHref, setNewExLinkHref] = useState('');
     const [exEditMode, setExEditMode] = useState(false);
     const [currentExLinkId, setCurrentExLinkId] = useState(null);
- 
+
     const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch settings on mount
+    // Fetch settings on mount and when selectedWebsite changes
     useEffect(() => {
         fetchSettings();
-    }, []);
+    }, [selectedWebsite]);
 
     const fetchSettings = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/settings');
+            const res = await api.get(`/api/settings?website=${encodeURIComponent(selectedWebsite)}`);
             if (res.data.success && res.data.data) {
-                const { 
-                    logo, exhibitorBrochurePdf, emails, phones, addresses, mapIframe: savedIframe, 
+                const {
+                    logo, exhibitorBrochurePdf, domesticRegistrationFormPdf, internationalRegistrationFormPdf, sponsorshipDeckPdf,
+                    emails, phones, addresses, mapIframe: savedIframe,
                     marqueeText: savedMarquee, topbarDate: savedDate, supportDeskText: savedSupportDeskText,
                     companyName: sName, companyAddress: sAddress, companyGst: sGst, companyCin: sCin,
-                    fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp
+                    contactPhone: sContactPhone, contactEmail: sContactEmail, contactWebsite: sContactWebsite,
+                    contactPerson: sContactPerson, contactDesignation: sContactDesignation,
+                    fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
+                    showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay, showGovtPmsScheme: sShowPms,
+                    downloadBrochurePdf
                 } = res.data.data;
+
+                if (sShowPopUp !== undefined) setShowBrochurePopUp(sShowPopUp);
+                if (sPopUpDelay !== undefined) setBrochurePopUpDelay(sPopUpDelay);
+                if (sShowPms !== undefined) setShowGovtPmsScheme(sShowPms);
 
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
                 }
+                if (res.data.data.emailLogo) {
+                    setEmailLogoPreview(`${SERVER_URL}${res.data.data.emailLogo}`);
+                }
                 if (exhibitorBrochurePdf) {
                     setBrochurePreview(`${SERVER_URL}${exhibitorBrochurePdf}`);
+                }
+                if (domesticRegistrationFormPdf) {
+                    setDomesticFormPreview(`${SERVER_URL}${domesticRegistrationFormPdf}`);
+                }
+                if (internationalRegistrationFormPdf) {
+                    setInternationalFormPreview(`${SERVER_URL}${internationalRegistrationFormPdf}`);
+                }
+                if (sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${sponsorshipDeckPdf}`);
+                }
+                if (downloadBrochurePdf) {
+                    setDownloadBrochurePreview(`${SERVER_URL}${downloadBrochurePdf}`);
                 }
                 if (savedIframe) {
                     setMapIframe(savedIframe);
@@ -152,10 +208,37 @@ const Settings = () => {
                 if (sAddress) setCompanyAddress(sAddress);
                 if (sGst) setCompanyGst(sGst);
                 if (sCin) setCompanyCin(sCin);
+                if (sContactPhone) setReceiptContactPhone(sContactPhone);
+                if (sContactEmail) setReceiptContactEmail(sContactEmail);
+                if (sContactWebsite) setReceiptContactWebsite(sContactWebsite);
+                if (sContactPerson) setReceiptContactPerson(sContactPerson);
+                if (sContactDesignation) setReceiptContactDesignation(sContactDesignation);
                 if (sDisc !== undefined) setFullPaymentDiscount(sDisc);
                 if (sTds) setAvailableTdsRates(sTds);
                 if (authorizedSignature) setSignaturePreview(`${SERVER_URL}${authorizedSignature}`);
                 if (companyStamp) setStampPreview(`${SERVER_URL}${companyStamp}`);
+
+                // MSME Settings
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                }
+                if (res.data.data.msmeLogoTitle) {
+                    setMsmeLogoTitle(res.data.data.msmeLogoTitle);
+                }
+                if (res.data.data.isMsmeLogoActive !== undefined) {
+                    setIsMsmeLogoActive(res.data.data.isMsmeLogoActive);
+                }
+
+                // Load Multiple MSME Logos
+                if (res.data.data.msmeLogos && res.data.data.msmeLogos.length > 0) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
+                } else {
+                    setMsmeLogos([]);
+                }
 
 
                 if (emails && emails.length > 0) {
@@ -189,8 +272,23 @@ const Settings = () => {
             if (logo) {
                 formData.append('logo', logo);
             }
+            if (emailLogo) {
+                formData.append('emailLogo', emailLogo);
+            }
             if (brochureFile) {
                 formData.append('exhibitorBrochurePdf', brochureFile);
+            }
+            if (domesticFormFile) {
+                formData.append('domesticRegistrationFormPdf', domesticFormFile);
+            }
+            if (internationalFormFile) {
+                formData.append('internationalRegistrationFormPdf', internationalFormFile);
+            }
+            if (sponsorshipDeckFile) {
+                formData.append('sponsorshipDeckPdf', sponsorshipDeckFile);
+            }
+            if (downloadBrochureFile) {
+                formData.append('downloadBrochurePdf', downloadBrochureFile);
             }
 
             const emailsToSave = emails.map(({ id, isEditing, ...rest }) => rest);
@@ -214,10 +312,30 @@ const Settings = () => {
             formData.append('companyAddress', companyAddress);
             formData.append('companyGst', companyGst);
             formData.append('companyCin', companyCin);
+            formData.append('contactPhone', receiptContactPhone);
+            formData.append('contactEmail', receiptContactEmail);
+            formData.append('contactWebsite', receiptContactWebsite);
+            formData.append('contactPerson', receiptContactPerson);
+            formData.append('contactDesignation', receiptContactDesignation);
             formData.append('fullPaymentDiscount', fullPaymentDiscount);
             formData.append('availableTdsRates', JSON.stringify(availableTdsRates));
             if (signatureFile) formData.append('authorizedSignature', signatureFile);
             if (stampFile) formData.append('companyStamp', stampFile);
+
+            // MSME
+            if (msmeLogo) formData.append('msmeLogo', msmeLogo);
+            formData.append('msmeLogoTitle', msmeLogoTitle);
+            formData.append('isMsmeLogoActive', isMsmeLogoActive);
+            
+            // Add selected website
+            formData.append('website', selectedWebsite);
+
+            // Multiple MSME Logos
+            const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
+            formData.append('msmeLogos', JSON.stringify(msmeLogosData));
+            formData.append('showBrochurePopUp', showBrochurePopUp);
+            formData.append('brochurePopUpDelay', brochurePopUpDelay);
+            formData.append('showGovtPmsScheme', showGovtPmsScheme);
 
 
             const res = await api.put('/api/settings', formData, {
@@ -238,9 +356,29 @@ const Settings = () => {
                     setLogoPreview(`${SERVER_URL}${res.data.data.logo}`);
                     setLogo(null);
                 }
+                if (res.data.data.emailLogo) {
+                    setEmailLogoPreview(`${SERVER_URL}${res.data.data.emailLogo}`);
+                    setEmailLogo(null);
+                }
                 if (res.data.data.exhibitorBrochurePdf) {
                     setBrochurePreview(`${SERVER_URL}${res.data.data.exhibitorBrochurePdf}`);
                     setBrochureFile(null);
+                }
+                if (res.data.data.domesticRegistrationFormPdf) {
+                    setDomesticFormPreview(`${SERVER_URL}${res.data.data.domesticRegistrationFormPdf}`);
+                    setDomesticFormFile(null);
+                }
+                if (res.data.data.internationalRegistrationFormPdf) {
+                    setInternationalFormPreview(`${SERVER_URL}${res.data.data.internationalRegistrationFormPdf}`);
+                    setInternationalFormFile(null);
+                }
+                if (res.data.data.sponsorshipDeckPdf) {
+                    setSponsorshipDeckPreview(`${SERVER_URL}${res.data.data.sponsorshipDeckPdf}`);
+                    setSponsorshipDeckFile(null);
+                }
+                if (res.data.data.downloadBrochurePdf) {
+                    setDownloadBrochurePreview(`${SERVER_URL}${res.data.data.downloadBrochurePdf}`);
+                    setDownloadBrochureFile(null);
                 }
                 if (res.data.data.authorizedSignature) {
                     setSignaturePreview(`${SERVER_URL}${res.data.data.authorizedSignature}`);
@@ -249,6 +387,18 @@ const Settings = () => {
                 if (res.data.data.companyStamp) {
                     setStampPreview(`${SERVER_URL}${res.data.data.companyStamp}`);
                     setStampFile(null);
+                }
+                if (res.data.data.msmeLogo) {
+                    setMsmeLogoPreview(`${SERVER_URL}${res.data.data.msmeLogo}`);
+                    setMsmeLogo(null);
+                }
+                // Update msmeLogos from response
+                if (res.data.data.msmeLogos) {
+                    setMsmeLogos(res.data.data.msmeLogos.map((logo, index) => ({
+                        ...logo,
+                        id: Date.now() + index,
+                        preview: `${SERVER_URL}${logo.imageUrl}`
+                    })));
                 }
             }
         } catch (error) {
@@ -271,6 +421,30 @@ const Settings = () => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 setLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleEmailLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setEmailLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setEmailLogoPreview(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleMsmeLogoUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setMsmeLogo(file);
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setMsmeLogoPreview(reader.result);
             };
             reader.readAsDataURL(file);
         }
@@ -357,13 +531,13 @@ const Settings = () => {
     };
 
     const setTopbarPhone = (id) => {
-        setPhones(phones.map(phone => 
+        setPhones(phones.map(phone =>
             phone.id === id ? { ...phone, forTopbar: !phone.forTopbar } : phone
         ));
     };
 
     const setContactPhone = (id) => {
-        setPhones(phones.map(phone => 
+        setPhones(phones.map(phone =>
             phone.id === id ? { ...phone, forContact: !phone.forContact } : phone
         ));
     };
@@ -426,14 +600,14 @@ const Settings = () => {
             setAddresses(addresses.filter(address => address.id !== id));
         }
     };
- 
+
     const startEditingLink = (link) => {
         setEditMode(true);
         setCurrentLinkId(link.id);
         setNewLinkLabel(link.label);
         setNewLinkHref(link.href);
     };
- 
+
     const handleLinkSubmit = () => {
         if (newLinkLabel && newLinkHref) {
             if (editMode) {
@@ -449,11 +623,11 @@ const Settings = () => {
             setNewLinkHref('');
         }
     };
- 
+
     const removeQuickLink = (link) => {
         setQuickLinks(quickLinks.filter(l => l.id !== link.id));
     };
- 
+
     // Exhibition Links logic
     const startEditingExLink = (link) => {
         setExEditMode(true);
@@ -461,7 +635,7 @@ const Settings = () => {
         setNewExLinkLabel(link.label);
         setNewExLinkHref(link.href);
     };
- 
+
     const handleExLinkSubmit = () => {
         if (newExLinkLabel && newExLinkHref) {
             if (exEditMode) {
@@ -477,11 +651,11 @@ const Settings = () => {
             setNewExLinkHref('');
         }
     };
- 
+
     const removeExLink = (link) => {
         setExhibitionLinks(exhibitionLinks.filter(l => l.id !== link.id));
     };
- 
+
     const linkColumns = [
         {
             key: "sno",
@@ -502,19 +676,29 @@ const Settings = () => {
     ];
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="SYSTEM CONFIGURATION"
-                description="Manage your exhibition's branding and contact information"
+                description={`Manage branding and contact information for ${selectedWebsite}`}
             >
-                <button
-                    onClick={saveSystemSettings}
-                    disabled={isLoading}
-                    className="py-2.5 px-6 bg-[#23471d] text-white font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 uppercase text-xs tracking-wider disabled:opacity-50"
-                >
-                    <Save className="w-4 h-4" />
-                    {isLoading ? "Saving..." : "Save Configuration"}
-                </button>
+                <div className="flex items-center gap-4">
+                    <select
+                        value={selectedWebsite}
+                        onChange={(e) => setSelectedWebsite(e.target.value)}
+                        className="py-2.5 px-4 bg-gray-50 border border-gray-300 text-gray-800 font-semibold rounded focus:outline-none focus:ring-2 focus:ring-[#23471d] cursor-pointer text-sm shadow-sm"
+                    >
+                        <option value="9th IHWE">9th IHWE</option>
+                        <option value="Organicexpo">Organicexpo</option>
+                    </select>
+                    <button
+                        onClick={saveSystemSettings}
+                        disabled={isLoading}
+                        className="py-2.5 px-6 bg-[#23471d] text-white font-bold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 uppercase text-xs tracking-wider disabled:opacity-50 rounded"
+                    >
+                        <Save className="w-4 h-4" />
+                        {isLoading ? "Saving..." : "Save Configuration"}
+                    </button>
+                </div>
             </PageHeader>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -544,7 +728,7 @@ const Settings = () => {
                                     {logoPreview ? (
                                         <div className="relative w-full h-full flex flex-col items-center justify-center">
                                             <div className="w-24 h-24 mb-2 p-2 border border-gray-100 bg-white rounded flex items-center justify-center">
-                                                <img src={logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:') ? logoPreview : `${SERVER_URL}${logoPreview}`} alt="Preview" className="max-w-full max-h-full object-contain" />
+                                                <img loading="lazy" decoding="async" src={logoPreview.startsWith('http') || logoPreview.startsWith('data:') || logoPreview.startsWith('blob:') ? logoPreview : `${SERVER_URL}${logoPreview}`} alt="Preview" className="max-w-full max-h-full object-contain" />
                                             </div>
                                             <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
                                                 <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change Logo</span>
@@ -558,6 +742,46 @@ const Settings = () => {
                                     )}
                                 </div>
                             </div>
+
+                            {/* Email Logo Upload */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Email Logo <span className="text-[10px] text-orange-500 normal-case font-normal ml-1">(Used in payment receipt emails)</span>
+                                </label>
+                                <div className="border border-dashed border-orange-300 p-4 text-center relative group min-h-[160px] flex items-center justify-center bg-orange-50/20 rounded-lg hover:border-orange-500 transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleEmailLogoUpload}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {emailLogoPreview ? (
+                                        <div className="relative w-full h-full flex flex-col items-center justify-center">
+                                            <div className="w-24 h-24 mb-2 p-2 border border-orange-100 bg-white rounded flex items-center justify-center">
+                                                <img loading="lazy" decoding="async" src={emailLogoPreview.startsWith('http') || emailLogoPreview.startsWith('data:') || emailLogoPreview.startsWith('blob:') ? emailLogoPreview : `${SERVER_URL}${emailLogoPreview}`} alt="Email Logo Preview" className="max-w-full max-h-full object-contain" />
+                                            </div>
+                                            <p className="text-[9px] font-semibold text-orange-500 uppercase tracking-widest mt-1">Email Logo Set ✓</p>
+                                            <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded pointer-events-none">
+                                                <span className="text-xs font-bold text-gray-600 bg-white/90 px-2 py-1 rounded shadow-sm">Change Email Logo</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center py-4">
+                                            <Mail className="w-8 h-8 text-orange-200 mb-2" />
+                                            <p className="text-[10px] font-semibold text-orange-400 uppercase tracking-widest">Click to upload email logo</p>
+                                            <p className="text-[9px] text-gray-400 mt-1">Falls back to Website Logo if not set</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Multiple MSME Logos Management */}
+                            <MsmeLogosManager
+                                msmeLogos={msmeLogos}
+                                setMsmeLogos={setMsmeLogos}
+                                isMsmeLogoActive={isMsmeLogoActive}
+                                setIsMsmeLogoActive={setIsMsmeLogoActive}
+                            />
 
                             <div>
                                 <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
@@ -578,6 +802,130 @@ const Settings = () => {
                                             </p>
                                             {brochurePreview && !brochureFile && (
                                                 <a href={brochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Domestic Registration Form PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Domestic Registration Form (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setDomesticFormFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {domesticFormFile || domesticFormPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-blue-500 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {domesticFormFile ? domesticFormFile.name : "Domestic Form.pdf"}
+                                            </p>
+                                            {domesticFormPreview && !domesticFormFile && (
+                                                <a href={domesticFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* International Registration Form PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    International Registration Form (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setInternationalFormFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {internationalFormFile || internationalFormPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-purple-500 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {internationalFormFile ? internationalFormFile.name : "International Form.pdf"}
+                                            </p>
+                                            {internationalFormPreview && !internationalFormFile && (
+                                                <a href={internationalFormPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Sponsorship Deck PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    Awards Sponsorship Deck (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setSponsorshipDeckFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {sponsorshipDeckFile || sponsorshipDeckPreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-green-600 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {sponsorshipDeckFile ? sponsorshipDeckFile.name : "Sponsorship Deck.pdf"}
+                                            </p>
+                                            {sponsorshipDeckPreview && !sponsorshipDeckFile && (
+                                                <a href={sponsorshipDeckPreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="flex flex-col items-center">
+                                            <Plus className="w-6 h-6 text-gray-300 mb-1" />
+                                            <p className="text-[9px] font-bold text-gray-400 uppercase">Click to upload PDF</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Download Brochure PDF */}
+                            <div>
+                                <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">
+                                    General Download Brochure (PDF)
+                                </label>
+                                <div className="border border-dashed border-gray-300 p-4 text-center relative group min-h-[100px] flex items-center justify-center bg-gray-50/30 rounded-lg hover:border-[#23471d] transition-colors overflow-hidden">
+                                    <input
+                                        type="file"
+                                        accept="application/pdf"
+                                        onChange={(e) => setDownloadBrochureFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                    />
+                                    {downloadBrochureFile || downloadBrochurePreview ? (
+                                        <div className="flex flex-col items-center">
+                                            <FileText className="w-8 h-8 text-emerald-600 mb-1" />
+                                            <p className="text-[10px] font-bold text-gray-600 truncate max-w-[200px]">
+                                                {downloadBrochureFile ? downloadBrochureFile.name : "Brochure.pdf"}
+                                            </p>
+                                            {downloadBrochurePreview && !downloadBrochureFile && (
+                                                <a href={downloadBrochurePreview} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-600 underline mt-1">View Current PDF</a>
                                             )}
                                         </div>
                                     ) : (
@@ -642,6 +990,58 @@ const Settings = () => {
                                 </div>
                             </div>
 
+                            <div className="grid grid-cols-2 gap-3 mt-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Phone</label>
+                                    <input
+                                        type="text"
+                                        value={receiptContactPhone}
+                                        onChange={(e) => setReceiptContactPhone(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Email</label>
+                                    <input
+                                        type="email"
+                                        value={receiptContactEmail}
+                                        onChange={(e) => setReceiptContactEmail(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Person Name</label>
+                                    <input
+                                        type="text"
+                                        value={receiptContactPerson}
+                                        onChange={(e) => setReceiptContactPerson(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        placeholder="e.g. John Doe"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Designation</label>
+                                    <input
+                                        type="text"
+                                        value={receiptContactDesignation}
+                                        onChange={(e) => setReceiptContactDesignation(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                        placeholder="e.g. Sales Manager"
+                                    />
+                                </div>
+                            </div>
+                            <div className="mt-3">
+                                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-wider">Contact Website</label>
+                                <input
+                                    type="text"
+                                    value={receiptContactWebsite}
+                                    onChange={(e) => setReceiptContactWebsite(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d]"
+                                />
+                            </div>
+
                             <div className="pt-2">
                                 <label className="block text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wider">Authorized Signature & Stamp</label>
                                 <div className="grid grid-cols-2 gap-3">
@@ -652,13 +1052,13 @@ const Settings = () => {
                                             accept="image/png"
                                             onChange={(e) => {
                                                 const f = e.target.files[0];
-                                                if(f) { setSignatureFile(f); setSignaturePreview(URL.createObjectURL(f)); }
+                                                if (f) { setSignatureFile(f); setSignaturePreview(URL.createObjectURL(f)); }
                                             }}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
                                         {signaturePreview ? (
                                             <div className="flex flex-col items-center">
-                                                <img src={signaturePreview} alt="Signature" className="h-12 object-contain" />
+                                                <img loading="lazy" decoding="async" src={signaturePreview} alt="Signature" className="h-12 object-contain" />
                                                 <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Signature Added</p>
                                             </div>
                                         ) : (
@@ -676,13 +1076,13 @@ const Settings = () => {
                                             accept="image/png"
                                             onChange={(e) => {
                                                 const f = e.target.files[0];
-                                                if(f) { setStampFile(f); setStampPreview(URL.createObjectURL(f)); }
+                                                if (f) { setStampFile(f); setStampPreview(URL.createObjectURL(f)); }
                                             }}
                                             className="absolute inset-0 opacity-0 cursor-pointer z-10"
                                         />
                                         {stampPreview ? (
                                             <div className="flex flex-col items-center">
-                                                <img src={stampPreview} alt="Stamp" className="h-12 object-contain" />
+                                                <img loading="lazy" decoding="async" src={stampPreview} alt="Stamp" className="h-12 object-contain" />
                                                 <p className="text-[8px] font-bold text-gray-400 mt-1 uppercase">Stamp Added</p>
                                             </div>
                                         ) : (
@@ -785,6 +1185,78 @@ const Settings = () => {
                                     <div className="map-preview-container" dangerouslySetInnerHTML={{ __html: mapIframe }} />
                                 </div>
                             )}
+                        </div>
+                    </div>
+
+                    {/* Brochure Pop-up Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-rose-50 rounded">
+                                <ImageIcon className="w-5 h-5 text-rose-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase">Banner Pop-up Settings</h2>
+                        </div>
+                        <div className="space-y-6">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Show Banner Pop-up</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle the secondary brochure banner</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={showBrochurePopUp}
+                                        onChange={(e) => setShowBrochurePopUp(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                    <Calendar className="w-3.5 h-3.5" /> Delay After Close (Seconds)
+                                </label>
+                                <div className="relative">
+                                    <input
+                                        type="number"
+                                        value={brochurePopUpDelay}
+                                        onChange={(e) => setBrochurePopUpDelay(Number(e.target.value))}
+                                        className="w-full pl-3 pr-16 py-2 border border-gray-200 text-xs rounded focus:outline-none focus:border-[#23471d] font-bold shadow-sm"
+                                        placeholder="e.g. 7"
+                                        min="1"
+                                    />
+                                    <div className="absolute right-10 top-2 text-[10px] font-bold text-gray-400 uppercase">SEC</div>
+                                </div>
+                                <p className="text-[9px] text-gray-400 italic">Delay before the banner appears after closing the download form.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Government MSME PMS Scheme Settings */}
+                    <div className="bg-white border border-gray-200 p-6 shadow-sm rounded-lg">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="p-2 bg-emerald-50 rounded">
+                                <CheckCircle className="w-5 h-5 text-emerald-600" />
+                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900 uppercase font-sans">Govt PMS Scheme Settings</h2>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Show PMS Scheme Menu & Banner</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle Government MSME PMS Scheme visibility</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={showGovtPmsScheme}
+                                        onChange={(e) => setShowGovtPmsScheme(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -957,7 +1429,7 @@ const Settings = () => {
                             ))}
                         </div>
                     </div>
- 
+
                     {/* Quick Links */}
                     <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
                         <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
@@ -966,7 +1438,7 @@ const Settings = () => {
                                 <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{quickLinks.length} Links Listed</p>
                             </div>
                         </div>
- 
+
                         <div className="p-6">
                             {/* Form to Add/Edit Link */}
                             <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
@@ -1011,7 +1483,7 @@ const Settings = () => {
                                     </div>
                                 </div>
                             </div>
- 
+
                             {/* Links Table */}
                             <Table
                                 columns={linkColumns}
@@ -1021,7 +1493,7 @@ const Settings = () => {
                             />
                         </div>
                     </div>
- 
+
                     {/* Exhibition Links */}
                     <div className="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
                         <div className="px-6 py-4 border-b bg-[#23471d] flex justify-between items-center text-white">
@@ -1030,7 +1502,7 @@ const Settings = () => {
                                 <p className="text-[10px] text-blue-100 uppercase mt-0.5 font-medium">{exhibitionLinks.length} Links Listed</p>
                             </div>
                         </div>
- 
+
                         <div className="p-6">
                             {/* Form to Add/Edit Link */}
                             <div className="bg-gray-50 border border-gray-100 p-4 rounded-lg mb-6">
@@ -1075,7 +1547,7 @@ const Settings = () => {
                                     </div>
                                 </div>
                             </div>
- 
+
                             {/* Exhibition Table */}
                             <Table
                                 columns={linkColumns}

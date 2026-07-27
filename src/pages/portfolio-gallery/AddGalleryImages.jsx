@@ -25,7 +25,7 @@ const AddGalleryImages = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await api.get("/api/gallery-category");
+                const res = await api.get("/api/gallery-category?type=gallery");
                 if (res.data.success) setCategories(res.data.data);
             } catch (err) {
                 console.error("Failed to fetch categories", err);
@@ -196,8 +196,7 @@ const AddGalleryImages = () => {
                             {images.map((file, idx) => (
                                 <div key={idx} className="relative bg-white p-3 rounded-md border-2 border-gray-200 shadow-sm hover:border-[#134698] transition-all">
                                     <div className="relative mb-3">
-                                        <img
-                                            src={URL.createObjectURL(file)}
+                                        <img loading="lazy" decoding="async"                                             src={URL.createObjectURL(file)}
                                             alt="preview"
                                             className="w-full h-36 object-cover rounded-md border border-gray-100"
                                         />

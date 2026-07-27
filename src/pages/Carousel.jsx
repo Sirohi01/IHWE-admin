@@ -361,8 +361,7 @@ const Carousel = () => {
                                     className={`${isExpanded ? 'h-32' : 'h-20'} rounded-lg overflow-hidden border border-gray-200 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center`}
                                 >
                                     {img.url ? (
-                                        <img
-                                            src={img.url}
+                                        <img loading="lazy" decoding="async"                                             src={img.url}
                                             alt={`${carousel.title} - Image ${idx + 1}`}
                                             className="w-full h-full object-cover"
                                         />
@@ -1196,8 +1195,7 @@ export default Carousel;
 //                                                                     className="w-8 h-8 rounded-full border-2 border-white shadow overflow-hidden"
 //                                                                 >
 //                                                                     {img.url ? (
-//                                                                         <img
-//                                                                             src={img.url}
+//                                                                         <img loading="lazy" decoding="async" //                                                                             src={img.url}
 //                                                                             alt=""
 //                                                                             className="w-full h-full object-cover"
 //                                                                         />
@@ -1335,8 +1333,7 @@ export default Carousel;
 //                                                                             carousel.images.map((img, idx) => (
 //                                                                                 <div key={img.id || idx} className="w-16 h-16 rounded overflow-hidden border border-gray-200">
 //                                                                                     {img.url ? (
-//                                                                                         <img
-//                                                                                             src={img.url}
+//                                                                                         <img loading="lazy" decoding="async" //                                                                                             src={img.url}
 //                                                                                             alt={`Image ${idx + 1}`}
 //                                                                                             className="w-full h-full object-cover"
 //                                                                                         />

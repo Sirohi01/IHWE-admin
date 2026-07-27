@@ -141,7 +141,7 @@ const BlogsList = () => {
       width: "80px",
       render: (row) =>
         row.image ? (
-          <img
+          <img loading="lazy" decoding="async" 
             src={`${SERVER_URL}${row.image}`}
             alt="blog"
             className="w-16 h-12 object-cover rounded border border-gray-200"
@@ -303,7 +303,7 @@ const BlogsList = () => {
               {/* IMAGE */}
               {selectedBlog.image && (
                 <div className="mb-6">
-                  <img
+                  <img loading="lazy" decoding="async" 
                     src={`${SERVER_URL}${selectedBlog.image}`}
                     alt={selectedBlog.title}
                     className="w-full h-64 object-cover rounded-lg shadow-lg"

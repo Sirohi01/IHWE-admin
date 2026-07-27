@@ -1,4 +1,7 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import headerBg from "../assets/exhi.jpg";
+import arenaImg from "../assets/hall.jpg";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     CheckCircle,
@@ -23,7 +26,90 @@ import Swal from 'sweetalert2';
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from "../features/activityLog/activityLogSlice";
 
+const SearchableDropdown = ({
+    value,
+    options,
+    onChange,
+    placeholder,
+    searchPlaceholder,
+    inputClassName
+}) => {
+    const [open, setOpen] = useState(false);
+    const [search, setSearch] = useState("");
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleOutsideClick = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setOpen(false);
+                setSearch("");
+            }
+        };
+        document.addEventListener("mousedown", handleOutsideClick);
+        return () => document.removeEventListener("mousedown", handleOutsideClick);
+    }, []);
+
+    const selectedOption = options.find((option) => String(option.value) === String(value));
+    const filteredOptions = options.filter((option) =>
+        option.label.toLowerCase().includes(search.trim().toLowerCase())
+    );
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                className={`${inputClassName} flex items-center justify-between cursor-pointer`}
+                onClick={() => setOpen((current) => !current)}
+            >
+                <span className={`truncate ${selectedOption ? "text-slate-800" : "text-slate-400"}`}>
+                    {selectedOption?.label || placeholder}
+                </span>
+                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+            </button>
+
+            {open && (
+                <div className="absolute bottom-full z-50 mb-1 w-full rounded border border-slate-200 bg-white shadow-lg">
+                    <div className="border-b border-slate-100 p-1.5">
+                        <input
+                            type="text"
+                            className="w-full rounded border border-slate-200 p-1.5 text-[12px] outline-none focus:border-[#23471d]"
+                            placeholder={searchPlaceholder}
+                            value={search}
+                            onChange={(event) => setSearch(event.target.value)}
+                            autoFocus
+                        />
+                    </div>
+                    <ul className="max-h-48 overflow-y-auto">
+                        {filteredOptions.map((option) => (
+                            <li
+                                key={String(option.value)}
+                                className={`cursor-pointer px-3 py-1.5 text-[12px] hover:bg-slate-100 ${String(value) === String(option.value)
+                                    ? "bg-[#23471d] text-white hover:bg-[#23471d]"
+                                    : "text-slate-700"}`}
+                                onClick={() => {
+                                    onChange(option.value);
+                                    setOpen(false);
+                                    setSearch("");
+                                }}
+                            >
+                                {option.label}
+                            </li>
+                        ))}
+                        {filteredOptions.length === 0 && (
+                            <li className="px-3 py-2 text-center text-[12px] text-slate-500">
+                                No options available
+                            </li>
+                        )}
+                    </ul>
+                </div>
+            )}
+        </div>
+    );
+};
+
 const BookAStand = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [events, setEvents] = useState([]);
@@ -37,13 +123,26 @@ const BookAStand = () => {
     const [cities, setCities] = useState([]);
     const [exhibitorType, setExhibitorType] = useState(null); // 'domestic' | 'international'
     const [settings, setSettings] = useState(null);
+    const [previousExhibitions, setPreviousExhibitions] = useState([]);
+    const exhibitionYears = useMemo(
+        () => Array.from(
+            { length: new Date().getFullYear() - 2015 },
+            (_, index) => new Date().getFullYear() - index
+        ),
+        []
+    );
 
     useEffect(() => {
         const info = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
-        if (info) setCurrentUser(JSON.parse(info));
+        if (info) {
+            const parsedUser = JSON.parse(info);
+            setCurrentUser(parsedUser);
+            setFormData(prev => ({ ...prev, spokenWith: parsedUser.fullName || parsedUser.username }));
+        }
     }, []);
 
     const [formData, setFormData] = useState({
+        clientId: '',
         exhibitorName: '',
         typeOfBusiness: '',
         industrySector: '',
@@ -54,8 +153,12 @@ const BookAStand = () => {
         city: '',
         pincode: '',
         landlineNo: '',
+        companyEmail: '',
         gstNo: '',
         panNo: '',
+        aadhaarNo: '',
+        aboutCompany: '',
+        registrantType: 'registered',
         natureOfBusiness: '',
         fasciaName: '',
         contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
@@ -66,18 +169,25 @@ const BookAStand = () => {
             stallFor: '',
             stallSize: 0,
             stallType: 'Shell Space',
+            stallCategory: '',
             currency: 'INR',
             rate: 0,
             amount: 0,
             gstPercent: 18,
             total: 0,
-            dimension: ''
+            dimension: '',
+            incrementPercentage: 0
         },
         selectedSectors: [],
         primaryCategory: '',
         subCategory: '',
         referredBy: 'Direct Website',
+        socialMediaType: '',
+        referralName: '',
+        referralMobile: '',
         spokenWith: '',
+        exhibitorStatus: '',
+        previousExhibition: null,
         filledBy: 'Admin',
         status: 'pending',
         paymentMode: 'manual',
@@ -86,54 +196,167 @@ const BookAStand = () => {
         amountPaid: 0,
         balanceAmount: 0,
         financeBreakdown: {
-            grossCost: 0,
-            stallDiscount: { percentage: 0, amount: 0 },
+            grossAmount: 0,
+            stallDiscountPercent: 0,
+            stallDiscountAmount: 0,
             subtotal1: 0,
-            fullPaymentDiscount: { percentage: 0, amount: 0 },
-            subtotal2: 0,
-            tdsDeduction: { percentage: 0, amount: 0 },
-            gst: 0,
-            totalAmount: 0,
+            discountPercent: 0,
+            discountAmount: 0,
+            subtotal: 0,
+            gstAmount: 0,
+            tdsPercent: 0,
+            tdsAmount: 0,
+            netPayable: 0,
             isFullPayment: false
         }
     });
 
+    const [isStallDropdownOpen, setIsStallDropdownOpen] = useState(false);
+    const [stallSearchQuery, setStallSearchQuery] = useState("");
+    const stallDropdownRef = useRef(null);
+    const [isPreviousExhibitionDropdownOpen, setIsPreviousExhibitionDropdownOpen] = useState(false);
+    const [previousExhibitionSearchQuery, setPreviousExhibitionSearchQuery] = useState("");
+    const previousExhibitionDropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (stallDropdownRef.current && !stallDropdownRef.current.contains(event.target)) {
+                setIsStallDropdownOpen(false);
+            }
+            if (previousExhibitionDropdownRef.current && !previousExhibitionDropdownRef.current.contains(event.target)) {
+                setIsPreviousExhibitionDropdownOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                const [eRes, staffRes, ratesRes, countryRes, stateRes, cityRes, settingsRes] = await Promise.all([
-                    api.get('/api/events'),
+                api.get('/api/events').then(eRes => {
+                    if (eRes.data.success && eRes.data.data.length > 0) {
+                        setEvents(eRes.data.data);
+                        setSelectedEventId(eRes.data.data[0]._id);
+                        setFormData(prev => {
+                            const selEv = eRes.data.data[0];
+                            const plans = selEv?.paymentPlans || [];
+                            const firstPlanId = plans.length > 0 ? plans[0].id : 'full';
+                            const firstPlanLabel = plans.length > 0 ? plans[0].label : 'Full Payment';
+                            return { ...prev, eventId: selEv._id, paymentPlanType: firstPlanId, paymentPlanLabel: firstPlanLabel };
+                        });
+                    }
+                }).catch(err => console.error("Error fetching events:", err));
+
+                // Fetch stall rates independently
+                api.get('/api/stall-rates').then(ratesRes => {
+                    if (ratesRes.data.success) setAllRates(ratesRes.data.data);
+                }).catch(err => console.error("Error fetching rates:", err));
+
+                api.get('/api/previous-exhibitions/public').then(previousRes => {
+                    if (previousRes.data.success) setPreviousExhibitions(previousRes.data.data || []);
+                }).catch(err => console.error("Error fetching previous exhibitions:", err));
+
+                // Fetch other data in parallel
+                Promise.all([
                     api.get('/api/public/employees'),
-                    api.get('/api/stall-rates'),
                     api.get('/api/crm-countries'),
                     api.get('/api/crm-states'),
                     api.get('/api/crm-cities'),
                     api.get('/api/settings')
-                ]);
-
-                if (eRes.data.success && eRes.data.data.length > 0) {
-                    setEvents(eRes.data.data);
-                    setSelectedEventId(eRes.data.data[0]._id);
-                    setFormData(prev => {
-                        const selEv = eRes.data.data[0];
-                        const plans = selEv?.paymentPlans || [];
-                        const firstPlanId = plans.length > 0 ? plans[0].id : 'full';
-                        const firstPlanLabel = plans.length > 0 ? plans[0].label : 'Full Payment';
-                        return { ...prev, eventId: selEv._id, paymentPlanType: firstPlanId, paymentPlanLabel: firstPlanLabel };
-                    });
-                }
-                if (staffRes.data.success) setMarketingStaff(staffRes.data.data);
-                if (ratesRes.data.success) setAllRates(ratesRes.data.data);
-                if (countryRes.data.data) setCountries(countryRes.data.data);
-                if (stateRes.data.data) setStates(stateRes.data.data);
-                if (cityRes.data.data) setCities(cityRes.data.data);
-                if (settingsRes.data.success) setSettings(settingsRes.data.data);
+                ]).then(([staffRes, countryRes, stateRes, cityRes, settingsRes]) => {
+                    if (staffRes.data.success) setMarketingStaff(staffRes.data.data);
+                    if (countryRes.data.data) setCountries(countryRes.data.data);
+                    if (stateRes.data.data) setStates(stateRes.data.data);
+                    if (cityRes.data.data) setCities(cityRes.data.data);
+                    if (settingsRes.data.success) setSettings(settingsRes.data.data);
+                }).catch(error => {
+                    console.error("Error fetching background data:", error);
+                });
             } catch (error) {
-                console.error("Error fetching initial data:", error);
+                console.error("Error in fetchInitialData:", error);
             }
         };
         fetchInitialData();
     }, []);
+
+    useEffect(() => {
+        if (id) {
+            api.get(`/api/companies/${id}`).then(res => {
+                if (res.data) {
+                    const comp = res.data;
+                    const cCountry = (comp.country || "India").toLowerCase();
+                    const isDom = cCountry === "india";
+                    setExhibitorType(isDom ? 'domestic' : 'international');
+
+                    setFormData(prev => {
+                        const newF = { ...prev };
+                        newF.clientId = comp._id || '';
+                        newF.exhibitorName = comp.companyName || '';
+                        newF.website = comp.website || '';
+                        newF.address = comp.address || '';
+                        newF.country = comp.country || (isDom ? 'India' : '');
+                        newF.state = comp.state || '';
+                        newF.city = comp.city || '';
+                        newF.pincode = comp.pincode || '';
+                        newF.landlineNo = comp.landline || '';
+                        newF.companyEmail = comp.email || '';
+                        newF.gstNo = comp.gstNumber || '';
+                        newF.aboutCompany = comp.companyDescription || '';
+
+                        if (comp.contacts && comp.contacts.length > 0) {
+                            newF.contact1 = {
+                                title: comp.contacts[0].title || 'Mr.',
+                                firstName: comp.contacts[0].firstName || '',
+                                lastName: comp.contacts[0].surname || '',
+                                email: comp.contacts[0].email || '',
+                                designation: comp.contacts[0].designation || '',
+                                mobile: comp.contacts[0].mobile || '',
+                                alternateNo: comp.contacts[0].alternate || ''
+                            };
+                        }
+                        if (comp.contacts && comp.contacts.length > 1) {
+                            newF.contact2 = {
+                                title: comp.contacts[1].title || 'Mr.',
+                                firstName: comp.contacts[1].firstName || '',
+                                lastName: comp.contacts[1].surname || '',
+                                email: comp.contacts[1].email || '',
+                                designation: comp.contacts[1].designation || '',
+                                mobile: comp.contacts[1].mobile || '',
+                                alternateNo: comp.contacts[1].alternate || ''
+                            };
+                        }
+                        // Default to INR for domestic, USD for international
+                        newF.participation = {
+                            ...newF.participation,
+                            currency: isDom ? 'INR' : 'USD',
+                            stallCategory: comp.exhibitorCategory || prev.participation.stallCategory
+                        };
+                        // CRM Attribution: Use forwardTo, else assigned to (added_by), else fallback
+                        const targetUser = comp.forwardTo || comp.added_by;
+                        let mappedName = targetUser;
+                        if (targetUser && Array.isArray(marketingStaff)) {
+                            const staff = marketingStaff.find(s => s.username === targetUser || s.fullName === targetUser);
+                            if (staff && staff.fullName) mappedName = staff.fullName;
+                        }
+                        newF.spokenWith = mappedName || prev.spokenWith;
+
+                        return newF;
+                    });
+                }
+            }).catch(err => console.error("Error fetching client data:", err));
+        }
+    }, [id]);
+
+    // Ensure spokenWith is mapped to fullName once marketingStaff is loaded
+    useEffect(() => {
+        if (marketingStaff.length > 0 && formData.spokenWith) {
+            const staff = marketingStaff.find(s => s.username === formData.spokenWith);
+            if (staff && staff.fullName && staff.fullName !== formData.spokenWith) {
+                setFormData(prev => ({ ...prev, spokenWith: staff.fullName }));
+            }
+        }
+    }, [marketingStaff, formData.spokenWith]);
 
     useEffect(() => {
         if (selectedEventId) {
@@ -192,10 +415,10 @@ const BookAStand = () => {
         const currentEvent = events.find(e => e._id === selectedEventId);
         const plans = currentEvent?.paymentPlans || [];
         const selectedPlan = plans.find(p => p.id === formData.paymentPlanType);
-        
+
         // A payment is "full" if the plan ID is 'full' OR if the percentage is 100
         const isFull = formData.paymentPlanType === 'full' || (selectedPlan && Number(selectedPlan.percentage) === 100);
-        
+
         const fpDiscountPct = isFull ? (settings?.fullPaymentDiscount || 0) : 0;
         const fpDiscountAmt = Math.round(subtotal1 * fpDiscountPct / 100);
         const subtotal2 = subtotal1 - fpDiscountAmt;
@@ -245,6 +468,27 @@ const BookAStand = () => {
             balanceAmount: Math.round(netPayable - amountToCollect)
         }));
     }, [formData.participation.stallNo, formData.participation.rate, availableStalls, formData.paymentPlanType, formData.chosenTdsPercent, settings, events, selectedEventId]);
+    useEffect(() => {
+        if (exhibitorType === 'domestic' && formData.pincode?.length === 6) {
+            const timerId = setTimeout(() => {
+                fetch(`https://api.postalpincode.in/pincode/${formData.pincode}`)
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data && data[0] && data[0].Status === 'Success') {
+                            const postOffice = data[0].PostOffice[0];
+                            setFormData(prev => ({
+                                ...prev,
+                                state: postOffice.State || prev.state,
+                                city: postOffice.District || prev.city
+                            }));
+                        }
+                    })
+                    .catch(err => console.error("Error fetching pincode data:", err));
+            }, 600); // 600ms debounce
+
+            return () => clearTimeout(timerId);
+        }
+    }, [formData.pincode, exhibitorType]);
 
     const filteredStates = useMemo(() => {
         if (!formData.country || !countries.length) return [];
@@ -272,12 +516,25 @@ const BookAStand = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.referredBy) {
+            return Swal.fire("Required", "Please select a Referral Channel.", "warning");
+        }
+        if (!formData.spokenWith) {
+            return Swal.fire("Required", "Please select the staff member in Spoken With.", "warning");
+        }
+        if (
+            formData.exhibitorStatus === 'Existing Client'
+            && (!formData.previousExhibition?.id || !formData.previousExhibition?.year)
+        ) {
+            return Swal.fire("Required", "Please select the Previous Exhibition and Exhibition Year.", "warning");
+        }
         setIsLoading(true);
         try {
             const finalData = {
                 ...formData,
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
+                filledByFullName: currentUser?.fullName || currentUser?.username || 'Admin',
                 status: 'pending',
                 paymentMode: 'manual',
                 amountPaid: 0,
@@ -310,63 +567,10 @@ const BookAStand = () => {
                     title: 'REGISTRATION SUCCESSFUL',
                     text: `Manual booking for ${formData.exhibitorName} has been recorded. Confirmation email & WhatsApp will be sent automatically.`,
                     confirmButtonColor: '#23471d'
-                }).then(() => {
-                    setExhibitorType(null);
-                    setFormData({
-                        exhibitorName: '',
-                        typeOfBusiness: '',
-                        industrySector: '',
-                        website: '',
-                        address: '',
-                        country: '',
-                        state: '',
-                        city: '',
-                        pincode: '',
-                        landlineNo: '',
-                        gstNo: '',
-                        panNo: '',
-                        natureOfBusiness: '',
-                        fasciaName: '',
-                        contact1: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
-                        contact2: { title: 'Mr.', firstName: '', lastName: '', email: '', designation: '', mobile: '', alternateNo: '' },
-                        participation: {
-                            eventId: '',
-                            stallNo: '',
-                            stallFor: '',
-                            stallSize: 0,
-                            stallType: 'Shell Space',
-                            currency: 'INR',
-                            rate: 0,
-                            amount: 0,
-                            gstPercent: 18,
-                            total: 0,
-                            dimension: ''
-                        },
-                        selectedSectors: [],
-                        primaryCategory: '',
-                        subCategory: '',
-                        referredBy: 'Direct Website',
-                        spokenWith: '',
-                        filledBy: 'Admin',
-                        status: 'pending',
-                        paymentMode: 'manual',
-                        paymentPlanType: 'full', paymentPlanLabel: 'Full Payment (100%)',
-                        chosenTdsPercent: 0,
-                        amountPaid: 0,
-                        balanceAmount: 0,
-                        financeBreakdown: {
-                            grossCost: 0,
-                            stallDiscount: { percentage: 0, amount: 0 },
-                            subtotal1: 0,
-                            fullPaymentDiscount: { percentage: 0, amount: 0 },
-                            subtotal2: 0,
-                            tdsDeduction: { percentage: 0, amount: 0 },
-                            gst: 0,
-                            totalAmount: 0,
-                            isFullPayment: false
-                        }
-                    });
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        navigate('/ihweClientData2026/confirmClientList');
+                    }
                 });
             }
         } catch (error) {
@@ -407,14 +611,15 @@ const BookAStand = () => {
                     stallFor: stall.stallNumber,
                     stallSize: stall.area,
                     stallType: stall.stallType || prev.participation.stallType,
-                    stallScheme: stall.plScheme || 'One Side Open',
-                    dimension: `${stall.length}x${stall.width}m`
+                    stallScheme: stall.plScheme ? stall.plScheme.toUpperCase() : 'ONE SIDE OPEN',
+                    dimension: `${stall.length}x${stall.width}m`,
+                    incrementPercentage: stall.incrementPercentage || 0
                 }
             }));
         } else {
             setFormData(prev => ({
                 ...prev,
-                participation: { ...prev.participation, stallNo: '', stallFor: '', stallSize: 0, dimension: '', stallScheme: '' }
+                participation: { ...prev.participation, stallNo: '', stallFor: '', stallSize: 0, dimension: '', stallScheme: '', incrementPercentage: 0 }
             }));
         }
     };
@@ -443,38 +648,43 @@ const BookAStand = () => {
         }));
     };
 
-    const inputClasses = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-900 font-medium shadow-none outline-none px-3 w-full text-left";
-    const labelClasses = "text-[10px] font-bold uppercase tracking-[0.05em] text-slate-800 mb-1 block";
-    const sectionHeaderClasses = "text-sm font-bold text-[#d26019] uppercase tracking-[0.05em] border-b border-slate-100 pb-1.5 mb-3";
+    const inputClasses = "rounded border border-slate-400 h-7 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white placeholder:text-slate-400 text-slate-800 invalid:text-slate-400 font-medium shadow-none outline-none px-3 w-full text-left";
+    const labelClasses = "block text-[10px] font-semibold capitalize tracking-wide text-slate-700 mb-1";
+    const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
+    const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
 
 
     return (
-        <div className="bg-white shadow-md mt-4 p-4 min-h-screen font-inter animate-fadeIn">
+        <div className="bg-[#f8fafc] shadow-md px-4 pt-4 pb-1 min-h-[calc(100vh-90px)] font-inter animate-fadeIn">
+            <style>{`
+                select option { color: #1e293b !important; }
+                select option[value=""] { color: #94a3b8 !important; font-weight: 500; }
+            `}</style>
             {/* HEADER */}
-            <div className="flex flex-col sm:flex-row justify-between items-center pb-3 border-b border-gray-100">
-                <div>
-                    <h1 className="text-xl font-medium text-slate-900 uppercase tracking-tight leading-none font-inter">MANUAL REGISTRATION</h1>
-                    <p className="text-[10px] text-slate-500 font-medium uppercase tracking-[0.2em] mt-0.5">Book A Stand  Admin Panel</p>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3 sm:mt-0">
-                    <div className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-100 text-[#23471d] rounded border border-slate-200">
-                        {events.find(e => e._id === selectedEventId)?.name || 'NO EVENT SELECTED'}
+            {!exhibitorType && (
+                <div className="flex flex-col sm:flex-row justify-between items-center pb-3">
+                    <div>
+                        <h1 className="text-[22px] font-bold text-slate-900 capitalize tracking-tight leading-none font-inter">New Exhibitor Registration</h1>
+                        <p className="text-xs text-slate-500 font-medium mt-1 max-w-3xl leading-relaxed">
+                            Onboard new exhibitors seamlessly by capturing company information, <br />
+                            selecting stall space, managing commercial details, and generating <br /> booking documents—all from a single workspace.
+                        </p>
                     </div>
-                    {exhibitorType && (
-                        <button type="button" onClick={() => setExhibitorType(null)}
-                            className="px-3 py-1.5 text-[11px] font-black uppercase bg-slate-800 text-white rounded border border-slate-700 hover:bg-slate-700 transition-all">
-                            BACK
-                        </button>
-                    )}
+                    <div className="flex flex-col sm:items-end gap-2 mt-3 sm:mt-0 max-w-4xl">
+                        <div className="px-3 py-2.5 text-[10.5px] text-slate-600 bg-blue-50/60 border border-blue-200/60 rounded-md leading-relaxed text-left shadow-sm">
+                            <span className="font-bold text-blue-800 mb-0.5 block">NOTE : </span>
+                            This option should be used when an exhibitor prefers not to register through the official website or requires assistance from the IHWE Sales Team. The sales representative can manually create the exhibitor profile, reserve stall space, generate quotations, issue invoices, and complete the registration process on behalf of the exhibitor.
+                        </div>
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* EVENT SELECTOR */}
             {/* <div className="mt-3 flex flex-col md:flex-row gap-4 items-end bg-slate-50 border border-slate-200 rounded-[2px] px-4 py-3">
                 <div className="w-full md:w-80">
-                    <label className="text-[10px] font-bold text-[#23471d] uppercase mb-1 block tracking-widest">Select Exhibition Event *</label>
+                    <label className="text-[10px] font-bold text-[#23471d] uppercase mb-1 block tracking-widest">Select Exhibition Event <span className="text-red-500">*</span></label>
                     <select required value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)} className={inputClasses}>
-                        <option value="">Choose Event</option>
+                        <option value="" className="text-red-500 font-medium">Choose Event</option>
                         {events.map(ev => <option key={ev._id} value={ev._id}>{ev.name} ({new Date(ev.startDate).getFullYear()})</option>)}
                     </select>
                 </div>
@@ -483,158 +693,218 @@ const BookAStand = () => {
 
             {/* DOMESTIC / INTERNATIONAL SELECTION */}
             {!exhibitorType ? (
-                <div className="mt-6 flex flex-col items-center justify-center text-center p-10 bg-white border border-dashed border-slate-300 rounded-[2px]">
-                    <h3 className="text-xl font-bold text-slate-900 mb-1 font-inter uppercase tracking-tight">Select Exhibitor Type</h3>
-                    <p className="text-slate-400 text-[12px] mb-8 font-medium">Choose the exhibitor category to begin manual registration.</p>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                        <button type="button" onClick={() => handleExhibitorTypeChange('domestic')}
-                            className="group px-10 py-2 bg-white border-2 border-[#23471d] text-[#23471d] rounded hover:bg-[#23471d] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
-                            Domestic (India)
-                            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
-                        <button type="button" onClick={() => handleExhibitorTypeChange('international')}
-                            className="group px-10 py-2  bg-white border-2 border-[#d26019] text-[#d26019] rounded hover:bg-[#d26019] hover:text-white transition-all flex items-center gap-3 font-bold text-sm uppercase tracking-widest">
-                            International
-                            <ChevronRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                        </button>
-                    </div>
-                </div>
-            ) : (
-                <form onSubmit={handleSubmit} className="mt-4 space-y-5">
+                <div className="w-full mt-0 flex flex-col gap-1">
+                    {/* -- HERO SECTION -- */}
+                    <section
+                        className="hero-background-registration relative overflow-hidden !aspect-auto md:!aspect-[4/1] !h-auto md:!h-auto py-6 md:py-0 rounded-t-lg"
+                        style={{
+                            backgroundImage: "url('/exhibition/bg.png')",
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'left',
+                            backgroundRepeat: 'no-repeat',
+                            fontFamily: "'Barlow', sans-serif",
+                        }}
+                    >
+                        <div className="w-full">
+                            <div className="w-full">
+                                <div className="relative z-10 pt-6 md:pt-8 pb-1 md:pb-2 flex flex-col gap-2 w-full md:w-[60%] lg:w-[55%] bg-black/40 md:bg-transparent p-4 md:p-0 rounded-2xl md:rounded-none backdrop-blur-sm md:backdrop-blur-none px-4 md:px-8">
 
-                    {/* SUB-HEADER */}
-                    <div className="bg-slate-50/50 border border-slate-200 px-4 py-2 rounded-[2px] flex items-center justify-between">
-                        <div>
-                            <h2 className="text-xl font-medium text-slate-900 uppercase tracking-tight font-inter">Manual Exhibitor Booking</h2>
-                            <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-medium">International Health & Wellness Expo</p>
-                        </div>
-                        <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-[2px] border ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border-green-200' : 'bg-orange-50 text-[#d26019] border-orange-200'}`}>
-                            {exhibitorType === 'domestic' ? 'Domestic  INR' : 'International  USD'}
-                        </span>
-                    </div>
+                                    {/* Register as a Buyer */}
+                                    <div className="inline-block mt-4 px-4 py-1 bg-[#a8d060]/15 border border-[#a8d060]/40 rounded-lg text-[#a8d060] text-xs font-bold uppercase tracking-[0.2em] w-fit backdrop-blur-sm shadow-[0_0_20px_rgba(168,208,96,0.2)]">
+                                        Exhibition stall booking
+                                    </div>
 
-                    {/* SECTION: STALL SELECTION */}
-                    <div className="space-y-3 px-2">
-                        <h3 className={sectionHeaderClasses}>Stall Selection</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-                            <div>
-                                <label className={labelClasses}>Stall Number *</label>
-                                <select required value={formData.participation.stallNo} onChange={(e) => handleStallSelect(e.target.value)} className={inputClasses}>
-                                    <option value="">-- Choose Available Stall --</option>
-                                    {availableStalls.filter(s =>
-                                        (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId) ||
-                                        (typeof s.event === 'string' ? s.event === selectedEventId : s.event?._id === selectedEventId)
-                                    ).map(s => (
-                                        <option key={s._id} value={s._id}>{s.stallNumber} ({s.area} sqm � {s.plScheme})</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div>
-                                <label className={labelClasses}>Stall Type</label>
-                                <select value={formData.participation.stallType} onChange={(e) => handleSelectChange('participation.stallType', e.target.value)} className={inputClasses}>
-                                    <option value="Shell Space">Shell Space (Built-up)</option>
-                                    <option value="Raw Space">Raw Space (Plot)</option>
-                                </select>
-                            </div>
-                        </div>
+                                    {/* Main Heading */}
+                                    <div className="mt-1">
+                                        <h1 className="text-3xl md:text-[38px] font-extrabold text-white leading-tight uppercase">
+                                            Book Your <br />
+                                            Exhibition <span className="text-[#a8d060]">Stand</span>
+                                        </h1>
+                                    </div>
 
-                        {/* LIVE RATES */}
-                        {selectedEventId && (() => {
-                            const currency = exhibitorType === 'domestic' ? 'INR' : 'USD';
-                            const filtered = allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId && r.currency === currency);
-                            return filtered.length > 0 && (
-                                <div className="mt-2 p-3 bg-slate-50 border border-slate-200 rounded-[2px]">
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-2">
-                                        <Banknote size={12} className="text-[#23471d]" />
-                                        Live Market Rates
-                                        <span className={`ml-1 px-2 py-0.5 text-[8px] font-black uppercase rounded-[2px]  ${exhibitorType === 'domestic' ? 'bg-green-50 text-[#23471d] border border-green-200' : 'bg-orange-50 text-[#d26019] border border-orange-200'}`}>
-                                            {currency}
-                                        </span>
+                                    {/* Description */}
+                                    <p className="text-white/80 text-[13px] md:text-sm leading-relaxed max-w-md mt-1">
+                                        Showcase your innovations to 8,000+ healthcare Professionals-fill the form and get a customized stall for your brand.
                                     </p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {filtered.map(rate => (
-                                            <div key={rate._id} className="bg-white px-3 py-1.5 border border-slate-200 rounded-[2px] shadow-sm">
-                                                <p className="text-[8px] font-black text-slate-400 uppercase leading-none mb-0.5 ">{rate.stallType}</p>
-                                                <p className="text-[11px] font-black text-[#d26019] font-semibold ">{rate.currency} {rate.ratePerSqm.toLocaleString()}/sqm</p>
+
+                                    {/* Stats Row */}
+                                    {/* <div className="grid grid-cols-2 md:flex md:items-center mt-3 gap-y-4 gap-x-2 md:gap-3">
+                                        {[
+                                            {
+                                                num: '', label: '8,000+\nHealthcare\nProfessionals',
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b1.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />
+                                            },
+                                            {
+                                                num: '', label: 'Custom\nStall\nSolutions',
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b2.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
+                                            },
+                                            {
+                                                num: '', label: 'Maximum\nBrand\nVisibility',
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b3.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
+                                            },
+                                            {
+                                                num: '', label: 'High-Value\nBusiness\nConnections',
+                                                icon: <img loading="lazy" decoding="async" src="/exhibition/b4.png" alt="" className="w-10 h-10 md:w-12 md:h-12 object-contain" />,
+                                            },
+                                        ].map((stat, i, arr) => (
+                                            <div key={i} className="flex items-center md:contents">
+                                                <div className="flex flex-col items-center text-center px-1 flex-1">
+                                                    <div className="mb-1.5">{stat.icon}</div>
+                                                    {stat.num && (
+                                                        <div className="text-lg md:text-xl font-bold text-[#a8d060] leading-none tracking-tight">
+                                                            {stat.num}
+                                                        </div>
+                                                    )}
+                                                    <div className="text-[9px] md:text-[10px] font-semibold text-white uppercase tracking-wider leading-tight opacity-90 whitespace-pre-line max-w-[120px]">
+                                                        {stat.label}
+                                                    </div>
+                                                </div>
+                                                {i < arr.length - 1 && (
+                                                    <div className="hidden md:block h-16 w-px bg-[#a8d060]/20 shrink-0" />
+                                                )}
                                             </div>
                                         ))}
-                                    </div>
-                                </div>
-                            );
-                        })()}
+                                    </div> */}
 
-                        {/* PAYMENT PLAN & TDS CONTROL */}
-                        <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-[2px] mt-3">
-                            <label className={labelClasses}>Apply TDS Deduction *</label>
-                            <div className="flex flex-wrap gap-4 items-center">
-                                <div className="w-48 relative">
-                                    <select 
-                                        value={formData.chosenTdsPercent} 
-                                        onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))} 
-                                        className="w-full h-9 rounded-[2px] border border-slate-400 px-3 text-[12px] font-black text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
-                                    >
-                                        <option value={0}>0% TDS</option>
-                                        <option value={1}>1% TDS</option>
-                                        <option value={2}>2% TDS</option>
-                                        <option value={10}>10% TDS</option>
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-3 top-3 text-red-600 pointer-events-none" />
-                                </div>
+                                    {/* <div className="mt-5">
+                                        <button className="flex items-center gap-3 bg-[#4a8f2f] hover:bg-[#3d7a26] text-white px-6 py-2 rounded-full text-xs font-semibold uppercase tracking-wider shadow-md transition-all duration-300 hover:scale-[1.03] w-fit">
+                                            Book Your Stall Now
+                                            <span className="w-6 h-6 rounded-full bg-white flex items-center justify-center shrink-0">
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 text-[#4a8f2f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M5 12h14M13 6l6 6-6 6" />
+                                                </svg>
+                                            </span>
+                                        </button>
+                                    </div> */}
 
-                                <div className="text-right ml-auto min-w-[120px]">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">
-                                        Total Payable (Net)
-                                    </p>
-                                    <p className="text-xl font-black text-[#23471d] leading-none">
-                                        {formData.participation.currency} {formData.amountPaid?.toLocaleString()}
-                                    </p>
                                 </div>
                             </div>
                         </div>
+                    </section>
+                    <section className="bg-white border border-gray-100 rounded-b-lg shadow-sm px-4 md:px-5 pb-2 md:pb-2 pt-2 md:pt-3 flex flex-col lg:flex-row gap-6 lg:gap-8 -mt-1">
 
-                        {/* COST BREAKDOWN */}
-                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-[2px] flex flex-wrap gap-6 items-end">
-                            <div className="flex flex-col gap-0.5">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Stall</p>
-                                <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || ''}</p>
-                                <p className="text-[11px] text-slate-500">{formData.participation.stallType}  {formData.participation.stallSize} sqm</p>
-                            </div>
-                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Rate</p>
-                                <p className="text-sm font-bold text-slate-900">{formData.participation.currency} {Number(formData.participation.rate).toLocaleString()}/sqm</p>
-                            </div>
-                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Base Amount</p>
-                                <p className="text-sm font-bold text-slate-900">{formData.participation.currency} {Math.round(formData.participation.amount).toLocaleString()}</p>
-                            </div>
-                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">GST (18%)</p>
-                                <p className="text-sm font-bold text-slate-900">{formData.participation.currency} {Math.round(formData.participation.total - formData.participation.amount).toLocaleString()}</p>
-                            </div>
-                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4 ml-auto">
-                                <p className="text-[10px] font-black text-[#23471d] uppercase tracking-widest flex items-center gap-1.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
-                                    Total Payable
+                        {/* Left Side */}
+                        <div className="flex-1 flex flex-col justify-between">
+                            <div>
+                                <h2 className="text-[#1a4d1a] text-[15px] font-semibold leading-snug mb-2">
+                                    <span className="text-[#0D530E] text-[17px] font-medium">9th Edition of International Health & Wellness Expo 2026</span> <br />
+
+
+                                    <span className="text-gray-900 text-[12px] font-medium">(IHWE Global Edition)</span>
+                                </h2>
+                                <div className="w-8 h-[3px] bg-[#4a8f2f] rounded mb-3" />
+                                <p className="text-gray-600 text-[13px] leading-relaxed">
+                                    Join IHWE 2026, the premier global platform uniting the healthcare, wellness, and AYUSH industries. Connect with India's most trusted brands, discover innovations, and build meaningful business connections. Register now to be part of a powerful global movement in <span className="text-[#4a8f2f] font-semibold">health & wellness.</span>
                                 </p>
-                                <p className="text-2xl font-black text-[#23471d]">{formData.participation.currency === 'INR' ? `\u20b9${formData.participation.total?.toLocaleString()}` : `$${formData.participation.total?.toLocaleString()}`}</p>
                             </div>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="hidden lg:block w-px bg-gray-200 self-stretch" />
+                        <div className="block lg:hidden h-px w-full bg-gray-200 my-2" />
+
+                        {/* Right Side */}
+                        <div className="flex-1">
+                            <h3 className="text-gray-900 text-[17px] font-medium mb-1">Choose Exhibitor Category</h3>
+                            <div className="w-8 h-[3px] bg-[#4a8f2f] rounded mb-3" />
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                                {/* Domestic Exhibitor */}
+                                <div
+                                    onClick={() => handleExhibitorTypeChange('domestic')}
+                                    className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${exhibitorType === 'domestic' ? 'bg-[#f0f7e6] border-[#4a8f2f] shadow-lg scale-[1.02]' : 'bg-[#f0f7e6]/50 border-[#4a8f2f]/5 hover:border-[#c8e6a0] hover:bg-[#f0f7e6]'}`}
+                                >
+                                    <div className="flex items-center justify-center">
+                                        <img loading="lazy" decoding="async" src="/exhibition/dom.png" alt="Domestic" className="w-18 h-16 object-contain" />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-800 font-bold text-base mb-1">Domestic Exhibitor</p>
+                                        <p className="text-gray-700 text-xs">For exhibitors based in India</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={`flex gap-2 items-center text-white text-xs font-medium uppercase tracking-widest px-5 py-2 rounded-lg transition-colors ${exhibitorType === 'domestic' ? 'bg-[#1a4d1a]' : 'bg-[#23471d] hover:bg-[#1a4d1a]'}`}
+                                    >
+                                        {exhibitorType === 'domestic' ? 'Selected' : 'Register Now'}
+                                        <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+                                            <svg className={`w-3 h-3 ${exhibitorType === 'domestic' ? 'text-[#1a4d1a]' : 'text-[#23471d]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M5 12h14M13 6l6 6-6 6" />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                </div>
+
+                                {/* International Exhibitor */}
+                                <div
+                                    onClick={() => handleExhibitorTypeChange('international')}
+                                    className={`cursor-pointer transition-all duration-300 rounded-xl px-5 pt-2 pb-4 flex flex-col items-center text-center gap-2 border-2 ${exhibitorType === 'international' ? 'bg-[#fff7f0] border-[#d26019] shadow-lg scale-[1.02]' : 'bg-[#fff7f0]/50 border-[#d26019]/5 hover:border-[#f5d5b0] hover:bg-[#fff7f0]'}`}
+                                >
+                                    <div className="flex items-center justify-center">
+                                        <img loading="lazy" decoding="async" src="/exhibition/int.png" alt="International" className="w-18 h-16 object-contain" />
+                                    </div>
+                                    <div>
+                                        <p className="text-gray-800 font-bold text-base mb-1">International Exhibitor</p>
+                                        <p className="text-gray-700 text-xs">For exhibitors based outside India</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className={`flex items-center gap-2 text-white text-xs font-medium uppercase tracking-widest px-5 py-2 rounded-lg transition-colors ${exhibitorType === 'international' ? 'bg-[#c96a18]' : 'bg-[#e07820] hover:bg-[#c96a18]'}`}
+                                    >
+                                        {exhibitorType === 'international' ? 'Selected' : 'Register Now'}
+                                        <span className="w-5 h-5 rounded-full bg-white flex items-center justify-center shrink-0">
+                                            <svg className={`w-3 h-3 ${exhibitorType === 'international' ? 'text-[#c96a18]' : 'text-[#e07820]'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M5 12h14M13 6l6 6-6 6" />
+                                            </svg>
+                                        </span>
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </section>
+                </div>
+            ) : (
+                <form onSubmit={handleSubmit} className="space-y-3">
+
+                    {/* SUB-HEADER */}
+                    <div
+                        className="relative px-4 py-3 sm:py-3.5 rounded-xl shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 overflow-hidden"
+                        style={{
+                            backgroundImage: `linear-gradient(to right, rgba(13, 83, 14, 0.95), rgba(13, 83, 14, 0.8)), url(${headerBg})`,
+                            backgroundSize: 'cover',
+                            backgroundPosition: 'center'
+                        }}
+                    >
+                        <div className="relative z-10 w-full text-center sm:text-left">
+                            <h2 className="text-xl font-bold text-white uppercase tracking-tight font-inter">
+                                {exhibitorType === 'domestic' ? 'Domestic' : 'International'} New Exhibitor Registration
+                            </h2>
+                            <p className="text-[10px] text-green-100 uppercase tracking-[0.2em] mt-0.5 font-medium">9th Edition of International Health & Wellness Expo</p>
+                        </div>
+                        <div className="relative z-10 shrink-0 w-full sm:w-auto flex justify-center sm:justify-end">
+                            <button type="button" onClick={() => setExhibitorType(null)}
+                                className="px-5 py-1.5 text-[11px] font-bold uppercase bg-white/10 text-white rounded border border-white/30 hover:bg-white hover:text-black transition-all shadow-sm backdrop-blur-sm">
+                                BACK
+                            </button>
                         </div>
                     </div>
 
                     {/* SECTION: COMPANY INFORMATION */}
-                    <div className="space-y-3 px-2">
+                    <div className={cardClasses}>
                         <h3 className={sectionHeaderClasses}>Exhibitor Details</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-x-4 gap-y-3 -mt-3">
                             <div>
-                                <label className={labelClasses}>Company Name *</label>
+                                <label className={labelClasses}>Company Name <span className="text-red-500">*</span></label>
                                 <input required type="text" value={formData.exhibitorName} onChange={(e) => handleSelectChange('exhibitorName', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Type of Business *</label>
+                                <label className={labelClasses}>Type of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.typeOfBusiness} onChange={(e) => handleSelectChange('typeOfBusiness', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    <option>Private Ltd. Company</option>
-                                    <option>Public Ltd. Company</option>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
+                                    <option>Pvt. Ltd. Company</option>
+                                    <option>Pub. Ltd. Company</option>
                                     <option>Partnership Company</option>
                                     <option>Limited Liability Partnership (LLP)</option>
                                     <option>One Person Company</option>
@@ -644,9 +914,9 @@ const BookAStand = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClasses}>Industry / Sector *</label>
+                                <label className={labelClasses}>Industry / Sector <span className="text-red-500">*</span></label>
                                 <select required value={formData.industrySector} onChange={(e) => handleSelectChange('industrySector', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Here</option>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
                                     <option>Medical &amp; Healthcare</option>
                                     <option>AYUSH &amp; Traditional Medicine</option>
                                     <option>Wellness, Fitness &amp; Lifestyle</option>
@@ -658,54 +928,67 @@ const BookAStand = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className={labelClasses}>Website *</label>
+                                <label className={labelClasses}>Website <span className="text-red-500">*</span></label>
                                 <input required type="text" value={formData.website} onChange={(e) => handleSelectChange('website', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
-                            <div className="md:col-span-2">
-                                <label className={labelClasses}>Exhibitor Address *</label>
-                                <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
-                            </div>
                             <div>
-                                <label className={labelClasses}>Country *</label>
-                                {exhibitorType === 'domestic' ? (
-                                    <input readOnly value="India" className={`${inputClasses} bg-slate-50 cursor-not-allowed`} />
-                                ) : (
+                                <label className={labelClasses}>Pincode <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
+                            </div>
+                            {exhibitorType !== 'domestic' && (
+                                <div>
+                                    <label className={labelClasses}>Country <span className="text-red-500">*</span></label>
                                     <select required value={formData.country} onChange={(e) => handleSelectChange('country', e.target.value)} className={inputClasses}>
-                                        <option value="">Select Here</option>
+                                        <option value="" className="text-red-500 font-medium">Select Here</option>
                                         {countries.filter(c => c.name.toLowerCase() !== 'india').map((c, i) => <option key={i} value={c.name}>{c.name}</option>)}
+                                    </select>
+                                </div>
+                            )}
+                            <div>
+                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'State' : 'State / Province'} <span className="text-red-500">*</span></label>
+                                {exhibitorType === 'domestic' ? (
+                                    <input required type="text" value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
+                                        <option value="" className="text-red-500 font-medium">Select Here</option>
+                                        {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
                                     </select>
                                 )}
                             </div>
                             <div>
-                                <label className={labelClasses}>{exhibitorType === 'domestic' ? 'State *' : 'State / Province *'}</label>
-                                <select required value={formData.state} onChange={(e) => handleSelectChange('state', e.target.value)} disabled={!formData.country} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    {filteredStates.map((s, i) => <option key={i} value={s.name}>{s.name}</option>)}
-                                </select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
-                            <div>
-                                <label className={labelClasses}>City *</label>
-                                <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
-                                    <option value="">Select Here</option>
-                                    {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
-                                </select>
+                                <label className={labelClasses}>City <span className="text-red-500">*</span></label>
+                                {exhibitorType === 'domestic' ? (
+                                    <input required type="text" value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} className={inputClasses} placeholder="Auto-filled from Pincode" />
+                                ) : (
+                                    <select required value={formData.city} onChange={(e) => handleSelectChange('city', e.target.value)} disabled={!formData.state} className={inputClasses}>
+                                        <option value="" className="text-red-500 font-medium">Select Here</option>
+                                        {filteredCities.map((ct, i) => <option key={i} value={ct.name}>{ct.name}</option>)}
+                                    </select>
+                                )}
                             </div>
                             <div>
-                                <label className={labelClasses}>Pincode *</label>
-                                <input required type="text" value={formData.pincode} onChange={(e) => handleSelectChange('pincode', e.target.value)} className={inputClasses} placeholder="Write Here.." inputMode="numeric" />
+                                <label className={labelClasses}>Office Address <span className="text-red-500">*</span></label>
+                                <input required type="text" value={formData.address} onChange={(e) => handleSelectChange('address', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
                             <div>
-                                <label className={labelClasses}>Landline No.</label>
+                                <label className={labelClasses}>Landline.</label>
                                 <input type="text" value={formData.landlineNo} onChange={(e) => handleSelectChange('landlineNo', e.target.value)} className={inputClasses} placeholder="Write Here.." />
                             </div>
+                            <div>
+                                <label className={labelClasses}>Company Email <span className="text-red-500">*</span></label>
+                                <input
+                                    required
+                                    type="email"
+                                    value={formData.companyEmail}
+                                    onChange={(e) => handleSelectChange('companyEmail', e.target.value)}
+                                    className={inputClasses}
+                                    placeholder="company@example.com"
+                                />
+                            </div>
                             {/* <div>
-                                <label className={labelClasses}>Nature of Business *</label>
+                                <label className={labelClasses}>Nature of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.natureOfBusiness} onChange={(e) => handleSelectChange('natureOfBusiness', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Here</option>
+                                    <option value="" className="text-red-500 font-medium">Select Here</option>
                                     <option>Agency</option><option>Aggregator</option><option>Association</option><option>College</option>
                                     <option>Dealer</option><option>Digital Media</option><option>Distributor</option><option>Electronic Media</option>
                                     <option>Government Body</option><option>Institution</option><option>Manufacturer</option><option>NGO</option>
@@ -713,169 +996,605 @@ const BookAStand = () => {
                                     <option>Retailer</option><option>Service Provider</option><option>University</option><option>Others</option>
                                 </select>
                             </div> */}
+
+                            {/* About the Company */}
+                            <div className="md:col-span-2 flex flex-col h-full">
+                                <label className={labelClasses}>About the Company <span className="text-red-500">*</span></label>
+                                <textarea
+                                    required
+                                    minLength={250}
+                                    maxLength={300}
+                                    value={formData.aboutCompany}
+                                    onChange={(e) => handleSelectChange('aboutCompany', e.target.value.slice(0, 300))}
+                                    className={`${inputClasses} flex-1 !h-full py-1.5 resize-y leading-tight ${formData.aboutCompany?.length > 0 && formData.aboutCompany.length < 250 ? 'border-red-300 focus:border-red-500 focus:ring-red-200' : ''}`}
+                                    placeholder="Write a brief description about the company (minimum 250 characters)..."
+                                />
+                                <div className={`text-[10px] mt-1 font-medium ${!formData.aboutCompany || formData.aboutCompany.length < 250 ? 'text-red-500' : 'text-green-600'}`}>
+                                    {!formData.aboutCompany || formData.aboutCompany.length < 250
+                                        ? `* Minimum 250 and maximum 300 characters required. (Current: ${formData.aboutCompany?.length || 0}/300)`
+                                        : '✓ Character requirement met.'}
+                                </div>
+                            </div>
+
+                            {/* REGISTRANT TYPE */}
+                            <div className="border border-slate-200 rounded-md bg-slate-50/60 px-2 py-1.5 flex flex-col justify-center h-full">
+                                <p className="text-[11px] font-semibold text-slate-700 capitalize tracking-wide mb-1.5">Registration Type *</p>
+                                <div className="flex flex-col gap-1.5">
+                                    <label className="flex items-center gap-1.5 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="registrantType"
+                                            value="registered"
+                                            checked={formData.registrantType === 'registered'}
+                                            onChange={() => setFormData(prev => ({ ...prev, registrantType: 'registered', panNo: '', aadhaarNo: '' }))}
+                                            className="accent-[#23471d] w-3.5 h-3.5"
+                                        />
+                                        <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#23471d] transition-colors leading-none flex items-center gap-1.5">
+                                            Registered
+                                            <span className="text-[8.5px] font-semibold text-[#23471d] bg-green-50 border border-green-200 px-1.5 py-0.5 rounded uppercase tracking-wider">GST</span>
+                                        </span>
+                                    </label>
+                                    <label className="flex items-center gap-1.5 cursor-pointer group">
+                                        <input
+                                            type="radio"
+                                            name="registrantType"
+                                            value="unregistered"
+                                            checked={formData.registrantType === 'unregistered'}
+                                            onChange={() => setFormData(prev => ({ ...prev, registrantType: 'unregistered', gstNo: '' }))}
+                                            className="accent-[#d26019] w-3.5 h-3.5"
+                                        />
+                                        <span className="text-[11px] font-bold text-slate-800 group-hover:text-[#d26019] transition-colors leading-none flex items-center gap-1.5">
+                                            Unregistered
+                                            <span className="text-[8.5px] font-semibold text-[#d26019] bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded uppercase tracking-wider">PAN+Aadhar</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            {/* CONDITIONAL FIELDS */}
+                            {formData.registrantType === 'registered' ? (
+                                <>
+                                    <div className="md:col-span-2 flex flex-col gap-0">
+                                        <div className="grid grid-cols-2 gap-x-4">
+                                            <div>
+                                                <label className={labelClasses}>GST No. (GSTIN) <span className="text-red-500">*</span></label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    value={formData.gstNo}
+                                                    onChange={(e) => handleSelectChange('gstNo', e.target.value.toUpperCase())}
+                                                    className={inputClasses}
+                                                    placeholder="e.g. 07AABCU9603R1ZX"
+                                                    maxLength={15}
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="pt-1.5">
+                                            <label className={labelClasses}>Fascia Name (Optional)</label>
+                                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <>
+                                    <div className="md:col-span-2 flex flex-col gap-0">
+                                        <div className="grid grid-cols-2 gap-x-4">
+                                            <div>
+                                                <label className={labelClasses}>PAN Card No. <span className="text-red-500">*</span></label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    value={formData.panNo}
+                                                    onChange={(e) => handleSelectChange('panNo', e.target.value.toUpperCase())}
+                                                    className={inputClasses}
+                                                    placeholder="e.g. ABCDE1234F"
+                                                    maxLength={10}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className={labelClasses}>Aadhaar Card No. <span className="text-red-500">*</span></label>
+                                                <input
+                                                    required
+                                                    type="text"
+                                                    value={formData.aadhaarNo || ''}
+                                                    onChange={(e) => handleSelectChange('aadhaarNo', e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                                    className={inputClasses}
+                                                    placeholder="12-digit Aadhaar number"
+                                                    maxLength={12}
+                                                    inputMode="numeric"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div className="pt-1.5">
+                                            <label className={labelClasses}>Fascia Name (Optional)</label>
+                                            <input type="text" value={formData.fasciaName} onChange={(e) => handleSelectChange('fasciaName', e.target.value)} className={inputClasses} placeholder="Name on stall board" />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
-                    {/* SECTION: CONTACT PERSONS */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 px-2">
-                        <div className="space-y-2">
-                            <h3 className={sectionHeaderClasses}>First Contact Person Details</h3>
-                            <div className="bg-slate-50/40 p-4 border border-slate-200 rounded-[2px] space-y-3">
-                                <div className="grid grid-cols-4 gap-3">
+                    {/* SECTION: STALL SELECTION */}
+                    <div className={cardClasses}>
+                        <h3 className={sectionHeaderClasses}>Exhibition Space Selection</h3>
+
+                        <div className="flex flex-col lg:flex-row gap-5 lg:items-stretch -mt-3">
+                            {/* Left Side: Inputs */}
+                            <div className="w-full lg:w-[40%] flex flex-col gap-3">
+                                <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className={labelClasses}>Title *</label>
-                                        <select value={formData.contact1.title} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, title: e.target.value } }))} className={inputClasses}>
-                                            <option>Mr.</option><option>Ms.</option><option>Mrs.</option><option>Dr.</option>
+                                        <label className={labelClasses}>Stall Number <span className="text-red-500">*</span></label>
+                                        <div className="relative" ref={stallDropdownRef}>
+                                            <div
+                                                className={`${inputClasses} flex items-center justify-between cursor-pointer`}
+                                                onClick={() => setIsStallDropdownOpen(!isStallDropdownOpen)}
+                                            >
+                                                <span className={formData.participation.stallNo ? "text-slate-800" : "text-slate-400"}>
+                                                    {formData.participation.stallNo
+                                                        ? availableStalls.find(s => s._id === formData.participation.stallNo)?.stallNumber
+                                                        : "Search & Choose Stall"}
+                                                </span>
+                                                <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                            </div>
+
+                                            {isStallDropdownOpen && (
+                                                <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded shadow-lg">
+                                                    <div className="p-1.5 border-b border-slate-100">
+                                                        <input
+                                                            type="text"
+                                                            className="w-full text-[12px] p-1.5 border border-slate-200 rounded outline-none focus:border-[#23471d]"
+                                                            placeholder="Search stall..."
+                                                            value={stallSearchQuery}
+                                                            onChange={(e) => setStallSearchQuery(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <ul className="max-h-48 overflow-y-auto">
+                                                        {availableStalls
+                                                            .filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId))
+                                                            .sort((a, b) => (a.stallNumber || '').localeCompare((b.stallNumber || ''), undefined, { numeric: true, sensitivity: 'base' }))
+                                                            .filter(s => (s.stallNumber || '').toLowerCase().includes(stallSearchQuery.toLowerCase()))
+                                                            .map(s => (
+                                                                <li
+                                                                    key={s._id}
+                                                                    className={`px-3 py-1.5 text-[12px] cursor-pointer hover:bg-slate-100 ${formData.participation.stallNo === s._id ? 'bg-[#23471d] text-white hover:bg-[#23471d]' : 'text-slate-700'}`}
+                                                                    onClick={() => {
+                                                                        handleStallSelect(s._id);
+                                                                        setIsStallDropdownOpen(false);
+                                                                        setStallSearchQuery("");
+                                                                    }}
+                                                                >
+                                                                    {s.stallNumber}
+                                                                </li>
+                                                            ))}
+                                                        {availableStalls.filter(s => (typeof s.eventId === 'string' ? s.eventId === selectedEventId : s.eventId?._id === selectedEventId)).length === 0 && (
+                                                            <li className="px-3 py-2 text-[12px] text-slate-500 text-center">No stalls available</li>
+                                                        )}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className={labelClasses}>Open Sides</label>
+                                        <select value={formData.participation.stallScheme || ''} onChange={(e) => handleSelectChange('participation.stallScheme', e.target.value)} className={inputClasses}>
+                                            <option value="" className="text-red-500 font-medium">Select Open Sides</option>
+                                            <option value="ONE SIDE OPEN">One Side Open</option>
+                                            <option value="TWO SIDE OPEN">Two Side Open</option>
+                                            <option value="THREE SIDE OPEN">Three Side Open</option>
+                                            <option value="FOUR SIDE OPEN">Four Side Open</option>
+                                        </select>
+                                        {formData.participation.incrementPercentage > 0 && (
+                                            <p className="text-[8.5px] text-red-500 font-bold mt-1.5 leading-tight tracking-tight whitespace-nowrap">
+                                                Note : {formData.participation.incrementPercentage}% PLC applicable on base rate
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className={labelClasses}>Stall Type</label>
+                                        <select value={formData.participation.stallType} onChange={(e) => handleSelectChange('participation.stallType', e.target.value)} className={inputClasses}>
+                                            <option value="Shell Space">Shell Space (Built-up)</option>
+                                            <option value="Raw Space">Raw Space (Plot)</option>
                                         </select>
                                     </div>
                                     <div>
-                                        <label className={labelClasses}>First Name *</label>
-                                        <input required type="text" value={formData.contact1.firstName} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, firstName: e.target.value } }))} className={inputClasses} placeholder="Write Here.." />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className={labelClasses}>Last Name *</label>
-                                        <input required type="text" value={formData.contact1.lastName} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, lastName: e.target.value } }))} className={inputClasses} placeholder="Write Here.." />
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div>
-                                        <label className={labelClasses}>Email *</label>
-                                        <input required type="email" value={formData.contact1.email} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, email: e.target.value } }))} className={inputClasses} placeholder="Official Email" />
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Designation *</label>
-                                        <input required type="text" value={formData.contact1.designation} onChange={(e) => setFormData(p => ({ ...p, contact1: { ...p.contact1, designation: e.target.value } }))} className={inputClasses} placeholder="Write Here.." />
+                                        <label className={labelClasses}>Stall Category</label>
+                                        <select value={formData.participation.stallCategory} onChange={(e) => handleSelectChange('participation.stallCategory', e.target.value)} className={inputClasses}>
+                                            <option value="" className="text-red-500 font-medium">Select Category</option>
+                                            <option value="Under MSME PSM Scheme">Under MSME PSM Scheme</option>
+                                            <option value="Under General Category">Under General Category</option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-3">
+                            </div>
+
+                            {/* Middle Side: LIVE RATES */}
+                            <div className="w-full lg:w-[32%]">
+                                {selectedEventId && (() => {
+                                    const currency = exhibitorType === 'domestic' ? 'INR' : 'USD';
+                                    const filtered = allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId && r.currency === currency);
+                                    return filtered.length > 0 && (
+                                        <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm h-full">
+                                            <table className="w-full text-left border-collapse h-full">
+                                                <thead>
+                                                    <tr className="bg-[#0088cc] text-white">
+                                                        <th className="py-1.5 px-2 text-[9px] font-bold uppercase tracking-wider">Stand Type</th>
+                                                        <th className="py-1.5 px-2 text-[9px] font-bold uppercase tracking-wider">Cost ({currency} {currency === 'INR' ? '₹' : '$'})</th>
+                                                        <th className="py-1.5 px-2 text-[9px] font-bold uppercase tracking-wider text-center">GST</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="bg-white">
+                                                    {filtered.map((rate, index) => (
+                                                        <tr key={rate._id} className={index !== filtered.length - 1 ? 'border-b border-slate-100' : ''}>
+                                                            <td className="py-1.5 px-2 flex flex-col justify-center">
+                                                                <span className="text-[10px] font-bold text-slate-700 uppercase leading-none">{rate.stallType}</span>
+                                                                <span className="text-[8px] text-slate-400 font-medium mt-0.5">(Min. 9 sq m.)</span>
+                                                            </td>
+                                                            <td className="py-1.5 px-2 align-middle">
+                                                                <span className="text-[10px] font-semibold text-[#0088cc]">
+                                                                    {currency === 'INR' ? '₹' : '$'} {rate.ratePerSqm.toLocaleString()} / sq m.
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-1.5 px-2 text-center align-middle">
+                                                                <span className="inline-block px-2 py-0.5 text-[8px] font-bold text-black bg-orange-50 border border-orange-200 rounded-full">
+                                                                    18% GST
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+
+                            {/* Right Side: Image Banner */}
+                            <div className="w-full lg:w-[28%] relative rounded-lg overflow-hidden border border-slate-200 shadow-sm hidden lg:block">
+                                <img loading="lazy" decoding="async" src={arenaImg} alt="Exhibition Arena" className="absolute inset-0 w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                <div className="absolute bottom-3 left-3 right-3">
+                                    <h4 className="text-white font-bold text-[11px] uppercase tracking-wide">Exhibition Arena</h4>
+                                    <p className="text-white/80 text-[9px] mt-0.5 leading-snug">World-class stalls and networking spaces.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* SECTION: CRM ATTRIBUTION (Moved inside per request) */}
+                        <div className="mt-4 pt-4 border-t border-slate-100">
+                            <h4 className="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                CRM Attribution
+                            </h4>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-3">
+                                <div>
+                                    <label className={labelClasses}>Referral Channel <span className="text-red-500">*</span></label>
+                                    <SearchableDropdown
+                                        value={formData.referredBy}
+                                        options={[
+                                            "Direct Calling",
+                                            "Direct Website",
+                                            "Email Marketing",
+                                            "Google (GMB / GMV)",
+                                            "Others",
+                                            "Referral",
+                                            "Social Media",
+                                            "WhatsApp Marketing"
+                                        ].map((option) => ({ value: option, label: option }))}
+                                        onChange={(value) => handleSelectChange('referredBy', value)}
+                                        placeholder="How did you hear about us?"
+                                        searchPlaceholder="Search referral channel..."
+                                        inputClassName={inputClasses}
+                                    />
+                                </div>
+
+                                {formData.referredBy === 'Social Media' && (
                                     <div>
-                                        <label className={labelClasses}>Mobile *</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            inputMode={exhibitorType === 'domestic' ? 'numeric' : 'tel'}
-                                            maxLength={exhibitorType === 'domestic' ? 10 : undefined}
-                                            value={formData.contact1.mobile}
-                                            onChange={(e) => {
-                                                const val = exhibitorType === 'domestic' ? e.target.value.replace(/\D/g, '').slice(0, 10) : e.target.value;
-                                                setFormData(p => ({ ...p, contact1: { ...p.contact1, mobile: val } }));
-                                            }}
-                                            className={inputClasses}
-                                            placeholder={exhibitorType === 'domestic' ? '10-digit number' : 'WhatsApp Number'}
+                                        <label className={labelClasses}>Social Media <span className="text-red-500">*</span></label>
+                                        <select required value={formData.socialMediaType} onChange={(e) => handleSelectChange('socialMediaType', e.target.value)} className={inputClasses}>
+                                            <option value="" className="text-red-500 font-medium">Select Platform</option>
+                                            <option value="Instagram">Instagram</option>
+                                            <option value="Facebook">Facebook</option>
+                                            <option value="X">X (Twitter)</option>
+                                            <option value="LinkedIn">LinkedIn</option>
+                                        </select>
+                                    </div>
+                                )}
+
+                                {formData.referredBy === 'Referral' && (
+                                    <>
+                                        <div>
+                                            <label className={labelClasses}>Referral Name <span className="text-red-500">*</span></label>
+                                            <input required value={formData.referralName} onChange={(e) => handleSelectChange('referralName', e.target.value)} placeholder="Name" className={inputClasses} />
+                                        </div>
+                                        <div>
+                                            <label className={labelClasses}>Referral Mobile <span className="text-red-500">*</span></label>
+                                            <input required value={formData.referralMobile} onChange={(e) => handleSelectChange('referralMobile', e.target.value)} placeholder="Mobile" className={inputClasses} inputMode="numeric" maxLength={10} />
+                                        </div>
+                                    </>
+                                )}
+
+                                <div>
+                                    <label className={labelClasses}>Spoken With <span className="text-red-500">*</span></label>
+                                    <SearchableDropdown
+                                        value={formData.spokenWith}
+                                        options={marketingStaff
+                                            .slice()
+                                            .sort((a, b) => (a.fullName || a.username || "").localeCompare(b.fullName || b.username || ""))
+                                            .map((staff) => ({
+                                                value: staff.fullName || staff.username,
+                                                label: staff.fullName || staff.username
+                                            }))}
+                                        onChange={(value) => handleSelectChange('spokenWith', value)}
+                                        placeholder="Select Staff Member"
+                                        searchPlaceholder="Search staff member..."
+                                        inputClassName={inputClasses}
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className={labelClasses}>Exhibitor Status <span className="text-red-500">*</span></label>
+                                    <select
+                                        required
+                                        value={formData.exhibitorStatus}
+                                        onChange={(e) => {
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                exhibitorStatus: e.target.value,
+                                                previousExhibition: e.target.value === 'Existing Client' ? prev.previousExhibition : null
+                                            }));
+                                            setIsPreviousExhibitionDropdownOpen(false);
+                                            setPreviousExhibitionSearchQuery("");
+                                        }}
+                                        className={inputClasses}
+                                    >
+                                        <option value="" className="text-red-500 font-medium">Select Status</option>
+                                        <option value="New Client">New Client</option>
+                                        <option value="Existing Client">Existing Client</option>
+                                    </select>
+                                </div>
+
+                                {formData.exhibitorStatus === 'Existing Client' && (
+                                    <div>
+                                        <label className={labelClasses}>Previous Exhibition <span className="text-red-500">*</span></label>
+                                        <div className="relative" ref={previousExhibitionDropdownRef}>
+                                            <div
+                                                className={`${inputClasses} flex items-center justify-between cursor-pointer`}
+                                                onClick={() => setIsPreviousExhibitionDropdownOpen((open) => !open)}
+                                            >
+                                                <span className={`truncate ${formData.previousExhibition?.id ? "text-slate-800" : "text-slate-400"}`}>
+                                                    {formData.previousExhibition?.id
+                                                        ? formData.previousExhibition.name
+                                                        : "Search & Choose Exhibition"}
+                                                </span>
+                                                <ChevronDown className="w-3.5 h-3.5 shrink-0 text-slate-500" />
+                                            </div>
+
+                                            {isPreviousExhibitionDropdownOpen && (
+                                                <div className="absolute bottom-full z-50 mb-1 w-full rounded border border-slate-200 bg-white shadow-lg">
+                                                    <div className="border-b border-slate-100 p-1.5">
+                                                        <input
+                                                            type="text"
+                                                            className="w-full rounded border border-slate-200 p-1.5 text-[12px] outline-none focus:border-[#23471d]"
+                                                            placeholder="Search exhibition name..."
+                                                            value={previousExhibitionSearchQuery}
+                                                            onChange={(e) => setPreviousExhibitionSearchQuery(e.target.value)}
+                                                            autoFocus
+                                                        />
+                                                    </div>
+                                                    <ul className="max-h-48 overflow-y-auto">
+                                                        {previousExhibitions
+                                                            .slice()
+                                                            .sort((a, b) => (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" }))
+                                                            .filter((exhibition) =>
+                                                                exhibition.name.toLowerCase()
+                                                                    .includes(previousExhibitionSearchQuery.toLowerCase())
+                                                            )
+                                                            .map((exhibition) => (
+                                                                <li
+                                                                    key={exhibition._id}
+                                                                    className={`cursor-pointer px-3 py-1.5 text-[12px] hover:bg-slate-100 ${formData.previousExhibition?.id === exhibition._id
+                                                                        ? "bg-[#23471d] text-white hover:bg-[#23471d]"
+                                                                        : "text-slate-700"}`}
+                                                                    onClick={() => {
+                                                                        setFormData((prev) => ({
+                                                                            ...prev,
+                                                                            previousExhibition: {
+                                                                                id: exhibition._id,
+                                                                                name: exhibition.name,
+                                                                                year: prev.previousExhibition?.year || ""
+                                                                            }
+                                                                        }));
+                                                                        setIsPreviousExhibitionDropdownOpen(false);
+                                                                        setPreviousExhibitionSearchQuery("");
+                                                                    }}
+                                                                >
+                                                                    {exhibition.name}
+                                                                </li>
+                                                            ))}
+                                                        {previousExhibitions.filter((exhibition) =>
+                                                            exhibition.name.toLowerCase()
+                                                                .includes(previousExhibitionSearchQuery.toLowerCase())
+                                                        ).length === 0 && (
+                                                                <li className="px-3 py-2 text-center text-[12px] text-slate-500">
+                                                                    No exhibitions available
+                                                                </li>
+                                                            )}
+                                                    </ul>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {formData.exhibitorStatus === 'Existing Client' && (
+                                    <div>
+                                        <label className={labelClasses}>Exhibition Year <span className="text-red-500">*</span></label>
+                                        <SearchableDropdown
+                                            value={formData.previousExhibition?.year || ""}
+                                            options={exhibitionYears.map((year) => ({
+                                                value: year,
+                                                label: String(year)
+                                            }))}
+                                            onChange={(year) => setFormData((prev) => ({
+                                                ...prev,
+                                                previousExhibition: {
+                                                    ...(prev.previousExhibition || {}),
+                                                    year: Number(year)
+                                                }
+                                            }))}
+                                            placeholder="Select Year"
+                                            searchPlaceholder="Search year..."
+                                            inputClassName={inputClasses}
                                         />
                                     </div>
-                                    <div>
-                                        <label className={labelClasses}>Alternate No. *</label>
-                                        <input
-                                            required
-                                            type="text"
-                                            inputMode={exhibitorType === 'domestic' ? 'numeric' : 'tel'}
-                                            maxLength={exhibitorType === 'domestic' ? 10 : undefined}
-                                            value={formData.contact1.alternateNo}
-                                            onChange={(e) => {
-                                                const val = exhibitorType === 'domestic' ? e.target.value.replace(/\D/g, '').slice(0, 10) : e.target.value;
-                                                setFormData(p => ({ ...p, contact1: { ...p.contact1, alternateNo: val } }));
-                                            }}
-                                            className={inputClasses}
-                                            placeholder={exhibitorType === 'domestic' ? '10-digit number' : 'Write Here..'}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="space-y-2">
-                            <h3 className={sectionHeaderClasses}>Exhibitor Category</h3>
-                            <div className="bg-slate-50/40 p-4 border border-slate-200 rounded-[2px] space-y-3">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-                                    <div>
-                                        <label className={labelClasses}>Primary Category *</label>
-                                        <select required value={formData.primaryCategory} onChange={(e) => handleSelectChange('primaryCategory', e.target.value)} className={inputClasses}>
-                                            <option value="">Select Primary Category</option>
-                                            <option>Medical &amp; Healthcare</option>
-                                            <option>AYUSH &amp; Traditional Medicine</option>
-                                            <option>Wellness, Fitness &amp; Lifestyle</option>
-                                            <option>Nutrition, Organic &amp; Health Foods</option>
-                                            <option>Beauty, Personal Care &amp; Aesthetic Wellness</option>
-                                            <option>Mental Health, Yoga &amp; Spiritual Wellness</option>
-                                            <option>Medical Technology, Diagnostics &amp; Devices</option>
-                                            <option>Institutions, Government Bodies &amp; Startups</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className={labelClasses}>Sub-Category</label>
-                                        <select value={formData.subCategory} onChange={(e) => handleSelectChange('subCategory', e.target.value)} disabled={!formData.primaryCategory} className={inputClasses}>
-                                            <option value="">{formData.primaryCategory ? 'Select Sub-Category' : 'Select Primary Category first'}</option>
-                                            {({
-                                                'Medical & Healthcare': ['Hospitals & Clinics', 'Pharmaceuticals', 'Medical Services', 'Healthcare Consultants'],
-                                                'AYUSH & Traditional Medicine': ['Ayurveda Products', 'Herbal Medicines', 'Panchakarma & Therapies', 'AYUSH Institutions'],
-                                                'Wellness, Fitness & Lifestyle': ['Fitness Equipment', 'Wellness Centers', 'Lifestyle Products', 'Preventive Healthcare'],
-                                                'Nutrition, Organic & Health Foods': ['Organic Food Products', 'Nutraceuticals', 'Supplements', 'Functional Foods'],
-                                                'Beauty, Personal Care & Aesthetic Wellness': ['Skincare', 'Cosmetics', 'Herbal Beauty', 'Aesthetic Clinics'],
-                                                'Mental Health, Yoga & Spiritual Wellness': ['Yoga Institutes', 'Meditation Services', 'Mental Health Solutions', 'Spiritual Organizations'],
-                                                'Medical Technology, Diagnostics & Devices': ['Diagnostic Equipment', 'Medical Devices', 'Digital Health / HealthTech', 'AI & Software Solutions'],
-                                                'Institutions, Government Bodies & Startups': ['Government Bodies', 'Research Institutes', 'Universities', 'Startups']
-                                            }[formData.primaryCategory] || []).map(sub => (
-                                                <option key={sub} value={sub}>{sub}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* SECTION: CRM ATTRIBUTION */}
-                    <div className="space-y-3 px-2">
-                        <h3 className={sectionHeaderClasses}>CRM Attribution</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-                            <div>
-                                <label className={labelClasses}>Referral Channel *</label>
-                                <select required value={formData.referredBy} onChange={(e) => handleSelectChange('referredBy', e.target.value)} className={inputClasses}>
-                                    <option value="">How did you hear about us?</option>
-                                    <option value="Direct Website">Direct Website</option>
-                                    <option value="Email Marketing">Email Marketing</option>
-                                    <option value="Social Media">Social Media</option>
-                                    <option value="Search Engine">Search Engine</option>
-                                    <option value="Others">Others</option>
-                                </select>
+                    {/* PAYMENT PLAN & TDS CONTROL */}
+                    {/* PAYMENT PLAN, TDS & BREAKDOWNS MOVED TO CONVERTED CLIENT PAGE 
+                    <div className="p-4 bg-[#f8fafc] border border-slate-200 rounded-xl mt-3 flex flex-col lg:flex-row items-end justify-between gap-4">
+
+
+                            {(() => {
+                                const currentEvent = events.find(e => e._id === selectedEventId);
+                                const plans = currentEvent?.paymentPlans || [];
+                                const fullPlan = plans.find(p => Number(p.percentage) === 100 || p.id === 'full');
+                                // First installment phase (lowest %)
+                                const firstInstallPlan = plans
+                                    .filter(p => Number(p.percentage) < 100)
+                                    .sort((a, b) => Number(a.percentage) - Number(b.percentage))[0];
+                                const isFullSelected = formData.paymentPlanType === 'full' || formData.paymentPlanType === fullPlan?.id;
+                                return (
+                                    <div className="flex-1">
+                                        <label className={labelClasses}>Payment Plan <span className="text-red-500">*</span></label>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    paymentPlanType: fullPlan?.id || 'full',
+                                                    paymentPlanLabel: fullPlan?.label || 'Full Payment'
+                                                }))}
+                                                className={`px-4 py-1.5 text-[11px] font-semibold uppercase rounded-[2px] border transition-all ${isFullSelected
+                                                    ? 'bg-[#23471d] text-white border-[#23471d]'
+                                                    : 'bg-white text-slate-600 border-slate-300 hover:border-[#23471d]'
+                                                    }`}
+                                            >
+                                                Full Payment{settings?.fullPaymentDiscount > 0 ? ` (${settings.fullPaymentDiscount}% discount)` : ''}
+                                            </button>
+                                            {firstInstallPlan && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        paymentPlanType: firstInstallPlan.id,
+                                                        paymentPlanLabel: firstInstallPlan.label
+                                                    }))}
+                                                    className={`px-4 py-1.5 text-[11px] font-semibold uppercase rounded-[2px] border transition-all ${!isFullSelected
+                                                        ? 'bg-[#1a3a6b] text-white border-[#1a3a6b]'
+                                                        : 'bg-white text-slate-600 border-slate-300 hover:border-[#1a3a6b]'
+                                                        }`}
+                                                >
+                                                    Installment ({firstInstallPlan.percentage}% Now)
+                                                </button>
+                                            )}
+                                        </div>
+                                        <p className="text-[10px] text-black mt-1.5 font-medium">
+                                            Selected: <span className="font-bold text-red-600">{formData.paymentPlanLabel}</span>
+                                            {isFullSelected && settings?.fullPaymentDiscount > 0 && (
+                                                <span className="ml-2 text-[#23471d] font-semibold">— {settings.fullPaymentDiscount}% discount applied</span>
+                                            )}
+                                        </p>
+                                    </div>
+                                );
+                            })()}
+
+                            <div className="flex items-end justify-end gap-6 shrink-0">
+                                <div>
+                                    <label className={labelClasses}>Apply TDS Deduction <span className="text-red-500">*</span></label>
+                                    <div className="w-40 relative mt-1">
+                                        <select
+                                            value={formData.chosenTdsPercent}
+                                            onChange={(e) => setFormData(prev => ({ ...prev, chosenTdsPercent: Number(e.target.value) }))}
+                                            className="w-full h-[28px] rounded-[2px] border border-slate-400 px-3 text-[11px] font-semibold text-red-600 bg-white focus:border-[#23471d] outline-none appearance-none"
+                                        >
+                                            <option value={0}>0% TDS</option>
+                                            <option value={1}>1% TDS</option>
+                                            <option value={2}>2% TDS</option>
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-2 top-1.5 text-red-600 pointer-events-none" />
+                                    </div>
+                                </div>
+                                <div className="text-right border-l border-slate-200 pl-6">
+                                    <p className="text-[9px] font-bold text-black uppercase tracking-widest leading-none mb-1.5">
+                                        Net Payable (After TDS)
+                                    </p>
+                                    <p className="text-xl font-semibold text-[#23471d] leading-none">
+                                        {formData.participation.currency} {formData.financeBreakdown?.netPayable?.toLocaleString() || 0}
+                                    </p>
+                                </div>
                             </div>
-                            <div>
-                                <label className={labelClasses}>Spoken With *</label>
-                                <select required value={formData.spokenWith} onChange={(e) => handleSelectChange('spokenWith', e.target.value)} className={inputClasses}>
-                                    <option value="">Select Staff Member</option>
-                                    {marketingStaff.map(s => <option key={s._id} value={s.username}>{s.username}</option>)}
-                                </select>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl flex flex-wrap gap-6 items-end">
+                            <div className="flex flex-col gap-0.5">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Stall</p>
+                                <p className="text-sm font-bold text-slate-900">{formData.participation.stallFor || ''}</p>
+                                <p className="text-[11px] text-slate-500">{formData.participation.stallType}  {formData.participation.stallSize} sqm</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Base Rate</p>
+                                <p className="text-sm font-bold text-slate-900">{formData.participation.currency} {Number(formData.participation.rate).toLocaleString()}/sqm</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Base Amount</p>
+                                <p className="text-sm font-bold text-slate-900">{formData.participation.currency} {Math.round(formData.participation.amount).toLocaleString()}</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">GST (18%)</p>
+                                <p className="text-sm font-bold text-slate-900">{formData.participation.currency} {Math.round(formData.participation.total - formData.participation.amount).toLocaleString()}</p>
+                            </div>
+                            <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4 ml-auto">
+                                <p className="text-[10px] font-semibold text-[#23471d] uppercase tracking-widest flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
+                                    Total Payable
+                                </p>
+                                <p className="text-2xl font-semibold text-[#23471d]">{formData.participation.currency === 'INR' ? `\u20b9${formData.participation.total?.toLocaleString()}` : `$${formData.participation.total?.toLocaleString()}`}</p>
                             </div>
                         </div>
                     </div>
-                    {/* FINANCIAL SETTLEMENT BREAKDOWN */}
+
+
+
                     <div className="px-2">
-                        <div className="bg-white border border-slate-200 rounded-[2px] p-5 shadow-sm relative overflow-hidden group">
+                        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)] relative overflow-hidden group">
                             <div className="absolute top-0 left-0 w-1 h-full bg-[#23471d]"></div>
-                            
+
                             <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck size={18} className="text-[#23471d]" />
-                                    <h3 className="text-[11px] font-black text-slate-900 uppercase tracking-[0.2em]">Financial Settlement Breakdown</h3>
+                                    <h3 className="text-[11px] font-semibold text-slate-900 uppercase tracking-[0.2em]">Financial Settlement Breakdown</h3>
                                 </div>
-                                <span className="px-2 py-0.5 text-[8px] font-black uppercase bg-slate-100 text-slate-500 rounded border border-slate-200 tracking-widest">Calculated Live</span>
+                                <span className="px-2 py-0.5 text-[8px] font-semibold uppercase bg-slate-100 text-slate-500 rounded border border-slate-200 tracking-widest">Calculated Live</span>
                             </div>
-                            
+
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-4">
-                                {/* Gross Cost */}
                                 <div className="space-y-1">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Gross Booking Cost</p>
+                                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Gross Booking Cost</p>
                                     <p className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                                         {formData.participation.currency} {formData.financeBreakdown.grossAmount?.toLocaleString()}
                                     </p>
                                 </div>
 
-                                {/* Discounts Combined */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest flex items-center justify-between">
+                                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest flex items-center justify-between">
                                         Applied Savings
-                                        <span className="text-[8px] font-black text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2">SAVED</span>
+                                        <span className="text-[8px] font-semibold text-green-600 bg-green-50 px-1.5 py-0.5 rounded ml-2">SAVED</span>
                                     </p>
                                     <div className="flex flex-col">
                                         <p className="text-sm font-bold text-green-600">
@@ -896,27 +1615,25 @@ const BookAStand = () => {
                                     </div>
                                 </div>
 
-                                {/* Taxes & Deductions */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6">
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Government Taxes & TDS</p>
+                                    <p className="text-[9px] font-semibold text-slate-400 uppercase tracking-widest">Government Taxes & TDS</p>
                                     <div className="flex gap-4">
                                         <div>
-                                            <p className="text-[10px] font-black text-slate-900">+{formData.participation.currency} {formData.financeBreakdown.gstAmount?.toLocaleString()}</p>
-                                            <p className="text-[8px] font-bold text-slate-400 uppercase">GST 18%</p>
+                                            <p className="text-[10px] font-semibold text-slate-900">+{formData.participation.currency} {formData.financeBreakdown.gstAmount?.toLocaleString()}</p>
+                                            <p className="text-[8px] font-bold text-red-600 uppercase">GST 18%</p>
                                         </div>
                                         {formData.financeBreakdown.tdsPercent > 0 && (
                                             <div>
-                                                <p className="text-[10px] font-black text-red-600">-{formData.participation.currency} {formData.financeBreakdown.tdsAmount?.toLocaleString()}</p>
+                                                <p className="text-[10px] font-semibold text-red-600">-{formData.participation.currency} {formData.financeBreakdown.tdsAmount?.toLocaleString()}</p>
                                                 <p className="text-[8px] font-bold text-red-400 uppercase">TDS {formData.financeBreakdown.tdsPercent}%</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                {/* Net Payable */}
                                 <div className="space-y-1 border-l-0 md:border-l border-slate-100 pl-0 md:pl-6 text-right">
-                                    <p className="text-[9px] font-black text-[#23471d] uppercase tracking-[0.1em] mb-1">Net To Be Collected</p>
-                                    <p className="text-3xl font-black text-[#23471d] leading-none mb-1">
+                                    <p className="text-[9px] font-semibold text-[#23471d] uppercase tracking-[0.1em] mb-1">Net To Be Collected</p>
+                                    <p className="text-3xl font-semibold text-[#23471d] leading-none mb-1">
                                         {formData.participation.currency} {formData.financeBreakdown.netPayable?.toLocaleString()}
                                     </p>
                                     <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">All Taxes Included</p>
@@ -925,58 +1642,59 @@ const BookAStand = () => {
                         </div>
                     </div>
 
-                    {/* BOOKING SUMMARY */}
                     <div className="px-2 space-y-3">
-                        <div className="bg-slate-50 border border-slate-200 rounded-[2px] p-4 flex flex-wrap gap-6 items-end justify-between">
+                        <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 flex flex-wrap gap-6 items-end justify-between">
                             <div className="flex flex-col gap-0.5">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Final Status</p>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Final Status</p>
                                 <p className="text-sm font-bold text-slate-900">
                                     {formData.financeBreakdown.isFullPayment ? 'Full Booking' : 'Advance Booking'}
                                 </p>
                                 <p className="text-[11px] text-slate-500">Plan: {formData.paymentPlanLabel}</p>
                             </div>
                             <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Due Today</p>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Due Today</p>
                                 <p className="text-sm font-bold text-[#23471d]">{formData.participation.currency} {formData.amountPaid?.toLocaleString()}</p>
                             </div>
                             <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4">
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Balance Later</p>
+                                <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Balance Later</p>
                                 <p className="text-sm font-bold text-red-600">{formData.participation.currency} {formData.balanceAmount?.toLocaleString()}</p>
                             </div>
                             <div className="flex flex-col gap-0.5 border-l border-slate-200 pl-4 ml-auto">
-                                <p className="text-[10px] font-black text-[#23471d] uppercase tracking-widest flex items-center gap-1.5">
+                                <p className="text-[10px] font-semibold text-[#23471d] uppercase tracking-widest flex items-center gap-1.5">
                                     <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block animate-pulse"></span>
                                     Net Total
                                 </p>
-                                <p className="text-2xl font-black text-[#23471d]">{formData.participation.currency} {formData.financeBreakdown.netPayable?.toLocaleString()}</p>
+                                <p className="text-2xl font-semibold text-[#23471d]">{formData.participation.currency} {formData.financeBreakdown.netPayable?.toLocaleString()}</p>
                             </div>
                         </div>
                     </div>
+                    */}
 
-                        {/* FOOTER ACTIONS */}
-                        <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
-                                <ShieldCheck size={14} className="text-[#23471d]" />
-                                Secure Admin Manual Booking
-                            </p>
-                            <div className="flex gap-3">
-                                <button type="button" onClick={() => window.location.reload()}
-                                    className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-[2px]">
-                                    Reset
-                                </button>
-                                <button type="submit" disabled={isLoading}
-                                    className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-lg flex items-center gap-2 group">
-                                    {isLoading
-                                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                        : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
-                                    }
-                                </button>
-                            </div>
+
+                    {/* FOOTER ACTIONS */}
+                    <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 px-2">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] flex items-center gap-2">
+                            <ShieldCheck size={14} className="text-[#23471d]" />
+                            Secure Admin Manual Booking
+                        </p>
+                        <div className="flex gap-3">
+                            <button type="button" onClick={() => window.location.reload()}
+                                className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-md">
+                                Reset
+                            </button>
+                            <button type="submit" disabled={isLoading}
+                                className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-md shadow-lg flex items-center gap-2 group">
+                                {isLoading
+                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                    : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
+                                }
+                            </button>
                         </div>
-                    </form>
-                )}
-            </div>
-        );
+                    </div>
+                </form>
+            )}
+        </div>
+    );
 };
 
 export default BookAStand;

@@ -45,24 +45,25 @@ export default function ExhibitorProductsProfile() {
     const fetchExhibitors = async () => {
         setLoading(true);
         try {
-            const res = await api.get("/api/exhibitor-registration");
+            const res = await api.get("/api/stall-products/admin/exhibitors-with-products");
             if (res.data && res.data.success && Array.isArray(res.data.data)) {
-                const activeOnes = res.data.data
-                    .filter(e => e && e.status && ['paid', 'confirmed', 'approved', 'advance-paid'].includes(e.status.toLowerCase()))
+                const exhibitorsWithProducts = res.data.data
                     .map(e => ({
                         _id: e._id,
                         title: e.exhibitorName || 'Unknown Company',
                         location: `${e.city || ''}, ${e.country || ''}`,
                         email: e.contact1?.email || 'No Email',
-                        companyLogoUrl: e.companyLogoUrl
+                        companyLogoUrl: e.companyLogoUrl,
+                        registrationId: e.registrationId,
+                        planName: e.productCount ? `${e.productCount} Products` : 'Products',
                     }));
-                setExhibitors(activeOnes);
+                setExhibitors(exhibitorsWithProducts);
             } else {
                 setExhibitors([]);
             }
         } catch (err) {
             console.error("Fetch Error:", err);
-            toast.error("Failed to load exhibitors");
+            setExhibitors([]);
         } finally {
             setLoading(false);
         }
@@ -88,7 +89,6 @@ export default function ExhibitorProductsProfile() {
             if (aRes?.data?.success) setExhibitorAnalytics(aRes.data.data || null);
         } catch (err) {
             console.error("Select Error:", err);
-            toast.error("Error fetching data");
             setProducts([]);
             setExhibitorAnalytics(null);
         } finally {
@@ -151,10 +151,10 @@ export default function ExhibitorProductsProfile() {
     ) : [];
 
     return (
-        <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+        <div className="p-6 max-w-[1600px] mx-auto space-y-6 mt-6">
             <PageHeader
-                title="Exhibitors Products Management"
-                subtitle="End-to-end monitoring and multi-exhibitor catalog control."
+                title="Seller Products Management"
+                subtitle="Manage product catalogs for sellers with active subscriptions."
             />
 
             <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
@@ -187,8 +187,14 @@ export default function ExhibitorProductsProfile() {
                                 <div className="min-w-0">
                                     <h4 className="text-[11px] font-black uppercase truncate leading-tight">{exh.title}</h4>
                                     <p className={`text-[10px] font-medium truncate mt-0.5 ${selectedExhibitor?._id === exh._id ? 'text-white/70' : 'text-gray-400'}`}>
-                                        {exh.location}
+                                        {exh.registrationId || exh.location}
                                     </p>
+                                    {exh.planName && (
+                                        <span className={`text-[8px] font-black px-1.5 py-0.5 rounded uppercase mt-0.5 inline-block ${selectedExhibitor?._id === exh._id ? 'bg-white/20 text-white' : 'bg-green-50 text-green-700'
+                                            }`}>
+                                            {exh.planName}
+                                        </span>
+                                    )}
                                 </div>
                                 <ArrowRight size={14} className={`shrink-0 transition-transform ${selectedExhibitor?._id === exh._id ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:opacity-100'}`} />
                             </button>
@@ -202,7 +208,8 @@ export default function ExhibitorProductsProfile() {
                         {!selectedExhibitor ? (
                             <div className="h-full flex flex-col items-center justify-center bg-gray-50 border-2 border-dashed rounded-lg p-20 text-center opacity-60">
                                 <Users size={48} className="text-gray-300 mb-4" />
-                                <h3 className="text-sm font-black uppercase text-gray-400">Select an Exhibitor to Manage</h3>
+                                <h3 className="text-sm font-black uppercase text-gray-400">Select a Seller to Manage Products</h3>
+                                <p className="text-xs text-gray-400 mt-2">Only sellers with active subscription are shown</p>
                             </div>
                         ) : productsLoading ? (
                             <div className="h-full flex items-center justify-center py-40">
@@ -215,8 +222,7 @@ export default function ExhibitorProductsProfile() {
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 bg-[#23471d] text-white rounded flex items-center justify-center text-xl font-black overflow-hidden border border-gray-100 shadow-sm">
                                             {selectedExhibitor.companyLogoUrl ? (
-                                                <img
-                                                    src={selectedExhibitor.companyLogoUrl.startsWith('http') ? selectedExhibitor.companyLogoUrl : `${backendBaseUrl}${selectedExhibitor.companyLogoUrl}`}
+                                                <img loading="lazy" decoding="async"                                                     src={selectedExhibitor.companyLogoUrl.startsWith('http') ? selectedExhibitor.companyLogoUrl : `${backendBaseUrl}${selectedExhibitor.companyLogoUrl}`}
                                                     className="w-full h-full object-contain bg-white"
                                                     alt={selectedExhibitor.title}
                                                     onError={(e) => {
@@ -280,8 +286,7 @@ export default function ExhibitorProductsProfile() {
                                                     >
                                                         <div className="aspect-square bg-gray-50 relative">
                                                             {p.images?.[0] ? (
-                                                                <img
-                                                                    src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
+                                                                <img loading="lazy" decoding="async"                                                                     src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
                                                                     className="w-full h-full object-contain"
                                                                     onError={(e) => e.target.src = 'https://placehold.co/400x400?text=No+Image'}
                                                                 />
@@ -343,8 +348,7 @@ export default function ExhibitorProductsProfile() {
                                                             <td className="py-3 flex items-center gap-3">
                                                                 <div className="w-10 h-10 border rounded overflow-hidden bg-gray-50 flex">
                                                                     {p.images?.[0] ? (
-                                                                        <img
-                                                                            src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
+                                                                        <img loading="lazy" decoding="async"                                                                             src={p.images[0].startsWith('http') ? p.images[0] : `${backendBaseUrl}${p.images[0]}`}
                                                                             className="w-full h-full object-contain"
                                                                             onError={(e) => e.target.src = 'https://placehold.co/100x100?text=NA'}
                                                                         />
@@ -412,7 +416,7 @@ export default function ExhibitorProductsProfile() {
                                                 onClick={() => setActiveModalImage(idx)}
                                                 className={`w-16 h-16 rounded border-2 transition-all overflow-hidden shrink-0 ${activeModalImage === idx ? 'border-[#23471d] scale-110 shadow-md' : 'border-transparent opacity-50 hover:opacity-100'}`}
                                             >
-                                                <img src={img.startsWith('http') ? img : `${backendBaseUrl}${img}`} className="w-full h-full object-cover" />
+                                                <img loading="lazy" decoding="async" src={img.startsWith('http') ? img : `${backendBaseUrl}${img}`} className="w-full h-full object-cover" />
                                             </button>
                                         ))}
                                     </div>
@@ -500,7 +504,7 @@ export default function ExhibitorProductsProfile() {
                                         <div className="grid grid-cols-4 gap-4">
                                             {imagePreviews.map((src, i) => (
                                                 <div key={i} className="aspect-square rounded border relative group bg-gray-50 flex overflow-hidden">
-                                                    <img src={src} className="w-full h-full object-contain m-auto" />
+                                                    <img loading="lazy" decoding="async" src={src} className="w-full h-full object-contain m-auto" />
                                                     <button type="button" onClick={() => {
                                                         setSelectedImages(prev => prev.filter((_, idx) => idx !== i));
                                                         setImagePreviews(prev => prev.filter((_, idx) => idx !== i));

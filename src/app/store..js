@@ -9,6 +9,7 @@ import dataSourceReducer from "../features/add_by_admin/dataSource/dataSourceSli
 import crmEventReducer from "../features/crmEvent/crmEventSlice";
 import companyReducer from "../features/company/companySlice";
 import statusOptionReducer from "../features/add_by_admin/statusOption/statusOptionSlice";
+import exhibitionRoleReducer from "../features/add_by_admin/exhibitionRole/exhibitionRoleSlice";
 import bankReducer from "../features/add_by_admin/banks/bankSlice";
 import crmMessageReducer from "../features/add_by_admin/crm_wat_mess/CrmWatMessage";
 import authReducer from "../features/auth/authSlice";
@@ -29,6 +30,10 @@ import primaryProductReducer from "../features/add_by_admin/primary_product/Prim
 import secondaryProductReducer from "../features/add_by_admin/secondary_product/SecondaryProductSlice";
 import meetingPriorityReducer from "../features/add_by_admin/meeting-priority/MeetingPrioritySlice";
 import unitReducer from "../features/add_by_admin/unit/UnitSlice";
+import nextActionReducer from "../features/add_by_admin/nextAction/nextActionSlice";
+
+import documentRequirementReducer from "../features/add_by_admin/document-requirements/DocumentRequirementSlice";
+import clientDocumentReducer from "../features/client-documents/ClientDocumentSlice";
 
 export const store = configureStore({
   reducer: {
@@ -43,6 +48,7 @@ export const store = configureStore({
     crmEvents: crmEventReducer,
     companies: companyReducer,
     statusOptions: statusOptionReducer,
+    exhibitionRoles: exhibitionRoleReducer,
     banks: bankReducer,
     crmMessages: crmMessageReducer,
     auth: authReducer,
@@ -62,6 +68,9 @@ export const store = configureStore({
     secondaryProduct: secondaryProductReducer,
     meetingPriority: meetingPriorityReducer,
     unit: unitReducer,
+    nextActions: nextActionReducer,
+    documentRequirements: documentRequirementReducer,
+    clientDocuments: clientDocumentReducer,
   },
 });
 

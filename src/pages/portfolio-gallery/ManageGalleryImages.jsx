@@ -17,8 +17,10 @@ const EMPTY_FORM = {
 const ManageGalleryImages = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { categoryTitle } = location.state || {};
-    
+    const { categoryTitle, categoryId, categoryType } = location.state || {};
+    const isVideo = categoryType === 'video';
+    const isMedia = categoryType === 'media';
+
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -34,13 +36,19 @@ const ManageGalleryImages = () => {
             return;
         }
         fetchImages();
-    }, [categoryTitle]);
+    }, [categoryTitle, categoryId]);
 
     const fetchImages = async () => {
         setIsLoading(true);
         try {
-            // Fetch images filtered by title
-            const res = await api.get(`/api/gallery?title=${encodeURIComponent(categoryTitle)}`);
+            let res;
+            if (categoryId) {
+                // Fetch by galleryCategoryId
+                const cat = categoryType || 'gallery';
+                res = await api.get(`/api/gallery?category=${cat}&galleryCategoryId=${categoryId}`);
+            } else {
+                res = await api.get(`/api/gallery?title=${encodeURIComponent(categoryTitle)}`);
+            }
             if (res.data.success) {
                 setImages(res.data.data);
             }
@@ -85,7 +93,7 @@ const ManageGalleryImages = () => {
             confirmButtonText: 'Yes, delete!'
         });
         if (!result.isConfirmed) return;
-        
+
         setIsLoading(true);
         try {
             await api.delete(`/api/gallery/${id}`);
@@ -104,7 +112,7 @@ const ManageGalleryImages = () => {
         setIsLoading(true);
         try {
             let imagePath = form.image;
-            
+
             // If a new file is selected, upload it first
             if (selectedFile) {
                 const formData = new FormData();
@@ -143,7 +151,7 @@ const ManageGalleryImages = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="flex items-center justify-between mb-8">
                 <PageHeader
                     title={`MANAGE IMAGES: ${categoryTitle}`}
@@ -173,16 +181,16 @@ const ManageGalleryImages = () => {
                         ) : (
                             <div className="space-y-4">
                                 <div className="h-48 border-2 border-gray-200 rounded-lg overflow-hidden relative group">
-                                    <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+                                    <img loading="lazy" decoding="async" src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
                                     <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity gap-4">
-                                        <button 
+                                        <button
                                             onClick={handleReplaceClick}
                                             className="w-10 h-10 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all"
                                             title="Replace Image"
                                         >
                                             <RefreshCw className="w-5 h-5" />
                                         </button>
-                                        <button 
+                                        <button
                                             onClick={() => handleDelete(form._id)}
                                             className="w-10 h-10 bg-red-500/80 hover:bg-red-600 rounded-full flex items-center justify-center text-white backdrop-blur-sm transition-all"
                                             title="Delete Image"
@@ -190,10 +198,10 @@ const ManageGalleryImages = () => {
                                             <Trash2 className="w-5 h-5" />
                                         </button>
                                     </div>
-                                    <input 
-                                        type="file" 
-                                        ref={fileInputRef} 
-                                        className="hidden" 
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        className="hidden"
                                         accept="image/*"
                                         onChange={handleFileChange}
                                     />
@@ -228,9 +236,9 @@ const ManageGalleryImages = () => {
                                 </div>
                             </div>
                         )}
-                        
+
                         <div className="mt-6 pt-6 border-t border-gray-100">
-                             <button
+                            <button
                                 onClick={() => navigate('/add-gallery-images', { state: { categoryId: categoryTitle, categoryTitle } })}
                                 className="w-full py-3 border-2 border-dashed border-[#d26019] text-[#d26019] font-bold hover:bg-orange-50 transition-all flex items-center justify-center gap-2 text-xs uppercase"
                             >
@@ -279,16 +287,27 @@ const ManageGalleryImages = () => {
                                         <tr key={img._id} className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${form._id === img._id ? 'bg-orange-50 border-l-4 border-l-[#d26019]' : ''}`}>
                                             <td className="py-4 px-4 text-gray-400 font-bold">{idx + 1}</td>
                                             <td className="py-4 px-4">
-                                                <img
-                                                    src={`${SERVER_URL}${img.image}`}
-                                                    className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200"
-                                                    alt={img.imageAlt}
-                                                />
+                                                {img.videoUrl ? (
+                                                    img.videoUrl.includes('youtube.com') || img.videoUrl.includes('youtu.be') ? (
+                                                        <img loading="lazy" decoding="async"                                                             src={`https://img.youtube.com/vi/${img.videoUrl.split('v=')[1]?.split('&')[0] || img.videoUrl.split('youtu.be/')[1]?.split('?')[0]}/hqdefault.jpg`}
+                                                            className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200"
+                                                            alt={img.title}
+                                                        />
+                                                    ) : (
+                                                        <video src={`${SERVER_URL}${img.videoUrl}#t=0.5`} className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200" preload="metadata" muted playsInline />
+                                                    )
+                                                ) : (
+                                                    <img loading="lazy" decoding="async"                                                         src={`${SERVER_URL}${img.image}`}
+                                                        className="w-20 h-14 object-cover rounded shadow-sm border border-gray-200"
+                                                        alt={img.imageAlt}
+                                                    />
+                                                )}
                                             </td>
                                             <td className="py-4 px-4">
                                                 <div className="max-w-[300px]">
-                                                    <p className={`text-xs ${img.imageAlt ? 'text-gray-700' : 'text-gray-300 italic'}`}>
-                                                        {img.imageAlt || 'No alt text provided'}
+                                                    <p className="text-xs font-bold text-gray-800">{img.title || '—'}</p>
+                                                    <p className={`text-xs mt-1 ${img.imageAlt || img.videoUrl ? 'text-gray-600' : 'text-gray-300 italic'}`}>
+                                                        {img.videoUrl || img.imageAlt || 'No alt text provided'}
                                                     </p>
                                                     <span className="text-[9px] text-gray-400 mt-1 block uppercase font-medium tracking-tighter">
                                                         ID: {img._id}

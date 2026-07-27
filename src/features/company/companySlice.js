@@ -257,9 +257,16 @@ const getUserInfo = () => {
 // ==================== FETCH ====================
 export const fetchCompanies = createAsyncThunk(
   "company/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const res = await api.get("/api/companies"); // ✅ api use
+      // Build query string, omitting undefined/null/empty values
+      const validParams = Object.fromEntries(
+        Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== "")
+      );
+      const queryString = new URLSearchParams(validParams).toString();
+      const url = `/api/companies${queryString ? `?${queryString}` : ""}`;
+      
+      const res = await api.get(url);
       return res.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || error.message);
@@ -376,10 +383,46 @@ export const deleteCompany = createAsyncThunk(
     }
   },
 );
+// ==================== UPLOAD EXCEL ====================
 
+export const uploadCompaniesThunk =
+  createAsyncThunk(
+    "company/uploadCompanies",
+    async (file, { rejectWithValue }) => {
+      try {
+        const formData =
+          new FormData();
+
+        formData.append(
+          "file",
+          file
+        );
+
+        const res = await api.post(
+          "/api/companies/upload-companies",
+          formData,
+          {
+            headers: {
+              "Content-Type":
+                "multipart/form-data",
+            },
+          }
+        );
+
+        return res.data;
+      } catch (error) {
+        return rejectWithValue(
+          error.response?.data
+            ?.message ||
+            error.message
+        );
+      }
+    }
+  );
 // ==================== SLICE ====================
 const initialState = {
   companies: [],
+  pagination: null,
   loading: false,
   error: null,
 };
@@ -401,7 +444,13 @@ const companySlice = createSlice({
       })
       .addCase(fetchCompanies.fulfilled, (state, action) => {
         state.loading = false;
-        state.companies = action.payload;
+        if (action.payload && action.payload.pagination) {
+          state.companies = action.payload.data;
+          state.pagination = action.payload.pagination;
+        } else {
+          state.companies = action.payload;
+          state.pagination = null;
+        }
       })
       .addCase(fetchCompanies.rejected, (state, action) => {
         state.loading = false;

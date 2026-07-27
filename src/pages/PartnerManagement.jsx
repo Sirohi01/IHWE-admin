@@ -10,7 +10,7 @@ import PageHeader from '../components/PageHeader';
 const PartnerManagement = () => {
     const [groups, setGroups] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    
+
     // Group Form State (for adding/editing group headings)
     const [groupForm, setGroupForm] = useState({
         subheading: 'Title Partners',
@@ -126,8 +126,8 @@ const PartnerManagement = () => {
     };
 
     const handlePartnerSubmit = async (groupId) => {
-        if (!imageFile && !partnerForm.logo) {
-            Swal.fire('Warning', 'Please upload a logo', 'warning');
+        if (!imageFile && !partnerForm.logo && !partnerForm.name) {
+            Swal.fire('Warning', 'Please provide a name or upload a logo', 'warning');
             return;
         }
 
@@ -137,12 +137,9 @@ const PartnerManagement = () => {
             if (imageFile) {
                 logoUrl = await uploadLogo();
             }
-            
+
             let response;
             if (isEditingPartnerId) {
-                // For simplicity in sub-document updates, we can use a PUT on the group with the partner ID
-                // But I'll implement a specific route for updating partner details if needed.
-                // For now, let's assume we add/delete or I'll add the PUT route in backend.
                 response = await api.put(`/api/partners/groups/${groupId}/partners/${isEditingPartnerId}`, {
                     name: partnerForm.name,
                     logo: logoUrl,
@@ -214,7 +211,7 @@ const PartnerManagement = () => {
     };
 
     return (
-        <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+        <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
                 title="PARTNERS MANAGEMENT"
                 description="Manage partner groups, categories and logos"
@@ -268,7 +265,7 @@ const PartnerManagement = () => {
                                     <Save className="w-4 h-4" /> {isEditingGroupId ? 'Update Group' : 'Save Group'}
                                 </button>
                                 {isEditingGroupId && (
-                                    <button 
+                                    <button
                                         onClick={() => { setIsEditingGroupId(null); setGroupForm({ subheading: 'Title Partners', heading: 'Industry Leadership', highlightText: 'Leadership' }); }}
                                         className="px-4 py-2 border-2 border-gray-200 text-gray-500 font-bold hover:bg-gray-50"
                                     >
@@ -367,11 +364,11 @@ const PartnerManagement = () => {
                                                     >
                                                         {partnerForm.groupId === group._id && imagePreview ? (
                                                             <div className="flex items-center gap-2">
-                                                                <img src={imagePreview} className="w-6 h-6 object-contain rounded" />
+                                                                <img loading="lazy" decoding="async" src={imagePreview} className="w-6 h-6 object-contain rounded" />
                                                                 <span className="text-[#23471d]">Image Selected</span>
                                                             </div>
                                                         ) : (
-                                                            <><ImageIcon className="w-4 h-4" /> Click to Upload Logo</>
+                                                            <><ImageIcon className="w-4 h-4" /> Click to Upload Logo (Optional)</>
                                                         )}
                                                     </label>
                                                     {partnerForm.groupId === group._id && imagePreview && (
@@ -414,7 +411,7 @@ const PartnerManagement = () => {
                                             {!group.partners?.length ? (
                                                 <tr>
                                                     <td colSpan={4} className="py-10 text-center text-slate-400 italic">
-                                                        No logos added yet for this group.
+                                                        No partners added yet for this group.
                                                     </td>
                                                 </tr>
                                             ) : group.partners.map((partner, pIdx) => (
@@ -422,7 +419,7 @@ const PartnerManagement = () => {
                                                     <td className="py-3 px-4 font-bold text-slate-400">{pIdx + 1}</td>
                                                     <td className="py-3 px-4">
                                                         <div className="w-20 h-12 bg-white border border-slate-200 p-1 flex items-center justify-center rounded">
-                                                            <img src={`${SERVER_URL}${partner.logo}`} className="max-h-full max-w-full object-contain" />
+                                                            <img loading="lazy" decoding="async" src={`${SERVER_URL}${partner.logo}`} className="max-h-full max-w-full object-contain" />
                                                         </div>
                                                     </td>
                                                     <td className="py-3 px-4 font-semibold text-slate-700">
@@ -435,9 +432,9 @@ const PartnerManagement = () => {
                                                                 {partner.updatedBy || 'System'}
                                                             </span>
                                                             <span className="text-[9px] text-gray-500 font-bold whitespace-nowrap text-center">
-                                                                {partner.updatedAt ? new Date(partner.updatedAt).toLocaleString('en-GB', { 
-                                                                    day: '2-digit', month: 'short', year: 'numeric', 
-                                                                    hour: '2-digit', minute: '2-digit', hour12: true 
+                                                                {partner.updatedAt ? new Date(partner.updatedAt).toLocaleString('en-GB', {
+                                                                    day: '2-digit', month: 'short', year: 'numeric',
+                                                                    hour: '2-digit', minute: '2-digit', hour12: true
                                                                 }) : 'N/A'}
                                                             </span>
                                                         </div>
@@ -445,14 +442,14 @@ const PartnerManagement = () => {
                                                     <td className="py-3 px-4 text-right">
 
                                                         <div className="flex items-center justify-end gap-2">
-                                                            <button 
+                                                            <button
                                                                 onClick={() => startEditPartner(group, partner)}
                                                                 className="p-2 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-full transition-all"
                                                                 title="Edit Partner"
                                                             >
                                                                 <Edit size={16} />
                                                             </button>
-                                                            <button 
+                                                            <button
                                                                 onClick={() => handleDeletePartner(group._id, partner._id)}
                                                                 className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all"
                                                                 title="Delete Partner"

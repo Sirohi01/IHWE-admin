@@ -66,8 +66,7 @@ const ProjectList = () => {
       label: "Photo",
       render: (row) =>
         row.photo ? (
-          <img
-            src={row.photo}
+          <img loading="lazy" decoding="async"             src={row.photo}
             alt="Project"
             className="w-10 h-10 rounded-md object-cover border"
           />
@@ -118,7 +117,7 @@ const ProjectList = () => {
   };
 
   return (
-    <div className="bg-white shadow-md mt-6 p-6 min-h-screen">
+    <div className="bg-white shadow-md  p-6 min-h-screen">
       <div className="w-full">
         <PageHeader
           title="PROJECT LIST"

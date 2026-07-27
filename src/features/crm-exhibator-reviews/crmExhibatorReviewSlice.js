@@ -180,10 +180,8 @@
 // export default crmExhibatorReviewSlice.reducer;
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../lib/api";
 import { createActivityLogThunk } from "../activityLog/activityLogSlice";
-
-const BASE_URL = import.meta.env.VITE_API_URL;
 
 // ─── Helper ───────────────────────────────────────────────────────────────────
 
@@ -203,7 +201,7 @@ export const fetchReviews = createAsyncThunk(
   "reviews/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/crm-exhibator-reviews`);
+      const res = await api.get(`/api/crm-exhibator-reviews`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -211,12 +209,13 @@ export const fetchReviews = createAsyncThunk(
   },
 );
 
-// Get review by ID
 export const fetchReviewById = createAsyncThunk(
   "reviews/fetchById",
-  async (id, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${BASE_URL}/crm-exhibator-reviews/${id}`);
+      const id = typeof params === 'object' ? params.id : params;
+      const limit = typeof params === 'object' && params.limit ? `?limit=${params.limit}` : '';
+      const res = await api.get(`/api/crm-exhibator-reviews/${id}${limit}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
@@ -229,8 +228,8 @@ export const createReview = createAsyncThunk(
   "reviews/create",
   async (reviewData, { dispatch, rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        `${BASE_URL}/crm-exhibator-reviews`,
+      const res = await api.post(
+        `/api/crm-exhibator-reviews`,
         reviewData,
       );
 
@@ -265,8 +264,8 @@ export const updateReview = createAsyncThunk(
   "reviews/update",
   async ({ id, reviewData }, { dispatch, rejectWithValue }) => {
     try {
-      const res = await axios.put(
-        `${BASE_URL}/crm-exhibator-reviews/${id}`,
+      const res = await api.put(
+        `/api/crm-exhibator-reviews/${id}`,
         reviewData,
       );
 
@@ -304,7 +303,7 @@ export const deleteReview = createAsyncThunk(
       const { reviews } = getState().reviews;
       const reviewToDelete = reviews.find((r) => r._id === id);
 
-      const res = await axios.delete(`${BASE_URL}/crm-exhibator-reviews/${id}`);
+      const res = await api.delete(`/api/crm-exhibator-reviews/${id}`);
 
       const { userId, userName } = getUserInfo();
 
@@ -373,7 +372,7 @@ const crmExhibatorReviewSlice = createSlice({
       })
       .addCase(fetchReviewById.fulfilled, (state, action) => {
         state.loading = false;
-        state.review = action.payload;
+        state.reviews = action.payload;
       })
       .addCase(fetchReviewById.rejected, (state, action) => {
         state.loading = false;
@@ -387,8 +386,8 @@ const crmExhibatorReviewSlice = createSlice({
       })
       .addCase(createReview.fulfilled, (state, action) => {
         state.loading = false;
-        state.reviews.push(action.payload.data);
-        state.success = action.payload.message;
+        if (action.payload) state.reviews.push(action.payload);
+        state.success = "Review created";
       })
       .addCase(createReview.rejected, (state, action) => {
         state.loading = false;
@@ -403,9 +402,9 @@ const crmExhibatorReviewSlice = createSlice({
       .addCase(updateReview.fulfilled, (state, action) => {
         state.loading = false;
         state.reviews = state.reviews.map((r) =>
-          r._id === action.payload.data._id ? action.payload.data : r,
+          r && action.payload && r._id === action.payload._id ? action.payload : r,
         );
-        state.success = action.payload.message;
+        state.success = "Review updated";
       })
       .addCase(updateReview.rejected, (state, action) => {
         state.loading = false;

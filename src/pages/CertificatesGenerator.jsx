@@ -1,0 +1,515 @@
+import React, { useEffect, useState } from 'react';
+import Certi from '../components/certificates/Certi';
+import api, { SERVER_URL } from '../lib/api';
+
+import certificateHeading from "../assets/certificates/Certificate/Certificate Participation copy.png";
+import msmeSupportedBy from "../assets/certificates/Certificate/MSME.png";
+import namoGangeLogo from "../assets/certificates/Certificate/NGT Logo.png";
+import eventLogo from "../assets/certificates/Certificate/ags logo.png";
+import founderSignature from "../assets/certificates/Certificate/Acharya ji.png";
+import chairmanSignature from "../assets/certificates/Certificate/Vijay sir.png";
+import globalAwardLogo from "../assets/certificates/Certificate/Global Award.png";
+
+const defaultSeed = {
+    supportedByText: "SUPPORTED BY:",
+    supportedByLeftText: "SUPPORTED BY:",
+    supportedByRightText: "SUPPORTED BY:",
+    supportedByBottomRightText: "SUPPORTED BY:",
+    presentsText: "Presents",
+    bodyTextPart1: "We extend our heartfelt gratitude to",
+    recipientName: "DABUR INDIA LIMITED",
+    bodyTextPart2: "for being a Valuable Speaker at the 18th",
+    highlightText1: "Arogya Sangoshthi",
+    bodyTextPart3: "Seminar & 9th Edition of",
+    highlightText2: "International Health & Wellness",
+    highlightText3: "Expo 2026",
+    bodyTextPart4: ", organised by Namo Gange Trust, held from 21st August to 23rd August 2026",
+    bodyTextPart5: "at Pragati Maidan, New Delhi, Bharat.",
+    bodyTextPart6: "Your insightful session, valuable expertise, and inspiring contribution greatly enriched",
+    bodyTextPart7: "the conference and benefited all participants.",
+    bodyTextPart8: "We sincerely appreciate your time, dedication, and commitment to advancing health and wellness,",
+    bodyTextPart9: "and look forward to your continued support in future initiatives.",
+    founderName: "H.H. Shri Acharya Jagdish Ji",
+    founderRole: "Founder",
+    chairmanName: "Shri Vijay Sharma",
+    chairmanRole: "Chairman",
+    initiativesTitle: "Namo Gange Trust Initiatives",
+    concurrentTitle: "CONCURRENT EVENTS",
+    footerAddress: "Head Office: 12/52, Site-II, Loni Road Industrial Area, Mohan Nagar, Ghaziabad 201007, UP, Bharat",
+    footerContact: "info@namogange.org | web: www.namogange.org"
+};
+
+const defaultImages = {
+    supportedByLogo: msmeSupportedBy,
+    supportedByRightLogo: msmeSupportedBy,
+    supportedByBottomRightLogo: msmeSupportedBy,
+    mainLogo: namoGangeLogo,
+    titleLogo: eventLogo,
+    certificateHeading,
+    founderSignature,
+    chairmanSignature,
+    globalAwardLogo
+};
+
+const imageLabels = {
+    supportedByLogo: 'Supported By Logo',
+    supportedByRightLogo: 'Right Supported By Logo',
+    supportedByBottomRightLogo: 'Bottom Right Supported By Logo',
+    mainLogo: 'Namo Gange Logo',
+    titleLogo: 'Event Title Logo',
+    certificateHeading: 'Certificate Heading',
+    founderSignature: 'Founder Signature',
+    chairmanSignature: 'Chairman Signature',
+    globalAwardLogo: 'Global Award Logo'
+};
+
+const resolveMedia = (value) => {
+    if (!value) return '';
+    if (/^(data:|blob:|https?:\/\/)/i.test(value)) return value;
+    return `${SERVER_URL}${value.startsWith('/') ? '' : '/'}${value}`;
+};
+
+const makeEmptyArray = (count) => Array.from({ length: count }, () => '');
+const EMPTY_IMAGE_VALUE = '__CERT_IMAGE_EMPTY__';
+const certificateTypes = [
+    { value: 'speaker', label: 'Speaker' },
+    { value: 'delegate', label: 'Delegate' },
+    { value: 'paperPresentation', label: 'Paper Presentation' },
+    { value: 'posterPresentation', label: 'Poster Presentation' },
+    { value: 'juryMember', label: 'Jury Member' },
+    { value: 'guest', label: 'Guest' }
+];
+
+const CertificatesGenerator = () => {
+    const [config, setConfig] = useState(defaultSeed);
+    const [images, setImages] = useState(defaultImages);
+    const [imageFiles, setImageFiles] = useState({});
+    const [initiativeImages, setInitiativeImages] = useState(makeEmptyArray(24));
+    const [concurrentImages, setConcurrentImages] = useState(makeEmptyArray(7));
+    const [initiativeFiles, setInitiativeFiles] = useState({});
+    const [concurrentFiles, setConcurrentFiles] = useState({});
+    const [rawInitiativeLogos, setRawInitiativeLogos] = useState(makeEmptyArray(24));
+    const [rawConcurrentLogos, setRawConcurrentLogos] = useState(makeEmptyArray(7));
+    const [clearedImageFields, setClearedImageFields] = useState([]);
+    const [resetImageFields, setResetImageFields] = useState([]);
+    const [showImages, setShowImages] = useState(false);
+    const [showText, setShowText] = useState(false);
+    const [showInitiatives, setShowInitiatives] = useState(false);
+    const [showConcurrent, setShowConcurrent] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [recipients, setRecipients] = useState([]);
+    const [recipientsLoading, setRecipientsLoading] = useState(false);
+    const [selectedRecipientNames, setSelectedRecipientNames] = useState([]);
+    const [batchPrintNames, setBatchPrintNames] = useState([]);
+    const [printLimit, setPrintLimit] = useState(10);
+    const [isBatchPrinting, setIsBatchPrinting] = useState(false);
+    const [printSize, setPrintSize] = useState('A4');
+    const [certificateType, setCertificateType] = useState('speaker');
+
+    const loadConfig = async (type = certificateType) => {
+        const res = await api.get('/api/arogya-certificate-config', { params: { type } });
+        const data = res.data?.data || {};
+        setConfig({ ...defaultSeed, ...Object.fromEntries(Object.keys(defaultSeed).map((key) => [key, data[key] ?? defaultSeed[key]])) });
+        setImages(Object.fromEntries(Object.keys(defaultImages).map((key) => {
+            if (data[key] === EMPTY_IMAGE_VALUE) return [key, ''];
+            return [key, resolveMedia(data[key]) || defaultImages[key]];
+        })));
+
+        const savedInitiatives = [...makeEmptyArray(24)];
+        (data.initiativeLogos || []).forEach((url, index) => { savedInitiatives[index] = url || ''; });
+        setRawInitiativeLogos(savedInitiatives);
+        setInitiativeImages(savedInitiatives.map((url) => url === EMPTY_IMAGE_VALUE ? '' : resolveMedia(url)));
+
+        const savedConcurrent = [...makeEmptyArray(7)];
+        (data.concurrentLogos || []).forEach((url, index) => { savedConcurrent[index] = url || ''; });
+        setRawConcurrentLogos(savedConcurrent);
+        setConcurrentImages(savedConcurrent.map((url) => url === EMPTY_IMAGE_VALUE ? '' : resolveMedia(url)));
+        setClearedImageFields([]);
+        setResetImageFields([]);
+    };
+
+    const loadRecipients = async (type = certificateType) => {
+        setRecipientsLoading(true);
+        try {
+            const res = await api.get('/api/certificate-recipients', { params: { type } });
+            const nextRecipients = Array.isArray(res.data?.data) ? res.data.data.filter((item) => item?.name) : [];
+            setRecipients(nextRecipients);
+            setSelectedRecipientNames([]);
+            setBatchPrintNames([]);
+        } catch (error) {
+            console.error('Failed to load certificate recipients', error);
+            setRecipients([]);
+            setSelectedRecipientNames([]);
+            setBatchPrintNames([]);
+        } finally {
+            setRecipientsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadConfig(certificateType).catch((error) => console.error('Failed to load certificate config', error));
+        loadRecipients(certificateType);
+    }, [certificateType]);
+
+    const handleRecipientChange = (e) => {
+        const name = e.target.value;
+        setConfig(prev => ({ ...prev, recipientName: name }));
+    };
+
+    const hasCurrentRecipient = recipients.some((recipient) => recipient.name === config.recipientName);
+
+    const handleBatchRecipientChange = (e) => {
+        const names = Array.from(e.target.selectedOptions).map((option) => option.value);
+        setSelectedRecipientNames(names);
+        if (names[0]) {
+            setConfig(prev => ({ ...prev, recipientName: names[0] }));
+        }
+    };
+
+    const printCertificates = (names) => {
+        if (names.length === 0) {
+            alert('Please select at least one recipient.');
+            return;
+        }
+
+        const cleanup = () => {
+            setIsBatchPrinting(false);
+            setBatchPrintNames([]);
+        };
+        window.addEventListener('afterprint', cleanup, { once: true });
+        setBatchPrintNames(names);
+        setIsBatchPrinting(true);
+        setTimeout(() => {
+            window.print();
+            setTimeout(cleanup, 1000);
+        }, 100);
+    };
+
+    const printSelectedCertificates = () => printCertificates(selectedRecipientNames);
+    const printAllCertificates = () => printCertificates(recipients.map((recipient) => recipient.name));
+    const selectLimitedRecipients = () => {
+        const limit = Math.max(1, Math.min(Number(printLimit) || 1, recipients.length));
+        const names = recipients.slice(0, limit).map((recipient) => recipient.name);
+        setSelectedRecipientNames(names);
+        if (names[0]) {
+            setConfig(prev => ({ ...prev, recipientName: names[0] }));
+        }
+    };
+
+    const handleTextChange = (e) => {
+        const { name, value } = e.target;
+        setConfig(prev => ({ ...prev, [name]: value }));
+    };
+
+    const readPreview = (file, callback) => {
+        const reader = new FileReader();
+        reader.onloadend = () => callback(reader.result);
+        reader.readAsDataURL(file);
+    };
+
+    const handleImageChange = (e) => {
+        const { name, files } = e.target;
+        const file = files?.[0];
+        if (!file) return;
+        setImageFiles(prev => ({ ...prev, [name]: file }));
+        setClearedImageFields(prev => prev.filter(field => field !== name));
+        setResetImageFields(prev => prev.filter(field => field !== name));
+        readPreview(file, (src) => setImages(prev => ({ ...prev, [name]: src })));
+    };
+
+    const deleteMainImage = (key) => {
+        setImages(prev => ({ ...prev, [key]: '' }));
+        setImageFiles(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+        setClearedImageFields(prev => prev.includes(key) ? prev : [...prev, key]);
+        setResetImageFields(prev => prev.filter(field => field !== key));
+    };
+
+    const useDefaultMainImage = (key) => {
+        setImages(prev => ({ ...prev, [key]: defaultImages[key] }));
+        setImageFiles(prev => {
+            const next = { ...prev };
+            delete next[key];
+            return next;
+        });
+        setClearedImageFields(prev => prev.filter(field => field !== key));
+        setResetImageFields(prev => prev.includes(key) ? prev : [...prev, key]);
+    };
+
+    const handleLogoSlotChange = (e, index, type) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const setFiles = type === 'initiative' ? setInitiativeFiles : setConcurrentFiles;
+        const setImagesForType = type === 'initiative' ? setInitiativeImages : setConcurrentImages;
+
+        setFiles(prev => ({ ...prev, [index]: file }));
+        readPreview(file, (src) => {
+            setImagesForType(prev => {
+                const next = [...prev];
+                next[index] = src;
+                return next;
+            });
+        });
+    };
+
+    const deleteLogoSlot = (index, type) => {
+        const setImagesForType = type === 'initiative' ? setInitiativeImages : setConcurrentImages;
+        const setRawForType = type === 'initiative' ? setRawInitiativeLogos : setRawConcurrentLogos;
+        const setFiles = type === 'initiative' ? setInitiativeFiles : setConcurrentFiles;
+
+        setImagesForType(prev => {
+            const next = [...prev];
+            next[index] = '';
+            return next;
+        });
+        setRawForType(prev => {
+            const next = [...prev];
+            next[index] = EMPTY_IMAGE_VALUE;
+            return next;
+        });
+        setFiles(prev => {
+            const next = { ...prev };
+            delete next[index];
+            return next;
+        });
+    };
+
+    const useDefaultLogoSlot = (index, type) => {
+        const setImagesForType = type === 'initiative' ? setInitiativeImages : setConcurrentImages;
+        const setRawForType = type === 'initiative' ? setRawInitiativeLogos : setRawConcurrentLogos;
+        const setFiles = type === 'initiative' ? setInitiativeFiles : setConcurrentFiles;
+
+        setImagesForType(prev => {
+            const next = [...prev];
+            next[index] = '';
+            return next;
+        });
+        setRawForType(prev => {
+            const next = [...prev];
+            next[index] = '';
+            return next;
+        });
+        setFiles(prev => {
+            const next = { ...prev };
+            delete next[index];
+            return next;
+        });
+    };
+
+    const clearTextField = (key) => setConfig(prev => ({ ...prev, [key]: '' }));
+    const resetTextField = (key) => setConfig(prev => ({ ...prev, [key]: defaultSeed[key] ?? '' }));
+
+    const saveConfig = async () => {
+        setSaving(true);
+        try {
+            const form = new FormData();
+            form.append('certificateType', certificateType);
+            Object.entries(config).forEach(([key, value]) => form.append(key, value ?? ''));
+            Object.entries(imageFiles).forEach(([key, file]) => form.append(key, file));
+            form.append('clearedImageFields', JSON.stringify(clearedImageFields));
+            form.append('resetImageFields', JSON.stringify(resetImageFields));
+            form.append('initiativeLogos', JSON.stringify(rawInitiativeLogos));
+            form.append('concurrentLogos', JSON.stringify(rawConcurrentLogos));
+            Object.entries(initiativeFiles).forEach(([index, file]) => form.append(`initiativeLogo_${index}`, file));
+            Object.entries(concurrentFiles).forEach(([index, file]) => form.append(`concurrentLogo_${index}`, file));
+
+            await api.post('/api/arogya-certificate-config/update', form);
+            setImageFiles({});
+            setClearedImageFields([]);
+            setResetImageFields([]);
+            setInitiativeFiles({});
+            setConcurrentFiles({});
+            await loadConfig(certificateType);
+            alert('Certificate settings saved.');
+        } catch (error) {
+            console.error('Failed to save certificate config', error);
+            alert(error.response?.data?.message || 'Failed to save certificate settings.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    return (
+        <div className={`admin-cert-generator ${isBatchPrinting ? 'batch-printing' : ''}`} style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+            <style>{`
+                @media print {
+                    .cert-form-sidebar { display: none !important; }
+                    .admin-cert-generator { display: block !important; height: auto !important; }
+                    .certi-page-shell { padding: 0 !important; }
+                    body * { visibility: hidden !important; }
+                    .admin-cert-generator, .admin-cert-generator * { visibility: visible !important; }
+                    .cert-preview-container, .cert-preview-container * { visibility: visible !important; }
+                    .batch-printing .cert-single-preview { display: none !important; }
+                    .batch-printing .cert-batch-print { display: block !important; }
+                    .batch-printing .cert-batch-print,
+                    .batch-printing .cert-batch-print * { visibility: visible !important; }
+                }
+            `}</style>
+            <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+                <div className="cert-form-sidebar" style={{ width: '420px', backgroundColor: '#fff', borderRight: '1px solid #ccc', padding: '20px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', marginBottom: '10px' }}>Certificate Settings</h2>
+                    <button onClick={() => setConfig(defaultSeed)} style={{ padding: '8px', background: '#d72624', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Reset Text to Seed</button>
+                    <button onClick={saveConfig} disabled={saving} style={{ padding: '8px', background: '#1d7f3a', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px', opacity: saving ? .7 : 1 }}>{saving ? 'Saving...' : 'Save Settings'}</button>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Certificate Type</label>
+                        <select value={certificateType} onChange={(e) => setCertificateType(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            {certificateTypes.map((type) => (
+                                <option key={type.value} value={type.value}>{type.label}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Recipient Name</label>
+                        <select value={config.recipientName || ''} onChange={handleRecipientChange} disabled={recipientsLoading || recipients.length === 0} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            <option value="">{recipientsLoading ? 'Loading names...' : 'Select recipient'}</option>
+                            {config.recipientName && !hasCurrentRecipient && (
+                                <option value={config.recipientName}>{config.recipientName}</option>
+                            )}
+                            {recipients.map((recipient) => (
+                                <option key={`${recipient.type}-${recipient._id}`} value={recipient.name}>
+                                    {recipient.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Multiple Recipients</label>
+                        <select multiple value={selectedRecipientNames} onChange={handleBatchRecipientChange} disabled={recipientsLoading || recipients.length === 0} style={{ width: '100%', height: '130px', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            {recipients.map((recipient) => (
+                                <option key={`batch-${recipient.type}-${recipient._id}`} value={recipient.name}>
+                                    {recipient.name}
+                                </option>
+                            ))}
+                        </select>
+                        <div style={buttonRowStyle}>
+                            <button type="button" onClick={() => setSelectedRecipientNames(recipients.map((recipient) => recipient.name))} disabled={recipients.length === 0} style={smallButtonStyle}>Select All</button>
+                            <button type="button" onClick={printAllCertificates} disabled={recipients.length === 0} style={smallButtonStyle}>Print All</button>
+                            <button type="button" onClick={() => setSelectedRecipientNames([])} style={smallButtonStyle}>Clear</button>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 8 }}>
+                            <input type="number" min="1" max={recipients.length || 1} value={printLimit} onChange={(e) => setPrintLimit(e.target.value)} disabled={recipients.length === 0} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
+                            <button type="button" onClick={selectLimitedRecipients} disabled={recipients.length === 0} style={smallButtonStyle}>Select First</button>
+                        </div>
+                        <button type="button" onClick={printSelectedCertificates} disabled={selectedRecipientNames.length === 0} style={{ padding: '8px', background: '#254b9f', color: '#fff', border: 'none', cursor: selectedRecipientNames.length === 0 ? 'not-allowed' : 'pointer', borderRadius: '4px', opacity: selectedRecipientNames.length === 0 ? .6 : 1 }}>
+                            Print Selected ({selectedRecipientNames.length})
+                        </button>
+                    </div>
+                    <div style={fieldStyle}>
+                        <label style={labelStyle}>Print Paper Size</label>
+                        <select value={printSize} onChange={(e) => setPrintSize(e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }}>
+                            <option value="A4">A4</option>
+                            <option value="A3">A3</option>
+                        </select>
+                    </div>
+                    <button onClick={() => window.print()} style={{ padding: '8px', background: '#254b9f', color: '#fff', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>Print Certificate ({printSize})</button>
+
+                    <h3 onClick={() => setShowImages(!showImages)} style={sectionHeaderStyle}>
+                        Main Images
+                        <span>{showImages ? '▼' : '▶'}</span>
+                    </h3>
+                    {showImages && Object.keys(images).map(key => (
+                        <div key={key} style={fieldStyle}>
+                            <label style={labelStyle}>{imageLabels[key] || key}</label>
+                            <div style={imagePreviewStyle}>
+                                {images[key] ? (
+                                    <img src={images[key]} alt={imageLabels[key] || key} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                ) : (
+                                    <span style={{ fontSize: 11, color: '#999' }}>Deleted</span>
+                                )}
+                            </div>
+                            <input type="file" accept="image/*" name={key} onChange={handleImageChange} style={{ fontSize: '12px' }} />
+                            <div style={buttonRowStyle}>
+                                <button type="button" onClick={() => deleteMainImage(key)} style={dangerSmallButtonStyle}>Delete</button>
+                                <button type="button" onClick={() => useDefaultMainImage(key)} style={smallButtonStyle}>Use Default</button>
+                            </div>
+                        </div>
+                    ))}
+
+                    <h3 onClick={() => setShowInitiatives(!showInitiatives)} style={sectionHeaderStyle}>
+                        Initiative Logos (Multiple)
+                        <span>{showInitiatives ? '▼' : '▶'}</span>
+                    </h3>
+                    {showInitiatives && (
+                        <LogoSlotEditor count={24} images={initiativeImages} type="initiative" onChange={handleLogoSlotChange} onDelete={deleteLogoSlot} onDefault={useDefaultLogoSlot} />
+                    )}
+
+                    <h3 onClick={() => setShowConcurrent(!showConcurrent)} style={sectionHeaderStyle}>
+                        Concurrent Event Logos (Multiple)
+                        <span>{showConcurrent ? '▼' : '▶'}</span>
+                    </h3>
+                    {showConcurrent && (
+                        <LogoSlotEditor count={7} images={concurrentImages} type="concurrent" onChange={handleLogoSlotChange} onDelete={deleteLogoSlot} onDefault={useDefaultLogoSlot} />
+                    )}
+
+                    <h3 onClick={() => setShowText(!showText)} style={sectionHeaderStyle}>
+                        Text Content
+                        <span>{showText ? '▼' : '▶'}</span>
+                    </h3>
+                    {showText && Object.keys(config).map(key => (
+                        <div key={key} style={fieldStyle}>
+                            <label style={labelStyle}>{key}</label>
+                            <textarea name={key} value={config[key]} onChange={handleTextChange} rows={key === 'recipientName' ? 1 : 3} style={{ width: '100%', padding: '8px', border: '1px solid #ccc', borderRadius: '4px', fontSize: '14px' }} />
+                            <div style={buttonRowStyle}>
+                                <button type="button" onClick={() => clearTextField(key)} style={dangerSmallButtonStyle}>Delete Text</button>
+                                <button type="button" onClick={() => resetTextField(key)} style={smallButtonStyle}>Use Default</button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="cert-preview-container" style={{ flex: 1, backgroundColor: '#eeeeee', overflowY: 'auto' }}>
+                    <div className="cert-single-preview">
+                        <Certi config={config} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} certificateType={certificateType} />
+                    </div>
+                    <div className="cert-batch-print" style={{ display: 'none' }}>
+                        {batchPrintNames.map((name, index) => (
+                            <Certi key={`print-${index}-${name}`} config={{ ...config, recipientName: name }} images={images} customInitiatives={initiativeImages} customConcurrent={concurrentImages} printSize={printSize} certificateType={certificateType} printMode="batch" />
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const sectionHeaderStyle = {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    marginTop: '10px',
+    borderBottom: '1px solid #eee',
+    paddingBottom: '5px',
+    cursor: 'pointer',
+    display: 'flex',
+    justifyContent: 'space-between'
+};
+
+const fieldStyle = { display: 'flex', flexDirection: 'column', gap: '5px' };
+const labelStyle = { fontSize: '14px', fontWeight: '500' };
+const imagePreviewStyle = { width: '100%', height: 58, border: '1px solid #eee', borderRadius: 6, background: '#fafafa', display: 'flex', alignItems: 'center', justifyContent: 'center' };
+const buttonRowStyle = { display: 'flex', gap: 8, flexWrap: 'wrap' };
+const smallButtonStyle = { padding: '6px 8px', border: '1px solid #ddd', borderRadius: 4, background: '#fff', cursor: 'pointer', fontSize: 12 };
+const dangerSmallButtonStyle = { ...smallButtonStyle, borderColor: '#f1b4b4', color: '#b42318', background: '#fff7f7' };
+
+const LogoSlotEditor = ({ count, images, type, onChange, onDelete, onDefault }) => (
+    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px' }}>
+        {Array.from({ length: count }).map((_, index) => (
+            <div key={`${type}-${index}`} style={{ display: 'grid', gridTemplateColumns: '54px 1fr auto', alignItems: 'center', gap: '8px', padding: '8px', border: '1px solid #eee', borderRadius: '6px' }}>
+                <div style={{ width: 54, height: 34, border: '1px solid #ddd', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fafafa' }}>
+                    {images[index] ? <img src={images[index]} alt={`${type} ${index + 1}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} /> : <span style={{ fontSize: 10, color: '#999' }}>Default</span>}
+                </div>
+                <div>
+                    <label style={{ fontSize: 13, fontWeight: 600 }}>{type === 'initiative' ? 'Initiative' : 'Concurrent'} Logo {index + 1}</label>
+                    <input type="file" accept="image/*" onChange={(e) => onChange(e, index, type)} style={{ display: 'block', fontSize: 12, marginTop: 4 }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <button type="button" onClick={() => onDelete(index, type)} style={dangerSmallButtonStyle}>Delete</button>
+                    <button type="button" onClick={() => onDefault(index, type)} style={smallButtonStyle}>Default</button>
+                </div>
+            </div>
+        ))}
+    </div>
+);
+
+export default CertificatesGenerator;

@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
-import Globallytable from "../../Components/Globallytable";
-import UploaderTextarea from "../../Components/UploaderTextarea";
+import Globallytable from "../../components/Globallytable";
+import UploaderTextarea from "../../components/UploaderTextarea";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 
@@ -16,6 +16,11 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
     return sliceState[fallbackKey];
   }
   return [];
+};
+
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const RawDataList = () => {
@@ -46,9 +51,9 @@ const RawDataList = () => {
     { label: "Contact Details", accessor: "contact.details" },
     { label: "Category", accessor: "category.main" },
     { label: "Nature of Business", accessor: "business.type" },
-    { label: "City", accessor: "location.city" },
-    { label: "State", accessor: "location.state" },
+    { label: "Address", accessor: "location.fullAddress" },
     { label: "Source", accessor: "source.name" },
+    { label: "Forward To", accessor: "forwardTo" },
     { label: "Update Details", accessor: "update.details" },
   ];
 
@@ -56,30 +61,28 @@ const RawDataList = () => {
     (company) =>
       !company.companyStatus ||
       company.companyStatus.trim() === "" ||
-      company.companyStatus === "null" ||
-      company.companyStatus === "New Lead",
+      company.companyStatus === "null",
   );
 
   const rows = rawDataCompanies.map((c) => ({
     id: c._id,
     checkbox: true,
-    company: { name: c.companyName },
+    company: { name: toTitleCase(c.companyName) },
     contact: {
       details: c.contacts
         ?.map(
           (contact) =>
-            `${contact.firstName} ${contact.surname} | ${contact.mobile}`,
+            `${toTitleCase(contact.firstName)} ${toTitleCase(contact.surname)} | ${contact.mobile}`,
         )
         .join(", "),
     },
-    category: { main: c.category },
-    business: { type: c.businessNature },
-    location: { city: c.city, state: c.state },
-    source: { name: c.dataSource || "-" },
+    category: { main: toTitleCase(c.category) || "-" },
+    business: { type: toTitleCase(c.businessNature) || "-" },
+    location: { fullAddress: `${toTitleCase(c.country) || "-"} | ${toTitleCase(c.state) || "-"} | ${toTitleCase(c.city) || "-"}` },
+    source: { name: toTitleCase(c.dataSource) || "-" },
+    forwardTo: toTitleCase(c.forwardTo) || "-",
     update: {
-      details: `${new Date(c.updatedAt).toLocaleDateString()} | ${
-        c.contacts?.[0]?.firstName || "-"
-      }`,
+      details: `${new Date(c.updatedAt).toLocaleDateString()} | ${toTitleCase(c.contacts?.[0]?.firstName) || "-"}`,
     },
   }));
 
