@@ -441,7 +441,7 @@
 
 // export default AddCategory;
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   CalendarDays,
   CheckCircle2,
@@ -586,6 +586,7 @@ const csvEscape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
 
 const AddCategory = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const categoriesState = useSelector((state) => state.categories);
   const categories = Array.isArray(categoriesState?.categories)
@@ -695,13 +696,20 @@ const AddCategory = () => {
   };
 
   const startEdit = (category) => {
-    setIsEditing(category?._id);
-    setCategoryForm({
-      name: normaliseText(category?.cat_name),
-      status: getCategoryStatus(category),
-    });
+    const categoryId = category?._id || category?.id;
+
+    if (!categoryId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Unable to edit',
+        text: 'Category id is missing.',
+        confirmButtonColor: '#0f4cbd',
+      });
+      return;
+    }
+
     setOpenActionId(null);
-    setIsModalOpen(true);
+    navigate(`/ihweClientData2026/AddCategory/edit/${categoryId}`);
   };
 
   const handleInputChange = (event) => {
