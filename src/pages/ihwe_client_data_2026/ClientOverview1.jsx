@@ -1090,7 +1090,12 @@ const ClientOverview1 = () => {
                   icon: Wallet,
                   title: "Account",
                   color: "green-600",
-                  onClick: () => navigate(`/dashboard/account/${company?.clientId || company?._id || id}`),
+                  onClick: () => {
+                    const registrationEventId = company?.eventLifecycle?.registrationEventId || "";
+                    navigate(
+                      `/dashboard/account/${company?.clientId || company?._id || id}${registrationEventId ? `?eventId=${registrationEventId}` : ""}`
+                    );
+                  },
                   disabled: false,
                 },
                 {

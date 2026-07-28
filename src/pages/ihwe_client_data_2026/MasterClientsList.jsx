@@ -486,6 +486,7 @@ const MasterClientsList = () => {
                   </th>
                   {/* <th className="px-2 py-1.5 w-10 font-medium">#</th> */}
                   <th className="px-2 py-1.5 font-medium">Company Name</th>
+                  <th className="px-2 py-1.5 font-medium">Exhibitions</th>
                   <th className="px-2 py-1.5 font-medium">Source</th>
                   <th className="px-2 py-1.5 font-medium">Status</th>
                   <th className="px-2 py-1.5 font-medium">Industry</th>
@@ -548,6 +549,28 @@ const MasterClientsList = () => {
                           <span className="cursor-pointer hover:text-blue-600 transition-colors text-[11px]">
                             <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
                           </span>
+                        </td>
+                        <td className="px-2 py-1.5">
+                          <div className="flex max-w-[260px] flex-wrap gap-1 whitespace-normal">
+                            {(row.eventAssignments || []).length > 0 ? (
+                              row.eventAssignments.map((assignment) => {
+                                const event = crmEvents.find(
+                                  (item) => String(item._id) === String(assignment.eventId?._id || assignment.eventId)
+                                );
+                                return (
+                                  <span
+                                    key={String(assignment.eventId?._id || assignment.eventId)}
+                                    className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[8px] font-semibold text-blue-700"
+                                    title={assignment.status || "New Lead"}
+                                  >
+                                    {event?.event_fullName || event?.event_name || "Unknown Expo"} · {assignment.status || "New Lead"}
+                                  </span>
+                                );
+                              })
+                            ) : (
+                              <span className="text-[9px] text-slate-400">Not assigned</span>
+                            )}
+                          </div>
                         </td>
                         <td className="px-2 py-1.5">
                           <span className={`text-[9px] font-semibold inline-block ${sourceColor}`}>
