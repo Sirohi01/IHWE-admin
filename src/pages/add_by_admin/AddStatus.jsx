@@ -374,7 +374,12 @@ const getAddedBy = (item) =>
 const getDescription = (item) =>
   item?.description || item?.details || `${item?.name || "Lead"} status`;
 
-const getUsedIn = (item) => item?.used_in || item?.usedIn || "Leads";
+const getUsedIn = (item) => {
+  if (Array.isArray(item?.applicable_for) && item.applicable_for.length > 0) {
+    return item.applicable_for.join(", ");
+  }
+  return item?.used_in || item?.usedIn || "Leads";
+};
 
 const SummaryCard = ({ icon, iconClass, iconWrapClass, label, value, note }) => (
   <div className="flex min-w-0 items-center gap-3 rounded-lg border border-[#e4e8ef] bg-white px-3 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
