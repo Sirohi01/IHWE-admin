@@ -36,12 +36,15 @@ const ProposalSentList = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [eventId]);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/api/marketing-materials/history/all");
+      const params = new URLSearchParams();
+      if (eventId) params.set("eventId", eventId);
+      const queryString = params.toString();
+      const res = await api.get(`/api/marketing-materials/history/all${queryString ? `?${queryString}` : ""}`);
       if (res.data.success) {
         setHistory(res.data.data);
       }
