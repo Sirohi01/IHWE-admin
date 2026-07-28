@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import headerBg from "../assets/exhi.jpg";
 import arenaImg from "../assets/hall.jpg";
 import { motion, AnimatePresence } from "framer-motion";
@@ -109,6 +109,8 @@ const SearchableDropdown = ({
 
 const BookAStand = () => {
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const crmEventId = searchParams.get("crmEventId") || "";
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
@@ -234,12 +236,26 @@ const BookAStand = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                api.get('/api/events').then(eRes => {
+                api.get('/api/events').then(async (eRes) => {
                     if (eRes.data.success && eRes.data.data.length > 0) {
                         setEvents(eRes.data.data);
-                        setSelectedEventId(eRes.data.data[0]._id);
+                        let targetEvent = eRes.data.data[0];
+                        if (crmEventId) {
+                            try {
+                                const crmRes = await api.get(`/api/crm-events/${crmEventId}`);
+                                const crmEvent = crmRes.data?.data || crmRes.data;
+                                if (crmEvent?.registrationEventId) {
+                                    targetEvent = eRes.data.data.find(
+                                        (event) => String(event._id) === String(crmEvent.registrationEventId)
+                                    ) || targetEvent;
+                                }
+                            } catch (error) {
+                                console.error("Unable to resolve linked registration event:", error);
+                            }
+                        }
+                        setSelectedEventId(targetEvent._id);
                         setFormData(prev => {
-                            const selEv = eRes.data.data[0];
+                            const selEv = targetEvent;
                             const plans = selEv?.paymentPlans || [];
                             const firstPlanId = plans.length > 0 ? plans[0].id : 'full';
                             const firstPlanLabel = plans.length > 0 ? plans[0].label : 'Full Payment';
@@ -282,7 +298,7 @@ const BookAStand = () => {
 
     useEffect(() => {
         if (id) {
-            api.get(`/api/companies/${id}`).then(res => {
+            api.get(`/api/companies/${id}${crmEventId ? `?eventId=${crmEventId}` : ""}`).then(res => {
                 if (res.data) {
                     const comp = res.data;
                     const cCountry = (comp.country || "India").toLowerCase();
@@ -302,7 +318,16 @@ const BookAStand = () => {
                         newF.landlineNo = comp.landline || '';
                         newF.companyEmail = comp.email || '';
                         newF.gstNo = comp.gstNumber || '';
+                        newF.panNo = comp.panNo || '';
                         newF.aboutCompany = comp.companyDescription || '';
+                        newF.typeOfBusiness = comp.category || '';
+                        newF.industrySector = comp.businessNature || '';
+                        newF.referredBy = comp.dataSource || 'Direct Website';
+                        newF.socialMediaType = comp.socialMediaType || '';
+                        newF.referralName = comp.referralName || '';
+                        newF.referralMobile = comp.referralMobile || '';
+                        newF.exhibitorStatus = comp.exhibitorRegistrationId ? 'Existing Client' : 'New Client';
+                        newF.registrantType = comp.gstNumber ? 'registered' : (comp.panNo ? 'unregistered' : newF.registrantType);
 
                         if (comp.contacts && comp.contacts.length > 0) {
                             newF.contact1 = {
@@ -346,7 +371,7 @@ const BookAStand = () => {
                 }
             }).catch(err => console.error("Error fetching client data:", err));
         }
-    }, [id]);
+    }, [id, crmEventId]);
 
     // Ensure spokenWith is mapped to fullName once marketingStaff is loaded
     useEffect(() => {

@@ -408,7 +408,7 @@ const HotClientList = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => navigate(`/book-a-stand/${row._id}`)}
+                  onClick={() => navigate(`/book-a-stand/${row._id}?crmEventId=${currentEventId}`)}
                   className="text-[9px] font-bold bg-[#124170] hover:bg-[#0A2643] text-white px-1.5 py-0.5 rounded shadow-sm transition-all" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Book Stand
