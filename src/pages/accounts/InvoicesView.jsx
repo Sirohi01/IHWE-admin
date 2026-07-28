@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     ChevronRight, FileText, CheckCircle2, AlertCircle, Clock,
     Calendar, Eye, MoreVertical, Target,
@@ -113,6 +113,8 @@ const PAYMENT_TYPE_STYLES = {
 
 const InvoicesView = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const scopedEventId = searchParams.get('eventId') || '';
 
     const [rows, setRows] = useState([]);
     const [stats, setStats] = useState(null);
@@ -130,7 +132,7 @@ const InvoicesView = () => {
     const [inlineHall, setInlineHall] = useState('');
     const [inlineSalesPerson, setInlineSalesPerson] = useState('');
     const [events, setEvents] = useState([]);
-    const [filterEvent, setFilterEvent] = useState('all');
+    const [filterEvent, setFilterEvent] = useState(scopedEventId || 'all');
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(10);
 
@@ -146,7 +148,7 @@ const InvoicesView = () => {
                 const eventsData = eventsRes.data?.data || eventsRes.data || [];
                 eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
                 setEvents(eventsData);
-                if (eventsData.length > 0) {
+                if (!scopedEventId && eventsData.length > 0) {
                     setFilterEvent(eventsData[0]._id);
                 }
 
@@ -162,7 +164,7 @@ const InvoicesView = () => {
             }
         };
         fetchInvoices();
-    }, []);
+    }, [scopedEventId]);
 
     const hallOptions = useMemo(() => [...new Set(rows.map((r) => r.hallNo).filter(Boolean))].sort(), [rows]);
     const salesPersonOptions = useMemo(() => [...new Set(rows.map((r) => r.addedBy).filter(Boolean))].sort(), [rows]);
