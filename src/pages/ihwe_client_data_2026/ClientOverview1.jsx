@@ -1038,6 +1038,18 @@ const ClientOverview1 = () => {
               </div>
             </div>
 
+            <div className="bg-white rounded-lg p-2 flex items-center gap-2.5 min-w-0" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                <KanbanSquare className="text-amber-600" size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-slate-900 text-[9px] font-semibold whitespace-nowrap uppercase tracking-wider">Client Status</p>
+                <h3 className="font-bold text-[11px] mt-0.5 truncate text-[#8A3B00]">
+                  {company?.eventLifecycle?.status || company?.companyStatus || company?.status || "New Lead"}
+                </h3>
+              </div>
+            </div>
+
           </div>
 
           {/* ACTION CARDS */}
