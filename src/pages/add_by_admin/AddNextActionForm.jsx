@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate as routerNavigate, useParams as routerParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -37,8 +37,11 @@ const APPLICABLE_OPTIONS = [
   "Exhibitor Registration",
   "Buyer Lead",
   "Sponsor Lead",
-  "General Lead",
+  "Visitor Lead",
 ];
+
+const normalizeApplicableOption = (option) =>
+  option === "General Lead" ? "Visitor Lead" : option;
 
 const initialForm = {
   name: "",
@@ -80,9 +83,11 @@ const AddNextActionForm = () => {
   const { id } = routerParams();
 
   const nextActionState = useSelector((state) => state.nextActions) || {};
-  const nextActions = Array.isArray(nextActionState.nextActions)
-    ? nextActionState.nextActions
-    : [];
+  const rawNextActions = nextActionState.nextActions;
+  const nextActions = useMemo(
+    () => (Array.isArray(rawNextActions) ? rawNextActions : []),
+    [rawNextActions]
+  );
 
   const [form, setForm] = useState(initialForm);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,7 +111,7 @@ const AddNextActionForm = () => {
           name: existingAction.name || "",
           action_code: existingAction.action_code || "",
           description: existingAction.description || "",
-          display_order: existingAction.display_order || "",
+          display_order: existingAction.display_order ?? "",
           action_type: existingAction.action_type || "",
           follow_up_days: existingAction.follow_up_days || "",
           status:
@@ -114,7 +119,7 @@ const AddNextActionForm = () => {
               ? "Active"
               : "Inactive",
           applicable_for: Array.isArray(existingAction.applicable_for)
-            ? existingAction.applicable_for
+            ? existingAction.applicable_for.map(normalizeApplicableOption)
             : [],
         });
       }
@@ -162,9 +167,9 @@ const AddNextActionForm = () => {
     if (
       form.display_order === "" ||
       Number.isNaN(Number(form.display_order)) ||
-      Number(form.display_order) < 1
+      Number(form.display_order) < 0
     ) {
-      return "Display order must be a number greater than 0.";
+      return "Display order must be 0 or greater.";
     }
 
     if (!form.action_type) return "Please select an action type.";
@@ -203,7 +208,7 @@ const AddNextActionForm = () => {
         action_type: form.action_type,
         follow_up_days: form.follow_up_days ? Number(form.follow_up_days) : null,
         status: form.status.toLowerCase(),
-        applicable_for: form.applicable_for,
+        applicable_for: form.applicable_for.map(normalizeApplicableOption),
         updated_by: userName,
       };
 
@@ -283,13 +288,13 @@ const AddNextActionForm = () => {
   return (
     <section
       ref={pageRef}
-      className="box-border h-[calc(100dvh-72px)] min-h-0 overflow-hidden bg-[#f7f9fc] px-[clamp(18px,2.25vw,34px)] py-[clamp(10px,1.25vh,16px)] font-sans text-[#122252]"
+      className="box-border min-h-[calc(100dvh-72px)] bg-[#f7f9fc] px-[clamp(18px,2.25vw,34px)] py-[clamp(10px,1.25vh,16px)] font-sans text-[#122252]"
       style={{
         fontFamily:
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
-      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-[clamp(9px,1.15vh,14px)]">
+      <div className="flex flex-col gap-[clamp(9px,1.15vh,14px)]">
         {/* Page Header */}
         <header className="flex shrink-0 items-center justify-between gap-5">
           <div className="min-w-0">
@@ -344,9 +349,9 @@ const AddNextActionForm = () => {
         {/* Form Card */}
         <form
           onSubmit={handleSubmit}
-          className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.15vw,32px)] py-[clamp(12px,1.5vh,19px)] shadow-[0_5px_20px_rgba(15,31,75,.05)]"
+          className="flex flex-col rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.15vw,32px)] py-[clamp(12px,1.5vh,19px)] shadow-[0_5px_20px_rgba(15,31,75,.05)] flex-1"
         >
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div>
             <div className="mb-[clamp(11px,1.45vh,18px)]">
               <h2 className="text-[clamp(14px,1.08vw,17px)] font-extrabold text-[#1556c7]">
                 Next Action Information
@@ -411,8 +416,8 @@ const AddNextActionForm = () => {
               <Field label="Display Order" required>
                 <div className="relative">
                   <input
-                    type="number"
-                    min="1"
+                    type="text"
+                    min="0"
                     value={form.display_order}
                     onChange={(event) =>
                       updateField(
@@ -421,31 +426,8 @@ const AddNextActionForm = () => {
                       )
                     }
                     placeholder="Enter display order"
-                    className={`${inputClass} appearance-none pr-10`}
+                    className={`${inputClass} pr-4`}
                   />
-                  <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 flex-col text-[#53627e]">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="18 15 12 9 6 15" />
-                    </svg>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="-mt-1"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </div>
                 </div>
                 <HelperText>Lower number will be shown first.</HelperText>
               </Field>
@@ -473,7 +455,7 @@ const AddNextActionForm = () => {
 
               <Field label="Default Follow-up Days" optional>
                 <input
-                  type="number"
+                  type="text"
                   min="0"
                   value={form.follow_up_days}
                   onChange={(event) =>

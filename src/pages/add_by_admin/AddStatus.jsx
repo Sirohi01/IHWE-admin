@@ -361,6 +361,9 @@ const getItemDate = (item) =>
   item?.createdAt ||
   item?.created_at;
 
+const getDisplayOrder = (item) =>
+  Number.isFinite(Number(item?.display_order)) ? Number(item.display_order) : "—";
+
 const getAddedBy = (item) =>
   item?.added_by ||
   item?.created_by ||
@@ -378,12 +381,15 @@ const getUsedIn = (item) => {
   return item?.used_in || item?.usedIn || "Leads";
 };
 
-const SummaryCard = ({ icon: Icon, iconClass, iconWrapClass, label, value, note }) => (
+const SummaryCard = ({ icon, iconClass, iconWrapClass, label, value, note }) => (
   <div className="flex min-w-0 items-center gap-3 rounded-lg border border-[#e4e8ef] bg-white px-3 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
     <div
       className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconWrapClass}`}
     >
-      <Icon className={`h-5 w-5 ${iconClass}`} strokeWidth={2} />
+      {React.createElement(icon, {
+        className: `h-5 w-5 ${iconClass}`,
+        strokeWidth: 2,
+      })}
     </div>
 
     <div className="min-w-0">
@@ -447,7 +453,16 @@ const AddStatus = () => {
         typeFilter === "All" || getItemType(item) === typeFilter;
 
       return matchesSearch && matchesStatus && matchesType;
-    }).sort((a, b) => (a.display_order || 9999) - (b.display_order || 9999));
+    }).sort((a, b) => {
+      const orderA = Number.isFinite(Number(a?.display_order))
+        ? Number(a.display_order)
+        : 9999;
+      const orderB = Number.isFinite(Number(b?.display_order))
+        ? Number(b.display_order)
+        : 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return String(a?.name || "").localeCompare(String(b?.name || ""));
+    });
   }, [normalizedOptions, debouncedSearch, statusFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / itemsPerPage));
@@ -491,12 +506,6 @@ const AddStatus = () => {
     setIsEditing(null);
     setFormData({ name: "", status: "active" });
     setIsModalOpen(false);
-  };
-
-  const openAddModal = () => {
-    setIsEditing(null);
-    setFormData({ name: "", status: "active" });
-    setIsModalOpen(true);
   };
 
   const startEdit = (id) => {
@@ -643,7 +652,7 @@ const AddStatus = () => {
 
     const result = await Swal.fire({
       title: "Are you sure?",
-      text: `Delete \"${item?.name || "this status"}\"?`,
+      text: `Delete "${item?.name || "this status"}"?`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#dc2626",
@@ -883,7 +892,7 @@ const AddStatus = () => {
 
               <thead>
                 <tr className="h-11 border-b border-[#dfe5eb] bg-[#f7f9fb] text-[11px] font-semibold text-[#53637b]">
-                  <th className="px-4">#</th>
+                  <th className="px-4">Order</th>
                   <th className="px-3">Status Name</th>
                   <th className="px-3">Type</th>
                   <th className="px-3">Description</th>
@@ -919,8 +928,8 @@ const AddStatus = () => {
                         key={item?._id || `${item?.name}-${absoluteIndex}`}
                         className="h-11 border-b border-[#e7ebef] transition last:border-b-0 hover:bg-[#fbfcfd]"
                       >
-                        <td className="px-4 font-medium text-[#52627a]">
-                          {absoluteIndex + 1}
+                        <td className="px-4 font-semibold text-[#52627a]">
+                          {getDisplayOrder(item)}
                         </td>
 
                         <td className="px-3">

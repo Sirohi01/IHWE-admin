@@ -5,6 +5,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { createStatusOption, updateStatusOption } from "../../features/add_by_admin/statusOption/statusOptionSlice";
 import Swal from "sweetalert2";
 
+const APPLICABLE_OPTIONS = [
+  "Exhibitor Lead",
+  "Buyer Lead",
+  "Sponsor Lead",
+  "Visitor Lead",
+];
+
+const normalizeApplicableOption = (option) =>
+  option === "General Lead" ? "Visitor Lead" : option;
+
 const AddStatusForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -30,10 +40,12 @@ const AddStatusForm = () => {
           name: existingStatus.name || "",
           status_code: existingStatus.status_code || "",
           description: existingStatus.description || "",
-          display_order: existingStatus.display_order || 1,
+          display_order: existingStatus.display_order ?? 1,
           status: String(existingStatus.status || "inactive").toLowerCase() === "active" ? "active" : "inactive",
           color: existingStatus.color || "#2563eb",
-          applicable_for: Array.isArray(existingStatus.applicable_for) ? existingStatus.applicable_for : [],
+          applicable_for: Array.isArray(existingStatus.applicable_for)
+            ? existingStatus.applicable_for.map(normalizeApplicableOption)
+            : [],
         });
       }
     } else if (!id && statusOptions.length > 0) {
@@ -46,7 +58,9 @@ const AddStatusForm = () => {
     setFormData((prev) => {
       let newApplicableFor = [...prev.applicable_for];
       if (option === "All") {
-        newApplicableFor = newApplicableFor.includes("All") ? [] : ["All", "Exhibitor Lead", "Buyer Lead", "Sponsor Lead", "General Lead"];
+        newApplicableFor = newApplicableFor.includes("All")
+          ? []
+          : ["All", ...APPLICABLE_OPTIONS];
       } else {
         if (newApplicableFor.includes(option)) {
           newApplicableFor = newApplicableFor.filter((i) => i !== option);
@@ -77,12 +91,20 @@ const AddStatusForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return Swal.fire({ icon: "warning", title: "Warning", text: "Lead Status Name is required.", confirmButtonColor: "#08752f" });
-    if (!formData.display_order) return Swal.fire({ icon: "warning", title: "Warning", text: "Display Order is required.", confirmButtonColor: "#08752f" });
+    if (
+      formData.display_order === "" ||
+      Number.isNaN(Number(formData.display_order)) ||
+      Number(formData.display_order) < 0
+    ) return Swal.fire({ icon: "warning", title: "Warning", text: "Display Order must be 0 or greater.", confirmButtonColor: "#08752f" });
     if (formData.applicable_for.length === 0) return Swal.fire({ icon: "warning", title: "Warning", text: "Please select at least one Applicable For option.", confirmButtonColor: "#08752f" });
 
     setIsSaving(true);
     try {
-      const payload = { ...formData };
+      const payload = {
+        ...formData,
+        display_order: Number(formData.display_order),
+        applicable_for: formData.applicable_for.map(normalizeApplicableOption),
+      };
       if (id) {
         await dispatch(updateStatusOption({ id, data: payload })).unwrap();
         Swal.fire({ icon: "success", title: "Success", text: "Lead Status Updated successfully", timer: 1500, showConfirmButton: false });
@@ -100,13 +122,13 @@ const AddStatusForm = () => {
 
   return (
     <section
-      className="box-border h-[calc(100dvh-72px)] min-h-0 overflow-hidden bg-[#f7f9fc] px-[clamp(18px,2.7vw,42px)] py-[clamp(10px,1.3vh,18px)] font-sans text-[#122252]"
+      className="box-border min-h-[calc(100dvh-72px)] bg-[#f7f9fc] px-[clamp(18px,2.7vw,42px)] py-[clamp(10px,1.3vh,18px)] font-sans text-[#122252]"
       style={{
         fontFamily:
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
-      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-[clamp(10px,1.4vh,17px)]">
+      <div className="flex flex-col gap-[clamp(10px,1.4vh,17px)]">
         {/* Page Header */}
         <header className="flex shrink-0 items-center justify-between gap-5">
           <div className="min-w-0">
@@ -150,9 +172,9 @@ const AddStatusForm = () => {
         {/* Main Form Card */}
         <form
           onSubmit={handleSubmit}
-          className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.3vw,34px)] py-[clamp(14px,1.7vh,22px)] shadow-[0_5px_20px_rgba(15,31,75,.05)]"
+          className="flex flex-col rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.3vw,34px)] py-[clamp(14px,1.7vh,22px)] shadow-[0_5px_20px_rgba(15,31,75,.05)] flex-1"
         >
-          <div className="min-h-0 flex-1">
+          <div>
             <div className="mb-[clamp(12px,1.6vh,20px)]">
               <h2 className="text-[clamp(14px,1.1vw,17px)] font-extrabold text-[#108047]">
                 Lead Status Information
@@ -240,7 +262,7 @@ const AddStatusForm = () => {
                 <div className="relative">
                   <input
                     type="text"
-                    min="1"
+                    min="0"
                     value={formData.display_order}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
@@ -342,13 +364,7 @@ const AddStatusForm = () => {
               </label>
 
               <div className="flex flex-wrap items-center gap-x-[clamp(30px,4vw,58px)] gap-y-3">
-                {[
-                  "Exhibitor Lead",
-                  "Buyer Lead",
-                  "Sponsor Lead",
-                  "General Lead",
-                  "All",
-                ].map((option) => {
+                {[...APPLICABLE_OPTIONS, "All"].map((option) => {
                   const checked = formData.applicable_for.includes(option);
 
                   return (
