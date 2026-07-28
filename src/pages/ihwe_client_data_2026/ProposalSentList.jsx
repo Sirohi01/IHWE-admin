@@ -36,7 +36,7 @@ const ProposalSentList = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, [eventId]);
+  }, [eventId, user?.username, user?.role]);
 
   const fetchHistory = async () => {
     setLoading(true);
@@ -44,10 +44,42 @@ const ProposalSentList = () => {
       const params = new URLSearchParams();
       if (eventId) params.set("eventId", eventId);
       const queryString = params.toString();
-      const res = await api.get(`/api/marketing-materials/history/all${queryString ? `?${queryString}` : ""}`);
-      if (res.data.success) {
-        setHistory(res.data.data);
-      }
+      const companyParams = new URLSearchParams({
+        status: "Proposal Sent",
+        limit: "1000",
+        ...(eventId ? { eventId } : {}),
+        ...(user?.username ? { username: user.username } : {}),
+        ...(user?.role ? { role: user.role } : {}),
+      });
+      const [shareRes, companyRes] = await Promise.all([
+        api.get(`/api/marketing-materials/history/all${queryString ? `?${queryString}` : ""}`),
+        api.get(`/api/companies?${companyParams}`),
+      ]);
+      const shares = shareRes.data?.success && Array.isArray(shareRes.data.data)
+        ? shareRes.data.data
+        : [];
+      const companies = Array.isArray(companyRes.data?.data)
+        ? companyRes.data.data
+        : (Array.isArray(companyRes.data) ? companyRes.data : []);
+      const sharedCompanyIds = new Set(
+        shares.map((item) => String(item.cmpny_id?._id || item.cmpny_id || "")).filter(Boolean)
+      );
+      const statusOnlyRows = companies
+        .filter((company) => !sharedCompanyIds.has(String(company._id)))
+        .map((company) => ({
+          _id: `status-${company._id}`,
+          cmpny_id: company,
+          clientName: company.companyName,
+          clientEmail: company.email || company.contacts?.[0]?.email || "",
+          clientMobile: company.mobile || company.contacts?.[0]?.mobile || "",
+          materials: [],
+          sentVia: "Status Update",
+          sentBy: company.eventLifecycle?.forwardTo || company.forwardTo || "",
+          status: "Proposal Sent",
+          createdAt: company.eventLifecycle?.updatedAt || company.updatedAt || company.createdAt,
+          statusOnly: true,
+        }));
+      setHistory([...shares, ...statusOnlyRows]);
     } catch (error) {
       console.error(error);
     } finally {
