@@ -611,6 +611,21 @@ const BookAStand = () => {
             const response = await api.post('/api/exhibitor-registration', finalData);
 
             if (response.data.success) {
+                let destinationCrmEventId = crmEventId;
+                if (!destinationCrmEventId && selectedEventId) {
+                    try {
+                        const crmEventsResponse = await api.get('/api/crm-events');
+                        const crmEvents = Array.isArray(crmEventsResponse.data)
+                            ? crmEventsResponse.data
+                            : (crmEventsResponse.data?.data || []);
+                        const linkedCrmEvent = crmEvents.find(
+                            (event) => String(event.registrationEventId?._id || event.registrationEventId || '') === String(selectedEventId)
+                        );
+                        destinationCrmEventId = linkedCrmEvent?._id || '';
+                    } catch (error) {
+                        console.error('Unable to resolve destination Expo bookings page:', error);
+                    }
+                }
                 const adminName = currentUser?.user_fullname || currentUser?.username || "Admin";
                 const userId = sessionStorage.getItem("user_id") || currentUser?._id;
 
@@ -636,7 +651,7 @@ const BookAStand = () => {
                     confirmButtonColor: '#23471d'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        navigate('/ihweClientData2026/confirmClientList');
+                        navigate(destinationCrmEventId ? `/crm-event/${destinationCrmEventId}/bookings` : '/exhibitor-bookings');
                     }
                 });
             }
