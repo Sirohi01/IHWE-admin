@@ -102,9 +102,11 @@ const ConvertedList = () => {
     try {
       const regParams = new URLSearchParams({
         ...(currentEventId && { eventId: currentEventId }),
+        ...(user?.username && { username: user.username }),
+        ...(user?.role && { role: user.role }),
       });
       const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
-        api.get(`/api/exhibitor-registration?${regParams}`),
+        api.get(`/api/companies/converted?${regParams}`),
         api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
         api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
         api.get('/api/events/active').catch(() => ({ data: [] })),
@@ -468,7 +470,7 @@ const ConvertedList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
-                <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                <Link to={`/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>

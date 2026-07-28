@@ -530,8 +530,41 @@ const BookAStand = () => {
         }
         setIsLoading(true);
         try {
+            let proformaAction = '';
+            const hasAssignedTeamMember =
+                formData.spokenWith
+                && !/^(direct|no one|none|unassigned)$/i.test(formData.spokenWith.trim());
+
+            if (formData.clientId && hasAssignedTeamMember) {
+                const existingRes = await api.get(`/api/estimates/grouped/${formData.clientId}`);
+                const existing = (existingRes.data?.data || []).find(
+                    (estimate) =>
+                        String(estimate.eventId || '') === String(selectedEventId)
+                        && !['cancelled', 'superseded'].includes(String(estimate.status || '').toLowerCase())
+                );
+                if (existing) {
+                    const decision = await Swal.fire({
+                        title: 'Existing Proforma Found',
+                        text: `${existing.est_no || 'Existing proforma'} ko isi booking ke saath use karna hai, ya new revision banana hai?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        confirmButtonText: 'Use Same Proforma',
+                        denyButtonText: 'Create New Revision',
+                        cancelButtonText: 'Cancel Registration',
+                    });
+                    if (decision.isDismissed) {
+                        setIsLoading(false);
+                        return;
+                    }
+                    proformaAction = decision.isConfirmed ? 'reuse' : 'revision';
+                }
+            }
+
             const finalData = {
                 ...formData,
+                proformaAction,
+                registrationSource: 'admin',
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
                 filledByFullName: currentUser?.fullName || currentUser?.username || 'Admin',
