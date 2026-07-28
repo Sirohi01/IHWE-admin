@@ -507,17 +507,17 @@ const ConfirmClientList = () => {
   // Table Config
   const tableHeaders = (
     <>
-      <th className="px-1 py-2 font-medium">Company Name</th>
-      <th className="px-1 py-2 font-medium">Expo / Event</th>
-      <th className="px-1 py-2 font-medium">Contact Details</th>
-      <th className="px-1 py-2 font-medium text-left">Category</th>
-      <th className="px-1 py-2 font-medium text-left">Source</th>
-      <th className="px-1 py-2 font-medium text-center">Stall Size</th>
-      <th className="px-1 py-2 font-medium text-center">Booking Date</th>
-      <th className="px-1 py-2 font-medium text-left">Location</th>
-      <th className="px-1 py-2 font-medium text-right">Revenue</th>
-      <th className="px-1 py-2 font-medium text-center">PYMT Status</th>
-      <th className="px-1 py-2 font-medium text-center">Updated Details</th>
+      <th className="min-w-[185px] px-2 py-2 font-medium">Company Name</th>
+      <th className="min-w-[230px] px-2 py-2 font-medium">Expo / Event</th>
+      <th className="min-w-[150px] px-2 py-2 font-medium">Contact Details</th>
+      <th className="min-w-[150px] px-2 py-2 font-medium text-left">Category</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-left">Source</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-center">Stall Size</th>
+      <th className="min-w-[145px] px-2 py-2 font-medium text-center">Booking Date</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-left">Location</th>
+      <th className="min-w-[90px] px-2 py-2 font-medium text-right">Revenue</th>
+      <th className="min-w-[110px] px-2 py-2 font-medium text-center">PYMT Status</th>
+      <th className="min-w-[155px] px-2 py-2 font-medium text-center">Updated Details</th>
     </>
   );
 
@@ -584,18 +584,21 @@ const ConfirmClientList = () => {
                 onChange={() => onSelectRow(row._id)}
               />
             </td>
-            <td className="px-1 py-2">
+            <td className="min-w-[185px] px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
                 <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
-            <td className="px-1 py-2 text-left">
-              <span className="inline-flex max-w-[150px] items-center rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700">
+            <td className="min-w-[230px] max-w-[230px] px-2 py-2 text-left">
+              <span
+                className="block w-[210px] overflow-hidden text-ellipsis whitespace-nowrap rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700"
+                title={row.eventId?.name || "Event Not Assigned"}
+              >
                 {row.eventId?.name || "Event Not Assigned"}
               </span>
             </td>
-            <td className="px-1 py-2">
+            <td className="min-w-[150px] px-2 py-2">
               <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
                 {toTitleCase(contactName)}
               </div>
