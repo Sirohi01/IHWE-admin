@@ -84,7 +84,7 @@ const WarmClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Follow-Up Call',
+        status: filterStatus || 'Contacted,Follow-up,Follow-Up Call,Negotiation',
         source: filterSource,
         eventId: currentEventId,
       }));

@@ -87,7 +87,7 @@ const ColdClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Hold,Lost,Not Interested',
+        status: filterStatus || 'On Hold,Hold,Lost,Not Interested',
         source: filterSource,
         industry: filterIndustry,
         eventId: currentEventId,

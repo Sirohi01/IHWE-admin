@@ -87,7 +87,7 @@ const HotClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Est./PI Sent', // Default hot lead status
+        status: filterStatus || 'Hot Lead',
         source: filterSource,
         industry: filterIndustry,
         eventId: currentEventId,
