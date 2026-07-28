@@ -148,6 +148,7 @@ const ClientOverview1 = () => {
 
   const getCrmTargetId = () => (isExhibitor ? company?.clientId : company?._id);
   const getExhibitorTargetId = () => (isExhibitor ? company?._id : null);
+  const getReviewTargetId = () => company?.clientId || company?._id || id;
 
   const fetchCompanyDetails = async () => {
     try {
@@ -249,7 +250,7 @@ const ClientOverview1 = () => {
   };
 
   const filteredReviews = useMemo(() => {
-    const targetId = company?.clientId || company?._id;
+    const targetId = getReviewTargetId();
     return Array.isArray(reviews)
       ? reviews.filter((rev) => rev?.cmpny_id === targetId)
       : [];
@@ -283,7 +284,7 @@ const ClientOverview1 = () => {
 
   useEffect(() => {
     if (company?._id) {
-      const targetId = company.clientId || company._id;
+      const targetId = getReviewTargetId();
       dispatch(fetchReviewById({ id: targetId, limit: 8 }));
 
       setReviewData((prev) => ({
@@ -363,14 +364,23 @@ const ClientOverview1 = () => {
       const previousAssignee = isExhibitor ? (company.spokenWith || "") : (company.forwardTo || "");
       const newAssignee = reviewData.assigned_to || "";
       const assigneeChanged = newAssignee && newAssignee !== previousAssignee;
+      const targetCrmId = getReviewTargetId();
+      const statusToSave = reviewData.status_short || company.companyStatus || "";
+      const followUpDate = reviewData.follow_up_date || reviewData.reminder_dt || "";
 
       const logMessagePrefix = `[Status Update] Changes by ${currentUserName}\n`;
       let finalRemark = reviewData.re_msg || "";
 
       const changesList = [];
       const currentStatus = company.companyStatus;
-      if (reviewData.status_short && reviewData.status_short !== currentStatus) {
-        changesList.push(`Status changed from '${currentStatus || "-"}' to '${reviewData.status_short}'`);
+      if (statusToSave && statusToSave !== currentStatus) {
+        changesList.push(`Status changed from '${currentStatus || "-"}' to '${statusToSave}'`);
+      }
+      if (reviewData.forward_to) {
+        changesList.push(`Next action: ${reviewData.forward_to}`);
+      }
+      if (followUpDate) {
+        changesList.push(`Follow-up scheduled for ${new Date(followUpDate).toLocaleString("en-IN")}`);
       }
       if (assigneeChanged) {
         changesList.push(`Lead forwarded from '${previousAssignee || "Unassigned"}' to '${newAssignee}'`);
@@ -385,17 +395,25 @@ const ClientOverview1 = () => {
       // Create the review entry
       await dispatch(createReview({
         ...reviewData,
+        cmpny_id: targetCrmId,
+        status_short: statusToSave,
+        reminder_dt: followUpDate,
+        follow_up_date: followUpDate,
         re_msg: finalReMsg,
+        updated_by: currentUserName,
       })).unwrap();
 
       const companyUpdates = {
-        companyStatus: reviewData.status_short || company.companyStatus,
+        companyStatus: statusToSave,
       };
+      if (followUpDate) {
+        companyUpdates.reminder = followUpDate;
+        companyUpdates.followUpDate = followUpDate;
+      }
       if (assigneeChanged) {
         companyUpdates.forwardTo = newAssignee;
       }
 
-      const targetCrmId = company.clientId || company._id;
       await dispatch(updateCompany({ id: targetCrmId, data: companyUpdates })).unwrap();
 
       if (isExhibitor && assigneeChanged) {
@@ -409,11 +427,11 @@ const ClientOverview1 = () => {
         showConfirmButton: false,
       });
 
-      dispatch(fetchReviewById(id));
+      dispatch(fetchReviewById({ id: targetCrmId, limit: 8 }));
       fetchCompanyDetails();
 
       setReviewData({
-        cmpny_id: company?.clientId || company?._id,
+        cmpny_id: targetCrmId,
         evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
         event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
         status_short: "",
@@ -430,7 +448,7 @@ const ClientOverview1 = () => {
 
   const handleDelete = async (reviewId) => {
     await dispatch(deleteReview(reviewId));
-    dispatch(fetchReviewById(id));
+    dispatch(fetchReviewById({ id: getReviewTargetId(), limit: 8 }));
   };
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -633,8 +651,9 @@ const ClientOverview1 = () => {
         const logMessage = `[Profile Update] Changes by ${currentUserName}\n• ${changesText}`;
 
         // Log to communication panel
-        await dispatch(createReview({ cmpny_id: crmTargetId || exhibitorTargetId, type: "log", re_msg: logMessage })).unwrap();
-        dispatch(fetchReviewById(id));
+        const targetId = crmTargetId || exhibitorTargetId;
+        await dispatch(createReview({ cmpny_id: targetId, type: "log", re_msg: logMessage, updated_by: currentUserName })).unwrap();
+        dispatch(fetchReviewById({ id: targetId, limit: 8 }));
       }
     } catch (err) {
       console.log(err);
@@ -668,7 +687,7 @@ const ClientOverview1 = () => {
         type: "log",
         re_msg: logMessage,
       })).unwrap();
-      dispatch(fetchReviewById(id));
+      dispatch(fetchReviewById({ id: targetId, limit: 8 }));
       Swal.fire({ icon: "success", title: "Exhibitor Category Updated", timer: 1500, showConfirmButton: false });
       setIsMsmeEditOpen(false);
       fetchCompanyDetails();
@@ -758,8 +777,9 @@ const ClientOverview1 = () => {
         await api.put(`/api/exhibitor-registration/${exhibitorTargetId}`, payload);
       }
 
-      await dispatch(createReview({ cmpny_id: crmTargetId || exhibitorTargetId, type: "log", re_msg: logMessage })).unwrap();
-      dispatch(fetchReviewById(id));
+      const targetId = crmTargetId || exhibitorTargetId;
+      await dispatch(createReview({ cmpny_id: targetId, type: "log", re_msg: logMessage, updated_by: currentUserName })).unwrap();
+      dispatch(fetchReviewById({ id: targetId, limit: 8 }));
 
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
       setIsContactModalOpen(false);
@@ -774,13 +794,14 @@ const ClientOverview1 = () => {
 
   const handleSendEntry = async (data) => {
     try {
+      const targetId = getReviewTargetId();
       if (data) {
         await dispatch(createReview({
-          cmpny_id: company?.clientId || company?._id,
+          cmpny_id: targetId,
           ...data
         })).unwrap();
       }
-      dispatch(fetchReviewById({ id: company?.clientId || company?._id, limit: 8 }));
+      dispatch(fetchReviewById({ id: targetId, limit: 8 }));
     } catch (err) {
       console.log(err);
     }
@@ -1271,7 +1292,7 @@ const ClientOverview1 = () => {
           reviews={filteredReviews}
           onSendEntry={handleSendEntry}
           onOpenFullHistory={() => {
-            const targetId = company.clientId || company._id;
+            const targetId = getReviewTargetId();
             dispatch(fetchReviewById({ id: targetId }));
           }}
         />
