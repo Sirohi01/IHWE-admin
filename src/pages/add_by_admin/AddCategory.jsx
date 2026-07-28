@@ -1138,7 +1138,7 @@ const AddCategory = () => {
             </button>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-auto">
             <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
                 <col className="w-[5%]" />
@@ -1389,13 +1389,7 @@ const AddCategory = () => {
           </div>
         </main>
 
-        <footer className="flex items-center gap-3 px-3 text-[clamp(9px,.66vw,11px)] font-semibold text-slate-400">
-          <span>© 2026 International Health &amp; Wellness Expo</span>
-          <span>|</span>
-          <span>Namo Gange Wellness Pvt. Ltd.</span>
-          <span>|</span>
-          <span>All Rights Reserved.</span>
-        </footer>
+      
       </div>
 
       {isModalOpen && (
