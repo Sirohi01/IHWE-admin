@@ -448,6 +448,14 @@ const AddNewClients = () => {
                 // Jab naya create ho raha ho tab added_by mein bhi same name dalein
                 dataToSave.added_by = userName;
                 const response = await dispatch(addCompany(dataToSave)).unwrap();
+                const savedEventId = response?.eventLifecycle?.eventId || response?.eventId;
+                if (
+                    isCrmEventScope
+                    && currentEventId
+                    && String(savedEventId || "") !== String(currentEventId)
+                ) {
+                    throw new Error("Lead was not assigned to the selected exhibition. Please try again.");
+                }
 
                 // Log the activity
                 const userId = sessionStorage.getItem("user_id");
@@ -462,7 +470,7 @@ const AddNewClients = () => {
 
                 Swal.fire({
                     title: "Registered!",
-                    text: "New company added successfully!",
+                    text: `${response?.companyName || formData.companyName} added to ${currentEvent?.event_fullName || currentEvent?.event_name || "the selected exhibition"} successfully!`,
                     icon: "success",
                     confirmButtonColor: "#23471d"
                 });
