@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../lib/api';
@@ -177,8 +177,11 @@ export const PerformaInvoices = () => {
     const location = useLocation();
     const { id } = useParams();
     const editEstimateId = location.state?.editEstimateId;
+    const requestedEventId = new URLSearchParams(location.search).get('eventId') || '';
     const [companyData, setCompanyData] = useState(null);
     const [existingEstimateId, setExistingEstimateId] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const savingRef = useRef(false);
 
     const dispatch = useDispatch();
     const { countries: reduxCountries } = useSelector((state) => state.countries || { countries: [] });
@@ -538,14 +541,40 @@ export const PerformaInvoices = () => {
     };
 
     const handleGenerateEstimate = async () => {
+        if (savingRef.current) return;
         const actualCompanyId = companyData?.clientId || companyData?._id || id;
         if (!actualCompanyId) {
             Swal.fire('Error', 'Company ID is missing!', 'error');
             return;
         }
 
+        const assignments = Array.isArray(companyData?.eventAssignments)
+            ? companyData.eventAssignments.filter((assignment) => assignment?.registrationEventId)
+            : [];
+        const selectedAssignment = requestedEventId
+            ? assignments.find((assignment) =>
+                String(assignment.registrationEventId?._id || assignment.registrationEventId) === String(requestedEventId)
+            )
+            : (assignments.length === 1 ? assignments[0] : null);
+        const resolvedEventId =
+            requestedEventId
+            || selectedAssignment?.registrationEventId?._id
+            || selectedAssignment?.registrationEventId
+            || '';
+
+        if (!resolvedEventId && !existingEstimateId) {
+            Swal.fire(
+                'Exhibition Required',
+                'Please open Accounts from the required exhibition Client Profile before creating the Proforma Invoice.',
+                'warning'
+            );
+            return;
+        }
+
         const payload = {
             companyId: actualCompanyId,
+            eventId: resolvedEventId || undefined,
+            crmEventId: selectedAssignment?.eventId?._id || selectedAssignment?.eventId || undefined,
             est_type: form.estimateType,
             gst_no: form.gstin,
             supply_date: form.supplyDate,
@@ -587,6 +616,8 @@ export const PerformaInvoices = () => {
         };
 
         try {
+            savingRef.current = true;
+            setIsSaving(true);
             if (existingEstimateId) {
                 const previewResponse = await api.post(
                     `/api/estimates/${existingEstimateId}/impact-preview`,
@@ -644,6 +675,9 @@ export const PerformaInvoices = () => {
         } catch (error) {
             console.error("Error saving estimate:", error);
             Swal.fire('Error', error.response?.data?.message || 'Failed to save estimate', 'error');
+        } finally {
+            savingRef.current = false;
+            setIsSaving(false);
         }
     };
 
@@ -933,8 +967,8 @@ export const PerformaInvoices = () => {
                         >
                             <X className="w-3.5 h-3.5" /> Cancel
                         </button>
-                        <button onClick={handleGenerateEstimate} className="flex items-center gap-2 bg-green-800 hover:bg-green-900 text-white rounded px-6 py-2 text-xs font-bold transition">
-                            <FileText className="w-3.5 h-3.5" /> {existingEstimateId ? "Update Estimate" : "Generate Estimate"}
+                        <button disabled={isSaving} onClick={handleGenerateEstimate} className="flex items-center gap-2 bg-green-800 hover:bg-green-900 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded px-6 py-2 text-xs font-bold transition">
+                            <FileText className="w-3.5 h-3.5" /> {isSaving ? "Saving..." : existingEstimateId ? "Update Estimate" : "Generate Estimate"}
                         </button>
                     </div>
                 </div>
