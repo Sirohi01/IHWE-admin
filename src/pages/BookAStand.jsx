@@ -116,6 +116,8 @@ const BookAStand = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState('');
+    const [resolvedCrmEventName, setResolvedCrmEventName] = useState('');
+    const [crmScopeError, setCrmScopeError] = useState('');
     const [availableStalls, setAvailableStalls] = useState([]);
     const [marketingStaff, setMarketingStaff] = useState([]);
     const [allRates, setAllRates] = useState([]);
@@ -244,13 +246,27 @@ const BookAStand = () => {
                             try {
                                 const crmRes = await api.get(`/api/crm-events/${crmEventId}`);
                                 const crmEvent = crmRes.data?.data || crmRes.data;
-                                if (crmEvent?.registrationEventId) {
-                                    targetEvent = eRes.data.data.find(
-                                        (event) => String(event._id) === String(crmEvent.registrationEventId)
-                                    ) || targetEvent;
+                                setResolvedCrmEventName(crmEvent?.event_fullName || crmEvent?.event_name || '');
+                                const linkedEventId = crmEvent?.registrationEventId?._id || crmEvent?.registrationEventId;
+                                if (!linkedEventId) {
+                                    setSelectedEventId('');
+                                    setCrmScopeError('This CRM Expo is not linked with a Registration & Stall Event.');
+                                    return;
                                 }
+                                targetEvent = eRes.data.data.find(
+                                    (event) => String(event._id) === String(linkedEventId)
+                                );
+                                if (!targetEvent) {
+                                    setSelectedEventId('');
+                                    setCrmScopeError('The linked Registration & Stall Event is unavailable or inactive.');
+                                    return;
+                                }
+                                setCrmScopeError('');
                             } catch (error) {
                                 console.error("Unable to resolve linked registration event:", error);
+                                setSelectedEventId('');
+                                setCrmScopeError('Unable to resolve this Expo’s linked Registration & Stall Event.');
+                                return;
                             }
                         }
                         setSelectedEventId(targetEvent._id);
@@ -762,6 +778,21 @@ const BookAStand = () => {
             )}
 
             {/* EVENT SELECTOR */}
+            {crmEventId && (
+                <div className={`mb-3 rounded-md border px-3 py-2 text-xs font-semibold ${
+                    crmScopeError
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : 'border-blue-200 bg-blue-50 text-blue-800'
+                }`}>
+                    {crmScopeError || (
+                        <>
+                            Registration event locked to {resolvedCrmEventName || 'selected Expo'}:
+                            {' '}
+                            {events.find((event) => String(event._id) === String(selectedEventId))?.name || 'Loading...'}
+                        </>
+                    )}
+                </div>
+            )}
             {/* <div className="mt-3 flex flex-col md:flex-row gap-4 items-end bg-slate-50 border border-slate-200 rounded-[2px] px-4 py-3">
                 <div className="w-full md:w-80">
                     <label className="text-[10px] font-bold text-[#23471d] uppercase mb-1 block tracking-widest">Select Exhibition Event <span className="text-red-500">*</span></label>

@@ -160,6 +160,7 @@ const ConfirmClientList = () => {
       const params = new URLSearchParams({
         page,
         limit,
+        validBooking: "true",
         ...(searchTerm && { search: searchTerm }),
         ...(filterStage && { status: filterStage }),
         ...(filterSource && { referredBy: filterSource }),
