@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Eye } from 'lucide-react';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
@@ -87,7 +87,33 @@ const ConfirmClientList = () => {
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Currently selected event (global, from Navbar) — every fetch below scopes to this.
-  const { currentEventId } = useEventContext();
+  const { currentEventId, currentEvent } = useEventContext();
+  const { eventId: routeCrmEventId } = useParams();
+  const [scopedRegistrationEventId, setScopedRegistrationEventId] = useState('');
+  const [scopeResolved, setScopeResolved] = useState(!routeCrmEventId);
+  const [scopeError, setScopeError] = useState('');
+  const effectiveEventId = routeCrmEventId ? scopedRegistrationEventId : currentEventId;
+
+  useEffect(() => {
+    if (!routeCrmEventId) {
+      setScopeResolved(true);
+      setScopeError('');
+      return;
+    }
+    setScopeResolved(false);
+    api.get(`/api/crm-events/${routeCrmEventId}`)
+      .then((response) => {
+        const crmEvent = response.data?.data || response.data;
+        const linkedId = crmEvent?.registrationEventId?._id || crmEvent?.registrationEventId || '';
+        setScopedRegistrationEventId(linkedId);
+        setScopeError(linkedId ? '' : 'This Expo is not linked with a Registration & Stall Event.');
+      })
+      .catch(() => {
+        setScopedRegistrationEventId('');
+        setScopeError('Unable to resolve this Expo booking configuration.');
+      })
+      .finally(() => setScopeResolved(true));
+  }, [routeCrmEventId]);
 
   // Auth State — the logged-in admin's profile lives under the "adminInfo" key,
   // in localStorage (remember-me) or sessionStorage — NOT in the auth Redux slice,
@@ -125,18 +151,23 @@ const ConfirmClientList = () => {
 
   // Fetch paginated registrations from backend
   const fetchRegistrations = useCallback(async () => {
+    if (!scopeResolved || (routeCrmEventId && !effectiveEventId)) {
+      setRegistrations([]);
+      return;
+    }
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
         page,
         limit,
+        validBooking: "true",
         ...(searchTerm && { search: searchTerm }),
         ...(filterStage && { status: filterStage }),
         ...(filterSource && { referredBy: filterSource }),
         ...(filterIndustry && { industry: filterIndustry }),
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
-        ...(currentEventId && { eventId: currentEventId }),
+        ...(effectiveEventId && { eventId: effectiveEventId }),
       });
       const regRes = await api.get(`/api/exhibitor-registration?${params}`);
       if (regRes.data?.success) {
@@ -149,19 +180,21 @@ const ConfirmClientList = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role, currentEventId]);
+  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role, effectiveEventId, routeCrmEventId, scopeResolved]);
 
   // Fetch aggregated totals (across ALL matching records, not just this page) for the stat cards
   const fetchSummary = useCallback(async () => {
+    if (!scopeResolved || (routeCrmEventId && !effectiveEventId)) return;
     try {
       const params = new URLSearchParams({
+        validBooking: "true",
         ...(searchTerm && { search: searchTerm }),
         ...(filterStage && { status: filterStage }),
         ...(filterSource && { referredBy: filterSource }),
         ...(filterIndustry && { industry: filterIndustry }),
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
-        ...(currentEventId && { eventId: currentEventId }),
+        ...(effectiveEventId && { eventId: effectiveEventId }),
       });
       const res = await api.get(`/api/exhibitor-registration/summary?${params}`);
       if (res.data?.success) {
@@ -170,16 +203,17 @@ const ConfirmClientList = () => {
     } catch (error) {
       console.error('Error fetching registration summary:', error);
     }
-  }, [searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role, currentEventId]);
+  }, [searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role, effectiveEventId, routeCrmEventId, scopeResolved]);
 
   // Fetch filter dropdown options — only depends on the user's scope, not on the
   // filters/search themselves, so it doesn't need to refetch on every keystroke.
   const fetchFilterOptions = useCallback(async () => {
+    if (!scopeResolved || (routeCrmEventId && !effectiveEventId)) return;
     try {
       const params = new URLSearchParams({
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
-        ...(currentEventId && { eventId: currentEventId }),
+        ...(effectiveEventId && { eventId: effectiveEventId }),
       });
       const res = await api.get(`/api/exhibitor-registration/filter-options?${params}`);
       if (res.data?.success) {
@@ -188,7 +222,7 @@ const ConfirmClientList = () => {
     } catch (error) {
       console.error('Error fetching filter options:', error);
     }
-  }, [user?.username, user?.role, currentEventId]);
+  }, [user?.username, user?.role, effectiveEventId, routeCrmEventId, scopeResolved]);
 
   // Fetch static data only once (cached)
   const fetchStaticData = async () => {
@@ -474,16 +508,17 @@ const ConfirmClientList = () => {
   // Table Config
   const tableHeaders = (
     <>
-      <th className="px-1 py-2 font-medium">Company Name</th>
-      <th className="px-1 py-2 font-medium">Contact Details</th>
-      <th className="px-1 py-2 font-medium text-left">Category</th>
-      <th className="px-1 py-2 font-medium text-left">Source</th>
-      <th className="px-1 py-2 font-medium text-center">Stall Size</th>
-      <th className="px-1 py-2 font-medium text-center">Booking Date</th>
-      <th className="px-1 py-2 font-medium text-left">Location</th>
-      <th className="px-1 py-2 font-medium text-right">Revenue</th>
-      <th className="px-1 py-2 font-medium text-center">PYMT Status</th>
-      <th className="px-1 py-2 font-medium text-center">Updated Details</th>
+      <th className="min-w-[185px] px-2 py-2 font-medium">Company Name</th>
+      <th className="min-w-[230px] px-2 py-2 font-medium">Expo / Event</th>
+      <th className="min-w-[150px] px-2 py-2 font-medium">Contact Details</th>
+      <th className="min-w-[150px] px-2 py-2 font-medium text-left">Category</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-left">Source</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-center">Stall Size</th>
+      <th className="min-w-[145px] px-2 py-2 font-medium text-center">Booking Date</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-left">Location</th>
+      <th className="min-w-[90px] px-2 py-2 font-medium text-right">Revenue</th>
+      <th className="min-w-[110px] px-2 py-2 font-medium text-center">PYMT Status</th>
+      <th className="min-w-[155px] px-2 py-2 font-medium text-center">Updated Details</th>
     </>
   );
 
@@ -511,6 +546,10 @@ const ConfirmClientList = () => {
         </tr>
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
+        const isIncompleteBooking =
+          !row.participation?.stallNo
+          || Number(row.participation?.stallSize || 0) <= 0
+          || Number(row.participation?.total || 0) <= 0;
         const source = row.referredBy || "Direct";
         const primaryTeamMember = row.teamMembers?.find((member) =>
           member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
@@ -543,15 +582,23 @@ const ConfirmClientList = () => {
                 onChange={() => onSelectRow(row._id)}
               />
             </td>
-            <td className="px-1 py-2">
+            <td className="min-w-[185px] px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
                 <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
-            <td className="px-1 py-2">
-              <div className="font-bold text-[10px] lowercase" style={{ color: '#15173D' }}>
-                {contactEmail}
+            <td className="min-w-[230px] max-w-[230px] px-2 py-2 text-left">
+              <span
+                className="block w-[210px] overflow-hidden text-ellipsis whitespace-nowrap rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700"
+                title={row.eventId?.name || "Event Not Assigned"}
+              >
+                {row.eventId?.name || "Event Not Assigned"}
+              </span>
+            </td>
+            <td className="min-w-[150px] px-2 py-2">
+              <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
+                {toTitleCase(contactName)}
               </div>
               <div className="text-[9px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
                 <Phone size={9} className="text-blue-500 shrink-0" />
@@ -598,7 +645,9 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-1 py-2 text-center">
               <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
-                {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "N/A"}
+                {isIncompleteBooking
+                  ? <span className="text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">Incomplete Booking</span>
+                  : `${row.participation?.stallSize || row.stallSize} sqm`}
               </span>
             </td>
             <td className="px-1 py-2 text-center">
@@ -631,6 +680,7 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-1 py-2 text-center">
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                isIncompleteBooking ? 'bg-red-50 text-red-700 border border-red-200' :
                 row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                 row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
                 row.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
@@ -638,7 +688,8 @@ const ConfirmClientList = () => {
                 row.status === 'rejected' || row.status === 'payment-failed' ? 'bg-red-50 text-red-600 border border-red-200' :
                 'bg-amber-50 text-amber-600 border border-amber-200'
               }`}>
-                {row.status === 'paid' ? 'Paid (Full)' :
+                {isIncompleteBooking ? 'Incomplete' :
+                 row.status === 'paid' ? 'Paid (Full)' :
                  row.status === 'confirmed' ? 'Confirmed' :
                  row.status === 'approved' ? 'Approved' :
                  row.status === 'advance-paid' ? 'Installment' :
@@ -779,27 +830,27 @@ const ConfirmClientList = () => {
 
   return (
     <BaseLeadPage
-      title="Exhibitor List"
-      subtitle="Leads that have been successfully converted into clients"
+      title={routeCrmEventId ? `${currentEvent?.event_name || currentEvent?.event_fullName || "Expo"} Bookings` : "Exhibitor List"}
+      subtitle={scopeError || "Exhibitor registrations and stall bookings for this Expo"}
       badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
       headerActions={
         <div className="flex flex-wrap items-center gap-1.5">
-          <Link to="/book-a-stand" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/book-a-stand?crmEventId=${routeCrmEventId}` : "/book-a-stand"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Book a Stand
           </Link>
-          <Link to="/ihweClientData2026/newLeadList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/new-leads` : "/ihweClientData2026/newLeadList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             New Lead List
           </Link>
-          <Link to="/ihweClientData2026/warmClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/follow-ups` : "/ihweClientData2026/warmClientList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Warm Client
           </Link>
-          <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/hot-leads` : "/ihweClientData2026/hotClientList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Hot Client
           </Link>
-          <Link to="/ihweClientData2026/coldClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/lost-leads` : "/ihweClientData2026/coldClientList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Cold Client
           </Link>
-          <Link to="/ihweClientData2026/rawDataList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/all-leads` : "/ihweClientData2026/rawDataList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Raw Data List
           </Link>
         </div>

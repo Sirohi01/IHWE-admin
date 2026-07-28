@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import {
     Users, Search, Eye, Mail, Phone, Building
 } from 'lucide-react';
-import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, useParams } from 'react-router-dom';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 import { SERVER_URL } from '../lib/api';
 import Globallytable from '../components/Globallytable';
@@ -28,6 +28,9 @@ const ManageRegistrations = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [registrationType, setRegistrationType] = useState('all'); // 'all', 'exhibitor-only', 'domestic-exhibitor', 'international-exhibitor', 'seller'
     const [searchParams] = useSearchParams();
+    const { eventId: crmEventId } = useParams();
+    const [scopedExpoName, setScopedExpoName] = useState('');
+    const [scopeError, setScopeError] = useState('');
     const navigate = useNavigate();
     const filterType = searchParams.get('type'); // 'current' or 'incoming'
     const dispatch = useDispatch();
@@ -42,12 +45,27 @@ const ManageRegistrations = () => {
 
     useEffect(() => {
         fetchRegistrations();
-    }, []);
+    }, [crmEventId]);
 
     const fetchRegistrations = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/exhibitor-registration');
+            let registrationEventId = '';
+            if (crmEventId) {
+                const crmResponse = await api.get(`/api/crm-events/${crmEventId}`);
+                const crmEvent = crmResponse.data?.data || crmResponse.data;
+                setScopedExpoName(crmEvent?.event_fullName || crmEvent?.event_name || '');
+                registrationEventId = crmEvent?.registrationEventId?._id || crmEvent?.registrationEventId || '';
+                if (!registrationEventId) {
+                    setRegistrations([]);
+                    setScopeError('This CRM Expo is not linked with a Registration & Stall Event. Link it from Event Configuration before booking.');
+                    return;
+                }
+            }
+            setScopeError('');
+            const params = new URLSearchParams();
+            if (registrationEventId) params.set('eventId', registrationEventId);
+            const response = await api.get(`/api/exhibitor-registration${params.toString() ? `?${params}` : ''}`);
             if (response.data.success) {
                 setRegistrations(Array.isArray(response.data.data) ? response.data.data : []);
             }
@@ -638,10 +656,17 @@ const ManageRegistrations = () => {
             <div className="w-full bg-white">
                 <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-4 py-1 mb-3">
                     <h1 className="text-xl text-gray-500 mb-2 lg:mb-0 uppercase font-normal">
-                        {filterType === 'current' ? "CURRENT EXHIBITOR BOOKINGS" : filterType === 'incoming' ? "INCOMING EXHIBITOR BOOKINGS" : "ALL EXHIBITOR BOOKINGS"}
+                        {scopedExpoName
+                            ? `${scopedExpoName} — EXHIBITOR BOOKINGS`
+                            : (filterType === 'current' ? "CURRENT EXHIBITOR BOOKINGS" : filterType === 'incoming' ? "INCOMING EXHIBITOR BOOKINGS" : "ALL EXHIBITOR BOOKINGS")}
                     </h1>
                 </div>
             </div>
+            {scopeError && (
+                <div className="mx-3 mb-3 rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                    {scopeError}
+                </div>
+            )}
             <div className="bg-white mx-3 p-2 rounded shadow-sm">
                 <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center pr-4 pt-2 gap-4">
                     <h1 className="text-base font-normal text-gray-800 px-2 uppercase">

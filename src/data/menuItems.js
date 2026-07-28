@@ -91,7 +91,6 @@ export const menuItems = [
     label: "Exhibitors",
     icon: Users,
     children: [
-      { label: "Exhibitor List", path: "/ihweClientData2026/confirmClientList" },
       { label: "New Exhibitor Registration", path: "/book-a-stand" },
       { label: "Useful Documents", path: "/exhibitor-useful-documents" },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import headerBg from "../assets/exhi.jpg";
 import arenaImg from "../assets/hall.jpg";
 import { motion, AnimatePresence } from "framer-motion";
@@ -109,11 +109,15 @@ const SearchableDropdown = ({
 
 const BookAStand = () => {
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const crmEventId = searchParams.get("crmEventId") || "";
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const [isLoading, setIsLoading] = useState(false);
     const [events, setEvents] = useState([]);
     const [selectedEventId, setSelectedEventId] = useState('');
+    const [resolvedCrmEventName, setResolvedCrmEventName] = useState('');
+    const [crmScopeError, setCrmScopeError] = useState('');
     const [availableStalls, setAvailableStalls] = useState([]);
     const [marketingStaff, setMarketingStaff] = useState([]);
     const [allRates, setAllRates] = useState([]);
@@ -234,12 +238,40 @@ const BookAStand = () => {
     useEffect(() => {
         const fetchInitialData = async () => {
             try {
-                api.get('/api/events').then(eRes => {
+                api.get('/api/events').then(async (eRes) => {
                     if (eRes.data.success && eRes.data.data.length > 0) {
                         setEvents(eRes.data.data);
-                        setSelectedEventId(eRes.data.data[0]._id);
+                        let targetEvent = eRes.data.data[0];
+                        if (crmEventId) {
+                            try {
+                                const crmRes = await api.get(`/api/crm-events/${crmEventId}`);
+                                const crmEvent = crmRes.data?.data || crmRes.data;
+                                setResolvedCrmEventName(crmEvent?.event_fullName || crmEvent?.event_name || '');
+                                const linkedEventId = crmEvent?.registrationEventId?._id || crmEvent?.registrationEventId;
+                                if (!linkedEventId) {
+                                    setSelectedEventId('');
+                                    setCrmScopeError('This CRM Expo is not linked with a Registration & Stall Event.');
+                                    return;
+                                }
+                                targetEvent = eRes.data.data.find(
+                                    (event) => String(event._id) === String(linkedEventId)
+                                );
+                                if (!targetEvent) {
+                                    setSelectedEventId('');
+                                    setCrmScopeError('The linked Registration & Stall Event is unavailable or inactive.');
+                                    return;
+                                }
+                                setCrmScopeError('');
+                            } catch (error) {
+                                console.error("Unable to resolve linked registration event:", error);
+                                setSelectedEventId('');
+                                setCrmScopeError('Unable to resolve this Expo’s linked Registration & Stall Event.');
+                                return;
+                            }
+                        }
+                        setSelectedEventId(targetEvent._id);
                         setFormData(prev => {
-                            const selEv = eRes.data.data[0];
+                            const selEv = targetEvent;
                             const plans = selEv?.paymentPlans || [];
                             const firstPlanId = plans.length > 0 ? plans[0].id : 'full';
                             const firstPlanLabel = plans.length > 0 ? plans[0].label : 'Full Payment';
@@ -282,7 +314,7 @@ const BookAStand = () => {
 
     useEffect(() => {
         if (id) {
-            api.get(`/api/companies/${id}`).then(res => {
+            api.get(`/api/companies/${id}${crmEventId ? `?eventId=${crmEventId}` : ""}`).then(res => {
                 if (res.data) {
                     const comp = res.data;
                     const cCountry = (comp.country || "India").toLowerCase();
@@ -302,12 +334,21 @@ const BookAStand = () => {
                         newF.landlineNo = comp.landline || '';
                         newF.companyEmail = comp.email || '';
                         newF.gstNo = comp.gstNumber || '';
+                        newF.panNo = comp.panNo || '';
                         newF.aboutCompany = comp.companyDescription || '';
+                        newF.typeOfBusiness = comp.category || '';
+                        newF.industrySector = comp.businessNature || '';
+                        newF.referredBy = comp.dataSource || 'Direct Website';
+                        newF.socialMediaType = comp.socialMediaType || '';
+                        newF.referralName = comp.referralName || '';
+                        newF.referralMobile = comp.referralMobile || '';
+                        newF.exhibitorStatus = comp.exhibitorRegistrationId ? 'Existing Client' : 'New Client';
+                        newF.registrantType = comp.gstNumber ? 'registered' : (comp.panNo ? 'unregistered' : newF.registrantType);
 
                         if (comp.contacts && comp.contacts.length > 0) {
                             newF.contact1 = {
                                 title: comp.contacts[0].title || 'Mr.',
-                                firstName: comp.contacts[0].firstName || '',
+                                firstName: comp.contacts[0].firstName || comp.contacts[0].name || '',
                                 lastName: comp.contacts[0].surname || '',
                                 email: comp.contacts[0].email || '',
                                 designation: comp.contacts[0].designation || '',
@@ -346,7 +387,7 @@ const BookAStand = () => {
                 }
             }).catch(err => console.error("Error fetching client data:", err));
         }
-    }, [id]);
+    }, [id, crmEventId]);
 
     // Ensure spokenWith is mapped to fullName once marketingStaff is loaded
     useEffect(() => {
@@ -522,6 +563,15 @@ const BookAStand = () => {
         if (!formData.spokenWith) {
             return Swal.fire("Required", "Please select the staff member in Spoken With.", "warning");
         }
+        if (!selectedEventId) {
+            return Swal.fire("Event Not Linked", "Please link this CRM Expo with its Registration Event before booking a stand.", "warning");
+        }
+        if (!formData.participation?.stallNo || !formData.participation?.stallFor) {
+            return Swal.fire("Stall Required", "Please select a valid stall before creating the exhibitor registration.", "warning");
+        }
+        if (Number(formData.participation?.stallSize || 0) <= 0 || Number(formData.participation?.total || 0) <= 0) {
+            return Swal.fire("Invalid Booking", "Stall area and booking amount must be greater than zero.", "warning");
+        }
         if (
             formData.exhibitorStatus === 'Existing Client'
             && (!formData.previousExhibition?.id || !formData.previousExhibition?.year)
@@ -530,8 +580,41 @@ const BookAStand = () => {
         }
         setIsLoading(true);
         try {
+            let proformaAction = '';
+            const hasAssignedTeamMember =
+                formData.spokenWith
+                && !/^(direct|no one|none|unassigned)$/i.test(formData.spokenWith.trim());
+
+            if (formData.clientId && hasAssignedTeamMember) {
+                const existingRes = await api.get(`/api/estimates/grouped/${formData.clientId}`);
+                const existing = (existingRes.data?.data || []).find(
+                    (estimate) =>
+                        String(estimate.eventId || '') === String(selectedEventId)
+                        && !['cancelled', 'superseded'].includes(String(estimate.status || '').toLowerCase())
+                );
+                if (existing) {
+                    const decision = await Swal.fire({
+                        title: 'Existing Proforma Found',
+                        text: `${existing.est_no || 'Existing proforma'} ko isi booking ke saath use karna hai, ya new revision banana hai?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        showDenyButton: true,
+                        confirmButtonText: 'Use Same Proforma',
+                        denyButtonText: 'Create New Revision',
+                        cancelButtonText: 'Cancel Registration',
+                    });
+                    if (decision.isDismissed) {
+                        setIsLoading(false);
+                        return;
+                    }
+                    proformaAction = decision.isConfirmed ? 'reuse' : 'revision';
+                }
+            }
+
             const finalData = {
                 ...formData,
+                proformaAction,
+                registrationSource: 'admin',
                 eventId: selectedEventId,
                 filledBy: currentUser?.username || 'Admin',
                 filledByFullName: currentUser?.fullName || currentUser?.username || 'Admin',
@@ -544,6 +627,21 @@ const BookAStand = () => {
             const response = await api.post('/api/exhibitor-registration', finalData);
 
             if (response.data.success) {
+                let destinationCrmEventId = crmEventId;
+                if (!destinationCrmEventId && selectedEventId) {
+                    try {
+                        const crmEventsResponse = await api.get('/api/crm-events');
+                        const crmEvents = Array.isArray(crmEventsResponse.data)
+                            ? crmEventsResponse.data
+                            : (crmEventsResponse.data?.data || []);
+                        const linkedCrmEvent = crmEvents.find(
+                            (event) => String(event.registrationEventId?._id || event.registrationEventId || '') === String(selectedEventId)
+                        );
+                        destinationCrmEventId = linkedCrmEvent?._id || '';
+                    } catch (error) {
+                        console.error('Unable to resolve destination Expo bookings page:', error);
+                    }
+                }
                 const adminName = currentUser?.user_fullname || currentUser?.username || "Admin";
                 const userId = sessionStorage.getItem("user_id") || currentUser?._id;
 
@@ -569,7 +667,7 @@ const BookAStand = () => {
                     confirmButtonColor: '#23471d'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        navigate('/ihweClientData2026/confirmClientList');
+                        navigate(destinationCrmEventId ? `/crm-event/${destinationCrmEventId}/bookings` : '/exhibitor-bookings');
                     }
                 });
             }
@@ -680,6 +778,21 @@ const BookAStand = () => {
             )}
 
             {/* EVENT SELECTOR */}
+            {crmEventId && (
+                <div className={`mb-3 rounded-md border px-3 py-2 text-xs font-semibold ${
+                    crmScopeError
+                        ? 'border-red-200 bg-red-50 text-red-700'
+                        : 'border-blue-200 bg-blue-50 text-blue-800'
+                }`}>
+                    {crmScopeError || (
+                        <>
+                            Registration event locked to {resolvedCrmEventName || 'selected Expo'}:
+                            {' '}
+                            {events.find((event) => String(event._id) === String(selectedEventId))?.name || 'Loading...'}
+                        </>
+                    )}
+                </div>
+            )}
             {/* <div className="mt-3 flex flex-col md:flex-row gap-4 items-end bg-slate-50 border border-slate-200 rounded-[2px] px-4 py-3">
                 <div className="w-full md:w-80">
                     <label className="text-[10px] font-bold text-[#23471d] uppercase mb-1 block tracking-widest">Select Exhibition Event <span className="text-red-500">*</span></label>

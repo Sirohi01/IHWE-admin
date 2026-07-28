@@ -186,6 +186,8 @@ export default function Sidebar({
           { label: "Follow-Ups", path: `/crm-event/${ev._id}/follow-ups` },
           { label: "Hot Leads", path: `/crm-event/${ev._id}/hot-leads` },
           { label: "Proposal Sent", path: `/crm-event/${ev._id}/proposal-sent` },
+          { label: "New Exhibitor Registration", path: `/book-a-stand?crmEventId=${ev._id}` },
+          { label: "Exhibitor Bookings", path: `/crm-event/${ev._id}/bookings` },
           { label: "Lost Leads", path: `/crm-event/${ev._id}/lost-leads` },
           { label: "Converted Leads", path: `/crm-event/${ev._id}/converted-leads` },
           { label: "All Leads", path: `/crm-event/${ev._id}/all-leads` },

@@ -634,9 +634,12 @@ export default function AppRoutes() {
                 CrmEvent's assigned companies to show. */}
             <Route path="crm-event/:eventId/sales-tools" element={<SalesTools />} />
             <Route path="crm-event/:eventId/new-leads" element={<CrmEventScopedRoute><NewLeadList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/add-client" element={<CrmEventScopedRoute><AddNewClients /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/client/:id" element={<CrmEventScopedRoute><ClientOverview1 /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/follow-ups" element={<CrmEventScopedRoute><WarmClientList /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/hot-leads" element={<CrmEventScopedRoute><HotClientList /></CrmEventScopedRoute>} />
-            <Route path="crm-event/:eventId/proposal-sent" element={<ProposalSentList />} />
+            <Route path="crm-event/:eventId/proposal-sent" element={<CrmEventScopedRoute><ProposalSentList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/bookings" element={<CrmEventScopedRoute><ConfirmClientList /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/lost-leads" element={<CrmEventScopedRoute><ColdClientList /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/converted-leads" element={<CrmEventScopedRoute><ConvertedList /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/all-leads" element={<CrmEventScopedRoute><AllLeadsList /></CrmEventScopedRoute>} />

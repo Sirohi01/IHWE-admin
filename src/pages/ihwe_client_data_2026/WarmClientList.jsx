@@ -87,7 +87,7 @@ const WarmClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || FOLLOW_UP_STATUS_FILTER,
+        status: filterStatus || 'Contacted,Follow-up,Follow-Up Call,Negotiation',
         source: filterSource,
         eventId: currentEventId,
       }));
@@ -320,7 +320,7 @@ const WarmClientList = () => {
               </td>
               <td className="px-2 py-2">
                 <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                  <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                  <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
                 </div>
               </td>
               <td className="px-2 py-2">

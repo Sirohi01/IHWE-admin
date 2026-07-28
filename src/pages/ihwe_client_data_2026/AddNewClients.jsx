@@ -45,6 +45,7 @@ import {
 } from "../../features/company/companySlice";
 import { createActivityLogThunk } from "../../features/activityLog/activityLogSlice";
 import SearchableDropdown from "../../components/SearchableDropdown";
+import { useEventContext } from "../../context/EventContext";
 
 // Helper function to safely extract an array from any Redux slice
 const getArrayFromSlice = (sliceState, fallbackKey) => {
@@ -71,6 +72,8 @@ const AddNewClients = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
     const { id } = useParams();
+    const { currentEventId, currentEvent } = useEventContext();
+    const isCrmEventScope = Boolean(currentEvent?.event_name);
 
     // 🧩 Form State
     const [formData, setFormData] = useState({
@@ -202,13 +205,20 @@ const AddNewClients = () => {
 
     // Auto-select the first active event by default for new clients
     useEffect(() => {
+        if (!id && isCrmEventScope && currentEventId) {
+            setFormData(prev => ({
+                ...prev,
+                eventName: currentEvent.event_fullName || currentEvent.event_name || "",
+            }));
+            return;
+        }
         if (!id && !formData.eventName && events.length > 0) {
             const activeEvents = events.filter(e => e.status === "active");
             if (activeEvents.length > 0) {
                 setFormData(prev => ({ ...prev, eventName: activeEvents[0].name }));
             }
         }
-    }, [events, id, formData.eventName]);
+    }, [events, id, formData.eventName, isCrmEventScope, currentEventId, currentEvent]);
 
     // Initial Data Fetch
     useEffect(() => {
@@ -405,7 +415,14 @@ const AddNewClients = () => {
                 console.error("Error parsing user data:", e);
             }
 
-            const dataToSave = { ...formData, updated_by: userName || formData.updated_by };
+            const dataToSave = {
+                ...formData,
+                ...(isCrmEventScope && currentEventId ? {
+                    eventId: currentEventId,
+                    events: [currentEventId],
+                } : {}),
+                updated_by: userName || formData.updated_by,
+            };
             if (id) {
                 await dispatch(updateCompany({ id, data: dataToSave })).unwrap();
 
@@ -431,6 +448,14 @@ const AddNewClients = () => {
                 // Jab naya create ho raha ho tab added_by mein bhi same name dalein
                 dataToSave.added_by = userName;
                 const response = await dispatch(addCompany(dataToSave)).unwrap();
+                const savedEventId = response?.eventLifecycle?.eventId || response?.eventId;
+                if (
+                    isCrmEventScope
+                    && currentEventId
+                    && String(savedEventId || "") !== String(currentEventId)
+                ) {
+                    throw new Error("Lead was not assigned to the selected exhibition. Please try again.");
+                }
 
                 // Log the activity
                 const userId = sessionStorage.getItem("user_id");
@@ -445,12 +470,16 @@ const AddNewClients = () => {
 
                 Swal.fire({
                     title: "Registered!",
-                    text: "New company added successfully!",
+                    text: `${response?.companyName || formData.companyName} added to ${currentEvent?.event_fullName || currentEvent?.event_name || "the selected exhibition"} successfully!`,
                     icon: "success",
                     confirmButtonColor: "#23471d"
                 });
                 handleReset();
-                navigate("/ihweClientData2026/newLeadList");
+                navigate(
+                    isCrmEventScope && currentEventId
+                        ? `/crm-event/${currentEventId}/new-leads`
+                        : "/ihweClientData2026/newLeadList"
+                );
             }
         } catch (err) {
             console.error("Failed to save company:", err);
@@ -796,6 +825,9 @@ const AddNewClients = () => {
                                 <label className={labelClasses}>Event Attribution <span className="text-red-500">*</span></label>
                                 <select required disabled value={formData.eventName} onChange={(e) => handleChange("eventName", e.target.value)} className={`${inputClasses} bg-slate-50 cursor-not-allowed appearance-none`}>
                                     <option value="">Select Event</option>
+                                    {isCrmEventScope && formData.eventName && (
+                                        <option value={formData.eventName}>{formData.eventName}</option>
+                                    )}
                                     {events.filter(e => e.status === "active").map((event, i) => (
                                         <option key={i} value={event.name}>{event.name}</option>
                                     ))}

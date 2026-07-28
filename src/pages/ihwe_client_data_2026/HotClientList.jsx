@@ -87,7 +87,7 @@ const HotClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Est./PI Sent', // Default hot lead status
+        status: filterStatus || 'Hot Lead',
         source: filterSource,
         industry: filterIndustry,
         eventId: currentEventId,
@@ -350,7 +350,7 @@ const HotClientList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
               </div>
             </td>
             <td className="px-2 py-2">
@@ -408,7 +408,7 @@ const HotClientList = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => navigate(`/book-a-stand/${row._id}`)}
+                  onClick={() => navigate(`/book-a-stand/${row._id}?crmEventId=${currentEventId}`)}
                   className="text-[9px] font-bold bg-[#124170] hover:bg-[#0A2643] text-white px-1.5 py-0.5 rounded shadow-sm transition-all" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Book Stand
