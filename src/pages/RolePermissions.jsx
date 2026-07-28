@@ -40,20 +40,9 @@ export default function RolePermissions() {
             .slice()
             .sort((a, b) => new Date(b.event_fromDate || 0) - new Date(a.event_fromDate || 0))
             .map((ev) => ({
-                type: "dropdown",
+                type: "item",
                 label: ev.event_fullName || ev.event_name,
                 icon: CalendarClock,
-                children: [
-                    { label: "Sales Tools" },
-                    { label: "New Leads" },
-                    { label: "Follow-Ups" },
-                    { label: "Hot Leads" },
-                    { label: "Proposal Sent" },
-                    { label: "Lost Leads" },
-                    { label: "Converted Leads" },
-                    { label: "All Leads" },
-                    { label: "Referral Leads" },
-                ],
             }));
 
         const results = [...menuItems];
