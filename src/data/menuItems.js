@@ -91,7 +91,6 @@ export const menuItems = [
     label: "Exhibitors",
     icon: Users,
     children: [
-      { label: "New Exhibitor Registration", path: "/book-a-stand" },
       { label: "Useful Documents", path: "/exhibitor-useful-documents" },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },
       { label: "Exhibitor Products", path: "/exhibitor-products-profile" },
