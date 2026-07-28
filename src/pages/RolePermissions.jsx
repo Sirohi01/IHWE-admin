@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { ShieldCheck, Save, RefreshCw, CheckSquare, Square, ChevronDown, ChevronRight, Info, Search, Users, Edit } from "lucide-react";
+import { ShieldCheck, Save, RefreshCw, CheckSquare, Square, ChevronDown, ChevronRight, Info, Search, Users, Edit, CalendarClock } from "lucide-react";
 import api from "../lib/api";
 import { menuItems } from "../data/menuItems";
 import PageHeader from "../components/PageHeader";
 import Pagination from "../components/Pagination";
 import Swal from "sweetalert2";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchEvents } from "../features/crmEvent/crmEventSlice";
 
 export default function RolePermissions() {
     const [roles, setRoles] = useState([]);
@@ -24,9 +26,48 @@ export default function RolePermissions() {
         setExpandedRoles(prev => ({ ...prev, [roleId]: !prev[roleId] }));
     };
 
+    const dispatch = useDispatch();
+    const crmEvents = useSelector((state) => state.crmEvents?.events);
+
     useEffect(() => {
+        dispatch(fetchEvents());
         fetchRoles();
-    }, []);
+    }, [dispatch]);
+
+    const combinedMenuItems = React.useMemo(() => {
+        const dynamicEventItems = (crmEvents || [])
+            .filter((ev) => ev.event_name || ev.event_fullName)
+            .slice()
+            .sort((a, b) => new Date(b.event_fromDate || 0) - new Date(a.event_fromDate || 0))
+            .map((ev) => ({
+                type: "dropdown",
+                label: ev.event_fullName || ev.event_name,
+                icon: CalendarClock,
+                children: [
+                    { label: "Sales Tools" },
+                    { label: "New Leads" },
+                    { label: "Follow-Ups" },
+                    { label: "Hot Leads" },
+                    { label: "Proposal Sent" },
+                    { label: "Lost Leads" },
+                    { label: "Converted Leads" },
+                    { label: "All Leads" },
+                    { label: "Referral Leads" },
+                ],
+            }));
+
+        const results = [...menuItems];
+        const masterDataIdx = results.findIndex((c) => c.label === "Expo Master Data");
+        if (masterDataIdx >= 0) {
+            results.splice(masterDataIdx, 0, ...dynamicEventItems);
+        } else {
+            const salesIdx = results.findIndex((c) => c.type === "heading" && c.label === "Sales CRM");
+            if (salesIdx >= 0) {
+                results.splice(salesIdx + 1, 0, ...dynamicEventItems);
+            }
+        }
+        return results;
+    }, [crmEvents]);
 
     const fetchRoles = async () => {
         try {
@@ -271,7 +312,7 @@ export default function RolePermissions() {
                                     <button
                                         onClick={() => {
                                             const newPerms = {};
-                                            menuItems.forEach(item => {
+                                            combinedMenuItems.forEach(item => {
                                                 if (item.label) newPerms[item.label] = true;
                                                 if (item.children) item.children.forEach(c => newPerms[c.label] = true);
                                             });
@@ -308,7 +349,7 @@ export default function RolePermissions() {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
-                                    {menuItems.map((item, index) => (
+                                    {combinedMenuItems.map((item, index) => (
                                         <React.Fragment key={item.label || `heading-${index}`}>
                                             {/* Heading Row */}
                                             {item.type === "heading" && (

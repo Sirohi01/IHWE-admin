@@ -1,15 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  CalendarDays,
+  CheckCircle2,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
   Edit3,
-  Filter,
+  FileWarning,
+  House,
+  Info,
   Plus,
   RotateCcw,
   Save,
   Search,
   ShieldCheck,
+  Tags,
   Trash2,
   UserRound,
   UsersRound,
@@ -122,6 +127,9 @@ const getFollowUpDays = (item) => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1;
 };
 
+const getDisplayOrder = (item) =>
+  Number.isFinite(Number(item?.display_order)) ? Number(item.display_order) : "—";
+
 const getUpdatedBy = (item) =>
   normaliseText(
     item?.updated_by?.name ||
@@ -173,6 +181,27 @@ const initialForm = {
   follow_up_days: 1,
   applicable_for: ["Exhibitor Lead", "Buyer Lead"],
 };
+
+const SummaryCard = ({ icon, iconClass, iconWrapClass, label, value, note }) => (
+  <div className="flex min-w-0 items-center gap-3 rounded-lg border border-[#e4e8ef] bg-white px-3 py-2.5 shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
+    <div
+      className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconWrapClass}`}
+    >
+      {React.createElement(icon, {
+        className: `h-5 w-5 ${iconClass}`,
+        strokeWidth: 2,
+      })}
+    </div>
+
+    <div className="min-w-0">
+      <p className="truncate text-[11px] font-medium text-[#70809a]">{label}</p>
+      <p className="mt-0.5 truncate text-[20px] font-semibold leading-none text-[#172842]">
+        {value}
+      </p>
+      <p className="mt-2 truncate text-[11px] text-[#697991]">{note}</p>
+    </div>
+  </div>
+);
 
 const AddNextAction = () => {
   const dispatch = useDispatch();
@@ -307,6 +336,32 @@ const AddNextAction = () => {
       totalPages,
     ];
   }, [currentPage, totalPages]);
+
+  const summary = useMemo(() => {
+    const active = nextActions.filter(
+      (item) => getActionStatus(item) === "active"
+    ).length;
+    const inactive = nextActions.length - active;
+    const latestItem = [...nextActions]
+      .filter((item) => {
+        const date = new Date(getUpdatedAt(item));
+        return !Number.isNaN(date.getTime());
+      })
+      .sort(
+        (a, b) =>
+          new Date(getUpdatedAt(b)).getTime() -
+          new Date(getUpdatedAt(a)).getTime()
+      )[0];
+
+    return {
+      total: nextActions.length,
+      active,
+      inactive,
+      latestDate: latestItem ? formatDate(getUpdatedAt(latestItem)) : "—",
+      latestBy: latestItem ? getUpdatedBy(latestItem) : "No update yet",
+      actionTypes: new Set(nextActions.map(getActionType)).size,
+    };
+  }, [nextActions]);
 
   const resetForm = () => {
     setIsEditing(null);
@@ -487,155 +542,224 @@ const AddNextAction = () => {
   };
 
   return (
-    <section
-      className="box-border h-[calc(100dvh-72px)] min-h-0 overflow-hidden bg-[#f7f9fc] px-[clamp(18px,2.35vw,36px)] py-[clamp(12px,1.6vh,20px)] font-sans text-[#172750]"
-      style={{
-        fontFamily:
-          'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <div className="grid h-full min-h-0 grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-[clamp(10px,1.25vh,16px)]">
+    <section className="h-[calc(100dvh-20px)] overflow-hidden bg-[#fbfcfe] p-5 font-sans text-[#263754]">
+      <div className="grid h-full min-h-0 grid-rows-[auto_auto_auto_minmax(0,1fr)] gap-3">
         {/* Header */}
-        <header className="flex items-start justify-between gap-5 px-3">
-          <div className="min-w-0">
-            <h1 className="text-[clamp(22px,1.7vw,28px)] font-extrabold leading-tight tracking-[-.025em] text-[#0d1c4d]">
-              Next Action
+        <header className="grid grid-cols-[minmax(320px,0.9fr)_minmax(500px,1.1fr)] gap-5">
+          <div className="min-w-0 pt-0.5">
+            <nav className="flex items-center gap-2 text-[11px] font-medium text-[#6c7a91]">
+              <House className="h-3 w-3 text-[#8aa1af]" fill="currentColor" />
+              <span>Home</span>
+              <ChevronRight className="h-3.5 w-3.5 text-[#a7b2c2]" />
+              <span>System Configuration</span>
+              <ChevronRight className="h-3.5 w-3.5 text-[#a7b2c2]" />
+              <span className="font-semibold text-[#19843c]">Add Next Action</span>
+            </nav>
+
+            <h1 className="mt-4 text-[23px] font-semibold leading-none tracking-[-0.02em] text-[#14253f]">
+              Next Action Management
             </h1>
-            <p className="mt-1 text-[clamp(10px,.82vw,13px)] font-medium text-[#65708a]">
-              Manage all next actions for follow-up activities and task management.
+            <p className="mt-3 text-[12px] text-[#64758f]">
+              Manage next actions used in CRM follow-up activities.
             </p>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate("/ihweClientData2026/AddNextAction/add")}
-            className="inline-flex h-[clamp(40px,4.6vh,48px)] shrink-0 items-center justify-center gap-2 rounded-[7px] bg-[#075fd7] px-[clamp(18px,1.8vw,26px)] text-[clamp(11px,.86vw,13px)] font-extrabold text-white shadow-[0_7px_16px_rgba(7,95,215,.2)] transition hover:bg-[#064fbb] active:scale-[.98]"
-          >
-            <Plus className="h-4 w-4" strokeWidth={2.2} />
-            Add New Next Action
-          </button>
+          <div className="grid min-h-[92px] grid-cols-[minmax(0,1fr)_250px] overflow-hidden rounded-lg border border-[#e2e7ee] bg-white shadow-[0_1px_4px_rgba(15,23,42,0.04)]">
+            <div className="flex min-w-0 items-start gap-3 px-4 py-4">
+              <Info className="mt-0.5 h-[18px] w-[18px] shrink-0 text-[#3577d4]" />
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-[#263754]">
+                  About Next Action
+                </p>
+                <p className="mt-2 max-w-[520px] text-[11px] leading-5 text-[#63738c]">
+                  Next actions help your team plan follow-ups and move leads
+                  through the CRM workflow.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-center border-l border-[#e7ebf0] px-4">
+              <button
+                type="button"
+                onClick={() => navigate("/ihweClientData2026/AddNextAction/add")}
+                className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-[#08752f] px-4 text-[13px] font-semibold text-white shadow-[0_2px_5px_rgba(8,117,47,0.22)] transition hover:bg-[#066326]"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.2} />
+                Add New Next Action
+              </button>
+            </div>
+          </div>
         </header>
 
+        {/* Summary cards */}
+        <div className="grid grid-cols-5 gap-3">
+          <SummaryCard
+            icon={Tags}
+            iconClass="text-sky-500"
+            iconWrapClass="bg-sky-50"
+            label="Total Actions"
+            value={summary.total}
+            note="All next actions"
+          />
+          <SummaryCard
+            icon={CheckCircle2}
+            iconClass="text-emerald-600"
+            iconWrapClass="bg-emerald-50"
+            label="Active Actions"
+            value={summary.active}
+            note="Currently in use"
+          />
+          <SummaryCard
+            icon={FileWarning}
+            iconClass="text-amber-500"
+            iconWrapClass="bg-amber-50"
+            label="Inactive Actions"
+            value={summary.inactive}
+            note="Not in use"
+          />
+          <SummaryCard
+            icon={CalendarDays}
+            iconClass="text-violet-600"
+            iconWrapClass="bg-violet-50"
+            label="Last Updated"
+            value={summary.latestDate}
+            note={`By ${summary.latestBy}`}
+          />
+          <SummaryCard
+            icon={ShieldCheck}
+            iconClass="text-blue-600"
+            iconWrapClass="bg-blue-50"
+            label="Action Types"
+            value={summary.actionTypes}
+            note="Configured types"
+          />
+        </div>
+
         {/* Filters */}
-        <section className="grid shrink-0 grid-cols-[minmax(250px,1.35fr)_minmax(165px,.9fr)_minmax(180px,1fr)_minmax(180px,1fr)_78px_102px] items-end gap-[clamp(10px,1.2vw,18px)] rounded-[9px] border border-[#e2e6ed] bg-white px-[clamp(16px,1.7vw,25px)] py-[clamp(15px,1.8vh,21px)] shadow-[0_4px_16px_rgba(15,23,42,.04)]">
+        <div className="grid grid-cols-[minmax(250px,1.15fr)_minmax(190px,0.75fr)_minmax(190px,0.75fr)_minmax(190px,0.75fr)_auto] items-end gap-4 px-1">
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6d7c98]" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#a4afbf]" />
             <input
               type="text"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search by action name or code..."
-              className={filterInputClass}
+              className="h-10 w-full rounded-md border border-[#dce2e9] bg-white pl-10 pr-3 text-[12px] text-[#263754] outline-none transition placeholder:text-[#9ca8ba] focus:border-[#4e8c66] focus:ring-2 focus:ring-[#4e8c66]/10"
             />
           </div>
 
-          <FilterSelect
-            label="Status"
-            value={statusFilter}
-            onChange={(value) => {
-              setStatusFilter(value);
-              setCurrentPage(1);
-            }}
-            options={[
-              { value: "All", label: "All" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-            ]}
-          />
+          <label className="relative block">
+            <span className="absolute -top-2 left-2 z-10 bg-[#fbfcfe] px-1 text-[10px] font-medium text-[#748399]">
+              Status
+            </span>
+            <select
+              value={statusFilter}
+              onChange={(event) => {
+                setStatusFilter(event.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 w-full appearance-none rounded-md border border-[#dce2e9] bg-white px-3 pr-9 text-[12px] font-medium text-[#31415a] outline-none focus:border-[#4e8c66]"
+            >
+              <option value="All">All</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#65768e]" />
+          </label>
 
-          <FilterSelect
-            label="Action Type"
-            value={actionTypeFilter}
-            onChange={(value) => {
-              setActionTypeFilter(value);
-              setCurrentPage(1);
-            }}
-            options={[
-              { value: "All", label: "All" },
-              ...ACTION_TYPES.map((item) => ({
-                value: item,
-                label: item,
-              })),
-            ]}
-          />
+          <label className="relative block">
+            <span className="absolute -top-2 left-2 z-10 bg-[#fbfcfe] px-1 text-[10px] font-medium text-[#748399]">
+              Action Type
+            </span>
+            <select
+              value={actionTypeFilter}
+              onChange={(event) => {
+                setActionTypeFilter(event.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 w-full appearance-none rounded-md border border-[#dce2e9] bg-white px-3 pr-9 text-[12px] font-medium text-[#31415a] outline-none focus:border-[#4e8c66]"
+            >
+              <option value="All">All</option>
+              {ACTION_TYPES.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#65768e]" />
+          </label>
 
-          <FilterSelect
-            label="Applicable For"
-            value={applicableFilter}
-            onChange={(value) => {
-              setApplicableFilter(value);
-              setCurrentPage(1);
-            }}
-            options={[
-              { value: "All", label: "All" },
-              ...APPLICABLE_OPTIONS.map((item) => ({
-                value: item,
-                label: item,
-              })),
-            ]}
-          />
+          <label className="relative block">
+            <span className="absolute -top-2 left-2 z-10 bg-[#fbfcfe] px-1 text-[10px] font-medium text-[#748399]">
+              Applicable For
+            </span>
+            <select
+              value={applicableFilter}
+              onChange={(event) => {
+                setApplicableFilter(event.target.value);
+                setCurrentPage(1);
+              }}
+              className="h-10 w-full appearance-none rounded-md border border-[#dce2e9] bg-white px-3 pr-9 text-[12px] font-medium text-[#31415a] outline-none focus:border-[#4e8c66]"
+            >
+              <option value="All">All</option>
+              {APPLICABLE_OPTIONS.map((item) => (
+                <option key={item} value={item}>
+                  {item}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#65768e]" />
+          </label>
 
           <button
             type="button"
             onClick={resetFilters}
-            className="inline-flex h-[46px] items-center justify-center rounded-[7px] border border-[#d8dde6] bg-white px-4 text-[clamp(10px,.78vw,12px)] font-extrabold text-[#172750] transition hover:bg-[#f7f8fa]"
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-[#d8dee7] bg-white px-4 text-[12px] font-semibold text-[#34435a] transition hover:bg-[#f5f7fa]"
           >
-            Reset
+            <RotateCcw className="h-4 w-4" />
+            Reset Filters
           </button>
-
-          <button
-            type="button"
-            onClick={() => setCurrentPage(1)}
-            className="inline-flex h-[46px] items-center justify-center gap-2 rounded-[7px] bg-[#e9f0ff] px-4 text-[clamp(10px,.78vw,12px)] font-extrabold text-[#2365d8] transition hover:bg-[#dce8ff]"
-          >
-            <Filter className="h-4 w-4" />
-            Filter
-          </button>
-        </section>
+        </div>
 
         {/* Table */}
-        <main className="flex min-h-0 flex-col overflow-hidden rounded-[9px] border border-[#dfe4eb] bg-white shadow-[0_4px_16px_rgba(15,23,42,.04)]">
+        <div className="flex min-h-0 flex-col overflow-hidden rounded-lg border border-[#e0e5eb] bg-white shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
           <div className="min-h-0 flex-1 overflow-hidden">
             <table className="w-full table-fixed border-collapse text-left">
               <colgroup>
-                <col className="w-[6.5%]" />
-                <col className="w-[12%]" />
+                <col className="w-[4%]" />
+                <col className="w-[13%]" />
+                <col className="w-[9%]" />
                 <col className="w-[10%]" />
-                <col className="w-[10%]" />
-                <col className="w-[7.5%]" />
-                <col className="w-[15%]" />
                 <col className="w-[8%]" />
+                <col className="w-[14%]" />
+                <col className="w-[8%]" />
+                <col className="w-[13%]" />
                 <col className="w-[12%]" />
-                <col className="w-[11%]" />
-                <col className="w-[8%]" />
+                <col className="w-[9%]" />
               </colgroup>
 
               <thead>
-                <tr className="h-[48px] border-b border-[#dfe4eb] bg-[#f7f9fb] text-[clamp(8px,.63vw,10px)] font-extrabold uppercase tracking-[.02em] text-[#31415f]">
-                  <th className="px-[clamp(10px,1.1vw,18px)]">S.No.</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Action Name</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Action Code</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Action Type</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Status</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Applicable For</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)] text-center">
-                    Follow-up Days
-                  </th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Updated By</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)]">Updated At</th>
-                  <th className="px-[clamp(10px,1.1vw,18px)] text-center">
-                    Actions
-                  </th>
+                <tr className="h-11 border-b border-[#dfe5eb] bg-[#f7f9fb] text-[11px] font-semibold text-[#53637b]">
+                  <th className="px-4">Order</th>
+                  <th className="px-3">Action Name</th>
+                  <th className="px-3">Code</th>
+                  <th className="px-3">Action Type</th>
+                  <th className="px-3">Status</th>
+                  <th className="px-3">Applicable For</th>
+                  <th className="px-3 text-center">Follow-up</th>
+                  <th className="px-3">Updated On</th>
+                  <th className="px-3">Updated By</th>
+                  <th className="px-3 text-center">Actions</th>
                 </tr>
               </thead>
 
-              <tbody className="divide-y divide-[#e7ebef] text-[clamp(10px,.74vw,12px)] text-[#243453]">
+              <tbody className="text-[11.5px] text-[#34445d]">
                 {isLoading ? (
                   <tr>
-                    <td colSpan={10} className="h-[220px] text-center">
+                    <td colSpan={10} className="h-[180px] text-center">
                       <div className="flex h-full flex-col items-center justify-center gap-3 text-[#728099]">
-                        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#075fd7]/20 border-t-[#075fd7]" />
-                        <span className="text-[12px] font-semibold">
+                        <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-[#08752f]/20 border-t-[#08752f]" />
+                        <span className="text-[12px] font-medium">
                           Loading next actions...
                         </span>
                       </div>
@@ -651,78 +775,85 @@ const AddNextAction = () => {
                     return (
                       <tr
                         key={item?._id || `${item?.name}-${index}`}
-                        className="h-[clamp(46px,5.35vh,58px)] bg-white transition hover:bg-blue-50/25"
+                        className="h-11 border-b border-[#e7ebef] transition last:border-b-0 hover:bg-[#fbfcfd]"
                       >
-                        <td className="px-[clamp(10px,1.1vw,18px)] font-bold text-[#18356c]">
-                          {firstItemIndex + index + 1}
+                        <td className="px-4 font-semibold text-[#52627a]">
+                          {getDisplayOrder(item)}
                         </td>
 
-                        <td className="truncate px-[clamp(10px,1.1vw,18px)] font-extrabold text-[#172750]">
-                          {item?.name || "Untitled Action"}
+                        <td className="px-3">
+                          <div className="flex min-w-0 items-center gap-2.5">
+                            <span
+                              className={`h-2.5 w-2.5 shrink-0 rounded-full ${status === "active" ? "bg-[#0b8a3d]" : "bg-[#cbd5e1]"}`}
+                            />
+                            <span className="truncate font-semibold text-[#263754]">
+                              {item?.name || "Untitled Action"}
+                            </span>
+                          </div>
                         </td>
 
-                        <td className="truncate px-[clamp(10px,1.1vw,18px)] font-bold text-[#243d72]">
+                        <td className="truncate px-3 font-medium text-[#53637a]">
                           {getActionCode(item)}
                         </td>
 
-                        <td className="px-[clamp(10px,1.1vw,18px)]">
+                        <td className="px-3">
                           <span
-                            className={`inline-flex max-w-full truncate rounded-[5px] px-3 py-1.5 text-[clamp(9px,.68vw,11px)] font-extrabold ${ACTION_TYPE_STYLES[actionType] ||
-                              "bg-slate-100 text-slate-600"
+                            className={`inline-flex max-w-full truncate rounded-full px-2.5 py-1 text-[10px] font-semibold ${ACTION_TYPE_STYLES[actionType] ||
+                              "bg-[#eaf2ff] text-[#3f78c7]"
                               }`}
                           >
                             {actionType}
                           </span>
                         </td>
 
-                        <td className="px-[clamp(10px,1.1vw,18px)]">
+                        <td className="px-3">
                           <span
-                            className={`inline-flex rounded-[5px] px-2.5 py-1.5 text-[clamp(9px,.68vw,11px)] font-extrabold capitalize ${status === "active"
-                                ? "bg-emerald-50 text-emerald-600"
-                                : "bg-slate-100 text-slate-600"
+                            className={`inline-flex rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize ${status === "active"
+                                ? "bg-[#eaf8ef] text-[#2d9b58]"
+                                : "bg-[#f1f4f8] text-[#6b798f]"
                               }`}
                           >
                             {status}
                           </span>
                         </td>
 
-                        <td className="px-[clamp(10px,1.1vw,18px)]">
+                        <td className="px-3">
                           <ApplicableIcons values={applicableFor} />
                         </td>
 
-                        <td className="px-[clamp(10px,1.1vw,18px)] text-center font-bold text-[#253b68]">
+                        <td className="px-3 text-center font-semibold text-[#52627a]">
                           {getFollowUpDays(item)}
                         </td>
 
-                        <td className="truncate px-[clamp(10px,1.1vw,18px)] font-semibold text-[#344664]">
-                          {getUpdatedBy(item)}
-                        </td>
-
-                        <td className="px-[clamp(10px,1.1vw,18px)]">
-                          <div className="flex flex-col text-[clamp(9px,.67vw,11px)] font-semibold leading-[1.35] text-[#344664]">
+                        <td className="px-3">
+                          <div className="flex flex-col text-[10.5px] font-medium leading-[1.35] text-[#53637a]">
                             <span>{formatDate(updatedAt)}</span>
                             <span>{formatTime(updatedAt)}</span>
                           </div>
                         </td>
 
-                        <td className="px-[clamp(10px,1.1vw,18px)]">
+                        <td className="truncate px-3 font-medium text-[#53637a]">
+                          {getUpdatedBy(item)}
+                        </td>
+
+                        <td className="px-3">
                           <div className="flex items-center justify-center gap-2">
                             <button
                               type="button"
                               onClick={() => navigate(`/ihweClientData2026/AddNextAction/edit/${item?._id}`)}
-                              className="grid h-8 w-8 place-items-center rounded-[6px] border border-blue-100 bg-blue-50 text-blue-600 transition hover:bg-blue-100"
+                              className="flex h-7 w-7 items-center justify-center rounded bg-[#edf6ff] text-[#4c9be8] transition hover:bg-[#dbeeff]"
                               title="Edit action"
                             >
-                              <Edit3 className="h-4 w-4" />
+                              <Edit3 className="h-3.5 w-3.5" />
                             </button>
 
                             <button
                               type="button"
                               onClick={() => handleDelete(item?._id)}
-                              className="grid h-8 w-8 place-items-center rounded-[6px] border border-red-100 bg-red-50 text-red-500 transition hover:bg-red-100"
+                              className="flex h-7 w-7 items-center justify-center rounded bg-[#fff1f1] text-[#ec5d63] transition hover:bg-[#ffe1e1]"
                               title="Delete action"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         </td>
@@ -731,79 +862,75 @@ const AddNextAction = () => {
                   })
                 ) : (
                   <tr>
-                    <td colSpan={10} className="h-[220px] text-center">
-                      <div className="flex h-full flex-col items-center justify-center gap-2 text-[#758299]">
-                        <Search className="h-7 w-7 text-[#a5afbd]" />
-                        <p className="text-[12px] font-semibold">
-                          No next actions found.
+                    <td colSpan={10} className="h-[180px] text-center">
+                      <div className="flex h-full flex-col items-center justify-center gap-2 text-[#7b899b]">
+                        <Info className="h-7 w-7 text-[#a4afbd]" />
+                        <p className="text-[12px] font-medium">
+                          No next actions found
                         </p>
-                        <button
-                          type="button"
-                          onClick={resetFilters}
-                          className="text-[11px] font-extrabold text-[#075fd7] hover:underline"
-                        >
-                          Clear filters
-                        </button>
                       </div>
                     </td>
                   </tr>
                 )}
-
-                {!isLoading &&
-                  paginated.length > 0 &&
-                  Array.from({
-                    length: Math.max(
-                      0,
-                      Math.min(8, itemsPerPage) - paginated.length
-                    ),
-                  }).map((_, index) => (
-                    <tr
-                      key={`empty-row-${index}`}
-                      className="h-[clamp(46px,5.35vh,58px)]"
-                    >
-                      <td colSpan={10} />
-                    </tr>
-                  ))}
               </tbody>
             </table>
           </div>
 
-          {/* Pagination Footer */}
-          <footer className="flex h-[54px] shrink-0 items-center justify-between border-t border-[#e0e5eb] px-[clamp(14px,1.4vw,22px)]">
-            <p className="text-[clamp(9px,.68vw,11px)] font-semibold text-[#68758c]">
-              Showing{" "}
-              <span className="font-extrabold text-[#263d6e]">
-                {filtered.length ? firstItemIndex + 1 : 0}
-              </span>{" "}
-              to{" "}
-              <span className="font-extrabold text-[#263d6e]">
-                {Math.min(firstItemIndex + itemsPerPage, filtered.length)}
-              </span>{" "}
-              of{" "}
-              <span className="font-extrabold text-[#263d6e]">
-                {filtered.length}
-              </span>{" "}
-              entries
-            </p>
+          <footer className="flex h-[54px] shrink-0 items-center justify-between border-t border-[#e0e5eb] px-4">
+            <div className="flex items-center gap-6 text-[11px] text-[#53637a]">
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-[#eaf8ef] px-2.5 py-1 font-semibold text-[#2d9b58]">
+                  Active
+                </span>
+                <span>Currently in use</span>
+              </div>
 
-            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <span className="rounded-md bg-[#eaf2ff] px-2.5 py-1 font-semibold text-[#3f78c7]">
+                  Type
+                </span>
+                <span>Action category</span>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 text-[11px] text-[#53637a]">
+              <span className="font-medium">Show</span>
+
+              <label className="relative">
+                <select
+                  value={itemsPerPage}
+                  onChange={(event) => {
+                    setItemsPerPage(Number(event.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="h-9 w-[74px] appearance-none rounded-md border border-[#dce2e9] bg-white pl-3 pr-8 font-semibold text-[#34435a] outline-none"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#67768d]" />
+              </label>
+
+              <span className="font-semibold text-[#40516a]">
+                of {filtered.length}
+              </span>
+
               <button
                 type="button"
-                onClick={() =>
-                  setCurrentPage((page) => Math.max(1, page - 1))
-                }
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
                 disabled={currentPage === 1}
-                className={paginationArrowClass}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-[#e0e5eb] bg-white text-[#98a4b5] transition hover:bg-[#f5f7fa] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
 
-              {visiblePageNumbers.map((page, index) => {
-                if (String(page).trim() === "...") {
+              {visiblePageNumbers.map((pageNumber, index) => {
+                if (String(pageNumber).trim() === "...") {
                   return (
                     <span
                       key={`ellipsis-${index}`}
-                      className="grid h-8 min-w-8 place-items-center text-[12px] font-extrabold text-[#647189]"
+                      className="flex h-8 min-w-8 items-center justify-center px-2 text-[11px] font-semibold text-[#6b798f]"
                     >
                       ...
                     </span>
@@ -813,14 +940,14 @@ const AddNextAction = () => {
                 return (
                   <button
                     type="button"
-                    key={`${page}-${index}`}
-                    onClick={() => setCurrentPage(Number(page))}
-                    className={`grid h-8 min-w-8 place-items-center rounded-[6px] px-2 text-[11px] font-extrabold transition ${currentPage === page
-                        ? "bg-[#e8f0ff] text-[#1e5fd3] ring-1 ring-[#c9d9fa]"
-                        : "border border-[#e0e5eb] bg-white text-[#4f5f79] hover:bg-[#f6f8fb]"
+                    key={`${pageNumber}-${index}`}
+                    onClick={() => setCurrentPage(Number(pageNumber))}
+                    className={`flex h-8 min-w-8 items-center justify-center rounded-md px-2 text-[11px] font-semibold transition ${currentPage === Number(pageNumber)
+                        ? "bg-[#08752f] text-white shadow-[0_1px_3px_rgba(8,117,47,0.2)]"
+                        : "border border-[#e7ebef] bg-white text-[#6b798f] hover:bg-[#f5f7fa]"
                       }`}
                   >
-                    {page}
+                    {pageNumber}
                   </button>
                 );
               })}
@@ -828,43 +955,16 @@ const AddNextAction = () => {
               <button
                 type="button"
                 onClick={() =>
-                  setCurrentPage((page) =>
-                    Math.min(totalPages, page + 1)
-                  )
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
                 }
                 disabled={currentPage === totalPages}
-                className={paginationArrowClass}
+                className="flex h-8 w-8 items-center justify-center rounded-md border border-[#e0e5eb] bg-white text-[#98a4b5] transition hover:bg-[#f5f7fa] disabled:cursor-not-allowed disabled:opacity-45"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>
-
-              <label className="relative ml-6">
-                <select
-                  value={itemsPerPage}
-                  onChange={(event) => {
-                    setItemsPerPage(Number(event.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="h-9 w-[116px] appearance-none rounded-[6px] border border-[#dce2e9] bg-white pl-4 pr-9 text-[11px] font-bold text-[#44546d] outline-none"
-                >
-                  <option value={10}>10 / page</option>
-                  <option value={20}>20 / page</option>
-                  <option value={50}>50 / page</option>
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6c7990]" />
-              </label>
             </div>
           </footer>
-        </main>
-
-        {/* Page Footer */}
-        <footer className="flex items-center gap-2 px-1 text-[clamp(9px,.7vw,11px)] font-semibold text-[#7d869c]">
-          <span>© 2026 International Health &amp; Wellness Expo</span>
-          <span>|</span>
-          <span>Namo Gange Wellness Pvt. Ltd.</span>
-          <span>|</span>
-          <span>All Rights Reserved.</span>
-        </footer>
+        </div>
       </div>
 
       {/* Add / Edit Modal */}
@@ -1044,34 +1144,8 @@ const AddNextAction = () => {
   );
 };
 
-const filterInputClass =
-  "h-[46px] w-full rounded-[7px] border border-[#d7dde6] bg-white pl-10 pr-4 text-[clamp(10px,.78vw,12px)] font-semibold text-[#263754] outline-none transition placeholder:text-[#98a4b5] focus:border-[#4d80da] focus:ring-2 focus:ring-[#4d80da]/10";
-
 const modalInputClass =
   "h-10 w-full rounded-[6px] border border-[#d8dfe8] bg-white px-3 text-[12px] font-semibold text-[#263754] outline-none transition placeholder:text-[#a0abb9] focus:border-[#3f78d0] focus:ring-2 focus:ring-[#3f78d0]/10";
-
-const paginationArrowClass =
-  "grid h-8 w-8 place-items-center rounded-[6px] border border-[#e0e5eb] bg-white text-[#8794a8] transition hover:bg-[#f5f7fa] disabled:cursor-not-allowed disabled:opacity-45";
-
-const FilterSelect = ({ label, value, onChange, options }) => (
-  <label className="relative block min-w-0">
-    <span className="mb-2 block text-[clamp(9px,.72vw,11px)] font-extrabold text-[#293b68]">
-      {label}
-    </span>
-    <select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      className="h-[46px] w-full appearance-none rounded-[7px] border border-[#d7dde6] bg-white px-4 pr-10 text-[clamp(10px,.78vw,12px)] font-bold text-[#243656] outline-none transition focus:border-[#4d80da] focus:ring-2 focus:ring-[#4d80da]/10"
-    >
-      {options.map((option) => (
-        <option key={option.value} value={option.value}>
-          {option.label}
-        </option>
-      ))}
-    </select>
-    <ChevronDown className="pointer-events-none absolute bottom-[15px] right-3 h-4 w-4 text-[#60708b]" />
-  </label>
-);
 
 const ModalField = ({ label, required, children }) => (
   <label className="block">
