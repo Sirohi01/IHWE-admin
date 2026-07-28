@@ -420,7 +420,6 @@ const ClientOverview1 = () => {
         companyUpdates.forwardTo = newAssignee;
       }
 
-      const targetCrmId = company.clientId || company._id;
       if (selectedEventId) {
         await api.put(`/api/companies/${targetCrmId}/events/${selectedEventId}/lifecycle`, {
           status: reviewData.status_short || company.companyStatus,
