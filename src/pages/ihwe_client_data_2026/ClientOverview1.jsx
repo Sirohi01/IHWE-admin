@@ -169,7 +169,13 @@ const ClientOverview1 = () => {
               };
 
               if (data.contact1 && crmData.contacts && crmData.contacts[0]) {
-                data.contact1.photoUrl = data.contact1.photoUrl || data.contact1.photo || crmData.contacts[0].photo;
+                const crmContact = crmData.contacts[0];
+                data.contact1.firstName = data.contact1.firstName || data.contact1.name || crmContact.firstName || crmContact.name || "";
+                data.contact1.lastName = data.contact1.lastName || crmContact.surname || "";
+                data.contact1.designation = data.contact1.designation || crmContact.designation || "";
+                data.contact1.email = data.contact1.email || crmContact.email || "";
+                data.contact1.mobile = data.contact1.mobile || crmContact.mobile || "";
+                data.contact1.photoUrl = data.contact1.photoUrl || data.contact1.photo || crmContact.photoUrl || crmContact.photo;
               }
               if (data.contact2 && crmData.contacts && crmData.contacts[1]) {
                 data.contact2.photoUrl = data.contact2.photoUrl || data.contact2.photo || crmData.contacts[1].photo;
@@ -184,7 +190,7 @@ const ClientOverview1 = () => {
           data.companyStatus = data.companyStatus || data.status;
 
           try {
-            const resContacts = await api.get(`/api/client-contacts/${id}`);
+            const resContacts = await api.get(`/api/client-contacts/${data.clientId || id}`);
             data.contacts = resContacts.data?.data || [];
           } catch (e) { console.log(e); }
 

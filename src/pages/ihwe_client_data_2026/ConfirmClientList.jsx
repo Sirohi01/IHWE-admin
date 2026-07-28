@@ -155,6 +155,7 @@ const ConfirmClientList = () => {
   const fetchSummary = useCallback(async () => {
     try {
       const params = new URLSearchParams({
+        validBooking: "true",
         ...(searchTerm && { search: searchTerm }),
         ...(filterStage && { status: filterStage }),
         ...(filterSource && { referredBy: filterSource }),
@@ -511,6 +512,10 @@ const ConfirmClientList = () => {
         </tr>
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
+        const isIncompleteBooking =
+          !row.participation?.stallNo
+          || Number(row.participation?.stallSize || 0) <= 0
+          || Number(row.participation?.total || 0) <= 0;
         const source = row.referredBy || "Direct";
         const primaryTeamMember = row.teamMembers?.find((member) =>
           member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
@@ -601,7 +606,9 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-1 py-2 text-center">
               <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
-                {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "N/A"}
+                {isIncompleteBooking
+                  ? <span className="text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">Incomplete Booking</span>
+                  : `${row.participation?.stallSize || row.stallSize} sqm`}
               </span>
             </td>
             <td className="px-1 py-2 text-center">
@@ -634,6 +641,7 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-1 py-2 text-center">
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                isIncompleteBooking ? 'bg-red-50 text-red-700 border border-red-200' :
                 row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                 row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
                 row.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
@@ -641,7 +649,8 @@ const ConfirmClientList = () => {
                 row.status === 'rejected' || row.status === 'payment-failed' ? 'bg-red-50 text-red-600 border border-red-200' :
                 'bg-amber-50 text-amber-600 border border-amber-200'
               }`}>
-                {row.status === 'paid' ? 'Paid (Full)' :
+                {isIncompleteBooking ? 'Incomplete' :
+                 row.status === 'paid' ? 'Paid (Full)' :
                  row.status === 'confirmed' ? 'Confirmed' :
                  row.status === 'approved' ? 'Approved' :
                  row.status === 'advance-paid' ? 'Installment' :

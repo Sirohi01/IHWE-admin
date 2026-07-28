@@ -332,7 +332,7 @@ const BookAStand = () => {
                         if (comp.contacts && comp.contacts.length > 0) {
                             newF.contact1 = {
                                 title: comp.contacts[0].title || 'Mr.',
-                                firstName: comp.contacts[0].firstName || '',
+                                firstName: comp.contacts[0].firstName || comp.contacts[0].name || '',
                                 lastName: comp.contacts[0].surname || '',
                                 email: comp.contacts[0].email || '',
                                 designation: comp.contacts[0].designation || '',
@@ -546,6 +546,15 @@ const BookAStand = () => {
         }
         if (!formData.spokenWith) {
             return Swal.fire("Required", "Please select the staff member in Spoken With.", "warning");
+        }
+        if (!selectedEventId) {
+            return Swal.fire("Event Not Linked", "Please link this CRM Expo with its Registration Event before booking a stand.", "warning");
+        }
+        if (!formData.participation?.stallNo || !formData.participation?.stallFor) {
+            return Swal.fire("Stall Required", "Please select a valid stall before creating the exhibitor registration.", "warning");
+        }
+        if (Number(formData.participation?.stallSize || 0) <= 0 || Number(formData.participation?.total || 0) <= 0) {
+            return Swal.fire("Invalid Booking", "Stall area and booking amount must be greater than zero.", "warning");
         }
         if (
             formData.exhibitorStatus === 'Existing Client'
