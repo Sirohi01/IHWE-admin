@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate as routerNavigate, useParams as routerParams } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -37,8 +37,11 @@ const APPLICABLE_OPTIONS = [
   "Exhibitor Registration",
   "Buyer Lead",
   "Sponsor Lead",
-  "General Lead",
+  "Visitor Lead",
 ];
+
+const normalizeApplicableOption = (option) =>
+  option === "General Lead" ? "Visitor Lead" : option;
 
 const initialForm = {
   name: "",
@@ -80,9 +83,11 @@ const AddNextActionForm = () => {
   const { id } = routerParams();
 
   const nextActionState = useSelector((state) => state.nextActions) || {};
-  const nextActions = Array.isArray(nextActionState.nextActions)
-    ? nextActionState.nextActions
-    : [];
+  const rawNextActions = nextActionState.nextActions;
+  const nextActions = useMemo(
+    () => (Array.isArray(rawNextActions) ? rawNextActions : []),
+    [rawNextActions]
+  );
 
   const [form, setForm] = useState(initialForm);
   const [isSaving, setIsSaving] = useState(false);
@@ -106,7 +111,7 @@ const AddNextActionForm = () => {
           name: existingAction.name || "",
           action_code: existingAction.action_code || "",
           description: existingAction.description || "",
-          display_order: existingAction.display_order || "",
+          display_order: existingAction.display_order ?? "",
           action_type: existingAction.action_type || "",
           follow_up_days: existingAction.follow_up_days || "",
           status:
@@ -114,7 +119,7 @@ const AddNextActionForm = () => {
               ? "Active"
               : "Inactive",
           applicable_for: Array.isArray(existingAction.applicable_for)
-            ? existingAction.applicable_for
+            ? existingAction.applicable_for.map(normalizeApplicableOption)
             : [],
         });
       }
@@ -162,9 +167,9 @@ const AddNextActionForm = () => {
     if (
       form.display_order === "" ||
       Number.isNaN(Number(form.display_order)) ||
-      Number(form.display_order) < 1
+      Number(form.display_order) < 0
     ) {
-      return "Display order must be a number greater than 0.";
+      return "Display order must be 0 or greater.";
     }
 
     if (!form.action_type) return "Please select an action type.";
@@ -203,7 +208,7 @@ const AddNextActionForm = () => {
         action_type: form.action_type,
         follow_up_days: form.follow_up_days ? Number(form.follow_up_days) : null,
         status: form.status.toLowerCase(),
-        applicable_for: form.applicable_for,
+        applicable_for: form.applicable_for.map(normalizeApplicableOption),
         updated_by: userName,
       };
 
@@ -412,7 +417,7 @@ const AddNextActionForm = () => {
                 <div className="relative">
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     value={form.display_order}
                     onChange={(event) =>
                       updateField(

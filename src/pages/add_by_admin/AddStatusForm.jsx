@@ -5,6 +5,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { createStatusOption, updateStatusOption } from "../../features/add_by_admin/statusOption/statusOptionSlice";
 import Swal from "sweetalert2";
 
+const APPLICABLE_OPTIONS = [
+  "Exhibitor Lead",
+  "Buyer Lead",
+  "Sponsor Lead",
+  "Visitor Lead",
+];
+
+const normalizeApplicableOption = (option) =>
+  option === "General Lead" ? "Visitor Lead" : option;
+
 const AddStatusForm = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -30,10 +40,12 @@ const AddStatusForm = () => {
           name: existingStatus.name || "",
           status_code: existingStatus.status_code || "",
           description: existingStatus.description || "",
-          display_order: existingStatus.display_order || 1,
+          display_order: existingStatus.display_order ?? 1,
           status: String(existingStatus.status || "inactive").toLowerCase() === "active" ? "active" : "inactive",
           color: existingStatus.color || "#2563eb",
-          applicable_for: Array.isArray(existingStatus.applicable_for) ? existingStatus.applicable_for : [],
+          applicable_for: Array.isArray(existingStatus.applicable_for)
+            ? existingStatus.applicable_for.map(normalizeApplicableOption)
+            : [],
         });
       }
     } else if (!id && statusOptions.length > 0) {
@@ -46,7 +58,9 @@ const AddStatusForm = () => {
     setFormData((prev) => {
       let newApplicableFor = [...prev.applicable_for];
       if (option === "All") {
-        newApplicableFor = newApplicableFor.includes("All") ? [] : ["All", "Exhibitor Lead", "Buyer Lead", "Sponsor Lead", "General Lead"];
+        newApplicableFor = newApplicableFor.includes("All")
+          ? []
+          : ["All", ...APPLICABLE_OPTIONS];
       } else {
         if (newApplicableFor.includes(option)) {
           newApplicableFor = newApplicableFor.filter((i) => i !== option);
@@ -77,12 +91,20 @@ const AddStatusForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.name.trim()) return Swal.fire({ icon: "warning", title: "Warning", text: "Lead Status Name is required.", confirmButtonColor: "#08752f" });
-    if (!formData.display_order) return Swal.fire({ icon: "warning", title: "Warning", text: "Display Order is required.", confirmButtonColor: "#08752f" });
+    if (
+      formData.display_order === "" ||
+      Number.isNaN(Number(formData.display_order)) ||
+      Number(formData.display_order) < 0
+    ) return Swal.fire({ icon: "warning", title: "Warning", text: "Display Order must be 0 or greater.", confirmButtonColor: "#08752f" });
     if (formData.applicable_for.length === 0) return Swal.fire({ icon: "warning", title: "Warning", text: "Please select at least one Applicable For option.", confirmButtonColor: "#08752f" });
 
     setIsSaving(true);
     try {
-      const payload = { ...formData };
+      const payload = {
+        ...formData,
+        display_order: Number(formData.display_order),
+        applicable_for: formData.applicable_for.map(normalizeApplicableOption),
+      };
       if (id) {
         await dispatch(updateStatusOption({ id, data: payload })).unwrap();
         Swal.fire({ icon: "success", title: "Success", text: "Lead Status Updated successfully", timer: 1500, showConfirmButton: false });
@@ -240,12 +262,15 @@ const AddStatusForm = () => {
                 <div className="relative">
                   <input
                     type="number"
-                    min="1"
+                    min="0"
                     value={formData.display_order}
                     onChange={(e) =>
                       setFormData({
                         ...formData,
-                        display_order: parseInt(e.target.value, 10) || 1,
+                        display_order:
+                          e.target.value === ""
+                            ? ""
+                            : parseInt(e.target.value, 10),
                       })
                     }
                     placeholder="Enter order"
@@ -364,13 +389,7 @@ const AddStatusForm = () => {
               </label>
 
               <div className="flex flex-wrap items-center gap-x-[clamp(30px,4vw,58px)] gap-y-3">
-                {[
-                  "Exhibitor Lead",
-                  "Buyer Lead",
-                  "Sponsor Lead",
-                  "General Lead",
-                  "All",
-                ].map((option) => {
+                {[...APPLICABLE_OPTIONS, "All"].map((option) => {
                   const checked = formData.applicable_for.includes(option);
 
                   return (

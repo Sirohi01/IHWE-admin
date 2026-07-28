@@ -529,6 +529,11 @@ const getDateValue = (category) =>
   category?.createdAt ||
   null;
 
+const getDisplayOrder = (category) => {
+  const parsed = Number(category?.display_order);
+  return Number.isFinite(parsed) ? parsed : 9999;
+};
+
 const formatDate = (value, options = {}) => {
   if (!value) return '—';
   const date = new Date(value);
@@ -589,9 +594,11 @@ const AddCategory = () => {
   const navigate = useNavigate();
 
   const categoriesState = useSelector((state) => state.categories);
-  const categories = Array.isArray(categoriesState?.categories)
-    ? categoriesState.categories
-    : [];
+  const rawCategories = categoriesState?.categories;
+  const categories = useMemo(
+    () => (Array.isArray(rawCategories) ? rawCategories : []),
+    [rawCategories],
+  );
   const isLoading = Boolean(categoriesState?.loading);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -655,7 +662,11 @@ const AddCategory = () => {
           matchesMainCategory
         );
       })
-      .sort((a, b) => normaliseText(a?.cat_name).localeCompare(normaliseText(b?.cat_name)));
+      .sort((a, b) => {
+        const orderDifference = getDisplayOrder(a) - getDisplayOrder(b);
+        if (orderDifference !== 0) return orderDifference;
+        return normaliseText(a?.cat_name).localeCompare(normaliseText(b?.cat_name));
+      });
   }, [categories, debouncedSearch, statusFilter, businessNatureFilter, mainCategoryFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredCategories.length / ITEMS_PER_PAGE));

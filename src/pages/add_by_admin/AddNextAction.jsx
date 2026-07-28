@@ -43,7 +43,7 @@ const APPLICABLE_OPTIONS = [
   "Exhibitor Lead",
   "Buyer Lead",
   "Sponsor Lead",
-  "General Lead",
+  "Visitor Lead",
 ];
 
 const ACTION_TYPE_STYLES = {
@@ -58,6 +58,9 @@ const ACTION_TYPE_STYLES = {
 };
 
 const normaliseText = (value) => String(value ?? "").trim();
+
+const normalizeApplicableOption = (option) =>
+  option === "General Lead" ? "Visitor Lead" : option;
 
 const getActionStatus = (item) =>
   normaliseText(item?.status || "inactive").toLowerCase() === "active"
@@ -92,16 +95,19 @@ const getApplicableFor = (item) => {
     item?.lead_types ||
     item?.leadTypes;
 
-  if (Array.isArray(value)) return value.filter(Boolean);
+  if (Array.isArray(value)) {
+    return value.filter(Boolean).map(normalizeApplicableOption);
+  }
 
   if (typeof value === "string" && value.trim()) {
     return value
       .split(",")
       .map((entry) => entry.trim())
+      .map(normalizeApplicableOption)
       .filter(Boolean);
   }
 
-  return ["Exhibitor Lead", "Buyer Lead", "Sponsor Lead", "General Lead"];
+  return ["Exhibitor Lead", "Buyer Lead", "Sponsor Lead", "Visitor Lead"];
 };
 
 const getFollowUpDays = (item) => {
@@ -173,9 +179,11 @@ const AddNextAction = () => {
   const navigate = useNavigate();
 
   const nextActionState = useSelector((state) => state.nextActions) || {};
-  const nextActions = Array.isArray(nextActionState.nextActions)
-    ? nextActionState.nextActions.filter(Boolean)
-    : [];
+  const rawNextActions = nextActionState.nextActions;
+  const nextActions = useMemo(
+    () => (Array.isArray(rawNextActions) ? rawNextActions.filter(Boolean) : []),
+    [rawNextActions],
+  );
   const isLoading = Boolean(nextActionState.loading);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -237,8 +245,12 @@ const AddNextAction = () => {
         );
       })
       .sort((a, b) => {
-        const orderA = Number(a?.display_order) || 0;
-        const orderB = Number(b?.display_order) || 0;
+        const orderA = Number.isFinite(Number(a?.display_order))
+          ? Number(a.display_order)
+          : 9999;
+        const orderB = Number.isFinite(Number(b?.display_order))
+          ? Number(b.display_order)
+          : 9999;
         if (orderA !== orderB) return orderA - orderB;
         return normaliseText(a?.name).localeCompare(normaliseText(b?.name));
       });
@@ -300,28 +312,6 @@ const AddNextAction = () => {
     setIsEditing(null);
     setFormData(initialForm);
     setIsModalOpen(false);
-  };
-
-  const openAddModal = () => {
-    setIsEditing(null);
-    setFormData(initialForm);
-    setIsModalOpen(true);
-  };
-
-  const startEdit = (id) => {
-    const item = nextActions.find((action) => action?._id === id);
-    if (!item) return;
-
-    setIsEditing(id);
-    setFormData({
-      name: normaliseText(item?.name),
-      action_code: getActionCode(item) === "—" ? "" : getActionCode(item),
-      action_type: getActionType(item),
-      status: getActionStatus(item),
-      follow_up_days: getFollowUpDays(item),
-      applicable_for: getApplicableFor(item),
-    });
-    setIsModalOpen(true);
   };
 
   const handleApplicableChange = (option) => {
@@ -408,7 +398,7 @@ const AddNextAction = () => {
       action_type: formData.action_type,
       status: formData.status,
       follow_up_days: Number(formData.follow_up_days) || 1,
-      applicable_for: formData.applicable_for,
+      applicable_for: formData.applicable_for.map(normalizeApplicableOption),
       updated_by: userName,
     };
 
