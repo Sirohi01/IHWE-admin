@@ -553,19 +553,16 @@ const ConfirmClientList = () => {
         const source = row.referredBy || "Direct";
         const primaryTeamMember = row.teamMembers?.find((member) =>
           member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
-        );
+        ) || row.teamMembers?.[0];
         const companyContact =
           row.contacts?.find((contact) => contact.isPrimary)
           || row.contacts?.[0];
-        const contactName =
-          row.contact1?.name
-          || (row.contact1?.firstName
-            ? `${row.contact1.firstName} ${row.contact1.lastName || ''}`.trim()
-            : '')
-          || primaryTeamMember?.name
-          || companyContact?.name
-          || [companyContact?.firstName, companyContact?.surname].filter(Boolean).join(' ')
-          || row.contactPerson
+        const contactEmail =
+          row.contact1?.email
+          || primaryTeamMember?.email
+          || companyContact?.email
+          || row.companyEmail
+          || row.email
           || "N/A";
         const contactMobile =
           row.contact1?.mobile
@@ -600,8 +597,8 @@ const ConfirmClientList = () => {
               </span>
             </td>
             <td className="min-w-[150px] px-2 py-2">
-              <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
-                {toTitleCase(contactName)}
+              <div className="font-bold text-[10px] lowercase" style={{ color: '#15173D' }}>
+                {contactEmail}
               </div>
               <div className="text-[9px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
                 <Phone size={9} className="text-blue-500 shrink-0" />

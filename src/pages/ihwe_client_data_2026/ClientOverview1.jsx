@@ -149,6 +149,7 @@ const ClientOverview1 = () => {
 
   const getCrmTargetId = () => (isExhibitor ? company?.clientId : company?._id);
   const getExhibitorTargetId = () => (isExhibitor ? company?._id : null);
+  const getReviewTargetId = () => company?.clientId || company?._id || id;
 
   const fetchCompanyDetails = async () => {
     try {
@@ -256,7 +257,7 @@ const ClientOverview1 = () => {
   };
 
   const filteredReviews = useMemo(() => {
-    const targetId = company?.clientId || company?._id;
+    const targetId = getReviewTargetId();
     return Array.isArray(reviews)
       ? reviews.filter((rev) => rev?.cmpny_id === targetId)
       : [];
@@ -369,14 +370,23 @@ const ClientOverview1 = () => {
       const previousAssignee = isExhibitor ? (company.spokenWith || "") : (company.forwardTo || "");
       const newAssignee = reviewData.assigned_to || "";
       const assigneeChanged = newAssignee && newAssignee !== previousAssignee;
+      const targetCrmId = getReviewTargetId();
+      const statusToSave = reviewData.status_short || company.companyStatus || "";
+      const followUpDate = reviewData.follow_up_date || reviewData.reminder_dt || "";
 
       const logMessagePrefix = `[Status Update] Changes by ${currentUserName}\n`;
       let finalRemark = reviewData.re_msg || "";
 
       const changesList = [];
       const currentStatus = company.companyStatus;
-      if (reviewData.status_short && reviewData.status_short !== currentStatus) {
-        changesList.push(`Status changed from '${currentStatus || "-"}' to '${reviewData.status_short}'`);
+      if (statusToSave && statusToSave !== currentStatus) {
+        changesList.push(`Status changed from '${currentStatus || "-"}' to '${statusToSave}'`);
+      }
+      if (reviewData.forward_to) {
+        changesList.push(`Next action: ${reviewData.forward_to}`);
+      }
+      if (followUpDate) {
+        changesList.push(`Follow-up scheduled for ${new Date(followUpDate).toLocaleString("en-IN")}`);
       }
       if (assigneeChanged) {
         changesList.push(`Lead forwarded from '${previousAssignee || "Unassigned"}' to '${newAssignee}'`);
@@ -391,17 +401,25 @@ const ClientOverview1 = () => {
       // Create the review entry
       await dispatch(createReview({
         ...reviewData,
+        cmpny_id: targetCrmId,
+        status_short: statusToSave,
+        reminder_dt: followUpDate,
+        follow_up_date: followUpDate,
         re_msg: finalReMsg,
+        updated_by: currentUserName,
       })).unwrap();
 
       const companyUpdates = {
-        companyStatus: reviewData.status_short || company.companyStatus,
+        companyStatus: statusToSave,
       };
+      if (followUpDate) {
+        companyUpdates.reminder = followUpDate;
+        companyUpdates.followUpDate = followUpDate;
+      }
       if (assigneeChanged) {
         companyUpdates.forwardTo = newAssignee;
       }
 
-      const targetCrmId = company.clientId || company._id;
       if (selectedEventId) {
         await api.put(`/api/companies/${targetCrmId}/events/${selectedEventId}/lifecycle`, {
           status: reviewData.status_short || company.companyStatus,
@@ -790,9 +808,10 @@ const ClientOverview1 = () => {
 
   const handleSendEntry = async (data) => {
     try {
+      const targetId = getReviewTargetId();
       if (data) {
         await dispatch(createReview({
-          cmpny_id: company?.clientId || company?._id,
+          cmpny_id: targetId,
           ...data
         })).unwrap();
       }

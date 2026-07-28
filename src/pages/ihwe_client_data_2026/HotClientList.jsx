@@ -98,7 +98,7 @@ const HotClientList = () => {
   }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
 
   // Hook for accurate stats
-  const { totalLeads: hookTotal, statusStats } = useDashboardStats(undefined, null, currentEventId);
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId);
 
   const totalLeads = pagination?.total || allCompanies.length;
 
