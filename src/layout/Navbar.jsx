@@ -24,9 +24,6 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   }
   return [];
 };
-
-// Central config for each notification type — keeps the modal markup clean
-// and makes it trivial to add a new alert type later.
 const NOTIF_CONFIG = {
   chat: {
     title: "New Message Received!",
@@ -338,7 +335,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   return (
     <div className={`fixed top-0 right-0 z-[100] h-[42px] bg-gradient-to-r from-[#051c47] via-[#082b6b] to-[#051c47] border-b border-blue-900/50 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between px-6 print:hidden transition-all duration-300 left-0 ${sidebarOpen ? 'lg:left-[240px]' : 'lg:left-[70px]'}`}>
 
-      {/* Left */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -346,21 +342,10 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <div className="flex items-center gap-2">
-          {events.length > 0 && (
-            <select
-              value={currentEventId}
-              onChange={(e) => setCurrentEventId(e.target.value)}
-              className="bg-white/10 border border-white/20 text-white text-[11px] font-bold uppercase tracking-tight rounded px-2 py-1 max-w-[160px] outline-none cursor-pointer hover:bg-white/20 transition-colors"
-              title="Currently selected event — all lists/lead lists scope to this"
-            >
-              {events.map((ev) => (
-                <option key={ev._id} value={ev._id} className="text-slate-900 normal-case">
-                  {ev.name}
-                </option>
-              ))}
-            </select>
-          )}
+        <div className="flex items-center gap-3">
+          <span className="text-white text-[15px] font-bold uppercase tracking-tight opacity-95">
+            User Dashboard -
+          </span>
           <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
             <span className="text-yellow-200 font-medium tracking-normal capitalize">
               {sectionName ? `${sectionName} > ` : ''}{pageName}

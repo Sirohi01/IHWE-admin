@@ -3,11 +3,6 @@ import api from "../lib/api";
 import EventContext from "./EventContextObject";
 
 const STORAGE_KEY = "currentEventId";
-
-// Global "which event am I working with" selection — persisted in sessionStorage
-// so it survives reloads within the same browser session (same pattern as adminInfo/adminToken).
-// Every list page (New Lead, Warm, Hot, Cold, Exhibitor List, Converted List, ...) should read
-// currentEventId from here and pass it as a query param, instead of each page picking its own event.
 export function EventProvider({ children }) {
   const [events, setEvents] = useState([]);
   const [currentEventId, setCurrentEventIdState] = useState(() => sessionStorage.getItem(STORAGE_KEY) || "");
