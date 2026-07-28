@@ -239,41 +239,19 @@ const AddStatusForm = () => {
                 </label>
                 <div className="relative">
                   <input
-                    type="number"
+                    type="text"
                     min="1"
                     value={formData.display_order}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const val = e.target.value.replace(/\D/g, "");
                       setFormData({
                         ...formData,
-                        display_order: parseInt(e.target.value, 10) || 1,
-                      })
-                    }
+                        display_order: val === "" ? "" : parseInt(val, 10),
+                      });
+                    }}
                     placeholder="Enter order"
-                    className={`${inputClass} appearance-none pr-10`}
+                    className={`${inputClass} pr-4`}
                   />
-                  <div className="pointer-events-none absolute right-3 top-1/2 flex -translate-y-1/2 flex-col text-[#53627e]">
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                    >
-                      <polyline points="18 15 12 9 6 15" />
-                    </svg>
-                    <svg
-                      width="14"
-                      height="14"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      className="-mt-1"
-                    >
-                      <polyline points="6 9 12 15 18 9" />
-                    </svg>
-                  </div>
                 </div>
                 <p className={helperClass}>
                   Lower number will be shown first.
