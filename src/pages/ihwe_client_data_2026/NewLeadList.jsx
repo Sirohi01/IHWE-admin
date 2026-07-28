@@ -66,7 +66,10 @@ const NewLeadList = () => {
   const [filterAssignedTo, setFilterAssignedTo] = useState('');
 
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
-  const { currentEventId } = useEventContext();
+  const { currentEventId, currentEvent } = useEventContext();
+  const addClientPath = currentEvent?.event_name && currentEventId
+    ? `/crm-event/${currentEventId}/add-client`
+    : "/ihweClientData2026/addNewClients";
 
   // Auth State
   const { user } = useSelector(state => state.auth);
@@ -221,7 +224,7 @@ const NewLeadList = () => {
 
   const headerActions = (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Link to="/ihweClientData2026/addNewClients" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <Link to={addClientPath} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
         <Plus size={12} /> Add Lead
       </Link>
       <Link to="/ihweClientData2026/uploadExhibitor" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -340,7 +343,7 @@ const NewLeadList = () => {
               </td>
               <td className="px-2 py-2">
                 <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                  <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                  <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
                 </div>
               </td>
               <td className="px-2 py-2">
@@ -531,7 +534,7 @@ const NewLeadList = () => {
           <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Quick Actions</h3>
         </div>
         <div className="grid grid-cols-2 gap-1.5">
-          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
+          <button onClick={() => navigate(addClientPath)} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
             <Plus size={12} />
             <span className="text-[9px] font-bold">Add Lead</span>
           </button>

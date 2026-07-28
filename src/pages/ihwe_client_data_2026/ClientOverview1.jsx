@@ -104,9 +104,10 @@ const toTitleCase = (str) => {
 const ClientOverview1 = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { id } = useParams();
+  const { id, eventId: routeEventId } = useParams();
   const [searchParams] = useSearchParams();
   const isExhibitor = searchParams.get('source') === 'exhibitor';
+  const selectedEventId = routeEventId || searchParams.get('eventId') || "";
 
   const [events, setEvents] = useState([]);
   const [Flip, setFlip] = useState(false);
@@ -158,7 +159,7 @@ const ClientOverview1 = () => {
 
           if (data.clientId) {
             try {
-              const crmRes = await api.get(`/api/companies/${data.clientId}`);
+              const crmRes = await api.get(`/api/companies/${data.clientId}${selectedEventId ? `?eventId=${selectedEventId}` : ""}`);
               const crmData = crmRes.data;
               data = {
                 ...crmData,
@@ -196,7 +197,7 @@ const ClientOverview1 = () => {
 
       // Default to companies, or fallback from exhibitor
       try {
-        const res = await api.get(`/api/companies/${id}`);
+        const res = await api.get(`/api/companies/${id}${selectedEventId ? `?eventId=${selectedEventId}` : ""}`);
         let data = res.data;
         try {
           const resContacts = await api.get(`/api/client-contacts/${id}`);
@@ -284,13 +285,13 @@ const ClientOverview1 = () => {
   useEffect(() => {
     if (company?._id) {
       const targetId = company.clientId || company._id;
-      dispatch(fetchReviewById({ id: targetId, limit: 8 }));
+      dispatch(fetchReviewById({ id: targetId, limit: 8, eventId: selectedEventId }));
 
       setReviewData((prev) => ({
         ...prev,
         cmpny_id: targetId,
-        evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
-        event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
+        evnt_id: selectedEventId || (isExhibitor ? (company.eventId?._id || company.eventId || "") : (company.eventId || "")),
+        event_name: company.eventLifecycle?.eventName || (isExhibitor ? (company.eventId?.name || "") : (company.eventName || "")),
         assigned_to: isExhibitor ? (company.spokenWith || "") : (company.forwardTo || ""),
       }));
     }
@@ -330,10 +331,9 @@ const ClientOverview1 = () => {
 
   const fetchEvents = async () => {
     try {
-      const res = await api.get("/api/events");
-      if (res.data.success) {
-        setEvents(res.data.data);
-      }
+      const res = await api.get(selectedEventId ? "/api/crm-events" : "/api/events");
+      const rows = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+      setEvents(rows);
     } catch (err) {
       console.log(err);
     }
@@ -396,7 +396,17 @@ const ClientOverview1 = () => {
       }
 
       const targetCrmId = company.clientId || company._id;
-      await dispatch(updateCompany({ id: targetCrmId, data: companyUpdates })).unwrap();
+      if (selectedEventId) {
+        await api.put(`/api/companies/${targetCrmId}/events/${selectedEventId}/lifecycle`, {
+          status: reviewData.status_short || company.companyStatus,
+          ...(assigneeChanged ? { forwardTo: newAssignee } : {}),
+          lastRemark: finalReMsg,
+          reminder: reviewData.reminder_dt || null,
+          followUpDate: reviewData.follow_up_date || null,
+        });
+      } else {
+        await dispatch(updateCompany({ id: targetCrmId, data: companyUpdates })).unwrap();
+      }
 
       if (isExhibitor && assigneeChanged) {
         await api.put(`/api/exhibitor-registration/${company._id}`, { spokenWith: newAssignee });
@@ -409,12 +419,12 @@ const ClientOverview1 = () => {
         showConfirmButton: false,
       });
 
-      dispatch(fetchReviewById(id));
+      dispatch(fetchReviewById({ id: targetCrmId, eventId: selectedEventId, limit: 8 }));
       fetchCompanyDetails();
 
       setReviewData({
         cmpny_id: company?.clientId || company?._id,
-        evnt_id: isExhibitor ? (company.eventId?._id || "") : (company.eventName || ""),
+        evnt_id: selectedEventId || (isExhibitor ? (company.eventId?._id || company.eventId || "") : (company.eventId || "")),
         event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
         status_short: "",
         reminder_dt: "",
@@ -430,7 +440,7 @@ const ClientOverview1 = () => {
 
   const handleDelete = async (reviewId) => {
     await dispatch(deleteReview(reviewId));
-    dispatch(fetchReviewById(id));
+    dispatch(fetchReviewById({ id: company?.clientId || company?._id || id, eventId: selectedEventId, limit: 8 }));
   };
 
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
@@ -634,7 +644,7 @@ const ClientOverview1 = () => {
 
         // Log to communication panel
         await dispatch(createReview({ cmpny_id: crmTargetId || exhibitorTargetId, type: "log", re_msg: logMessage })).unwrap();
-        dispatch(fetchReviewById(id));
+        dispatch(fetchReviewById({ id: company?.clientId || company?._id || id, eventId: selectedEventId, limit: 8 }));
       }
     } catch (err) {
       console.log(err);
@@ -668,7 +678,7 @@ const ClientOverview1 = () => {
         type: "log",
         re_msg: logMessage,
       })).unwrap();
-      dispatch(fetchReviewById(id));
+      dispatch(fetchReviewById({ id: company?.clientId || company?._id || id, eventId: selectedEventId, limit: 8 }));
       Swal.fire({ icon: "success", title: "Exhibitor Category Updated", timer: 1500, showConfirmButton: false });
       setIsMsmeEditOpen(false);
       fetchCompanyDetails();
@@ -759,7 +769,7 @@ const ClientOverview1 = () => {
       }
 
       await dispatch(createReview({ cmpny_id: crmTargetId || exhibitorTargetId, type: "log", re_msg: logMessage })).unwrap();
-      dispatch(fetchReviewById(id));
+      dispatch(fetchReviewById({ id: company?.clientId || company?._id || id, eventId: selectedEventId, limit: 8 }));
 
       Swal.fire({ icon: "success", title: editingContactIdx !== null ? "Contact Updated" : "Contact Added", timer: 1500, showConfirmButton: false });
       setIsContactModalOpen(false);
@@ -780,7 +790,7 @@ const ClientOverview1 = () => {
           ...data
         })).unwrap();
       }
-      dispatch(fetchReviewById({ id: company?.clientId || company?._id, limit: 8 }));
+      dispatch(fetchReviewById({ id: company?.clientId || company?._id, eventId: selectedEventId, limit: 8 }));
     } catch (err) {
       console.log(err);
     }
@@ -829,7 +839,7 @@ const ClientOverview1 = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
-          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
+          <button onClick={() => navigate(selectedEventId ? `/crm-event/${selectedEventId}/add-client` : "/ihweClientData2026/addNewClients")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
             Add Client
           </button>
           <button onClick={() => navigate("/ihweClientData2026/masterData")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
@@ -1272,7 +1282,7 @@ const ClientOverview1 = () => {
           onSendEntry={handleSendEntry}
           onOpenFullHistory={() => {
             const targetId = company.clientId || company._id;
-            dispatch(fetchReviewById({ id: targetId }));
+            dispatch(fetchReviewById({ id: targetId, eventId: selectedEventId, limit: 8 }));
           }}
         />
       </div>

@@ -217,7 +217,7 @@ const AllLeadsList = () => {
             <tr key={row._id || i} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white">
               <td className="px-2 py-2 text-center"><input type="checkbox" className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm" /></td>
               <td className="px-2 py-2">
-                <Link to={`/client-overview/${row._id}`}>
+                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>
                   <div className="font-bold text-[11px] hover:text-blue-600 hover:underline cursor-pointer" style={{ color: "#093C5D" }}>{toTitleCase(row.companyName)}</div>
                 </Link>
                 <div className="text-[9px] font-bold mt-0.5" style={{ color: "#5E0006" }}>

@@ -214,8 +214,11 @@ export const fetchReviewById = createAsyncThunk(
   async (params, { rejectWithValue }) => {
     try {
       const id = typeof params === 'object' ? params.id : params;
-      const limit = typeof params === 'object' && params.limit ? `?limit=${params.limit}` : '';
-      const res = await api.get(`/api/crm-exhibator-reviews/${id}${limit}`);
+      const query = new URLSearchParams();
+      if (typeof params === 'object' && params.limit) query.set('limit', params.limit);
+      if (typeof params === 'object' && params.eventId) query.set('eventId', params.eventId);
+      const suffix = query.toString() ? `?${query}` : '';
+      const res = await api.get(`/api/crm-exhibator-reviews/${id}${suffix}`);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);
