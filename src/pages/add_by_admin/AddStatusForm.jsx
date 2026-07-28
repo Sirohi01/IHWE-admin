@@ -122,13 +122,13 @@ const AddStatusForm = () => {
 
   return (
     <section
-      className="box-border h-[calc(100dvh-72px)] min-h-0 overflow-hidden bg-[#f7f9fc] px-[clamp(18px,2.7vw,42px)] py-[clamp(10px,1.3vh,18px)] font-sans text-[#122252]"
+      className="box-border min-h-[calc(100dvh-72px)] bg-[#f7f9fc] px-[clamp(18px,2.7vw,42px)] py-[clamp(10px,1.3vh,18px)] font-sans text-[#122252]"
       style={{
         fontFamily:
           'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       }}
     >
-      <div className="grid h-full min-h-0 grid-rows-[auto_minmax(0,1fr)_auto] gap-[clamp(10px,1.4vh,17px)]">
+      <div className="flex flex-col gap-[clamp(10px,1.4vh,17px)]">
         {/* Page Header */}
         <header className="flex shrink-0 items-center justify-between gap-5">
           <div className="min-w-0">
@@ -172,9 +172,9 @@ const AddStatusForm = () => {
         {/* Main Form Card */}
         <form
           onSubmit={handleSubmit}
-          className="flex min-h-0 flex-col overflow-hidden rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.3vw,34px)] py-[clamp(14px,1.7vh,22px)] shadow-[0_5px_20px_rgba(15,31,75,.05)]"
+          className="flex flex-col rounded-[10px] border border-[#e0e4eb] bg-white px-[clamp(18px,2.3vw,34px)] py-[clamp(14px,1.7vh,22px)] shadow-[0_5px_20px_rgba(15,31,75,.05)] flex-1"
         >
-          <div className="min-h-0 flex-1">
+          <div>
             <div className="mb-[clamp(12px,1.6vh,20px)]">
               <h2 className="text-[clamp(14px,1.1vw,17px)] font-extrabold text-[#108047]">
                 Lead Status Information
@@ -261,30 +261,16 @@ const AddStatusForm = () => {
                 </label>
                 <div className="relative">
                   <input
-<<<<<<< HEAD
-                    type="number"
-                    min="0"
-=======
                     type="text"
-                    min="1"
->>>>>>> f90fee37c263e321566d6adee8e4830794a70aa2
+                    min="0"
                     value={formData.display_order}
                     onChange={(e) => {
                       const val = e.target.value.replace(/\D/g, "");
                       setFormData({
                         ...formData,
-<<<<<<< HEAD
-                        display_order:
-                          e.target.value === ""
-                            ? ""
-                            : parseInt(e.target.value, 10),
-                      })
-                    }
-=======
                         display_order: val === "" ? "" : parseInt(val, 10),
                       });
                     }}
->>>>>>> f90fee37c263e321566d6adee8e4830794a70aa2
                     placeholder="Enter order"
                     className={`${inputClass} pr-4`}
                   />
