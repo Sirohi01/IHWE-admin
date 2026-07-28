@@ -52,6 +52,9 @@ const toTitleCase = (str) => {
   return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
+const FOLLOW_UP_STATUSES = ['Follow-Up Call', 'Follow Up', 'Follow-Up', 'Follow Up Call'];
+const FOLLOW_UP_STATUS_FILTER = FOLLOW_UP_STATUSES.join(',');
+
 
 
 const WarmClientList = () => {
@@ -84,7 +87,7 @@ const WarmClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Follow-Up Call',
+        status: filterStatus || FOLLOW_UP_STATUS_FILTER,
         source: filterSource,
         eventId: currentEventId,
       }));
@@ -93,9 +96,9 @@ const WarmClientList = () => {
   }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, currentEventId]);
 
   const {
-    totalLeads: hookTotal, pendingFollowUpsCount, thisWeekLeads, thisMonthLeads,
+    totalLeads: hookTotal, pendingFollowUpsCount, followUpsDueThisWeek, followUpsDueThisMonth,
     overviewData, overdueLeads
-  } = useDashboardStats('Follow', null, currentEventId);
+  } = useDashboardStats(FOLLOW_UP_STATUSES, null, currentEventId);
 
   const circumference = 2 * Math.PI * 32;
   const [mounted, setMounted] = useState(false);
@@ -226,7 +229,7 @@ const WarmClientList = () => {
       <AnimatedStatCard
         icon={<CalendarDays className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
         gradientTo="to-blue-50" iconBg="bg-blue-100"
-        rawValue={thisWeekLeads}
+        rawValue={followUpsDueThisWeek}
         displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
         label="DUE THIS WEEK"
         subLabel="Follow-ups" subColor="#2563eb"
@@ -234,7 +237,7 @@ const WarmClientList = () => {
       <AnimatedStatCard
         icon={<CalendarDays className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
         gradientTo="to-purple-50" iconBg="bg-purple-100"
-        rawValue={thisMonthLeads}
+        rawValue={followUpsDueThisMonth}
         displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
         label="DUE THIS MONTH"
         subLabel="Follow-ups" subColor="#9333ea"
@@ -300,6 +303,7 @@ const WarmClientList = () => {
         const isSelected = selectedIds.includes(row._id);
         const source = row.dataSource || "Website";
         const status = row.companyStatus || "Due Today";
+        const followUpAt = row.reminder || row.followUpDate;
         const style = getStatusStyle(status);
         const statusBg = style.split(' ')[0];
         const statusText = style.split(' ')[1];
@@ -346,11 +350,11 @@ const WarmClientList = () => {
               </td>
               <td className="px-2 py-1.5">
                 <span className="text-[10px] font-medium whitespace-nowrap">
-                  {row.updatedAt ? (
+                  {followUpAt ? (
                     <>
-                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(followUpAt))}</span>
                       <span className="text-slate-400">, </span>
-                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(followUpAt))}</span>
                     </>
                   ) : "-"}
                 </span>

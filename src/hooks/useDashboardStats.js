@@ -7,6 +7,8 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
     todaysLeads: 0,
     thisWeekLeads: 0,
     thisMonthLeads: 0,
+    followUpsDueThisWeek: 0,
+    followUpsDueThisMonth: 0,
     pendingFollowUpsCount: 0,
     followUps: [],
     sourceChartData: [],
@@ -43,6 +45,7 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
       let thisWeekLeads = 0;
       let thisMonthLeads = 0;
       let pendingFollowUpsCount = 0;
+      let followUpsDueThisMonth = 0;
 
       const sourceStats = {};
       const statusStats = {};
@@ -112,9 +115,13 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const startOfNextWeek = new Date(startOfWeek);
       startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
+      const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
       followUpsRaw.forEach(fu => {
           const rDate = fu.rawDate;
+          if (rDate >= startOfMonth && rDate < startOfNextMonth) {
+              followUpsDueThisMonth++;
+          }
           if (rDate < startOfToday) {
               overdue++;
               const diffTime = Math.abs(startOfToday - rDate);
@@ -214,6 +221,8 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
             todaysLeads,
             thisWeekLeads,
             thisMonthLeads,
+            followUpsDueThisWeek: dueThisWeek,
+            followUpsDueThisMonth,
             pendingFollowUpsCount,
             followUps,
             overviewData,
