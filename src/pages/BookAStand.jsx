@@ -444,12 +444,12 @@ const BookAStand = () => {
 
         // 1. Gross cost before any discounts
         const baseCost = area * rate;
-        const plIncrement = (baseCost * inc) / 100;
+        const plIncrement = Math.round((baseCost * inc) / 100);
         const grossCost = baseCost + plIncrement;
 
         // 2. Stall specific discount
         const stallDiscountPct = stall ? (stall.discountPercentage || 0) : 0;
-        const stallDiscountAmt = (grossCost * stallDiscountPct) / 100;
+        const stallDiscountAmt = Math.round((grossCost * stallDiscountPct) / 100);
         const subtotal1 = grossCost - stallDiscountAmt;
 
         // 3. Organization-wide Full Payment Discount
