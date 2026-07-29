@@ -420,13 +420,18 @@ const ClientOverview1 = () => {
         companyUpdates.forwardTo = newAssignee;
       }
 
-      if (selectedEventId) {
-        await api.put(`/api/companies/${targetCrmId}/events/${selectedEventId}/lifecycle`, {
+      const effectiveEventId = selectedEventId || (isExhibitor ? (company.eventId?._id || company.eventId || "") : "");
+      if (effectiveEventId) {
+        const exhibitorRegId = isExhibitor ? (company?.registrationId ? company._id : (id || null)) : null;
+        const regEventId = isExhibitor ? (company?.eventId?._id || company?.eventId || null) : null;
+        await api.put(`/api/companies/${targetCrmId}/events/${effectiveEventId}/lifecycle`, {
           status: reviewData.status_short || company.companyStatus,
           ...(assigneeChanged ? { forwardTo: newAssignee } : {}),
           lastRemark: finalReMsg,
           reminder: reviewData.reminder_dt || null,
           followUpDate: reviewData.follow_up_date || null,
+          ...(exhibitorRegId ? { exhibitorRegistrationId: exhibitorRegId } : {}),
+          ...(regEventId ? { registrationEventId: regEventId } : {}),
         });
       } else {
         await dispatch(updateCompany({ id: targetCrmId, data: companyUpdates })).unwrap();
@@ -443,12 +448,12 @@ const ClientOverview1 = () => {
         showConfirmButton: false,
       });
 
-      dispatch(fetchReviewById({ id: targetCrmId, eventId: selectedEventId, limit: 8 }));
+      dispatch(fetchReviewById({ id: targetCrmId, eventId: effectiveEventId, limit: 8 }));
       fetchCompanyDetails();
 
       setReviewData({
         cmpny_id: company?.clientId || company?._id,
-        evnt_id: selectedEventId || (isExhibitor ? (company.eventId?._id || company.eventId || "") : (company.eventId || "")),
+        evnt_id: effectiveEventId,
         event_name: isExhibitor ? (company.eventId?.name || "") : (company.eventName || ""),
         status_short: "",
         reminder_dt: "",
