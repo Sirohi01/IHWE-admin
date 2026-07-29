@@ -52,7 +52,7 @@ const toTitleCase = (str) => {
   return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const FOLLOW_UP_STATUSES = ['Follow-Up Call', 'Follow Up', 'Follow-Up', 'Follow Up Call'];
+const FOLLOW_UP_STATUSES = ['Follow-up', 'Contacted', 'Negotiation'];
 const FOLLOW_UP_STATUS_FILTER = FOLLOW_UP_STATUSES.join(',');
 
 
@@ -87,7 +87,7 @@ const WarmClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Contacted,Follow-up,Follow-Up Call,Negotiation',
+        status: filterStatus || FOLLOW_UP_STATUS_FILTER,
         source: filterSource,
         eventId: currentEventId,
       }));

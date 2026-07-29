@@ -243,9 +243,17 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
         calculateStats(customData);
     } else {
         setStats(prev => ({ ...prev, isLoadingStats: true }));
-        const params = new URLSearchParams({ dashboard: 'true', ...(eventId && { eventId }) });
+        // Scope the raw-doc fetch to the same status/event as the list it backs
+        // (e.g. New Leads only wants companyStatus "New Lead" for the current
+        // event) instead of pulling the top 3000 rows across every status/event —
+        // that mismatch was the main source of the New Leads page's slow load.
+        const params = new URLSearchParams({
+            dashboard: 'true',
+            ...(eventId && { eventId }),
+            ...(filterStatus && { status: Array.isArray(filterStatus) ? filterStatus.join(',') : filterStatus }),
+        });
 
-        // The raw-doc fetch below is capped at 3000 rows (fine for the
+        // The raw-doc fetch above is capped at 3000 rows (fine for the
         // secondary charts — source breakdown, top executives, follow-ups —
         // which only ever show a top-N sample anyway). But the headline
         // "Total Leads" + per-status card counts must be exact even once the

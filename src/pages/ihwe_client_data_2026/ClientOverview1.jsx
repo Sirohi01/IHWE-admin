@@ -1093,7 +1093,7 @@ const ClientOverview1 = () => {
                   icon: FileText,
                   title: "Proposals / Broucher",
                   color: "purple-600",
-                  onClick: () => navigate(`/client-data/${company?.clientId || company?._id || id}/marketing-materials`),
+                  onClick: () => navigate(`/client-data/${company?.clientId || company?._id || id}/marketing-materials${selectedEventId ? `?crmEventId=${selectedEventId}` : ""}`),
                   disabled: false,
                 },
                 // {
@@ -1116,8 +1116,15 @@ const ClientOverview1 = () => {
                   color: "green-600",
                   onClick: () => {
                     const registrationEventId = company?.eventLifecycle?.registrationEventId || "";
+                    const acctParams = new URLSearchParams();
+                    if (registrationEventId) acctParams.set("eventId", registrationEventId);
+                    // CrmEvent this client was opened under (Organic Expo 2026, IHW Expo
+                    // 2026, ...) — carried through Account so any Estimate/Invoice created
+                    // from here records which event it belongs to.
+                    if (selectedEventId) acctParams.set("crmEventId", selectedEventId);
+                    const acctQuery = acctParams.toString();
                     navigate(
-                      `/dashboard/account/${company?.clientId || company?._id || id}${registrationEventId ? `?eventId=${registrationEventId}` : ""}`
+                      `/dashboard/account/${company?.clientId || company?._id || id}${acctQuery ? `?${acctQuery}` : ""}`
                     );
                   },
                   disabled: false,

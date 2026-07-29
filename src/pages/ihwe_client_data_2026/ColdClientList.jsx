@@ -52,7 +52,8 @@ function useCountUp(target, duration = 1200) {
   return { ref, count };
 }
 
-const FILTER_STATUS = ['Hold', 'Lost'];
+const FILTER_STATUS = ['On Hold', 'Hold', 'Lost', 'Not Interested'];
+const FILTER_STATUS_STRING = FILTER_STATUS.join(',');
 
 const ColdClientList = () => {
   const dispatch = useDispatch();
@@ -87,7 +88,7 @@ const ColdClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'On Hold,Hold,Lost,Not Interested',
+        status: filterStatus || FILTER_STATUS_STRING,
         source: filterSource,
         industry: filterIndustry,
         eventId: currentEventId,

@@ -634,8 +634,14 @@ const CreateInvoice = () => {
             return;
         }
 
+        // CrmEvent this Invoice belongs to — carried via query param when reached
+        // straight from the client's Account tab (no source estimate to derive it
+        // from server-side). Only sent on create; edit mode must not touch it.
+        const crmEventId = new URLSearchParams(location.search).get('crmEventId') || '';
+
         const payload = {
             companyId: form.companyId || id,
+            ...(!isEditMode && crmEventId ? { crmEventId } : {}),
             source_estimate_id: resolvedSourceEstimateId || sourceEstimateId || '',
             estimate_no: selectedPi || '',
             delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],

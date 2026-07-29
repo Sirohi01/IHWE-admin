@@ -18,7 +18,11 @@ const AccountOverview = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const eventId = searchParams.get("eventId") || "";
-  const eventQuery = eventId ? `?eventId=${encodeURIComponent(eventId)}` : "";
+  const crmEventId = searchParams.get("crmEventId") || "";
+  const eventQueryParams = new URLSearchParams();
+  if (eventId) eventQueryParams.set("eventId", eventId);
+  if (crmEventId) eventQueryParams.set("crmEventId", crmEventId);
+  const eventQuery = eventQueryParams.toString() ? `?${eventQueryParams.toString()}` : "";
   const scopedPath = (path) => `${path}${eventQuery}`;
 
   const [loading, setLoading] = useState(true);

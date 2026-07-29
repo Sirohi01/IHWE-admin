@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../lib/api";
 import pragatiMaidan from "../../assets/pragatiMaidan.jpeg";
 import sideImage from "../../assets/sideImage.jpeg";
@@ -113,6 +113,11 @@ const MarketingMaterialPage = () => {
   const userName = adminInfo.fullName || adminInfo.username || "Admin";
   const userId = adminInfo._id || null;
   const { currentEventId } = useEventContext();
+  const [searchParams] = useSearchParams();
+  // Prefer the CrmEvent the client was actually opened under (carried via
+  // query param from ClientOverview1) over the globally-selected Navbar
+  // event, which may point at a different event than this specific client.
+  const effectiveEventId = searchParams.get("crmEventId") || currentEventId;
 
   useEffect(() => {
     fetchCompanyDetails();
@@ -274,7 +279,7 @@ const MarketingMaterialPage = () => {
         clientEmail: company.companyEmail || company.email,
         clientMobile: company.companyMobile || company.mobile,
         clientName: company.companyName,
-        eventId: currentEventId,
+        eventId: effectiveEventId,
       });
 
       if (res.data.success) {
@@ -860,7 +865,7 @@ const MarketingMaterialPage = () => {
                   clientEmail: company.companyEmail || company.email,
                   clientMobile: company.companyMobile || company.mobile,
                   clientName: company.companyName,
-                  eventId: currentEventId,
+                  eventId: effectiveEventId,
                   logOnly: true
                 });
               }

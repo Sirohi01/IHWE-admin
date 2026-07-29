@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronRight, ArrowLeft, MessageCircleMore, Mail, FileText, CheckCircle2, Clock, Users, DollarSign, Package } from 'lucide-react';
 import api from '../../../lib/api';
 import Swal from 'sweetalert2';
@@ -66,6 +66,8 @@ function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, la
 const InvoiceList = () => {
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
+    const [searchParams] = useSearchParams();
+    const crmEventId = searchParams.get('crmEventId') || '';
     const isAllList = id === 'all';
     const [invoices, setInvoices] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -234,7 +236,9 @@ const InvoiceList = () => {
                         className="border border-gray-300 rounded-md px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
                     />
                     <button
-                        onClick={() => navigate(isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`)}
+                        onClick={() => navigate(
+                            `${isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`}${crmEventId ? `?crmEventId=${crmEventId}` : ''}`
+                        )}
                         className="flex items-center gap-1.5 bg-[#194090] hover:bg-[#112f6b] text-white px-3 py-1.5 rounded-md font-bold transition text-[13px]"
                     >
                         Create Invoice
