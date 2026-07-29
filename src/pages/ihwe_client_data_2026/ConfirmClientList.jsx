@@ -584,7 +584,7 @@ const ConfirmClientList = () => {
             </td>
             <td className="min-w-[185px] px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
-                <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                <Link to={`/client-overview/${row._id}?source=exhibitor&eventId=${routeCrmEventId || currentEventId}`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
