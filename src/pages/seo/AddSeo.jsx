@@ -19,6 +19,8 @@ const AddSeo = () => {
         metaTitle: "",
         metaKeywords: "",
         metaDescription: "",
+        ogTitle: "",
+        ogDescription: "",
         openGraphTags: "",
         schemaMarkup: "",
         canonicalTag: "",
@@ -61,6 +63,8 @@ const AddSeo = () => {
                 metaTitle: data.metaTitle || "",
                 metaKeywords: data.metaKeywords || "",
                 metaDescription: data.metaDescription || "",
+                ogTitle: data.ogTitle || "",
+                ogDescription: data.ogDescription || "",
                 openGraphTags: data.openGraphTags || "",
                 schemaMarkup: data.schemaMarkup || "",
                 canonicalTag: data.canonicalTag || "",
@@ -178,6 +182,8 @@ const AddSeo = () => {
                 metaTitle: "",
                 metaKeywords: "",
                 metaDescription: "",
+                ogTitle: "",
+                ogDescription: "",
                 openGraphTags: "",
                 schemaMarkup: "",
                 canonicalTag: "",
@@ -200,6 +206,8 @@ const AddSeo = () => {
                 metaTitle: existing.metaTitle || "",
                 metaKeywords: existing.metaKeywords || "",
                 metaDescription: existing.metaDescription || "",
+                ogTitle: existing.ogTitle || "",
+                ogDescription: existing.ogDescription || "",
                 openGraphTags: existing.openGraphTags || "",
                 schemaMarkup: existing.schemaMarkup || "",
                 canonicalTag: existing.canonicalTag || "",
@@ -232,6 +240,8 @@ const AddSeo = () => {
                 metaTitle: "",
                 metaKeywords: "",
                 metaDescription: "",
+                ogTitle: "",
+                ogDescription: "",
                 openGraphTags: "",
                 schemaMarkup: "",
                 canonicalTag: "",
@@ -326,6 +336,8 @@ const AddSeo = () => {
             data.append('metaTitle', formData.metaTitle);
             data.append('metaKeywords', formData.metaKeywords);
             data.append('metaDescription', formData.metaDescription);
+            data.append('ogTitle', formData.ogTitle);
+            data.append('ogDescription', formData.ogDescription);
             data.append('openGraphTags', formData.openGraphTags);
             data.append('schemaMarkup', formData.schemaMarkup);
             data.append('canonicalTag', formData.canonicalTag);
@@ -365,6 +377,8 @@ const AddSeo = () => {
                         metaTitle: "",
                         metaKeywords: "",
                         metaDescription: "",
+                        ogTitle: "",
+                        ogDescription: "",
                         openGraphTags: "",
                         schemaMarkup: "",
                         canonicalTag: "",
@@ -595,10 +609,77 @@ const AddSeo = () => {
                             />
                         </div>
 
+                        {/* Dedicated OG Title / Description */}
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs font-medium text-gray-700">
+                                    OG Title
+                                </label>
+                                <span className={`text-[10px] font-bold ${formData.ogTitle.length > 55 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                    {formData.ogTitle.length}/65
+                                </span>
+                            </div>
+                            <input
+                                type="text"
+                                name="ogTitle"
+                                value={formData.ogTitle}
+                                onChange={handleInputChange}
+                                placeholder="Leave empty to use Meta Title"
+                                maxLength={65}
+                                className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                            />
+                            <p className="text-[10px] text-gray-400 mt-1">Shown as the headline on WhatsApp, Facebook, LinkedIn, X & Telegram previews.</p>
+                        </div>
+
+                        <div>
+                            <div className="flex justify-between items-center mb-1">
+                                <label className="block text-xs font-medium text-gray-700">
+                                    OG Description
+                                </label>
+                                <span className={`text-[10px] font-bold ${formData.ogDescription.length > 150 ? 'text-orange-500' : 'text-gray-400'}`}>
+                                    {formData.ogDescription.length}/155
+                                </span>
+                            </div>
+                            <textarea
+                                name="ogDescription"
+                                value={formData.ogDescription}
+                                onChange={handleInputChange}
+                                placeholder="Leave empty to use Meta Description"
+                                rows={2}
+                                maxLength={155}
+                                className="w-full px-3 py-2 border border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                            />
+                        </div>
+
+                        {/* Social Share Preview */}
+                        <div className="md:col-span-2">
+                            <label className="block text-xs font-bold text-gray-700 mb-2">
+                                Social Share Preview
+                            </label>
+                            <div className="max-w-sm border border-gray-200 rounded-lg overflow-hidden shadow-sm bg-white">
+                                <div className="h-40 bg-gray-100 flex items-center justify-center overflow-hidden">
+                                    {formData.ogImagePreview ? (
+                                        <img loading="lazy" decoding="async" src={formData.ogImagePreview} alt="OG Preview" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <span className="text-[10px] text-gray-400 uppercase font-bold">No Image</span>
+                                    )}
+                                </div>
+                                <div className="p-3 bg-[#f0f2f5]">
+                                    <p className="text-[10px] text-gray-500 uppercase tracking-wide">ihwe.in</p>
+                                    <p className="text-sm font-bold text-gray-900 line-clamp-1">
+                                        {formData.ogTitle || formData.metaTitle || "Page title will appear here"}
+                                    </p>
+                                    <p className="text-xs text-gray-500 line-clamp-2">
+                                        {formData.ogDescription || formData.metaDescription || "Page description will appear here"}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Open Graph Tags Editor */}
                         <div className="md:col-span-2 space-y-2">
                             <label className="block text-xs font-bold text-gray-700">
-                                Open Graph Tags (HTML/Text) <span className="text-red-500">*</span>
+                                Advanced: Raw Open Graph Tags (optional HTML/Text override)
                             </label>
                             <div className="border-2 border-gray-200">
                                 <div

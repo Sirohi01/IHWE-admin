@@ -6,17 +6,25 @@ export const pagesList = [
     { name: "About Us / About IHWE", path: "/about" },
     { name: "About Us / Support & Services", path: "/partners" },
     { name: "About Us / Advisory Board Members", path: "/advisory-board" },
+    { name: "About Us / Advisory", path: "/advisory" },
     { name: "About Us / Media", path: "/media-registration" },
     { name: "About Us / Glimpses of the Event", path: "/gallery" },
+    { name: "About Us / Exhibitor Profile", path: "/exhibitor-profile" },
 
     // Participate Dropdown Pages
     { name: "Participate / Why Exhibit at IHWE?", path: "/why-exhibit" },
     { name: "Participate / Exhibitor List", path: "/exhibitors" },
     { name: "Participate / Why Visit IHWE", path: "/why-visit" },
     { name: "Participate / MSME PMS Scheme", path: "/government-msme-pms-schemes" },
+    { name: "Participate / MSME PMS Scheme (Alt)", path: "/msme-pms-scheme" },
+    { name: "Participate / Exhibition", path: "/exhibition" },
 
     // Standalone Menu Pages (Sequential)
     { name: "General / Buyer-Seller Meet", path: "/buyer-seller-meet" },
+
+    // Blog
+    { name: "Blog / Blog Home", path: "/blog" },
+    { name: "Blog / All Articles", path: "/blog/all" },
 
     // Opportunities Dropdown Pages
     { name: "Opportunities / Sponsorship", path: "/sponsership" },
@@ -25,8 +33,12 @@ export const pagesList = [
 
     // Other Standalone Menu Pages
     { name: "General / Conference", path: "/conference" },
+    { name: "General / Conference - Paper Presentation", path: "/conference/paper-presentation" },
+    { name: "General / Conference - Poster Presentation", path: "/conference/poster-presentation" },
+    { name: "General / Conference - Abstract Submission", path: "/conference/abstract-submission" },
     { name: "General / Awards", path: "/awards" },
     { name: "General / Contact", path: "/contact" },
+    { name: "General / Travel & Accommodation", path: "/travel-accommodation" },
 
     // Registration Pages
     { name: "Registration / Book A Stall", path: "/book-a-stand" },
@@ -38,6 +50,8 @@ export const pagesList = [
     { name: "Registration / Seller Registration", path: "/seller-registration" },
     { name: "Registration / Partner Registration", path: "/partner-registration" },
     { name: "Registration / Delegate Registration", path: "/delegate-registration" },
+    { name: "Registration / Delegate Registration Details", path: "/delegate-registration-details" },
+    { name: "Registration / Speaker Registration", path: "/speaker-registration" },
     { name: "Registration / Download Badge", path: "/download-badge" },
     { name: "Registration / Awards Nomination Form", path: "/awards/nomination" },
 
@@ -48,6 +62,10 @@ export const pagesList = [
     { name: "Partners / Printing & Branding Partner", path: "/printing-branding-partner" },
     { name: "Partners / Logistics Partner", path: "/logistic-partner" },
     { name: "Partners / Hospitality Partner", path: "/hospitality-partner" },
+
+    // Opportunities (additional)
+    { name: "Opportunities / E-Promotion", path: "/e-promotion" },
+    { name: "Opportunities / E-Promotion (Alt)", path: "/epromotion" },
 
     // Support Pages
     { name: "Support / Hotel Stay", path: "/support/hotel-stay" },
