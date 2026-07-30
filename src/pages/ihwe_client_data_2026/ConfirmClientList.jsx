@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Eye } from 'lucide-react';
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
 import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
+import { useEventContext } from '../../context/EventContext';
 
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
@@ -22,7 +23,7 @@ import {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -85,6 +86,15 @@ const ConfirmClientList = () => {
   const [filterStage, setFilterStage] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar, or pinned to the URL's
+  // CrmEvent via CrmEventScopedRoute when reached from crm-event/:eventId/bookings)
+  // — every fetch below scopes to this. Company.eventAssignments[].eventId
+  // already IS the CrmEvent id, so (unlike the old ExhibitorRegistration-based
+  // fetch) no extra registrationEventId resolution hop is needed.
+  const { currentEventId, currentEvent } = useEventContext();
+  const { eventId: routeCrmEventId } = useParams();
+  const effectiveEventId = currentEventId;
+
   // Auth State — the logged-in admin's profile lives under the "adminInfo" key,
   // in localStorage (remember-me) or sessionStorage — NOT in the auth Redux slice,
   // which only tracks isAuthenticated/loading flags.
@@ -95,10 +105,12 @@ const ConfirmClientList = () => {
   const roleSlug = (user?.role || '').toLowerCase().replace(/[^a-z]/g, '');
   const isSuperAdmin = roleSlug === 'superadmin' || roleSlug === 'ihwesuperadministrator';
 
-  // Server-side pagination state
+  // All "Booked" companies for this event (client-side filter/paginate/stat,
+  // same pattern as ConvertedList.jsx) — companies whose eventAssignments.status
+  // is "Booked" AND who don't have a Payment recorded yet (see getBookedCompanies
+  // in companyController.js). The moment a Payment appears, a company leaves
+  // this list and shows up in Converted instead.
   const [registrations, setRegistrations] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
 
   const [masterCompanies, setMasterCompanies] = useState(_cachedMasterCompanies || []);
   const [allReviews, setAllReviews] = useState(_cachedAllReviews || []);
@@ -110,78 +122,29 @@ const ConfirmClientList = () => {
   const [isFinanceModalOpen, setIsFinanceModalOpen] = useState(false);
   const [selectedClientForFinance, setSelectedClientForFinance] = useState(null);
 
-  // Aggregated totals across ALL matching registrations (not just the current page) — feeds the stat cards
-  const [summary, setSummary] = useState({
-    totalCount: 0, totalArea: 0, totalRevenue: 0, paymentReceived: 0, newClientsCount: 0, existingClientsCount: 0,
-  });
-
-  // Filter dropdown options — distinct values across ALL of this user's registrations
-  // (not just the current page), so the dropdowns always show the correct/full choices.
-  const [filterOptions, setFilterOptions] = useState({ sources: [], statuses: [], industries: [] });
-
-  // Fetch paginated registrations from backend
+  // Fetch all Booked companies for this event
   const fetchRegistrations = useCallback(async () => {
+    if (!effectiveEventId) {
+      setRegistrations([]);
+      return;
+    }
     setIsLoading(true);
     try {
       const params = new URLSearchParams({
-        page,
-        limit,
-        ...(searchTerm && { search: searchTerm }),
-        ...(filterStage && { status: filterStage }),
-        ...(filterSource && { referredBy: filterSource }),
-        ...(filterIndustry && { industry: filterIndustry }),
+        eventId: effectiveEventId,
         ...(user?.username && { username: user.username }),
         ...(user?.role && { role: user.role }),
       });
-      const regRes = await api.get(`/api/exhibitor-registration?${params}`);
+      const regRes = await api.get(`/api/companies/booked?${params}`);
       if (regRes.data?.success) {
         setRegistrations(Array.isArray(regRes.data.data) ? regRes.data.data : []);
-        setTotal(regRes.data.total || 0);
-        setTotalPages(regRes.data.totalPages || 1);
       }
     } catch (error) {
-      console.error('Error fetching registrations:', error);
+      console.error('Error fetching booked companies:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [page, limit, searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role]);
-
-  // Fetch aggregated totals (across ALL matching records, not just this page) for the stat cards
-  const fetchSummary = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        ...(searchTerm && { search: searchTerm }),
-        ...(filterStage && { status: filterStage }),
-        ...(filterSource && { referredBy: filterSource }),
-        ...(filterIndustry && { industry: filterIndustry }),
-        ...(user?.username && { username: user.username }),
-        ...(user?.role && { role: user.role }),
-      });
-      const res = await api.get(`/api/exhibitor-registration/summary?${params}`);
-      if (res.data?.success) {
-        setSummary(res.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching registration summary:', error);
-    }
-  }, [searchTerm, filterStage, filterSource, filterIndustry, user?.username, user?.role]);
-
-  // Fetch filter dropdown options — only depends on the user's scope, not on the
-  // filters/search themselves, so it doesn't need to refetch on every keystroke.
-  const fetchFilterOptions = useCallback(async () => {
-    try {
-      const params = new URLSearchParams({
-        ...(user?.username && { username: user.username }),
-        ...(user?.role && { role: user.role }),
-      });
-      const res = await api.get(`/api/exhibitor-registration/filter-options?${params}`);
-      if (res.data?.success) {
-        setFilterOptions(res.data.data);
-      }
-    } catch (error) {
-      console.error('Error fetching filter options:', error);
-    }
-  }, [user?.username, user?.role]);
+  }, [user?.username, user?.role, effectiveEventId]);
 
   // Fetch static data only once (cached)
   const fetchStaticData = async () => {
@@ -215,27 +178,27 @@ const ConfirmClientList = () => {
     }
   };
 
-  // Initial load: static data once, registrations on every filter/page change
+  // Initial load: static data once, booked companies on every event/user change
   useEffect(() => { fetchStaticData(); }, []);
 
-  useEffect(() => {
-    const debounce = setTimeout(() => { fetchRegistrations(); }, searchTerm ? 400 : 0);
-    return () => clearTimeout(debounce);
-  }, [fetchRegistrations]);
+  useEffect(() => { fetchRegistrations(); }, [fetchRegistrations]);
 
-  useEffect(() => {
-    const debounce = setTimeout(() => { fetchSummary(); }, searchTerm ? 400 : 0);
-    return () => clearTimeout(debounce);
-  }, [fetchSummary]);
+  // Frontend filtering and pagination — same pattern as ConvertedList.jsx
+  const filteredRegs = registrations.filter(r => {
+    if (filterStage && filterStage !== 'Booked' && (r.status || 'Booked') !== filterStage) return false;
+    if (filterSource && (r.referredBy || r.dataSource || 'Direct') !== filterSource) return false;
+    if (filterIndustry && (r.natureOfBusiness || r.industrySector || r.typeOfBusiness) !== filterIndustry) return false;
+    if (searchTerm) {
+      const searchStr = `${r.exhibitorName} ${r.companyName} ${r.contact1?.email} ${r.contact1?.mobile}`.toLowerCase();
+      if (!searchStr.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
 
-  useEffect(() => { fetchFilterOptions(); }, [fetchFilterOptions]);
-
-  // Current page data is directly from server — no frontend slicing needed
-  const allCompanies = registrations;
-  const totalLeads = total;
+  const totalLeads = filteredRegs.length;
+  const totalPages = Math.ceil(totalLeads / limit) || 1;
+  const allCompanies = filteredRegs.slice((page - 1) * limit, page * limit);
   const pagination = { totalPages };
-
-
 
   const isAllSelected = allCompanies.length > 0 && selectedIds.length === allCompanies.length;
   const onSelectAll = (e) => {
@@ -247,11 +210,11 @@ const ConfirmClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  // Filter dropdown options come from filterOptions (scoped to the user, across ALL
-  // their registrations) — not derived from the current page's rows.
-  const uniqueSources = filterOptions.sources;
-  const uniqueIndustries = filterOptions.industries;
-  const uniqueStages = filterOptions.statuses;
+  // Filter dropdown options derived from ALL booked companies for this event
+  // (not just the current page/filtered set), so the dropdowns show full choices.
+  const uniqueSources = [...new Set(registrations.map(r => r.referredBy || r.dataSource).filter(Boolean))];
+  const uniqueIndustries = [...new Set(registrations.map(r => r.natureOfBusiness || r.industrySector || r.typeOfBusiness).filter(Boolean))];
+  const uniqueStages = [...new Set(registrations.map(r => r.status).filter(Boolean))];
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -300,16 +263,44 @@ const ConfirmClientList = () => {
     </>
   );
 
-  // Stat cards use server-side aggregated totals across ALL matching records
-  // (not just the current page) — see fetchSummary / /api/exhibitor-registration/summary.
-  const totalConverted = summary.totalCount;
-  // Client Status comes straight from the "New Client / Existing Client" choice
-  // made on the exhibitor registration itself (exhibitorStatus), not a guessed match.
-  const existingClientsCount = summary.existingClientsCount;
-  const newClientsCount = summary.newClientsCount;
-  const totalArea = summary.totalArea;
-  const totalRevenue = summary.totalRevenue;
-  const paymentReceived = summary.paymentReceived;
+  // Stat cards computed client-side from the full filtered set — same pattern
+  // (and same name/email/mobile matching heuristic against masterCompanies)
+  // as ConvertedList.jsx.
+  const totalConverted = filteredRegs.length;
+  const existingClientsCount = filteredRegs.filter(reg => {
+    const rName = (reg.companyName || reg.exhibitorName || "").toLowerCase().trim();
+    const rEmail1 = (reg.contact1?.email || "").toLowerCase().trim();
+    const rEmail2 = (reg.contact2?.email || "").toLowerCase().trim();
+    const rMobile1 = (reg.contact1?.mobile || "").trim();
+    const rMobile2 = (reg.contact2?.mobile || "").trim();
+
+    return masterCompanies.some(comp => {
+      if (comp._id === reg._id) return false;
+      const cName = (comp.companyName || comp.exhibitorName || "").toLowerCase().trim();
+      const cEmail = (comp.email || "").toLowerCase().trim();
+      const cMobile = (comp.mobile || "").trim();
+
+      if (rName && cName && rName === cName) return true;
+      if (cEmail && (rEmail1 === cEmail || rEmail2 === cEmail)) return true;
+      if (cMobile && (rMobile1 === cMobile || rMobile2 === cMobile)) return true;
+
+      if (comp.contacts && Array.isArray(comp.contacts)) {
+        return comp.contacts.some(contact => {
+          const cntEmail = (contact.email || "").toLowerCase().trim();
+          const cntMobile = (contact.mobile || "").trim();
+          if (cntEmail && (rEmail1 === cntEmail || rEmail2 === cntEmail)) return true;
+          if (cntMobile && (rMobile1 === cntMobile || rMobile2 === cntMobile)) return true;
+          return false;
+        });
+      }
+      return false;
+    });
+  }).length;
+
+  const newClientsCount = totalConverted - existingClientsCount;
+  const totalArea = filteredRegs.reduce((acc, curr) => acc + (Number(curr.participation?.stallSize) || Number(curr.stallSize) || 0), 0);
+  const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (Number(curr.financeBreakdown?.netPayable) || Number(curr.participation?.total) || Number(curr.amountPaid) || 0), 0);
+  const paymentReceived = filteredRegs.reduce((acc, curr) => acc + (Number(curr.amountPaid) || Number(curr.financeBreakdown?.paidAmount) || 0), 0);
   const balancePayment = totalRevenue - paymentReceived;
 
   // Animated stat card component
@@ -467,16 +458,17 @@ const ConfirmClientList = () => {
   // Table Config
   const tableHeaders = (
     <>
-      <th className="px-1 py-2 font-medium">Company Name</th>
-      <th className="px-1 py-2 font-medium">Contact Details</th>
-      <th className="px-1 py-2 font-medium text-left">Category</th>
-      <th className="px-1 py-2 font-medium text-left">Source</th>
-      <th className="px-1 py-2 font-medium text-center">Stall Size</th>
-      <th className="px-1 py-2 font-medium text-center">Booking Date</th>
-      <th className="px-1 py-2 font-medium text-left">Location</th>
-      <th className="px-1 py-2 font-medium text-right">Revenue</th>
-      <th className="px-1 py-2 font-medium text-center">PYMT Status</th>
-      <th className="px-1 py-2 font-medium text-center">Updated Details</th>
+      <th className="min-w-[185px] px-2 py-2 font-medium">Company Name</th>
+      <th className="min-w-[230px] px-2 py-2 font-medium">Expo / Event</th>
+      <th className="min-w-[150px] px-2 py-2 font-medium">Contact Details</th>
+      <th className="min-w-[150px] px-2 py-2 font-medium text-left">Category</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-left">Source</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-center">Stall Size</th>
+      <th className="min-w-[145px] px-2 py-2 font-medium text-center">Booking Date</th>
+      <th className="min-w-[125px] px-2 py-2 font-medium text-left">Location</th>
+      <th className="min-w-[90px] px-2 py-2 font-medium text-right">Revenue</th>
+      <th className="min-w-[110px] px-2 py-2 font-medium text-center">PYMT Status</th>
+      <th className="min-w-[155px] px-2 py-2 font-medium text-center">Updated Details</th>
     </>
   );
 
@@ -504,22 +496,23 @@ const ConfirmClientList = () => {
         </tr>
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
+        const isIncompleteBooking =
+          !row.participation?.stallNo
+          || Number(row.participation?.stallSize || 0) <= 0
+          || Number(row.participation?.total || 0) <= 0;
         const source = row.referredBy || "Direct";
         const primaryTeamMember = row.teamMembers?.find((member) =>
           member.isPrimary || /primary contact/i.test(member.roleAtExhibition || '')
-        );
+        ) || row.teamMembers?.[0];
         const companyContact =
           row.contacts?.find((contact) => contact.isPrimary)
           || row.contacts?.[0];
-        const contactName =
-          row.contact1?.name
-          || (row.contact1?.firstName
-            ? `${row.contact1.firstName} ${row.contact1.lastName || ''}`.trim()
-            : '')
-          || primaryTeamMember?.name
-          || companyContact?.name
-          || [companyContact?.firstName, companyContact?.surname].filter(Boolean).join(' ')
-          || row.contactPerson
+        const contactEmail =
+          row.contact1?.email
+          || primaryTeamMember?.email
+          || companyContact?.email
+          || row.companyEmail
+          || row.email
           || "N/A";
         const contactMobile =
           row.contact1?.mobile
@@ -539,15 +532,23 @@ const ConfirmClientList = () => {
                 onChange={() => onSelectRow(row._id)}
               />
             </td>
-            <td className="px-1 py-2">
+            <td className="min-w-[185px] px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
-                <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                <Link to={`/client-overview/${row._id}?source=exhibitor&eventId=${routeCrmEventId || currentEventId}`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
-            <td className="px-1 py-2">
-              <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
-                {toTitleCase(contactName)}
+            <td className="min-w-[230px] max-w-[230px] px-2 py-2 text-left">
+              <span
+                className="block w-[210px] overflow-hidden text-ellipsis whitespace-nowrap rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700"
+                title={row.eventId?.name || "Event Not Assigned"}
+              >
+                {row.eventId?.name || "Event Not Assigned"}
+              </span>
+            </td>
+            <td className="min-w-[150px] px-2 py-2">
+              <div className="font-bold text-[10px] lowercase" style={{ color: '#15173D' }}>
+                {contactEmail}
               </div>
               <div className="text-[9px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
                 <Phone size={9} className="text-blue-500 shrink-0" />
@@ -594,7 +595,9 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-1 py-2 text-center">
               <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
-                {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "N/A"}
+                {isIncompleteBooking
+                  ? <span className="text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">Incomplete Booking</span>
+                  : `${row.participation?.stallSize || row.stallSize} sqm`}
               </span>
             </td>
             <td className="px-1 py-2 text-center">
@@ -627,6 +630,7 @@ const ConfirmClientList = () => {
             </td>
             <td className="px-1 py-2 text-center">
               <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                isIncompleteBooking ? 'bg-red-50 text-red-700 border border-red-200' :
                 row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
                 row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
                 row.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
@@ -634,7 +638,8 @@ const ConfirmClientList = () => {
                 row.status === 'rejected' || row.status === 'payment-failed' ? 'bg-red-50 text-red-600 border border-red-200' :
                 'bg-amber-50 text-amber-600 border border-amber-200'
               }`}>
-                {row.status === 'paid' ? 'Paid (Full)' :
+                {isIncompleteBooking ? 'Incomplete' :
+                 row.status === 'paid' ? 'Paid (Full)' :
                  row.status === 'confirmed' ? 'Confirmed' :
                  row.status === 'approved' ? 'Approved' :
                  row.status === 'advance-paid' ? 'Installment' :
@@ -775,27 +780,27 @@ const ConfirmClientList = () => {
 
   return (
     <BaseLeadPage
-      title="Exhibitor List"
-      subtitle="Leads that have been successfully converted into clients"
+      title={routeCrmEventId ? `${currentEvent?.event_name || currentEvent?.event_fullName || "Expo"} Bookings` : "Exhibitor List"}
+      subtitle="Exhibitor registrations and stall bookings for this Expo"
       badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
       headerActions={
         <div className="flex flex-wrap items-center gap-1.5">
-          <Link to="/book-a-stand" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/book-a-stand?crmEventId=${routeCrmEventId}` : "/book-a-stand"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Book a Stand
           </Link>
-          <Link to="/ihweClientData2026/newLeadList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/new-leads` : "/ihweClientData2026/newLeadList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             New Lead List
           </Link>
-          <Link to="/ihweClientData2026/warmClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/follow-ups` : "/ihweClientData2026/warmClientList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Warm Client
           </Link>
-          <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/hot-leads` : "/ihweClientData2026/hotClientList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Hot Client
           </Link>
-          <Link to="/ihweClientData2026/coldClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/lost-leads` : "/ihweClientData2026/coldClientList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Cold Client
           </Link>
-          <Link to="/ihweClientData2026/rawDataList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+          <Link to={routeCrmEventId ? `/crm-event/${routeCrmEventId}/all-leads` : "/ihweClientData2026/rawDataList"} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Raw Data List
           </Link>
         </div>

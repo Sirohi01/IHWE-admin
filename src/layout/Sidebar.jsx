@@ -1,6 +1,7 @@
-import { ChevronDown, X, Menu } from "lucide-react";
+import { ChevronDown, X, Menu, CalendarClock } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useDispatch, useSelector } from "react-redux";
 import { menuItems } from "../data/menuItems";
 import SocialSidebar from "../components/SocialSidebar";
 import { NavLink, useLocation } from "react-router-dom";
@@ -8,6 +9,7 @@ import Swal from "sweetalert2";
 import { logout } from "../utils/auth";
 import api, { SERVER_URL } from "../lib/api";
 import namogangelogo from "../assets/namogangelogo.webp";
+import { fetchEvents } from "../features/crmEvent/crmEventSlice";
 
 // ─── Default theme — must match the hardcoded static values exactly ──────────
 const DEFAULT_THEME = {
@@ -30,6 +32,13 @@ export default function Sidebar({
   setMobileMenuOpen,
 }) {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const crmEvents = useSelector((state) => state.crmEvents?.events);
+
+  useEffect(() => {
+    dispatch(fetchEvents());
+  }, [dispatch]);
+
   const [openDropdown, setOpenDropdown] = useState(null);
   const [openNestedDropdown, setOpenNestedDropdown] = useState(null);
   const [openSections, setOpenSections] = useState({});
@@ -155,8 +164,47 @@ export default function Sidebar({
       }
     });
 
+    // Sales CRM sub-sections: one dropdown per Event Configuration entry
+    // (Skill Technical, Medical Expo Data 2025, ...), each pointing at the
+    // shared lead-pipeline pages scoped to that event. Gated by the same
+    // per-label permission check as everything else — a non-superadmin only
+    // sees an event once a role grants them that exact event's label.
+    const dynamicEventItems = (crmEvents || [])
+      .filter((ev) => ev.event_name || ev.event_fullName)
+      .filter((ev) => isSuperAdmin || perms[ev.event_fullName || ev.event_name] === true)
+      // Latest/upcoming event first (e.g. Organic Expo 2027 above IHWE Expo
+      // 2026 above Organic Expo 2026) — sorted by each event's start date.
+      .slice()
+      .sort((a, b) => new Date(b.event_fromDate || 0) - new Date(a.event_fromDate || 0))
+      .map((ev) => ({
+        type: "dropdown",
+        label: ev.event_fullName || ev.event_name,
+        icon: CalendarClock,
+        children: [
+          { label: "Sales Tools", path: `/crm-event/${ev._id}/sales-tools` },
+          { label: "New Leads", path: `/crm-event/${ev._id}/new-leads` },
+          { label: "Follow-Ups", path: `/crm-event/${ev._id}/follow-ups` },
+          { label: "Hot Leads", path: `/crm-event/${ev._id}/hot-leads` },
+          { label: "Proposal Sent", path: `/crm-event/${ev._id}/proposal-sent` },
+          { label: "Bookings", path: `/crm-event/${ev._id}/bookings` },
+          { label: "Lost Leads", path: `/crm-event/${ev._id}/lost-leads` },
+          { label: "Converted Leads", path: `/crm-event/${ev._id}/converted-leads` },
+          { label: "All Leads", path: `/crm-event/${ev._id}/all-leads` },
+          { label: "Referral Leads", path: `/crm-event/${ev._id}/referral-leads` },
+        ],
+      }));
+
+    if (dynamicEventItems.length > 0) {
+      const salesCrmSection = results.find((r) => r.type === "section" && r.label === "Sales CRM");
+      if (salesCrmSection) {
+        const masterDataIdx = salesCrmSection.children.findIndex((c) => c.label === "Expo Master Data");
+        const insertAt = masterDataIdx >= 0 ? masterDataIdx : salesCrmSection.children.length;
+        salesCrmSection.children.splice(insertAt, 0, ...dynamicEventItems);
+      }
+    }
+
     return results.filter(item => item.type !== "section" || item.children.length > 0);
-  }, [currentUser, roleData]);
+  }, [currentUser, roleData, crmEvents]);
 
   useEffect(() => {
     let activeSection = null;

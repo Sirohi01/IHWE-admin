@@ -3,10 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import {
   Search, MoreVertical, Download, Filter, Calendar, MessageCircle, Phone, Mail, Users, Clock, CalendarDays, CalendarCheck, Target, ArrowRight, Plus, Upload, RefreshCw
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
+import { getLeadScore } from "../../utils/leadScoring";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -47,7 +49,7 @@ function useCountUp(target, duration = 1200) {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const NewLeadList = () => {
@@ -62,6 +64,12 @@ const NewLeadList = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterAssignedTo, setFilterAssignedTo] = useState('');
+
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId, currentEvent } = useEventContext();
+  const addClientPath = currentEvent?.event_name && currentEventId
+    ? `/crm-event/${currentEventId}/add-client`
+    : "/ihweClientData2026/addNewClients";
 
   // Auth State
   const { user } = useSelector(state => state.auth);
@@ -100,12 +108,13 @@ const NewLeadList = () => {
         industry: filterIndustry,
         forwardTo: filterAssignedTo,
         startDate,
-        endDate
+        endDate,
+        eventId: currentEventId,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo, currentEventId]);
 
   const uniqueSources = [...new Set(newLeadCompanies.map(c => c.dataSource).filter(Boolean))];
   const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
@@ -144,7 +153,7 @@ const NewLeadList = () => {
     totalLeads, todaysLeads, thisWeekLeads, thisMonthLeads,
     pendingFollowUpsCount, followUps, sourceChartData,
     statusChartData, recentActivities, topExecutives
-  } = useDashboardStats('New Lead');
+  } = useDashboardStats('New Lead', null, currentEventId);
 
   function AnimatedStatCard({ icon, gradientTo, iconBg, iconClass, rawValue, displayValue, label, subLabel, subColor }) {
     const { ref, count } = useCountUp(rawValue);
@@ -215,7 +224,7 @@ const NewLeadList = () => {
 
   const headerActions = (
     <div className="flex flex-wrap items-center gap-1.5">
-      <Link to="/ihweClientData2026/addNewClients" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+      <Link to={addClientPath} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
         <Plus size={12} /> Add Lead
       </Link>
       <Link to="/ihweClientData2026/uploadExhibitor" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
@@ -334,7 +343,7 @@ const NewLeadList = () => {
               </td>
               <td className="px-2 py-2">
                 <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                  <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                  <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
                 </div>
               </td>
               <td className="px-2 py-2">
@@ -359,10 +368,18 @@ const NewLeadList = () => {
                 </td>
               )}
               <td className="px-2 py-1.5">
-                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                  <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 65}</span>
-                </div>
+                {(() => {
+                  const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                  const filledStars = Math.round(score / 20);
+                  return (
+                    <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                      {[...Array(5)].map((_, i) =>
+                        i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                      )}
+                      <span className="ml-1 font-semibold text-slate-700">{score}</span>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-2 py-1.5">
                 <div className="flex items-start gap-1.5">
@@ -517,7 +534,7 @@ const NewLeadList = () => {
           <h3 className="text-sm font-bold text-[#15173D] tracking-tight">Quick Actions</h3>
         </div>
         <div className="grid grid-cols-2 gap-1.5">
-          <button onClick={() => navigate("/ihweClientData2026/addNewClients")} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
+          <button onClick={() => navigate(addClientPath)} className="flex items-center gap-1.5 p-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded transition-colors border border-emerald-100">
             <Plus size={12} />
             <span className="text-[9px] font-bold">Add Lead</span>
           </button>

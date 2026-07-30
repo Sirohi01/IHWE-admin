@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import api from "../../lib/api";
 import {
@@ -10,11 +10,12 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const ProposalSentList = () => {
   const navigate = useNavigate();
+  const { eventId } = useParams();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -35,15 +36,50 @@ const ProposalSentList = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, []);
+  }, [eventId, user?.username, user?.role]);
 
   const fetchHistory = async () => {
     setLoading(true);
     try {
-      const res = await api.get("/api/marketing-materials/history/all");
-      if (res.data.success) {
-        setHistory(res.data.data);
-      }
+      const params = new URLSearchParams();
+      if (eventId) params.set("eventId", eventId);
+      const queryString = params.toString();
+      const companyParams = new URLSearchParams({
+        status: "Proposal Sent",
+        limit: "1000",
+        ...(eventId ? { eventId } : {}),
+        ...(user?.username ? { username: user.username } : {}),
+        ...(user?.role ? { role: user.role } : {}),
+      });
+      const [shareRes, companyRes] = await Promise.all([
+        api.get(`/api/marketing-materials/history/all${queryString ? `?${queryString}` : ""}`),
+        api.get(`/api/companies?${companyParams}`),
+      ]);
+      const shares = shareRes.data?.success && Array.isArray(shareRes.data.data)
+        ? shareRes.data.data
+        : [];
+      const companies = Array.isArray(companyRes.data?.data)
+        ? companyRes.data.data
+        : (Array.isArray(companyRes.data) ? companyRes.data : []);
+      const sharedCompanyIds = new Set(
+        shares.map((item) => String(item.cmpny_id?._id || item.cmpny_id || "")).filter(Boolean)
+      );
+      const statusOnlyRows = companies
+        .filter((company) => !sharedCompanyIds.has(String(company._id)))
+        .map((company) => ({
+          _id: `status-${company._id}`,
+          cmpny_id: company,
+          clientName: company.companyName,
+          clientEmail: company.email || company.contacts?.[0]?.email || "",
+          clientMobile: company.mobile || company.contacts?.[0]?.mobile || "",
+          materials: [],
+          sentVia: "Status Update",
+          sentBy: company.eventLifecycle?.forwardTo || company.forwardTo || "",
+          status: "Proposal Sent",
+          createdAt: company.eventLifecycle?.updatedAt || company.updatedAt || company.createdAt,
+          statusOnly: true,
+        }));
+      setHistory([...shares, ...statusOnlyRows]);
     } catch (error) {
       console.error(error);
     } finally {
@@ -332,7 +368,7 @@ const ProposalSentList = () => {
                 <div className="flex flex-col items-start gap-1">
                   <div className="flex items-center gap-1.5">
                     {row.cmpny_id?._id ? (
-                      <Link to={`/client-overview/${row.cmpny_id._id}`} className="font-bold text-[11px] hover:text-emerald-600 hover:underline transition-colors" style={{ color: '#093C5D' }}>
+                      <Link to={eventId ? `/crm-event/${eventId}/client/${row.cmpny_id._id}` : `/client-overview/${row.cmpny_id._id}`} className="font-bold text-[11px] hover:text-emerald-600 hover:underline transition-colors" style={{ color: '#093C5D' }}>
                         {toTitleCase(compName)}
                       </Link>
                     ) : (
@@ -434,7 +470,7 @@ const ProposalSentList = () => {
               </td>
               <td className="px-3 py-2 text-center">
                 {row.cmpny_id?._id && (
-                  <button onClick={() => navigate(`/client-overview/${row.cmpny_id._id}`)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors shadow-sm">
+                  <button onClick={() => navigate(eventId ? `/crm-event/${eventId}/client/${row.cmpny_id._id}` : `/client-overview/${row.cmpny_id._id}`)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors shadow-sm">
                     <Eye size={12} />
                   </button>
                 )}

@@ -4,6 +4,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "../layout/LoginPage";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Dashboard";
+import CrmEventScopedRoute from "../components/CrmEventScopedRoute";
 const AdminUser = lazy(() => import("../layout/AdminUser"));
 const MyProfile = lazy(() => import("../pages/MyProfile"));
 const Crosual = lazy(() => import("../pages/HomeSlider"));
@@ -154,6 +155,7 @@ const ProposalSentList = lazy(() => import("../pages/ihwe_client_data_2026/Propo
 const ConvertedList = lazy(() => import("../pages/ihwe_client_data_2026/ConvertedList"));
 const AllLeadsList = lazy(() => import("../pages/ihwe_client_data_2026/AllLeadsList"));
 const MasterClientsList = lazy(() => import("../pages/ihwe_client_data_2026/MasterClientsList"));
+const CrmEventReferralLeads = lazy(() => import("../pages/CrmEventReferralLeads"));
 const RawDataList = lazy(() => import("../pages/ihwe_client_data_2026/RawDataList"));
 const UploadExhibitor = lazy(() => import("../pages/ihwe_client_data_2026/UploadExhibitor"));
 const AddNewVisitor = lazy(() => import("../pages/web_visitor_data/add_new_visitor/AddNewVisitors"));
@@ -624,6 +626,25 @@ export default function AppRoutes() {
               path="ihweClientData2026/allLeadsList"
               element={<AllLeadsList />}
             />
+
+            {/* Dynamic per-event CRM sections — one sidebar dropdown per
+                Event Configuration entry (any name, e.g. "Skill Technical",
+                "Medical Expo Data 2025"), all reusing the exact same pages
+                as the static IHWE Expo 2026 section. :eventId picks which
+                CrmEvent's assigned companies to show. */}
+            <Route path="crm-event/:eventId/sales-tools" element={<SalesTools />} />
+            <Route path="crm-event/:eventId/new-leads" element={<CrmEventScopedRoute><NewLeadList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/add-client" element={<CrmEventScopedRoute><AddNewClients /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/client/:id" element={<CrmEventScopedRoute><ClientOverview1 /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/follow-ups" element={<CrmEventScopedRoute><WarmClientList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/hot-leads" element={<CrmEventScopedRoute><HotClientList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/proposal-sent" element={<CrmEventScopedRoute><ProposalSentList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/bookings" element={<CrmEventScopedRoute><ConfirmClientList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/lost-leads" element={<CrmEventScopedRoute><ColdClientList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/converted-leads" element={<CrmEventScopedRoute><ConvertedList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/all-leads" element={<CrmEventScopedRoute><AllLeadsList /></CrmEventScopedRoute>} />
+            <Route path="crm-event/:eventId/referral-leads" element={<CrmEventReferralLeads />} />
+
             <Route
               path="ihweClientData2026/masterData"
               element={<MasterClientsList />}

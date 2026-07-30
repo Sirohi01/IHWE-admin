@@ -1,10 +1,8 @@
 import { useState, useEffect } from "react";
 import PageHeader from '../../components/PageHeader';
 import { Settings, List, BadgeHelp, Search, ChevronLeft, ChevronRight } from "lucide-react";
-import axios from "axios";
+import api from "../../lib/api";
 import Swal from 'sweetalert2';
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
 
 export default function TransferClient() {
     const [form, setForm] = useState({ fromUser: "", toUser: "", reason: "" });
@@ -17,12 +15,9 @@ export default function TransferClient() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
-                const headers = { Authorization: `Bearer ${token}` };
-
                 const [usersRes, logsRes] = await Promise.all([
-                    axios.get(`${API_URL}/api/admin/public-list`, { headers }),
-                    axios.get(`${API_URL}/api/ownership-transfer/logs`, { headers })
+                    api.get("/api/admin/public-list"),
+                    api.get("/api/ownership-transfer/logs")
                 ]);
 
                 if (usersRes.data.success) {
@@ -66,10 +61,7 @@ export default function TransferClient() {
         }
 
         try {
-            const token = localStorage.getItem("adminToken") || sessionStorage.getItem("adminToken");
-            const res = await axios.post(`${API_URL}/api/ownership-transfer/client`, form, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.post("/api/ownership-transfer/client", form);
 
             if (res.data.success) {
                 Swal.fire("Success", res.data.message, "success");

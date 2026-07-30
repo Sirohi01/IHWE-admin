@@ -3,12 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { motion } from "framer-motion";
 import {
   Search, Plus, Upload, MessageCircle, CalendarDays, Clock3, Filter, ChevronDown, MoreVertical, ArrowRight, Bell, Phone, Mail
 } from "lucide-react";
 import { FaWhatsapp, FaStar, FaRegStar } from 'react-icons/fa';
+import { getLeadScore } from "../../utils/leadScoring";
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -47,8 +49,11 @@ function useCountUp(target, duration = 1200) {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+const FOLLOW_UP_STATUSES = ['Follow-up', 'Contacted', 'Negotiation'];
+const FOLLOW_UP_STATUS_FILTER = FOLLOW_UP_STATUSES.join(',');
 
 
 
@@ -63,6 +68,9 @@ const WarmClientList = () => {
   const [filterSource, setFilterSource] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
 
   // Auth State
   const { user } = useSelector(state => state.auth);
@@ -79,17 +87,18 @@ const WarmClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Follow-Up Call',
+        status: filterStatus || FOLLOW_UP_STATUS_FILTER,
         source: filterSource,
+        eventId: currentEventId,
       }));
     }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, currentEventId]);
 
   const {
-    totalLeads: hookTotal, pendingFollowUpsCount, thisWeekLeads, thisMonthLeads,
+    totalLeads: hookTotal, pendingFollowUpsCount, followUpsDueThisWeek, followUpsDueThisMonth,
     overviewData, overdueLeads
-  } = useDashboardStats('Follow');
+  } = useDashboardStats(FOLLOW_UP_STATUSES, null, currentEventId);
 
   const circumference = 2 * Math.PI * 32;
   const [mounted, setMounted] = useState(false);
@@ -220,7 +229,7 @@ const WarmClientList = () => {
       <AnimatedStatCard
         icon={<CalendarDays className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
         gradientTo="to-blue-50" iconBg="bg-blue-100"
-        rawValue={thisWeekLeads}
+        rawValue={followUpsDueThisWeek}
         displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
         label="DUE THIS WEEK"
         subLabel="Follow-ups" subColor="#2563eb"
@@ -228,7 +237,7 @@ const WarmClientList = () => {
       <AnimatedStatCard
         icon={<CalendarDays className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
         gradientTo="to-purple-50" iconBg="bg-purple-100"
-        rawValue={thisMonthLeads}
+        rawValue={followUpsDueThisMonth}
         displayValue={(c) => Math.round(c).toString().padStart(2, '0')}
         label="DUE THIS MONTH"
         subLabel="Follow-ups" subColor="#9333ea"
@@ -294,6 +303,7 @@ const WarmClientList = () => {
         const isSelected = selectedIds.includes(row._id);
         const source = row.dataSource || "Website";
         const status = row.companyStatus || "Due Today";
+        const followUpAt = row.reminder || row.followUpDate;
         const style = getStatusStyle(status);
         const statusBg = style.split(' ')[0];
         const statusText = style.split(' ')[1];
@@ -310,7 +320,7 @@ const WarmClientList = () => {
               </td>
               <td className="px-2 py-2">
                 <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                  <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                  <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
                 </div>
               </td>
               <td className="px-2 py-2">
@@ -319,10 +329,18 @@ const WarmClientList = () => {
                 </span>
               </td>
               <td className="px-2 py-1.5">
-                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                  <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 70}</span>
-                </div>
+                {(() => {
+                  const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                  const filledStars = Math.round(score / 20);
+                  return (
+                    <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                      {[...Array(5)].map((_, i) =>
+                        i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                      )}
+                      <span className="ml-1 font-semibold text-slate-700">{score}</span>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-2 py-2 text-center">
                 <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
@@ -332,11 +350,11 @@ const WarmClientList = () => {
               </td>
               <td className="px-2 py-1.5">
                 <span className="text-[10px] font-medium whitespace-nowrap">
-                  {row.updatedAt ? (
+                  {followUpAt ? (
                     <>
-                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                      <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(followUpAt))}</span>
                       <span className="text-slate-400">, </span>
-                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                      <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(followUpAt))}</span>
                     </>
                   ) : "-"}
                 </span>

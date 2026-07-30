@@ -4,6 +4,7 @@ import Globallytable from "../../components/Globallytable";
 import UploaderTextarea from "../../components/UploaderTextarea";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import { useEventContext } from "../../context/EventContext";
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -20,7 +21,7 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const RawDataList = () => {
@@ -31,9 +32,12 @@ const RawDataList = () => {
   const isLoading = companiesState?.loading ?? false;
   const error = companiesState?.error ?? null;
 
+  // Currently selected event (global, from Navbar) — scopes the fetch below.
+  const { currentEventId } = useEventContext();
+
   useEffect(() => {
-    dispatch(fetchCompanies());
-  }, [dispatch]);
+    dispatch(fetchCompanies({ eventId: currentEventId }));
+  }, [dispatch, currentEventId]);
 
   const columns = [
     {

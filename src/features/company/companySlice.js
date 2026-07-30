@@ -348,6 +348,70 @@ export const updateCompany = createAsyncThunk(
   },
 );
 
+// ==================== ASSIGN EVENTS (additive — never removes existing ones) ====================
+export const assignEventsToCompany = createAsyncThunk(
+  "company/assignEvents",
+  async ({ id, eventIds, forwardTo }, { dispatch, rejectWithValue }) => {
+    const { userId, userName } = getUserInfo();
+    try {
+      const res = await api.post(`/api/companies/${id}/assign-events`, { eventIds, forwardTo });
+      const updated = res.data.data || res.data;
+
+      if (userId) {
+        dispatch(
+          createActivityLogThunk({
+            user_id: userId,
+            message: `Company '${updated.companyName || id}' assigned to ${eventIds.length} event(s) by ${userName}`,
+            link: `/companies/${id}`,
+            section: "companies",
+            data: { action: "ASSIGN_EVENTS", company_id: id, event_ids: eventIds },
+          }),
+        );
+      }
+
+      return updated;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  },
+);
+
+// ==================== MATCHING IDS (for "select all across pages") ====================
+export const fetchMatchingCompanyIds = createAsyncThunk(
+  "company/fetchMatchingIds",
+  async (params = {}, { rejectWithValue }) => {
+    try {
+      const validParams = Object.fromEntries(
+        Object.entries({ ...params, idsOnly: "true" }).filter(
+          ([, v]) => v !== undefined && v !== null && v !== "",
+        ),
+      );
+      const queryString = new URLSearchParams(validParams).toString();
+      const res = await api.get(`/api/companies?${queryString}`);
+      return res.data.ids || [];
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  },
+);
+
+// ==================== BULK ASSIGN (events / forwardTo) ====================
+export const bulkAssignCompanies = createAsyncThunk(
+  "company/bulkAssign",
+  async ({ companyIds, eventIds, forwardTo }, { rejectWithValue }) => {
+    try {
+      const res = await api.post("/api/companies/bulk-assign", {
+        companyIds,
+        eventIds,
+        forwardTo,
+      });
+      return res.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  },
+);
+
 // ==================== DELETE ====================
 export const deleteCompany = createAsyncThunk(
   "company/delete",
@@ -484,6 +548,28 @@ const companySlice = createSlice({
         if (index !== -1) state.companies[index] = action.payload;
       })
       .addCase(updateCompany.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // ASSIGN EVENTS (additive)
+      .addCase(assignEventsToCompany.fulfilled, (state, action) => {
+        const index = state.companies.findIndex((c) => c._id === action.payload._id);
+        if (index !== -1) state.companies[index] = action.payload;
+      })
+      .addCase(assignEventsToCompany.rejected, (state, action) => {
+        state.error = action.payload;
+      })
+
+      // BULK ASSIGN
+      .addCase(bulkAssignCompanies.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(bulkAssignCompanies.fulfilled, (state) => {
+        state.loading = false;
+      })
+      .addCase(bulkAssignCompanies.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

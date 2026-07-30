@@ -14,6 +14,7 @@ import { fetchCompanies } from "../features/company/companySlice";
 import { useSelector, useDispatch } from "react-redux";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import { menuItems } from "../data/menuItems";
+import { useEventContext } from "../context/EventContext";
 
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
@@ -23,9 +24,6 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   }
   return [];
 };
-
-// Central config for each notification type — keeps the modal markup clean
-// and makes it trivial to add a new alert type later.
 const NOTIF_CONFIG = {
   chat: {
     title: "New Message Received!",
@@ -133,6 +131,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   };
 
   const { page: pageName, section: sectionName } = getPageNameFromMenu(location.pathname);
+  const { events, currentEventId, setCurrentEventId } = useEventContext();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
@@ -336,7 +335,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   return (
     <div className={`fixed top-0 right-0 z-[100] h-[42px] bg-gradient-to-r from-[#051c47] via-[#082b6b] to-[#051c47] border-b border-blue-900/50 shadow-[0_4px_20px_rgba(0,0,0,0.15)] flex items-center justify-between px-6 print:hidden transition-all duration-300 left-0 ${sidebarOpen ? 'lg:left-[240px]' : 'lg:left-[70px]'}`}>
 
-      {/* Left */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -344,11 +342,16 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
-          IHWE 2026 <span className="text-yellow-200 font-medium tracking-normal capitalize ml-1">
-            | {sectionName ? `${sectionName} > ` : ''}{pageName}
+        <div className="flex items-center gap-3">
+          <span className="text-white text-[15px] font-bold uppercase tracking-tight opacity-95">
+            User Dashboard -
           </span>
-        </h2>
+          <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
+            <span className="text-yellow-200 font-medium tracking-normal capitalize">
+              {sectionName ? `${sectionName} > ` : ''}{pageName}
+            </span>
+          </h2>
+        </div>
       </div>
 
       {/* Right */}

@@ -27,7 +27,7 @@ const APPLICABLE_OPTIONS = [
   "Exhibitor Registration",
   "Buyer Lead",
   "Sponsor Lead",
-  "General Lead",
+  "Visitor Lead",
 ];
 
 const DEFAULT_PARENT_CATEGORIES = [
@@ -48,6 +48,9 @@ const BUSINESS_NATURE_OPTIONS = [
   "Manufacturer",
   "Service Provider",
 ];
+
+const normalizeApplicableOption = (option) =>
+  option === "General Lead" ? "Visitor Lead" : option;
 
 const initialForm = {
   name: "",
@@ -112,9 +115,11 @@ const AddNewExhibitorCategory = () => {
             existingCategory.nature_of_business ||
             existingCategory.nature ||
             "",
-          displayOrder: existingCategory.display_order || 1,
+          displayOrder: existingCategory.display_order ?? 1,
           status: String(existingCategory.cat_status || "Active").toLowerCase() === "active" ? "Active" : "Inactive",
-          applicableFor: Array.isArray(existingCategory.applicable_for) ? existingCategory.applicable_for : ["Exhibitor Lead", "Exhibitor Registration"],
+          applicableFor: Array.isArray(existingCategory.applicable_for)
+            ? existingCategory.applicable_for.map(normalizeApplicableOption)
+            : ["Exhibitor Lead", "Exhibitor Registration"],
           iconFile: null,
           iconPreview: existingCategory.icon_data_url || "",
         });
@@ -354,9 +359,9 @@ const AddNewExhibitorCategory = () => {
     if (
       form.displayOrder === "" ||
       Number.isNaN(Number(form.displayOrder)) ||
-      Number(form.displayOrder) < 1
+      Number(form.displayOrder) < 0
     ) {
-      return "Display order must be a number greater than 0.";
+      return "Display order must be 0 or greater.";
     }
 
     if (form.applicableFor.length === 0) {
@@ -423,7 +428,7 @@ const AddNewExhibitorCategory = () => {
         parent_category: form.parentCategory || null,
         business_nature: form.businessNature || "",
         display_order: Number(form.displayOrder),
-        applicable_for: form.applicableFor,
+        applicable_for: form.applicableFor.map(normalizeApplicableOption),
         icon_name: form.iconFile?.name || "",
         icon_data_url: form.iconPreview || "",
       };
@@ -627,13 +632,13 @@ const AddNewExhibitorCategory = () => {
                     event.target.value.replace(/[^\d]/g, "")
                   )
                 }
-                min="1"
+                min="0"
                 type="number"
                 inputMode="numeric"
                 placeholder="Enter display order"
                 className={inputClass}
               />
-              <HelperText>Lower number will be shown first</HelperText>
+              <HelperText>Lower number will be shown first. Use 0 for top priority.</HelperText>
             </Field>
 
             <div className="lg:col-span-2">

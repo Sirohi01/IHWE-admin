@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     ChevronRight, FileText, CheckCircle2, AlertTriangle, Clock, Calendar,
     Download, Eye, Filter, Search, Plus, CalendarDays, RefreshCw, BarChart2, Building2,
@@ -113,6 +113,8 @@ const formatDate = (val) => {
 
 const DebitNotesView = () => {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const scopedEventId = searchParams.get('eventId') || '';
     const { id = 'all' } = useParams();
     const isAllList = id === 'all';
 
@@ -128,7 +130,7 @@ const DebitNotesView = () => {
     const [typeFilter, setTypeFilter] = useState('');
     const [createdByFilter, setCreatedByFilter] = useState('');
     const [events, setEvents] = useState([]);
-    const [filterEvent, setFilterEvent] = useState('all');
+    const [filterEvent, setFilterEvent] = useState(scopedEventId || 'all');
 
     const [dateRangeOpen, setDateRangeOpen] = useState(false);
     const [filtersOpen, setFiltersOpen] = useState(false);
@@ -146,7 +148,12 @@ const DebitNotesView = () => {
         const fetchData = async () => {
             try {
                 const [notesRes, paymentsRes, eventsRes] = await Promise.all([
-                    api.get('/api/account-debit-notes', { params: isAllList ? {} : { companyId: id } }),
+                    api.get('/api/account-debit-notes', {
+                        params: {
+                            ...(isAllList ? {} : { companyId: id }),
+                            ...(scopedEventId ? { eventId: scopedEventId } : {}),
+                        }
+                    }),
                     api.get('/api/payments').catch(() => ({ data: [] })),
                     api.get('/api/events').catch(() => ({ data: { data: [] } }))
                 ]);
@@ -154,7 +161,7 @@ const DebitNotesView = () => {
                 const eventsData = eventsRes.data?.data || eventsRes.data || [];
                 eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
                 setEvents(eventsData);
-                if (eventsData.length > 0) {
+                if (!scopedEventId && eventsData.length > 0) {
                     setFilterEvent(eventsData[0]._id);
                 }
 
@@ -167,7 +174,7 @@ const DebitNotesView = () => {
             }
         };
         fetchData();
-    }, [id, isAllList]);
+    }, [id, isAllList, scopedEventId]);
 
     const handleOpenCreate = async () => {
         if (!isAllList) {

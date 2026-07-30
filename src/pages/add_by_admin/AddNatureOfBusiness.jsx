@@ -14,6 +14,11 @@ import {
 import Swal from 'sweetalert2';
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 
+const getDisplayOrder = (item) => {
+    const parsed = Number(item?.display_order);
+    return Number.isFinite(parsed) ? parsed : 9999;
+};
+
 const AddNatureOfBusiness = () => {
     const dispatch = useDispatch();
     const { natures, loading: isLoading } = useSelector((state) => state.natures);
@@ -55,7 +60,11 @@ const AddNatureOfBusiness = () => {
                 return s.toLowerCase() === statusFilter.toLowerCase();
             });
         }
-        list.sort((a, b) => (a.nature_name || "").localeCompare(b.nature_name || ""));
+        list.sort((a, b) => {
+            const orderDifference = getDisplayOrder(a) - getDisplayOrder(b);
+            if (orderDifference !== 0) return orderDifference;
+            return (a.nature_name || "").localeCompare(b.nature_name || "");
+        });
         return list;
     }, [natures, searchTerm, statusFilter]);
 
@@ -116,7 +125,7 @@ const AddNatureOfBusiness = () => {
                 name: n.nature_name,
                 shortCode: n.short_code || '',
                 description: n.description || '',
-                displayOrder: n.display_order || '',
+                displayOrder: n.display_order ?? '',
                 status: n.nature_status ? n.nature_status.charAt(0).toUpperCase() + n.nature_status.slice(1) : "Active",
                 applicableFor: n.applicable_for || [],
                 allowedOperations: n.allowed_operations || [],
@@ -134,6 +143,13 @@ const AddNatureOfBusiness = () => {
         }
         if (!formData.description.trim()) {
             return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Please enter a description', confirmButtonColor: '#1B42C1' });
+        }
+        if (
+            formData.displayOrder === '' ||
+            Number.isNaN(Number(formData.displayOrder)) ||
+            Number(formData.displayOrder) < 0
+        ) {
+            return Swal.fire({ icon: 'warning', title: 'Missing Field', text: 'Display order must be 0 or greater.', confirmButtonColor: '#1B42C1' });
         }
 
         const trimmedName = formData.name.trim();
@@ -154,7 +170,7 @@ const AddNatureOfBusiness = () => {
                 nature_name: trimmedName,
                 short_code: formData.shortCode.trim(),
                 description: formData.description.trim(),
-                display_order: formData.displayOrder,
+                display_order: Number(formData.displayOrder),
                 nature_status: formData.status.toLowerCase(),
                 applicable_for: formData.applicableFor,
                 allowed_operations: formData.allowedOperations,
@@ -293,6 +309,7 @@ const AddNatureOfBusiness = () => {
                                     <label className="block text-[13px] font-bold text-gray-800 mb-1.5">Display Order <span className="text-red-500">*</span></label>
                                     <input
                                         type="number"
+                                        min="0"
                                         name="displayOrder"
                                         value={formData.displayOrder}
                                         onChange={handleInputChange}

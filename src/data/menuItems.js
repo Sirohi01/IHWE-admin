@@ -59,54 +59,10 @@ export const menuItems = [
     label: "Sales CRM",
   },
   {
-    type: "dropdown",
-    label: "Organic Expo 2027",
-    icon: FileText,
-    children: [
-      { label: "Sales Tools", path: "/sales-tools" },
-      { label: "New Leads", path: "/ihweClientData2026/newLeadList" },
-      { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
-      { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
-      { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
-      { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
-      { label: "Converted Leads", path: "/ihweClientData2026/convertedList" },
-      { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
-      { label: "Referral Leads", path: "/organic-expo-2027/referral-leads" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "IHWE Expo 2026 ",
-    icon: FileText,
-    children: [
-      { label: "Sales Tools", path: "/sales-tools" },
-      { label: "New Leads", path: "/ihweClientData2026/newLeadList" },
-      { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
-      { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
-      { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
-      { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
-      { label: "Converted Leads", path: "/ihweClientData2026/convertedList" },
-      { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
-      { label: "Referral Leads", path: "/ihwe-expo-2026/referral-leads" },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Organic Expo 2026",
-    icon: FileText,
-    children: [
-      { label: "Sales Tools", path: "/sales-tools" },
-      { label: "New Leads", path: "/ihweClientData2026/newLeadList" },
-      { label: "Follow-Ups", path: "/ihweClientData2026/warmClientList" },
-      { label: "Hot Leads", path: "/ihweClientData2026/hotClientList" },
-      { label: "Proposal Sent", path: "/ihweClientData2026/proposalSentList" },
-      { label: "Lost Leads", path: "/ihweClientData2026/coldClientList" },
-      { label: "Converted Leads", path: "/ihweClientData2026/convertedList" },
-      { label: "All Leads", path: "/ihweClientData2026/allLeadsList" },
-      { label: "Referral Leads", path: "/organic-expo-2026/referral-leads" },
-    ],
-  },
-  {
+    // Every Event Configuration entry (Skill Technical, Medical Expo Data
+    // 2025, whatever gets created next — including IHWE Expo 2026 if it's
+    // added there) is injected here dynamically by Sidebar.jsx — see
+    // `dynamicEventItems`. Nothing hardcoded needed per event.
     type: "item",
     label: "Expo Master Data",
     icon: LibraryBig,
@@ -135,8 +91,6 @@ export const menuItems = [
     label: "Exhibitors",
     icon: Users,
     children: [
-      { label: "Exhibitor List", path: "/ihweClientData2026/confirmClientList" },
-      { label: "New Exhibitor Registration", path: "/book-a-stand" },
       { label: "Useful Documents", path: "/exhibitor-useful-documents" },
       { label: "Exhibitor Chat", path: "/exhibitor-chat" },
       { label: "Exhibitor Products", path: "/exhibitor-products-profile" },

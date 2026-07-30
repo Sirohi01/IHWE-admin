@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 
-const useDashboardStats = (filterStatus, customData = null) => {
+const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
   const [stats, setStats] = useState({
     totalLeads: 0,
     todaysLeads: 0,
     thisWeekLeads: 0,
     thisMonthLeads: 0,
+    followUpsDueThisWeek: 0,
+    followUpsDueThisMonth: 0,
     pendingFollowUpsCount: 0,
     followUps: [],
     sourceChartData: [],
@@ -43,6 +45,7 @@ const useDashboardStats = (filterStatus, customData = null) => {
       let thisWeekLeads = 0;
       let thisMonthLeads = 0;
       let pendingFollowUpsCount = 0;
+      let followUpsDueThisMonth = 0;
 
       const sourceStats = {};
       const statusStats = {};
@@ -112,9 +115,13 @@ const useDashboardStats = (filterStatus, customData = null) => {
       tomorrow.setDate(tomorrow.getDate() + 1);
       const startOfNextWeek = new Date(startOfWeek);
       startOfNextWeek.setDate(startOfNextWeek.getDate() + 7);
+      const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
 
       followUpsRaw.forEach(fu => {
           const rDate = fu.rawDate;
+          if (rDate >= startOfMonth && rDate < startOfNextMonth) {
+              followUpsDueThisMonth++;
+          }
           if (rDate < startOfToday) {
               overdue++;
               const diffTime = Math.abs(startOfToday - rDate);
@@ -214,6 +221,8 @@ const useDashboardStats = (filterStatus, customData = null) => {
             todaysLeads,
             thisWeekLeads,
             thisMonthLeads,
+            followUpsDueThisWeek: dueThisWeek,
+            followUpsDueThisMonth,
             pendingFollowUpsCount,
             followUps,
             overviewData,
@@ -234,8 +243,40 @@ const useDashboardStats = (filterStatus, customData = null) => {
         calculateStats(customData);
     } else {
         setStats(prev => ({ ...prev, isLoadingStats: true }));
-        api.get('/api/companies?dashboard=true')
-            .then(res => calculateStats(res.data))
+        // Scope the raw-doc fetch to the same status/event as the list it backs
+        // (e.g. New Leads only wants companyStatus "New Lead" for the current
+        // event) instead of pulling the top 3000 rows across every status/event —
+        // that mismatch was the main source of the New Leads page's slow load.
+        const params = new URLSearchParams({
+            dashboard: 'true',
+            ...(eventId && { eventId }),
+            ...(filterStatus && { status: Array.isArray(filterStatus) ? filterStatus.join(',') : filterStatus }),
+        });
+
+        // The raw-doc fetch above is capped at 3000 rows (fine for the
+        // secondary charts — source breakdown, top executives, follow-ups —
+        // which only ever show a top-N sample anyway). But the headline
+        // "Total Leads" + per-status card counts must be exact even once the
+        // collection grows past that cap, so always also pull the accurate
+        // aggregated totals (scoped to the same status filter, if any) and
+        // use those instead — this is what every list page's stat cards read.
+        const summaryParams = new URLSearchParams({
+            ...(eventId && { eventId }),
+            ...(filterStatus && { status: Array.isArray(filterStatus) ? filterStatus.join(',') : filterStatus }),
+        });
+        const statsSummaryPromise = api.get(`/api/companies/stats-summary?${summaryParams}`).catch(() => null);
+
+        Promise.all([api.get(`/api/companies?${params}`), statsSummaryPromise])
+            .then(([res, summaryRes]) => {
+                calculateStats(res.data);
+                if (summaryRes?.data?.success && isMounted) {
+                    setStats(prev => ({
+                        ...prev,
+                        totalLeads: summaryRes.data.total,
+                        statusStats: summaryRes.data.statusCounts,
+                    }));
+                }
+            })
             .catch(err => {
                 console.error("Error fetching dashboard stats:", err);
                 if (isMounted) setStats(prev => ({ ...prev, isLoadingStats: false }));
@@ -246,7 +287,7 @@ const useDashboardStats = (filterStatus, customData = null) => {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filterStatus), customData]);
+  }, [JSON.stringify(filterStatus), customData, eventId]);
 
   return stats;
 };

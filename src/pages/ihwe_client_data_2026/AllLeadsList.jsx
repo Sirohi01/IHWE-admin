@@ -3,16 +3,18 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { useEventContext } from "../../context/EventContext";
 import {
   Search, Download, Plus, Upload, RefreshCw, Calendar,
   Users, Package, DollarSign, Banknote, Clock, TrendingUp, Phone, CalendarDays,
   MessageCircle, Mail
 } from "lucide-react";
 import { FaStar, FaRegStar } from "react-icons/fa";
+import { getLeadScore } from "../../utils/leadScoring";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== "string") return str;
-  return str.replace(/\b\w/g, (c) => c.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 };
 
 const getConvIcon = (type) => {
@@ -104,6 +106,9 @@ const AllLeadsList = () => {
   const [filterSource, setFilterSource] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   const { user } = useSelector((s) => s.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, "") === "superadmin";
   const companiesState = useSelector((s) => s.companies);
@@ -113,10 +118,10 @@ const AllLeadsList = () => {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      dispatch(fetchCompanies({ page, limit, search: searchTerm, source: filterSource, startDate, endDate }));
+      dispatch(fetchCompanies({ page, limit, search: searchTerm, source: filterSource, startDate, endDate, eventId: currentEventId }));
     }, 400);
     return () => clearTimeout(t);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, currentEventId]);
 
   const filtered = filterStatus
     ? companies.filter((c) => (c.companyStatus || "").toLowerCase().includes(filterStatus.toLowerCase()))
@@ -212,7 +217,7 @@ const AllLeadsList = () => {
             <tr key={row._id || i} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white">
               <td className="px-2 py-2 text-center"><input type="checkbox" className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm" /></td>
               <td className="px-2 py-2">
-                <Link to={`/client-overview/${row._id}`}>
+                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>
                   <div className="font-bold text-[11px] hover:text-blue-600 hover:underline cursor-pointer" style={{ color: "#093C5D" }}>{toTitleCase(row.companyName)}</div>
                 </Link>
                 <div className="text-[9px] font-bold mt-0.5" style={{ color: "#5E0006" }}>
@@ -246,10 +251,18 @@ const AllLeadsList = () => {
               </td>
               {isSuperAdmin && <td className="px-2 py-2 font-bold text-blue-600 text-[10px]">{toTitleCase(row.forwardTo) || "Unassigned"}</td>}
               <td className="px-2 py-2">
-                <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
-                  <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                  <span className="ml-1 font-bold text-slate-700">{row.leadScore || 65}</span>
-                </div>
+                {(() => {
+                  const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                  const filledStars = Math.round(score / 20);
+                  return (
+                    <div className="flex items-center gap-0.5 text-emerald-500 text-[9px]">
+                      {[...Array(5)].map((_, i) =>
+                        i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                      )}
+                      <span className="ml-1 font-bold text-slate-700">{score}</span>
+                    </div>
+                  );
+                })()}
               </td>
               <td className="px-2 py-1.5">
                 <div className="flex items-start gap-1.5">

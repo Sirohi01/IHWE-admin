@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import api from "../../lib/api";
 import pragatiMaidan from "../../assets/pragatiMaidan.jpeg";
 import sideImage from "../../assets/sideImage.jpeg";
@@ -11,6 +11,7 @@ import {
   FaClipboardList, FaEye, FaPaperPlane, FaSearch, FaThLarge, FaList, FaFolderOpen
 } from "react-icons/fa";
 import EmailModal from "./communication/EmailModal";
+import { useEventContext } from "../../context/EventContext";
 
 const categoriesDef = [
   { name: "Brochure", sub: "Official expo brochure", icon: FaBookOpen, color: "text-blue-500", bg: "bg-blue-50" },
@@ -111,6 +112,12 @@ const MarketingMaterialPage = () => {
   const adminInfo = adminStr ? JSON.parse(adminStr) : {};
   const userName = adminInfo.fullName || adminInfo.username || "Admin";
   const userId = adminInfo._id || null;
+  const { currentEventId } = useEventContext();
+  const [searchParams] = useSearchParams();
+  // Prefer the CrmEvent the client was actually opened under (carried via
+  // query param from ClientOverview1) over the globally-selected Navbar
+  // event, which may point at a different event than this specific client.
+  const effectiveEventId = searchParams.get("crmEventId") || currentEventId;
 
   useEffect(() => {
     fetchCompanyDetails();
@@ -272,6 +279,7 @@ const MarketingMaterialPage = () => {
         clientEmail: company.companyEmail || company.email,
         clientMobile: company.companyMobile || company.mobile,
         clientName: company.companyName,
+        eventId: effectiveEventId,
       });
 
       if (res.data.success) {
@@ -857,6 +865,7 @@ const MarketingMaterialPage = () => {
                   clientEmail: company.companyEmail || company.email,
                   clientMobile: company.companyMobile || company.mobile,
                   clientName: company.companyName,
+                  eventId: effectiveEventId,
                   logOnly: true
                 });
               }

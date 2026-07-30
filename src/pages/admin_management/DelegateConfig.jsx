@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
 import Swal from 'sweetalert2';
+import { useEventContext } from '../../context/EventContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -46,25 +47,28 @@ const DelegateConfig = () => {
 
   const limit = 10;
 
+  // Currently selected event (global, from Navbar) — scopes all fetches/creates below.
+  const { currentEventId } = useEventContext();
+
   useEffect(() => {
     fetchAllDropdownDays();
-  }, []);
+  }, [currentEventId]);
 
   useEffect(() => {
     fetchDays();
-  }, [daysPage, daysSearch]);
+  }, [daysPage, daysSearch, currentEventId]);
 
   useEffect(() => {
     fetchSessions();
-  }, [sessionsPage, sessionsSearch]);
+  }, [sessionsPage, sessionsSearch, currentEventId]);
 
   useEffect(() => {
     fetchPasses();
-  }, [passesPage, passesSearch]);
+  }, [passesPage, passesSearch, currentEventId]);
 
   const fetchAllDropdownDays = async () => {
     try {
-      const res = await axios.get(`${API_URL}/delegate-config/admin`);
+      const res = await axios.get(`${API_URL}/delegate-config/admin${currentEventId ? `?eventId=${currentEventId}` : ''}`);
       setAllDaysForDropdown(res.data.data);
     } catch (error) { }
   };
@@ -72,7 +76,7 @@ const DelegateConfig = () => {
   const fetchDays = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/delegate-config/admin/days/paginated?page=${daysPage}&limit=${limit}&search=${daysSearch}`);
+      const res = await axios.get(`${API_URL}/delegate-config/admin/days/paginated?page=${daysPage}&limit=${limit}&search=${daysSearch}${currentEventId ? `&eventId=${currentEventId}` : ''}`);
       setDays(res.data.data);
       setDaysTotal(res.data.totalPages);
     } catch (error) {
@@ -85,7 +89,7 @@ const DelegateConfig = () => {
   const fetchSessions = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/delegate-config/admin/sessions/paginated?page=${sessionsPage}&limit=${limit}&search=${sessionsSearch}`);
+      const res = await axios.get(`${API_URL}/delegate-config/admin/sessions/paginated?page=${sessionsPage}&limit=${limit}&search=${sessionsSearch}${currentEventId ? `&eventId=${currentEventId}` : ''}`);
       setSessions(res.data.data);
       setSessionsTotal(res.data.totalPages);
     } catch (error) {
@@ -98,7 +102,7 @@ const DelegateConfig = () => {
   const fetchPasses = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/delegate-config/admin/passes/paginated?page=${passesPage}&limit=${limit}&search=${passesSearch}`);
+      const res = await axios.get(`${API_URL}/delegate-config/admin/passes/paginated?page=${passesPage}&limit=${limit}&search=${passesSearch}${currentEventId ? `&eventId=${currentEventId}` : ''}`);
       setPasses(res.data.data);
       setPassesTotal(res.data.totalPages);
     } catch (error) {
@@ -135,7 +139,7 @@ const DelegateConfig = () => {
         await axios.put(`${API_URL}/delegate-config/days/${editDayId}`, { ...newDay, updatedBy: adminName });
         Swal.fire('Updated!', 'Day updated successfully.', 'success');
       } else {
-        await axios.post(`${API_URL}/delegate-config/days`, { ...newDay, addedBy: adminName });
+        await axios.post(`${API_URL}/delegate-config/days`, { ...newDay, addedBy: adminName, eventId: currentEventId });
         Swal.fire('Added!', 'Day added successfully.', 'success');
       }
       closeDayModal();
@@ -156,7 +160,7 @@ const DelegateConfig = () => {
         await axios.put(`${API_URL}/delegate-config/sessions/${editSessionId}`, { ...newSession, updatedBy: adminName });
         Swal.fire('Updated!', 'Session updated successfully.', 'success');
       } else {
-        await axios.post(`${API_URL}/delegate-config/sessions`, { ...newSession, addedBy: adminName });
+        await axios.post(`${API_URL}/delegate-config/sessions`, { ...newSession, addedBy: adminName, eventId: currentEventId });
         Swal.fire('Added!', 'Session added successfully.', 'success');
       }
       closeSessionModal();
@@ -176,7 +180,8 @@ const DelegateConfig = () => {
       const payload = {
         ...newPass,
         perks: typeof newPass.perks === 'string' ? newPass.perks.split(',').map(p => p.trim()).filter(Boolean) : newPass.perks,
-        [editPassId ? 'updatedBy' : 'addedBy']: adminName
+        [editPassId ? 'updatedBy' : 'addedBy']: adminName,
+        ...(editPassId ? {} : { eventId: currentEventId }),
       };
       if (editPassId) {
         await axios.put(`${API_URL}/delegate-config/passes/${editPassId}`, payload);

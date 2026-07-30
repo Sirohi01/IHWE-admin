@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { motion } from "framer-motion";
 import {
@@ -10,10 +11,11 @@ import {
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2, Filter, ChevronDown
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
+import { getLeadScore } from "../../utils/leadScoring";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -65,6 +67,9 @@ const HotClientList = () => {
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
@@ -82,17 +87,18 @@ const HotClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Est./PI Sent', // Default hot lead status
+        status: filterStatus || 'Hot Lead',
         source: filterSource,
         industry: filterIndustry,
+        eventId: currentEventId,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
 
   // Hook for accurate stats
-  const { totalLeads: hookTotal, statusStats } = useDashboardStats();
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId);
 
   const totalLeads = pagination?.total || allCompanies.length;
 
@@ -174,19 +180,21 @@ const HotClientList = () => {
     { name: "Ready to Convert", value: readyCount, pct: pct(readyCount), color: "#10b981" }
   ];
 
+  const scoreOf = (c) => c.leadScore ?? getLeadScore(c.companyStatus);
+
   const scoreDist = [
-    { label: "90 - 100", count: allCompanies.filter(c => (c.leadScore || 85) >= 90).length, color: "bg-rose-500" },
-    { label: "80 - 89", count: allCompanies.filter(c => (c.leadScore || 85) >= 80 && (c.leadScore || 85) < 90).length, color: "bg-orange-500" },
-    { label: "70 - 79", count: allCompanies.filter(c => (c.leadScore || 85) >= 70 && (c.leadScore || 85) < 80).length, color: "bg-yellow-500" },
-    { label: "Below 70", count: allCompanies.filter(c => (c.leadScore || 85) < 70).length, color: "bg-emerald-500" },
+    { label: "90 - 100", count: allCompanies.filter(c => scoreOf(c) >= 90).length, color: "bg-rose-500" },
+    { label: "80 - 89", count: allCompanies.filter(c => scoreOf(c) >= 80 && scoreOf(c) < 90).length, color: "bg-orange-500" },
+    { label: "70 - 79", count: allCompanies.filter(c => scoreOf(c) >= 70 && scoreOf(c) < 80).length, color: "bg-yellow-500" },
+    { label: "Below 70", count: allCompanies.filter(c => scoreOf(c) < 70).length, color: "bg-emerald-500" },
   ].map(s => ({ ...s, pct: Math.round((s.count / Math.max(allCompanies.length, 1)) * 100) + '%' }));
 
   const topHotLeads = [...allCompanies]
-    .sort((a, b) => (b.leadScore || 85) - (a.leadScore || 85))
+    .sort((a, b) => scoreOf(b) - scoreOf(a))
     .slice(0, 3)
     .map(c => ({
       name: c.companyName || "Unknown",
-      score: c.leadScore || 85,
+      score: scoreOf(c),
       icon: <FaWhatsapp size={10} className="text-emerald-500" />
     }));
 
@@ -342,7 +350,7 @@ const HotClientList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
               </div>
             </td>
             <td className="px-2 py-2">
@@ -358,13 +366,18 @@ const HotClientList = () => {
               </span>
             </td>
             <td className="px-2 py-1.5">
-              <div className="flex items-center gap-0.5 text-rose-500 text-[9px]">
-                {Array.from({ length: 5 }).map((_, starIdx) => {
-                  const starsToFill = Math.round((row.leadScore || 85) / 20);
-                  return starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} className="text-slate-300" />;
-                })}
-                <span className="ml-1 font-semibold text-slate-700">{row.leadScore || 85}/100</span>
-              </div>
+              {(() => {
+                const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                const starsToFill = Math.round(score / 20);
+                return (
+                  <div className="flex items-center gap-0.5 text-rose-500 text-[9px]">
+                    {Array.from({ length: 5 }).map((_, starIdx) => (
+                      starIdx < starsToFill ? <FaStar key={starIdx} /> : <FaRegStar key={starIdx} className="text-slate-300" />
+                    ))}
+                    <span className="ml-1 font-semibold text-slate-700">{score}/100</span>
+                  </div>
+                );
+              })()}
             </td>
             <td className="px-2 py-1.5">
               <div className="flex items-start gap-1.5">
@@ -395,7 +408,7 @@ const HotClientList = () => {
                 </button>
               ) : (
                 <button
-                  onClick={() => navigate(`/book-a-stand/${row._id}`)}
+                  onClick={() => navigate(`/book-a-stand/${row._id}?crmEventId=${currentEventId}`)}
                   className="text-[9px] font-bold bg-[#124170] hover:bg-[#0A2643] text-white px-1.5 py-0.5 rounded shadow-sm transition-all" style={{ fontFamily: 'Inter, sans-serif' }}
                 >
                   Book Stand

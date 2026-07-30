@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
 import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
+import { useEventContext } from '../../context/EventContext';
 
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import {
@@ -22,7 +23,7 @@ import {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -78,6 +79,9 @@ const ConvertedList = () => {
   const [filterStage, setFilterStage] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
+  // Currently selected event (global, from Navbar) — scopes the registrations fetch below.
+  const { currentEventId } = useEventContext();
+
   // Auth State
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
@@ -96,8 +100,13 @@ const ConvertedList = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
+      const regParams = new URLSearchParams({
+        ...(currentEventId && { eventId: currentEventId }),
+        ...(user?.username && { username: user.username }),
+        ...(user?.role && { role: user.role }),
+      });
       const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
-        api.get('/api/exhibitor-registration'),
+        api.get(`/api/companies/converted?${regParams}`),
         api.get('/api/companies?dashboard=true').catch(() => ({ data: [] })),
         api.get('/api/crm-exhibator-reviews').catch(() => ({ data: [] })),
         api.get('/api/events/active').catch(() => ({ data: [] })),
@@ -135,7 +144,7 @@ const ConvertedList = () => {
   };
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentEventId]);
 
   // Frontend filtering and pagination
   const filteredRegs = registrations.filter(r => {
@@ -461,7 +470,7 @@ const ConvertedList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
-                <Link to={`/client-overview/${row._id}?source=exhibitor`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                <Link to={`/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
@@ -548,22 +557,28 @@ const ConvertedList = () => {
               <span className="font-bold text-[10px]" style={{ color: '#064232' }}>{row.participation?.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || row.financeBreakdown?.netPayable || row.participation?.total || 0).toLocaleString()}</span>
             </td>
             <td className="px-2 py-2 text-center">
-              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
-                row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
-                row.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                row.status === 'advance-paid' ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' :
-                row.status === 'rejected' || row.status === 'payment-failed' ? 'bg-red-50 text-red-600 border border-red-200' :
-                'bg-amber-50 text-amber-600 border border-amber-200'
-              }`}>
-                {row.status === 'paid' ? 'Paid (Full)' :
-                 row.status === 'confirmed' ? 'Confirmed' :
-                 row.status === 'approved' ? 'Approved' :
-                 row.status === 'advance-paid' ? 'Installment' :
-                 row.status === 'rejected' ? 'Rejected' :
-                 row.status === 'payment-failed' ? 'Failed' :
-                 'Pending'}
-              </span>
+              {(() => {
+                // Every row here already has a real Payment record (that's the
+                // definition of "Converted" now — see getConvertedCompanies),
+                // so this can never be "Pending". row.status is always the
+                // literal string "Converted" (not an ExhibitorRegistration
+                // status), so the actual pipeline status — Payment Pending vs
+                // Completed — comes from row.eventLifecycle instead.
+                const lifecycleStatus = (row.eventLifecycle?.status || '').toLowerCase();
+                const isCompleted = lifecycleStatus.includes('completed');
+                const isPartial = lifecycleStatus.includes('payment pending');
+                const badgeClass = isCompleted
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : isPartial
+                    ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
+                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
+                const badgeLabel = isCompleted ? 'Paid (Full)' : isPartial ? 'Partial Payment' : 'Paid';
+                return (
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${badgeClass}`}>
+                    {badgeLabel}
+                  </span>
+                );
+              })()}
             </td>
             <td className="px-2 py-2 text-center">
               <div className="flex flex-col items-center justify-center gap-0.5">

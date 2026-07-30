@@ -12,6 +12,7 @@ import { createActivityLogThunk } from "../../features/activityLog/activityLogSl
 import { fetchCountries } from "../../features/add_by_admin/country/countrySlice";
 import { fetchStates } from "../../features/state/stateSlice";
 import { fetchCities } from "../../features/city/citySlice";
+import api from "../../lib/api";
 
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const pages = [];
@@ -40,8 +41,9 @@ const AddEvent = () => {
   const [formData, setFormData] = useState({
     event_name: "", status: "Active", event_fullName: "", event_fromDate: "",
     event_toDate: "", event_address: "", event_country: "", event_state: "",
-    event_city: "", event_pincode: "", added_by: addedBy,
+    event_city: "", event_pincode: "", registrationEventId: "", added_by: addedBy,
   });
+  const [registrationEvents, setRegistrationEvents] = useState([]);
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [sortBy, setSortBy] = useState({ key: "event_name", dir: "asc" });
@@ -55,6 +57,9 @@ const AddEvent = () => {
 
   useEffect(() => {
     dispatch(fetchEvents()); dispatch(fetchCountries()); dispatch(fetchStates()); dispatch(fetchCities());
+    api.get("/api/events").then((response) => {
+      if (response.data?.success) setRegistrationEvents(response.data.data || []);
+    }).catch((error) => console.error("Failed to load registration events", error));
   }, [dispatch]);
 
   const filteredStates = useMemo(() => {
@@ -96,7 +101,7 @@ const AddEvent = () => {
   };
 
   const resetForm = () => {
-    setFormData({ event_name: "", status: "Active", event_fullName: "", event_fromDate: "", event_toDate: "", event_address: "", event_country: "", event_state: "", event_city: "", event_pincode: "", added_by: addedBy });
+    setFormData({ event_name: "", status: "Active", event_fullName: "", event_fromDate: "", event_toDate: "", event_address: "", event_country: "", event_state: "", event_city: "", event_pincode: "", registrationEventId: "", added_by: addedBy });
     setEditingStatus(null);
   };
 
@@ -124,6 +129,7 @@ const AddEvent = () => {
       event_toDate: formData.event_toDate, event_address: formData.event_address.trim(),
       event_country: formData.event_country, event_state: formData.event_state,
       event_city: formData.event_city, event_pincode: formData.event_pincode,
+      registrationEventId: formData.registrationEventId || null,
       added_by: formData.added_by || sessionStorage.getItem("user_name") || "System",
     };
     try {
@@ -178,6 +184,7 @@ const AddEvent = () => {
         event_toDate: formatDateForInput(s.event_toDate), event_address: s.event_address || "",
         event_country: s.event_country || "", event_state: s.event_state || "",
         event_city: s.event_city || "", event_pincode: s.event_pincode || "",
+        registrationEventId: s.registrationEventId?._id || s.registrationEventId || "",
       });
       setEditingStatus(s); window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -328,7 +335,7 @@ const AddEvent = () => {
               </div>
 
               {/* Row 3 */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-5 items-end">
                 <div>
                   <label className={labelCls}>Pincode</label>
                   <input type="text" name="event_pincode" value={formData.event_pincode} onChange={handleChange} maxLength={6} className={inputCls} placeholder="6 digit pincode" />
@@ -342,6 +349,15 @@ const AddEvent = () => {
                       </label>
                     ))}
                   </div>
+                </div>
+                <div>
+                  <label className={labelCls}>Registration & Stall Event</label>
+                  <select name="registrationEventId" value={formData.registrationEventId} onChange={handleChange} className={selectCls}>
+                    <option value="">Not Linked</option>
+                    {registrationEvents.map((event) => (
+                      <option key={event._id} value={event._id}>{event.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

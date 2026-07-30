@@ -4,14 +4,21 @@ import ClientOverview from "../../components/ClientOverview";
 import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchCompanies, deleteCompany } from "../../features/company/companySlice";
 import Swal from "sweetalert2";
+import { fetchCompanies, fetchMatchingCompanyIds, deleteCompany } from "../../features/company/companySlice";
+import { fetchEvents } from "../../features/crmEvent/crmEventSlice";
+import { fetchAdmins } from "../../features/auth/userSlice";
+import { fetchStates } from "../../features/state/stateSlice";
+import { fetchCitiesByState } from "../../features/city/citySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import {
   FaSearch, FaPlus, FaUpload, FaWhatsapp, FaDownload,
-  FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar, FaTrash
+  FaFilter, FaRedo, FaChevronLeft, FaChevronRight, FaRegStar, FaStar, FaUserTag, FaTrash
 } from "react-icons/fa";
 import { MdOutlineDateRange } from "react-icons/md";
+import AssignModal from "./AssignModal";
+import SearchableDropdown from "../../components/SearchableDropdown";
+import { getLeadScore } from "../../utils/leadScoring";
 
 // Helper to safely extract an array from any Redux slice
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
@@ -29,7 +36,7 @@ const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== "string") return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const MasterClientsList = () => {
@@ -41,6 +48,24 @@ const MasterClientsList = () => {
   const pagination = companiesState?.pagination;
   const isLoading = companiesState?.loading ?? false;
   const error = companiesState?.error ?? null;
+
+  const crmEvents = useSelector((state) => state.crmEvents?.events) || [];
+  const adminUsers = useSelector((state) => state.users?.users) || [];
+  const crmStates = useSelector((state) => state.states?.states);
+  const crmCities = useSelector((state) => state.cities?.citiesByState);
+
+  const [assignModal, setAssignModal] = useState(null); // { mode: 'single'|'bulk', companyIds, initialEventIds, initialForwardTo } | null
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [selectingAll, setSelectingAll] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchEvents());
+    dispatch(fetchAdmins());
+    dispatch(fetchStates());
+    // Cities are ~47k rows (~9MB) — only fetch the ones for whichever state
+    // gets selected in the filter (see the effect declared after `filters`
+    // below), never the full list.
+  }, [dispatch]);
 
   // --- STATS CALCULATION ---
   const { totalLeads: hookTotal, statusStats } = useDashboardStats();
@@ -84,13 +109,25 @@ const MasterClientsList = () => {
     status: "",
     industry: "",
     handledBy: "",
-    cityState: "",
+    state: "",
+    city: "",
     startDate: "",
     endDate: "",
   });
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [selectedRows, setSelectedRows] = useState([]);
+
+  // Load cities only for the selected State filter — keeps the page fast
+  // instead of shipping all ~47k cities on every Master Data load.
+  useEffect(() => {
+    if (!filters.state) return;
+    const selectedState = (crmStates || []).find(
+      (s) => s.name?.trim().toLowerCase() === filters.state.trim().toLowerCase()
+    );
+    if (selectedState) dispatch(fetchCitiesByState(selectedState.stateCode));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, filters.state]);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
@@ -100,12 +137,14 @@ const MasterClientsList = () => {
         search: globalSearch,
         status: filters.status,
         source: filters.source,
-        industry: filters.industry
+        industry: filters.industry,
+        state: filters.state,
+        city: filters.city,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, currentPage, pageSize, globalSearch, filters.status, filters.source, filters.industry]);
+  }, [dispatch, currentPage, pageSize, globalSearch, filters.status, filters.source, filters.industry, filters.state, filters.city, refreshKey]);
 
   // --- FILTERING LOGIC ---
   // Now handled by the backend, so we just use the array directly
@@ -116,11 +155,17 @@ const MasterClientsList = () => {
   const paginatedRows = filteredRows;
 
   // --- ACTIONS ---
+  // Whether every row on the CURRENT page is selected (selectedRows can hold
+  // more than that — e.g. after "select all N leads" across pages — so this
+  // is a subset check, not a length comparison).
+  const allPageSelected = paginatedRows.length > 0 && paginatedRows.every((r) => selectedRows.includes(r._id));
+
   const toggleSelectAll = () => {
-    if (selectedRows.length === paginatedRows.length && paginatedRows.length > 0) {
-      setSelectedRows([]);
+    if (allPageSelected) {
+      const pageIds = new Set(paginatedRows.map((r) => r._id));
+      setSelectedRows((prev) => prev.filter((id) => !pageIds.has(id)));
     } else {
-      setSelectedRows(paginatedRows.map((r) => r._id));
+      setSelectedRows((prev) => Array.from(new Set([...prev, ...paginatedRows.map((r) => r._id)])));
     }
   };
 
@@ -130,6 +175,27 @@ const MasterClientsList = () => {
     );
   };
 
+  // Fetches every company id matching the current filters (not just this
+  // page) so bulk-assign can act on all of them, not only the visible 10/20/50.
+  const handleSelectAllMatching = async () => {
+    setSelectingAll(true);
+    try {
+      const ids = await dispatch(
+        fetchMatchingCompanyIds({
+          search: globalSearch,
+          status: filters.status,
+          source: filters.source,
+          industry: filters.industry,
+        })
+      ).unwrap();
+      setSelectedRows(ids);
+    } catch {
+      Swal.fire({ title: "Error", text: "Failed to select all matching leads.", icon: "error", confirmButtonColor: "#23471d" });
+    } finally {
+      setSelectingAll(false);
+    }
+  };
+
   const resetFilters = () => {
     setGlobalSearch("");
     setFilters({
@@ -137,7 +203,8 @@ const MasterClientsList = () => {
       status: "",
       industry: "",
       handledBy: "",
-      cityState: "",
+      state: "",
+      city: "",
       startDate: "",
       endDate: "",
     });
@@ -145,16 +212,19 @@ const MasterClientsList = () => {
   };
 
   const exportTableToExcel = () => {
-    const dataToExport = filteredRows.map((c, i) => ({
-      "#": i + 1,
-      "Company Name": c.companyName || "-",
-      "Source": c.dataSource || "-",
-      "Status": c.companyStatus || "-",
-      "Industry": c.businessNature || "-",
-      "City / State": `${c.city || "-"}, ${c.state || "-"}`,
-      "Handled By": c.forwardTo || "-",
-      "Lead Score": c.leadScore || 0,
-    }));
+    const dataToExport = filteredRows.map((c, i) => {
+      const resolved = resolveStateCityDisplay(c.state, c.city);
+      return {
+        "#": i + 1,
+        "Company Name": c.companyName || "-",
+        "Source": c.dataSource || "-",
+        "Status": c.companyStatus || "-",
+        "Industry": c.businessNature || "-",
+        "City / State": `${resolved.city}, ${resolved.state}`,
+        "Handled By": c.forwardTo || "-",
+        "Lead Score": c.leadScore ?? getLeadScore(c.companyStatus),
+      };
+    });
     const worksheet = XLSX.utils.json_to_sheet(dataToExport);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
@@ -165,6 +235,24 @@ const MasterClientsList = () => {
   const uniqueSources = [...new Set(companiesArray.map(c => c.dataSource).filter(Boolean))];
   const uniqueStatuses = [...new Set(companiesArray.map(c => c.companyStatus).filter(Boolean))];
   const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
+
+  // City filter options — fetched pre-scoped to the selected State (see the
+  // fetchCitiesByState effect above), so this is already the right list.
+  const filteredCitiesForFilter = crmCities || [];
+
+  // Resolve a company's free-text state against the CrmState reference list
+  // for display, so typos/casing differences on old records (e.g. "uttar
+  // pradesh" vs "Uttar Pradesh") still show the canonical name. City isn't
+  // matched here since the full city list (~47k rows) is never loaded at
+  // once — the state/city migration already fixed the underlying data, so
+  // raw company.city is shown as-is.
+  const resolveStateCityDisplay = (rawState, rawCity) => {
+    const matchedState = (crmStates || []).find((s) => s.name?.trim().toLowerCase() === (rawState || "").trim().toLowerCase());
+    return {
+      state: matchedState?.name || rawState || "-",
+      city: rawCity || "-",
+    };
+  };
 
   const handleDelete = (id) => {
     Swal.fire({
@@ -297,13 +385,24 @@ const MasterClientsList = () => {
               <option value="Rahul Verma">Rahul Verma</option>
             </select>
 
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="City / State"
-                value={filters.cityState}
-                onChange={(e) => { setFilters({ ...filters, cityState: e.target.value }); setCurrentPage(1); }}
-                className="w-32 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            <div className="w-40">
+              <SearchableDropdown
+                name="state"
+                value={filters.state}
+                onChange={(e) => { setFilters({ ...filters, state: e.target.value, city: "" }); setCurrentPage(1); }}
+                placeholder="State"
+                options={(crmStates || []).map((s) => ({ label: s.name, value: s.name }))}
+              />
+            </div>
+
+            <div className="w-40">
+              <SearchableDropdown
+                name="city"
+                value={filters.city}
+                onChange={(e) => { setFilters({ ...filters, city: e.target.value }); setCurrentPage(1); }}
+                placeholder="City"
+                options={filteredCitiesForFilter.map((c) => ({ label: c.name, value: c.name }))}
+                disabled={!filters.state}
               />
             </div>
 
@@ -339,6 +438,38 @@ const MasterClientsList = () => {
           </div>
         </div>
 
+        {/* BULK ASSIGN TOOLBAR */}
+        {selectedRows.length > 0 && (
+          <div className="flex items-center justify-between gap-2 mb-2 bg-[#eef5ec] border border-[#23471d]/20 rounded-lg px-3 py-2 flex-wrap">
+            <span className="text-xs font-semibold text-[#23471d] flex items-center gap-2 flex-wrap">
+              {selectedRows.length} selected
+              {allPageSelected && selectedRows.length < totalCount && (
+                <button
+                  onClick={handleSelectAllMatching}
+                  disabled={selectingAll}
+                  className="underline underline-offset-2 font-medium text-[#23471d]/80 hover:text-[#23471d] disabled:opacity-50"
+                >
+                  {selectingAll ? "Selecting..." : `Select all ${totalCount} leads matching filters`}
+                </button>
+              )}
+              <button
+                onClick={() => setSelectedRows([])}
+                className="text-slate-500 hover:text-slate-700 font-medium"
+              >
+                Clear
+              </button>
+            </span>
+            <button
+              onClick={() =>
+                setAssignModal({ mode: "bulk", companyIds: selectedRows, initialEventIds: [], initialForwardTo: "" })
+              }
+              className="flex items-center gap-2 bg-[#23471d] hover:bg-[#1a3516] text-white px-4 py-1.5 rounded text-xs font-semibold transition-colors"
+            >
+              <FaUserTag size={11} /> Assign Events / Person
+            </button>
+          </div>
+        )}
+
         {/* DATA TABLE */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex-grow flex flex-col min-h-[400px] xl:min-h-0" ref={printref}>
           <div className="overflow-auto flex-grow relative custom-scrollbar">
@@ -348,13 +479,14 @@ const MasterClientsList = () => {
                   <th className="px-2 py-1.5 w-8 text-center">
                     <input
                       type="checkbox"
-                      checked={selectedRows.length === paginatedRows.length && paginatedRows.length > 0}
+                      checked={allPageSelected}
                       onChange={toggleSelectAll}
                       className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm"
                     />
                   </th>
                   {/* <th className="px-2 py-1.5 w-10 font-medium">#</th> */}
                   <th className="px-2 py-1.5 font-medium">Company Name</th>
+                  <th className="px-2 py-1.5 font-medium">Exhibitions</th>
                   <th className="px-2 py-1.5 font-medium">Source</th>
                   <th className="px-2 py-1.5 font-medium">Status</th>
                   <th className="px-2 py-1.5 font-medium">Industry</th>
@@ -362,21 +494,21 @@ const MasterClientsList = () => {
                   <th className="px-2 py-1.5 font-medium">Lead Score</th>
                   <th className="px-2 py-1.5 font-medium">Handled By / Last Conversation</th>
                   <th className="px-2 py-1.5 font-medium">Next Follow Up</th>
-                  <th className="px-2 py-1.5 font-medium text-center">Action</th>
+                  <th className="px-2 py-1.5 w-16 font-medium text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 text-sm">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="10" className="px-6 py-8 text-center text-slate-500">Loading leads...</td>
+                    <td colSpan="11" className="px-6 py-8 text-center text-slate-500">Loading leads...</td>
                   </tr>
                 ) : error ? (
                   <tr>
-                    <td colSpan="10" className="px-6 py-8 text-center text-red-500">Error loading data: {error}</td>
+                    <td colSpan="11" className="px-6 py-8 text-center text-red-500">Error loading data: {error}</td>
                   </tr>
                 ) : paginatedRows.length === 0 ? (
                   <tr>
-                    <td colSpan="10" className="px-6 py-8 text-center text-slate-500">No leads found matching criteria.</td>
+                    <td colSpan="11" className="px-6 py-8 text-center text-slate-500">No leads found matching criteria.</td>
                   </tr>
                 ) : (
                   paginatedRows.map((row, index) => {
@@ -419,6 +551,28 @@ const MasterClientsList = () => {
                           </span>
                         </td>
                         <td className="px-2 py-1.5">
+                          <div className="flex max-w-[260px] flex-wrap gap-1 whitespace-normal">
+                            {(row.eventAssignments || []).length > 0 ? (
+                              row.eventAssignments.map((assignment) => {
+                                const event = crmEvents.find(
+                                  (item) => String(item._id) === String(assignment.eventId?._id || assignment.eventId)
+                                );
+                                return (
+                                  <span
+                                    key={String(assignment.eventId?._id || assignment.eventId)}
+                                    className="rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[8px] font-semibold text-blue-700"
+                                    title={assignment.status || "New Lead"}
+                                  >
+                                    {event?.event_fullName || event?.event_name || "Unknown Expo"} · {assignment.status || "New Lead"}
+                                  </span>
+                                );
+                              })
+                            ) : (
+                              <span className="text-[9px] text-slate-400">Not assigned</span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-2 py-1.5">
                           <span className={`text-[9px] font-semibold inline-block ${sourceColor}`}>
                             @{toTitleCase(row.dataSource) || "Unknown"}
                           </span>
@@ -431,13 +585,24 @@ const MasterClientsList = () => {
                         </td>
                         <td className="px-2 py-1.5 text-[10px] text-slate-600">{toTitleCase(row.businessNature) || "-"}</td>
                         <td className="px-2 py-1.5 text-[10px] text-slate-600">
-                          {row.city ? `${toTitleCase(row.city)}, ${toTitleCase(row.state)}` : "-"}
+                          {(() => {
+                            const resolved = resolveStateCityDisplay(row.state, row.city);
+                            return row.city || row.state ? `${toTitleCase(resolved.city)}, ${toTitleCase(resolved.state)}` : "-";
+                          })()}
                         </td>
                         <td className="px-2 py-1.5">
-                          <div className="flex items-center gap-0.5 text-emerald-500 text-[10px]">
-                            <FaStar /><FaStar /><FaStar /><FaRegStar className="text-slate-300" /><FaRegStar className="text-slate-300" />
-                            <span className="ml-1 font-semibold text-slate-700 text-[10px]">{row.leadScore || Math.floor(Math.random() * 60 + 30)}</span>
-                          </div>
+                          {(() => {
+                            const score = row.leadScore ?? getLeadScore(row.companyStatus);
+                            const filledStars = Math.round(score / 20);
+                            return (
+                              <div className="flex items-center gap-0.5 text-emerald-500 text-[10px]">
+                                {[...Array(5)].map((_, i) =>
+                                  i < filledStars ? <FaStar key={i} /> : <FaRegStar key={i} className="text-slate-300" />
+                                )}
+                                <span className="ml-1 font-semibold text-slate-700 text-[10px]">{score}</span>
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="px-2 py-1.5">
                           <div className="flex items-center gap-2">
@@ -459,14 +624,30 @@ const MasterClientsList = () => {
                             <span className="text-[10px] text-slate-400">-</span>
                           )}
                         </td>
-                        <td className="px-2 py-1.5 text-center">
-                          <button
-                            onClick={() => handleDelete(row._id)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1 rounded transition-colors"
-                            title="Delete Lead"
-                          >
-                            <FaTrash size={12} />
-                          </button>
+                        <td className="px-2 py-1.5 w-16 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() =>
+                                setAssignModal({
+                                  mode: "single",
+                                  companyIds: [row._id],
+                                  initialEventIds: row.events || [],
+                                  initialForwardTo: row.forwardTo || "",
+                                })
+                              }
+                              className="inline-flex items-center justify-center w-6 h-6 bg-slate-100 hover:bg-[#eef5ec] hover:text-[#23471d] text-slate-600 rounded-full transition-colors"
+                              title="Assign events / person"
+                            >
+                              <FaUserTag size={11} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(row._id)}
+                              className="inline-flex items-center justify-center w-6 h-6 bg-red-50 hover:bg-red-100 text-red-600 rounded-full transition-colors"
+                              title="Delete lead"
+                            >
+                              <FaTrash size={10} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -537,6 +718,23 @@ const MasterClientsList = () => {
         </div>
       </div>
       {/* </div> */}
+
+      {assignModal && (
+        <AssignModal
+          mode={assignModal.mode}
+          companyIds={assignModal.companyIds}
+          initialEventIds={assignModal.initialEventIds}
+          initialForwardTo={assignModal.initialForwardTo}
+          events={crmEvents}
+          admins={adminUsers}
+          onClose={() => setAssignModal(null)}
+          onDone={() => {
+            setAssignModal(null);
+            setSelectedRows([]);
+            setRefreshKey((k) => k + 1);
+          }}
+        />
+      )}
     </div>
   );
 };

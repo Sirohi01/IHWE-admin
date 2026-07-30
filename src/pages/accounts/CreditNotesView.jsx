@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { FileText, Download, Search, Plus, Eye, Filter, CheckCircle2, AlertTriangle, RefreshCcw, Activity, Calendar, BarChart2, FilePlus, ChevronRight, ChevronDown, Building2, SquarePen } from 'lucide-react';
 import api from '../../lib/api';
 import { resolveLinkedIds } from '../../utils/resolveLinkedIds';
@@ -73,6 +73,8 @@ function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, botto
 }
 
 const CreditNotesView = () => {
+    const [searchParams] = useSearchParams();
+    const scopedEventId = searchParams.get('eventId') || '';
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
     const isAllList = id === 'all';
@@ -90,7 +92,7 @@ const CreditNotesView = () => {
     const [inlineDateRange, setInlineDateRange] = useState('');
     const [inlineSalesPerson, setInlineSalesPerson] = useState('');
     const [events, setEvents] = useState([]);
-    const [filterEvent, setFilterEvent] = useState('all');
+    const [filterEvent, setFilterEvent] = useState(scopedEventId || 'all');
 
     // Pagination
     const [currentPage, setCurrentPage] = useState(1);
@@ -109,18 +111,18 @@ const CreditNotesView = () => {
         const fetchData = async () => {
             try {
                 const [cnRes, dnRes, compRes, adminRes, invRes, eventsRes] = await Promise.all([
-                    api.get('/api/creditnotes').catch(() => ({ data: { data: [] } })),
-                    api.get('/api/debitnotes').catch(() => ({ data: { data: [] } })),
+                    api.get('/api/creditnotes', { params: scopedEventId ? { eventId: scopedEventId } : {} }).catch(() => ({ data: { data: [] } })),
+                    api.get('/api/debitnotes', { params: scopedEventId ? { eventId: scopedEventId } : {} }).catch(() => ({ data: { data: [] } })),
                     api.get('/api/companies'),
                     api.get('/api/admin/all').catch(() => ({ data: { data: [] } })),
-                    api.get('/api/invoices').catch(() => ({ data: [] })),
+                    api.get('/api/invoices', { params: scopedEventId ? { eventId: scopedEventId } : {} }).catch(() => ({ data: [] })),
                     api.get('/api/events').catch(() => ({ data: { data: [] } }))
                 ]);
 
                 const eventsData = eventsRes.data?.data || eventsRes.data || [];
                 eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
                 setEvents(eventsData);
-                if (eventsData.length > 0) {
+                if (!scopedEventId && eventsData.length > 0) {
                     setFilterEvent(eventsData[0]._id);
                 }
 
@@ -208,7 +210,7 @@ const CreditNotesView = () => {
             }
         };
         fetchData();
-    }, [id, isAllList]);
+    }, [id, isAllList, scopedEventId]);
 
     const handleOpenAddCreditNote = async () => {
         if (!isAllList) {

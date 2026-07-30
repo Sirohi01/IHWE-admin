@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronRight, ArrowLeft, FilePlus } from 'lucide-react';
 import api from '../../../lib/api';
 import EstimateTable from '../EstimateTable';
@@ -8,6 +8,8 @@ import AccountNavigation from '../../../components/AccountNavigation';
 const PerformaInvoiceList = () => {
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
+    const [searchParams] = useSearchParams();
+    const crmEventId = searchParams.get('crmEventId') || '';
     const isAllList = id === 'all';
     const [accountName, setAccountName] = useState('');
 
@@ -55,7 +57,7 @@ const PerformaInvoiceList = () => {
                 <div className="flex items-center gap-2">
                     {!isAllList && (
                         <button
-                            onClick={() => navigate(`/performa-invoice/${id}`)}
+                            onClick={() => navigate(`/performa-invoice/${id}${crmEventId ? `?crmEventId=${crmEventId}` : ''}`)}
                             className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-[13px] font-bold text-white transition-colors hover:bg-blue-700"
                         >
                             <FilePlus size={16} />

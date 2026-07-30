@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Mail, X, Paperclip, Send } from "lucide-react";
 import api from "../../../lib/api";
+import { useEventContext } from "../../../context/EventContext";
 
 const EmailModal = ({ company, onClose, onSend, initialSubject = "", initialContent = "", initialAttachments = [] }) => {
   const [form, setForm] = useState({ subject: initialSubject, content: initialContent });
   const [attachments, setAttachments] = useState([]);
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState(null);
+  const { currentEventId } = useEventContext();
 
   const email = company?.contacts?.[0]?.email || company?.companyEmail || company?.email;
   const adminStr = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
@@ -37,6 +39,7 @@ const EmailModal = ({ company, onClose, onSend, initialSubject = "", initialCont
       formData.append("senderId", userId || "");
       formData.append("senderName", userName);
       formData.append("cmpny_id", company?.clientId || company?._id || "");
+      if (currentEventId) formData.append("eventId", currentEventId);
       if (initialAttachments.length > 0) {
         formData.append("existingAttachments", JSON.stringify(initialAttachments));
       }

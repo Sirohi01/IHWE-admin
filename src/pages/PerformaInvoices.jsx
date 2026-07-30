@@ -544,8 +544,29 @@ export const PerformaInvoices = () => {
             return;
         }
 
+        // Which CrmEvent (Organic Expo 2026, IHW Expo 2026, ...) this Estimate
+        // belongs to — carried via query param from the client's Account tab.
+        // Only resolved/required on create: editing an existing Estimate is
+        // reached from a different, non-scoped navigation and must not have
+        // its crmEventId cleared just because this page didn't receive one.
+        let crmEventId = new URLSearchParams(location.search).get('crmEventId') || '';
+        if (!existingEstimateId && !crmEventId) {
+            const assignments = companyData?.eventAssignments || [];
+            if (assignments.length === 1) {
+                crmEventId = String(assignments[0].eventId || '');
+            } else if (assignments.length > 1) {
+                Swal.fire(
+                    'Event required',
+                    "This client belongs to more than one event. Open it from that specific event's list to create an Estimate.",
+                    'warning',
+                );
+                return;
+            }
+        }
+
         const payload = {
             companyId: actualCompanyId,
+            ...(crmEventId ? { crmEventId } : {}),
             est_type: form.estimateType,
             gst_no: form.gstin,
             supply_date: form.supplyDate,

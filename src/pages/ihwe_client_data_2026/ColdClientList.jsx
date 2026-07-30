@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
 import useDashboardStats from "../../hooks/useDashboardStats";
+import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { motion } from "framer-motion";
 import {
@@ -13,7 +14,7 @@ import { FaWhatsapp } from 'react-icons/fa';
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
-  return str.replace(/\b\w/g, (char) => char.toUpperCase());
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 // Hook: animate number from 0 to target when element enters viewport
@@ -51,7 +52,8 @@ function useCountUp(target, duration = 1200) {
   return { ref, count };
 }
 
-const FILTER_STATUS = ['Hold', 'Lost'];
+const FILTER_STATUS = ['On Hold', 'Hold', 'Lost', 'Not Interested'];
+const FILTER_STATUS_STRING = FILTER_STATUS.join(',');
 
 const ColdClientList = () => {
   const dispatch = useDispatch();
@@ -66,6 +68,9 @@ const ColdClientList = () => {
   const [filterReason, setFilterReason] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
+
+  // Currently selected event (global, from Navbar) — scopes the leads fetch below.
+  const { currentEventId } = useEventContext();
 
   // Auth State
   const { user } = useSelector(state => state.auth);
@@ -83,16 +88,17 @@ const ColdClientList = () => {
         page,
         limit,
         search: searchTerm,
-        status: filterStatus || 'Hold,Lost,Not Interested',
+        status: filterStatus || FILTER_STATUS_STRING,
         source: filterSource,
         industry: filterIndustry,
+        eventId: currentEventId,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
 
-  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS);
+  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS, null, currentEventId);
 
   const getStatusCount = (statusMatch) => {
     if (!statusStats) return 0;
@@ -320,7 +326,7 @@ const ColdClientList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                <Link to={`/client-overview/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
               </div>
             </td>
             <td className="px-2 py-2">
