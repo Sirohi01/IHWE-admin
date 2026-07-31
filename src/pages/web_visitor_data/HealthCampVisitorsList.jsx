@@ -1,16 +1,50 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { fetchHealthCampVisitors } from "../../features/visitor/freeHealthCampSlice";
 import ClientOverview from "../../components/ClientOverview";
 import BaseLeadPage from "../../layout/BaseLeadPage";
-import { Search, MoreVertical, RefreshCw } from "lucide-react";
+import { Search, MoreVertical, RefreshCw, Users, Clock, CalendarDays, CalendarCheck, CheckCircle } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
   return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+function useCountUp(target, duration = 1200) {
+  const [count, setCount] = useState(0);
+  const [started, setStarted] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && !started) setStarted(true); },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [started]);
+
+  useEffect(() => {
+    if (!started) return;
+    const numTarget = parseFloat(target) || 0;
+    if (numTarget === 0) { setCount(0); return; }
+    const startTime = performance.now();
+    const tick = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      setCount(ease * numTarget);
+      if (progress < 1) requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  }, [started, target, duration]);
+
+  return { ref, count };
+}
 
 const HealthCampVisitorsList = () => {
   const dispatch = useDispatch();
@@ -97,6 +131,85 @@ const HealthCampVisitorsList = () => {
   
   const totalPages = Math.ceil(filteredVisitors.length / limit) || 1;
   const paginatedVisitors = filteredVisitors.slice((page - 1) * limit, page * limit);
+
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const startOfWeek = new Date(startOfToday);
+  startOfWeek.setDate(today.getDate() - today.getDay());
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const totalStats = healthCampVisitors.length;
+  const todaysStats = healthCampVisitors.filter(v => new Date(v.createdAt) >= startOfToday).length;
+  const thisWeekStats = healthCampVisitors.filter(v => new Date(v.createdAt) >= startOfWeek).length;
+  const thisMonthStats = healthCampVisitors.filter(v => new Date(v.createdAt) >= startOfMonth).length;
+  const approvedStats = healthCampVisitors.filter(v => (v.status || "").toLowerCase().includes('approved')).length;
+
+  function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+    const { ref, count } = useCountUp(rawValue);
+    return (
+      <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className={`w-9 h-9 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+              {icon}
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+                {displayValue(count)}
+              </span>
+              <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+            </div>
+          </div>
+          <div style={{ fontSize: '9.5px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{subLabel}</div>
+        </div>
+      </div>
+    );
+  }
+
+  const statCards = (
+    <>
+      <AnimatedStatCard
+        icon={<Users className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
+        gradientTo="to-emerald-50" iconBg="bg-emerald-100"
+        rawValue={totalStats}
+        displayValue={(c) => Math.round(c)}
+        label="TOTAL VISITORS"
+        subLabel="All time" subColor="#059669"
+      />
+      <AnimatedStatCard
+        icon={<Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
+        gradientTo="to-blue-50" iconBg="bg-blue-100"
+        rawValue={todaysStats}
+        displayValue={(c) => Math.round(c)}
+        label="TODAY'S VISITORS"
+        subLabel="Registered today" subColor="#2563eb"
+      />
+      <AnimatedStatCard
+        icon={<CalendarDays className="w-5 h-5 text-purple-600" strokeWidth={2.5} />}
+        gradientTo="to-purple-50" iconBg="bg-purple-100"
+        rawValue={thisWeekStats}
+        displayValue={(c) => Math.round(c)}
+        label="THIS WEEK"
+        subLabel="Registered this week" subColor="#9333ea"
+      />
+      <AnimatedStatCard
+        icon={<CalendarCheck className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
+        gradientTo="to-orange-50" iconBg="bg-orange-100"
+        rawValue={thisMonthStats}
+        displayValue={(c) => Math.round(c)}
+        label="THIS MONTH"
+        subLabel="Registered this month" subColor="#ea580c"
+      />
+      <AnimatedStatCard
+        icon={<CheckCircle className="w-5 h-5 text-cyan-600" strokeWidth={2.5} />}
+        gradientTo="to-cyan-50" iconBg="bg-cyan-100"
+        rawValue={approvedStats}
+        displayValue={(c) => Math.round(c)}
+        label="APPROVED PASSES"
+        subLabel="Ready to enter" subColor="#0891b2"
+      />
+    </>
+  );
 
   // Define components for BaseLeadPage
   const headerActions = (
@@ -278,6 +391,7 @@ const HealthCampVisitorsList = () => {
           title="Health Camp Visitors"
           subtitle="Manage all health camp registrations and visitors"
           cardsInRow={5}
+          statCards={statCards}
           headerActions={headerActions}
           filterBar={filterBar}
           tableHeaders={tableHeadersComponent}
