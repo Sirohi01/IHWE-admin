@@ -561,6 +561,13 @@ export const PerformaInvoices = () => {
                     'warning',
                 );
                 return;
+            } else {
+                Swal.fire(
+                    'Exhibition required',
+                    'This client is not assigned to any exhibition yet. Assign it to an exhibition before creating a Proforma Invoice.',
+                    'warning',
+                );
+                return;
             }
         }
 
