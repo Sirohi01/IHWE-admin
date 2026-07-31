@@ -1,22 +1,32 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { fetchHealthCampVisitors } from "../../features/visitor/freeHealthCampSlice";
 import ClientOverview from "../../components/ClientOverview";
-import VisitorGloballytable from "./VisitorGloballytable";
+import BaseLeadPage from "../../layout/BaseLeadPage";
+import { Search, MoreVertical, RefreshCw } from "lucide-react";
+import { FaWhatsapp } from 'react-icons/fa';
+
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
 const HealthCampVisitorsList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [selectedClient, setSelectedClient] = useState(null);
-  const [open, setOpen] = useState("");
   const [modalQrCode, setModalQrCode] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
+  
+  // Local pagination state
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const { healthCampVisitors, loading } = useSelector(
     (state) => state.healthCampVisitors,
   );
-
-  const handle = (value) => setOpen(value);
 
   useEffect(() => {
     dispatch(fetchHealthCampVisitors());
@@ -31,108 +41,24 @@ const HealthCampVisitorsList = () => {
     const time = date.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false,
+      hour12: true,
     });
     return `${day} ${month} ${year} | ${time}`;
   };
-
-  const rows = healthCampVisitors.map((v) => ({
-    regId: { no: v.registrationId || "N/A" },
-    _id: v._id,
-    checkbox: true,
-    contact: {
-      person:
-        `${v.firstName || ""} ${v.lastName || ""} | ${v.mobile || ""}`.trim(),
-    },
-    mobile: v.mobile || "",
-    personal: {
-      email: v.email || "",
-      dob: v.dateOfBirth || "",
-      gender: v.gender || "",
-    },
-    location: {
-      city: `${v.city || ""} | ${v.state || ""}`.trim(),
-    },
-    appointment: {
-      date: `${v.preferredDate || ""} | ${v.preferredTimeSlot || ""}`.trim(),
-    },
-    status: {
-      status: v.status || "",
-    },
-    consent: {
-      medical: v.consentMedicalData || "",
-    },
-    meta: {
-      createdBy: v.created_by
-        ? `${v.created_by} | ${formatDateTime(v.createdAt)}`
-        : formatDateTime(v.createdAt),
-      updatedBy: v.updated_by
-        ? `${v.updated_by} | ${formatDateTime(v.updatedAt)}`
-        : formatDateTime(v.updatedAt),
-    },
-    qrCode: { image: v.qrCode || null },
-    _original: v,
-  }));
-
-  const columns = [
-    { label: "Registration ID", accessor: "regId.no" },
-    {
-      label: "Visitor Details",
-      accessor: "contact.person",
-      render: (value, row) => (
-        <Link
-          to={`/webVisitorData/healthCampVisitorDetails/${row._id}`}
-          className="text-blue-500 hover:underline"
-        >
-          {value}
-        </Link>
-      ),
-    },
-    { label: "Mobile", accessor: "mobile" },
-    { label: "Email", accessor: "personal.email" },
-    { label: "Appointment Details", accessor: "appointment.date" },
-    { label: "Status", accessor: "status.status" },
-    { label: "City & State", accessor: "location.city" },
-    {
-      label: "QR Code",
-      accessor: "qrCode.image",
-      render: (img) => img ? <img loading="lazy" decoding="async" src={img} alt="QR Code" className="w-12 h-12 cursor-pointer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalQrCode(img); }} /> : <span className="text-gray-400">N/A</span>
-    },
-    { label: "Created By", accessor: "meta.createdBy" },
-    { label: "Updated By", accessor: "meta.updatedBy" },
-    {
-      label: "Action",
-      accessor: "_id",
-      render: (id) => (
-        <Link
-          to={`/webVisitorData/healthCampVisitorDetails/${id}`}
-          className="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600 transition-colors"
-        >
-          View
-        </Link>
-      ),
-    },
-  ];
-
-  const handleClientClick = (clientData) => {
-    setSelectedClient(clientData._original || clientData);
-  };
-
 
   const handleBulkResend = async () => {
     if (selectedRows.length === 0) {
       alert("Please select at least one visitor to resend passes.");
       return;
     }
-    const selectedIds = selectedRows.map(idx => rows[idx]._id);
     const types = ["whatsapp"];
-    if (confirm(`Are you sure you want to resend WhatsApp passes to ${selectedIds.length} visitor(s)?`)) {
+    if (window.confirm(`Are you sure you want to resend WhatsApp passes to ${selectedRows.length} visitor(s)?`)) {
       try {
         const SERVER_URL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api$/, "");
         const res = await fetch(`${SERVER_URL}/api/health-camp-visitors/bulk-resend`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ visitorIds: selectedIds, types })
+          body: JSON.stringify({ visitorIds: selectedRows, types })
         });
         const data = await res.json();
         if (data.success) {
@@ -148,100 +74,222 @@ const HealthCampVisitorsList = () => {
     }
   };
 
-  const handleBackClick = () => setSelectedClient(null);
+  const toggleRowSelection = (id) => {
+    if (selectedRows.includes(id)) {
+      setSelectedRows(selectedRows.filter(rowId => rowId !== id));
+    } else {
+      setSelectedRows([...selectedRows, id]);
+    }
+  };
+
+  // Filter and paginate locally since API might return all
+  const filteredVisitors = healthCampVisitors.filter(v => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+    return (
+      (v.firstName && v.firstName.toLowerCase().includes(term)) ||
+      (v.lastName && v.lastName.toLowerCase().includes(term)) ||
+      (v.mobile && v.mobile.toLowerCase().includes(term)) ||
+      (v.email && v.email.toLowerCase().includes(term)) ||
+      (v.registrationId && v.registrationId.toLowerCase().includes(term))
+    );
+  });
+  
+  const totalPages = Math.ceil(filteredVisitors.length / limit) || 1;
+  const paginatedVisitors = filteredVisitors.slice((page - 1) * limit, page * limit);
+
+  // Define components for BaseLeadPage
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <button onClick={() => dispatch(fetchHealthCampVisitors())} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors" title="Refresh">
+        <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+      </button>
+      <button onClick={handleBulkResend} disabled={selectedRows.length === 0} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[10px] font-bold border border-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        <FaWhatsapp size={12} />
+        Resend Visitor Pass ({selectedRows.length})
+      </button>
+    </div>
+  );
+
+  const filterBar = (
+    <div className="flex flex-col sm:flex-row gap-3 items-center justify-between w-full">
+      <div className="relative w-full sm:w-64 shrink-0">
+        <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+          <Search size={12} className="text-slate-400" />
+        </div>
+        <input 
+          type="text" 
+          placeholder="Search visitors..." 
+          className="w-full pl-7 pr-3 py-1.5 bg-white border border-slate-200 rounded text-[11px] text-slate-800 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400 transition-all"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+
+  const tableHeadersComponent = (
+    <>
+      <th className="px-2 py-2 font-medium">Registration ID</th>
+      <th className="px-2 py-2 font-medium">Visitor Details</th>
+      <th className="px-2 py-2 font-medium">Contact</th>
+      <th className="px-2 py-2 font-medium text-center">Status</th>
+      <th className="px-2 py-2 font-medium">Appointment</th>
+      <th className="px-2 py-2 font-medium">City & State</th>
+      <th className="px-2 py-2 font-medium text-center">QR Code</th>
+      <th className="px-2 py-2 font-medium">Created / Updated</th>
+    </>
+  );
+
+  const tableBodyContent = (
+    <>
+      {loading ? (
+        [...Array(10)].map((_, index) => (
+          <tr key={`skeleton-${index}`} className="animate-pulse border-b border-slate-100 bg-white">
+            <td className="px-2 py-3 text-center"><div className="w-3 h-3 bg-slate-200 rounded-sm mx-auto"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-32 bg-slate-200 rounded mb-1"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded mb-1"></div></td>
+            <td className="px-2 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded"></div></td>
+            <td className="px-2 py-3 text-center"><div className="w-8 h-8 bg-slate-200 rounded mx-auto"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded"></div></td>
+          </tr>
+        ))
+      ) : paginatedVisitors.length === 0 ? (
+        <tr><td colSpan="10" className="text-center py-8 text-slate-500 text-[11px]">No health camp visitors found.</td></tr>
+      ) : (
+        paginatedVisitors.map((row, i) => {
+          const status = row.status || "Pending";
+          let statusBg = "bg-slate-50 text-slate-700";
+          if (status.toLowerCase().includes('approved')) statusBg = "bg-emerald-50 text-emerald-700";
+          if (status.toLowerCase().includes('rejected')) statusBg = "bg-red-50 text-red-700";
+
+          return (
+            <tr key={row._id || i} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white">
+              <td className="px-2 py-2 text-center">
+                <input type="checkbox" checked={selectedRows.includes(row._id)} onChange={() => toggleRowSelection(row._id)} className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm" />
+              </td>
+              <td className="px-2 py-2">
+                <div className="font-bold text-[10px] text-slate-600">{row.registrationId || "N/A"}</div>
+              </td>
+              <td className="px-2 py-2">
+                <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
+                  <Link to={`/webVisitorData/healthCampVisitorDetails/${row._id}`}>{toTitleCase(`${row.firstName || ""} ${row.lastName || ""}`)}</Link>
+                </div>
+              </td>
+              <td className="px-2 py-2">
+                <div className="text-[10px] text-slate-700 font-semibold">{row.mobile}</div>
+                <div className="text-[9px] text-slate-500">{row.email}</div>
+              </td>
+              <td className="px-2 py-2 text-center">
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} border-transparent`}>
+                  {toTitleCase(status)}
+                </span>
+              </td>
+              <td className="px-2 py-2">
+                <div className="text-[9px] font-bold text-slate-700">{row.preferredDate || "N/A"}</div>
+                <div className="text-[9px] text-slate-500">{row.preferredTimeSlot || ""}</div>
+              </td>
+              <td className="px-2 py-2">
+                <div className="text-[9px] font-semibold text-slate-700">{toTitleCase(row.city)}</div>
+                <div className="text-[9px] text-slate-500">{toTitleCase(row.state)}</div>
+              </td>
+              <td className="px-2 py-2 text-center">
+                {row.qrCode ? (
+                  <img loading="lazy" decoding="async" src={row.qrCode} alt="QR Code" className="w-8 h-8 object-contain mx-auto cursor-pointer border rounded" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModalQrCode(row.qrCode); }} />
+                ) : (
+                  <span className="text-[9px] text-slate-400">N/A</span>
+                )}
+              </td>
+              <td className="px-2 py-1.5">
+                <div className="text-[9px] text-slate-600 whitespace-nowrap">
+                  <span className="font-semibold">C:</span> {row.created_by ? `${row.created_by} | ` : ''}{formatDateTime(row.createdAt)}
+                </div>
+                {row.updatedAt && (
+                  <div className="text-[9px] text-slate-600 whitespace-nowrap mt-0.5">
+                    <span className="font-semibold">U:</span> {row.updated_by ? `${row.updated_by} | ` : ''}{formatDateTime(row.updatedAt)}
+                  </div>
+                )}
+              </td>
+            </tr>
+          );
+        })
+      )}
+    </>
+  );
+
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (page > 3) pages.push('...');
+      for (let i = Math.max(2, page - 1); i <= Math.min(totalPages - 1, page + 1); i++) pages.push(i);
+      if (page < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
+
+  const paginationBar = (
+    <>
+      <div className="flex items-center gap-1.5" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Showing</span>
+        <span className="text-[11px] font-black px-1.5 py-0.5 rounded-md bg-emerald-50 border border-emerald-100" style={{ color: '#016B61' }}>
+          {filteredVisitors.length === 0 ? 0 : (page - 1) * limit + 1}–{Math.min(page * limit, filteredVisitors.length)}
+        </span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>of</span>
+        <span className="text-[11px] font-black" style={{ color: '#15173D' }}>{filteredVisitors.length}</span>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>visitors</span>
+      </div>
+      <div className="flex items-center gap-1" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <button onClick={() => setPage(1)} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>«</button>
+        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>‹</button>
+        {getPageNumbers().map((p, i) =>
+          p === '...' ? (
+            <span key={`dot-${i}`} className="w-7 h-7 flex items-center justify-center text-[11px] text-slate-400 font-bold">…</span>
+          ) : (
+            <button key={p} onClick={() => setPage(p)} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black border transition-all duration-200" style={p === page ? { backgroundColor: '#016B61', color: '#fff', borderColor: '#016B61', boxShadow: '0 2px 8px rgba(1,107,97,0.3)' } : { backgroundColor: '#fff', color: '#15173D', borderColor: '#e2e8f0' }}>{p}</button>
+          )
+        )}
+        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page >= totalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>›</button>
+        <button onClick={() => setPage(totalPages)} disabled={page >= totalPages} className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold border transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-slate-100" style={{ borderColor: '#e2e8f0', color: '#334155' }}>»</button>
+      </div>
+      <div className="flex items-center gap-2" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <span className="text-[11px] font-bold" style={{ color: '#334155' }}>Rows:</span>
+        <select value={limit} onChange={(e) => { setLimit(Number(e.target.value)); setPage(1); }} className="border rounded-lg py-1 px-2 bg-white outline-none cursor-pointer text-[11px] font-bold" style={{ borderColor: '#e2e8f0', color: '#15173D', fontFamily: 'Inter, sans-serif' }}>
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={50}>50</option>
+        </select>
+      </div>
+    </>
+  );
 
   return (
-    <div className="w-full h-auto bg-[#eef1f5]">
+    <>
       {selectedClient ? (
-        <ClientOverview client={selectedClient} onBack={handleBackClick} />
+        <ClientOverview client={selectedClient} onBack={() => setSelectedClient(null)} />
       ) : (
-        <>
-          <div className="w-full bg-white">
-            <div className="w-full bg-white flex flex-col sm:flex-row justify-between items-center px-6 py-3 mb-3">
-              <h1 className="text-2xl text-gray-500 mb-2 lg:mb-0 uppercase">
-                Health Camp Visitor List
-              </h1>
-            </div>
-          </div>
-
-          <div className="bg-white mx-3 p-4 rounded shadow-sm">
-            <div className="flex justify-between items-center pr-4 pt-2">
-              <h1 className="text-xl font-normal text-gray-800 px-4 uppercase">
-                Health Camp Visitor List
-                {loading && (
-                  <span className="text-base font-normal text-gray-400 ml-2">
-                    Loading...
-                  </span>
-                )}
-              </h1>
-            </div>
-            <hr className="opacity-10 mb-4" />
-
-            {loading ? (
-              <div className="text-center py-8 text-base text-gray-400">
-                Loading health camp visitors...
-              </div>
-            ) : rows.length === 0 ? (
-              <div className="text-center py-8 text-base text-gray-400">
-                No health camp visitors found.
-              </div>
-            ) : (
-              <div className="text-base">
-                <div className="[&_td]:py-2 [&_td]:px-4 [&_th]:py-2 [&_th]:px-4 overflow-x-auto">
-                  <VisitorGloballytable
-                    rows={rows}
-                    colomns={columns}
-                    onRowClick={handleClientClick}
-                    selectedRows={selectedRows}
-                    setSelectedRows={setSelectedRows}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="flex justify-between items-center flex-wrap gap-4 mt-4">
-              <div className="flex gap-3">
-                <button onClick={handleBulkResend}
-                  type="button"
-                  className="px-5 py-2 text-base font-medium bg-[#3598dc] hover:bg-[#276b99] text-white rounded-md transition-colors"
-                >
-                  RESEND VISITOR PASS
-                </button>
-                <button
-                  type="button"
-                  className="px-5 py-2 text-base font-medium bg-[#3598dc] hover:bg-[#276b99] text-white rounded-md transition-colors"
-                >
-                  SENT
-                </button>
-
-              </div>
-
-              <div className="flex flex-wrap gap-3">
-                {[
-                  "Send Details",
-                  "Office Location",
-                  "Venue Location",
-                  "Visitor Pass",
-                ].map((option) => (
-                  <label
-                    key={option}
-                    className="flex items-center gap-2 px-3 h-10 bg-gray-100 border border-gray-400 text-base text-black cursor-pointer hover:bg-gray-200 rounded-md"
-                  >
-                    <input
-                      type="radio"
-                      name="options"
-                      value={option}
-                      checked={open === option}
-                      onChange={() => handle(option)}
-                      className="accent-[#3598dc] w-4 h-4"
-                    />
-                    {option}
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-        </>
+        <BaseLeadPage
+          title="Health Camp Visitors"
+          subtitle="Manage all health camp registrations and visitors"
+          cardsInRow={5}
+          headerActions={headerActions}
+          filterBar={filterBar}
+          tableHeaders={tableHeadersComponent}
+          tableBody={tableBodyContent}
+          pagination={paginationBar}
+          isAllSelected={paginatedVisitors.length > 0 && selectedRows.length === paginatedVisitors.length}
+          onSelectAll={(e) => setSelectedRows(e.target.checked ? paginatedVisitors.map(v => v._id) : [])}
+          onReset={() => {
+            setSearchTerm('');
+            setPage(1);
+          }}
+        />
       )}
 
       {/* QR Code Modal */}
@@ -254,7 +302,7 @@ const HealthCampVisitorsList = () => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
