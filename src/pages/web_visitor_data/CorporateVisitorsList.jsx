@@ -12,6 +12,7 @@ import VisitorGloballytable from "./VisitorGloballytable";
 const CorporateVisitorsList = () => {
   const dispatch = useDispatch();
   const [selectedClient, setSelectedClient] = useState(null);
+  const [selectedRows, setSelectedRows] = useState([]);
   const [open, setOpen] = useState("");
   const [modalQrCode, setModalQrCode] = useState(null);
 
@@ -115,6 +116,33 @@ const CorporateVisitorsList = () => {
     setSelectedClient(null);
   };
 
+
+  const handleBulkResend = async () => {
+    if (selectedRows.length === 0) {
+      showError('Please select at least one visitor to resend messages.');
+      return;
+    }
+    const visitorIds = selectedRows.map(index => rows[index]._id);
+
+    try {
+      const types = ['whatsapp'];
+      const res = await fetch(`${(import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/api$/, "")}/api/corporate-visitors/bulk-resend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visitorIds, types })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showSuccess(data.message);
+        setSelectedRows([]);
+      } else {
+        showError(data.message || 'Failed to resend messages');
+      }
+    } catch (err) {
+      showError('An error occurred while resending messages: ' + err.message);
+    }
+  };
+
   const handleRadioChange = (value) => {
     setOpen(value);
     console.log(`Selected option: ${value}`);
@@ -163,6 +191,8 @@ const CorporateVisitorsList = () => {
                     rows={rows}
                     colomns={columns}
                     onRowClick={handleClientClick}
+                    selectedRows={selectedRows}
+                    setSelectedRows={setSelectedRows}
                   />
                 </div>
               </div>
@@ -171,7 +201,7 @@ const CorporateVisitorsList = () => {
             <div className="flex justify-between items-center flex-wrap gap-4 mt-4">
               {/* Left — Action Buttons */}
               <div className="flex gap-3">
-                <button
+                <button onClick={handleBulkResend}
                   type="button"
                   className="px-5 py-2 text-base font-medium bg-[#3598dc] hover:bg-[#276b99] text-white rounded-md transition-colors"
                 >

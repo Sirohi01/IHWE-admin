@@ -85,6 +85,7 @@ const Settings = () => {
     const [showBrochurePopUp, setShowBrochurePopUp] = useState(true);
     const [brochurePopUpDelay, setBrochurePopUpDelay] = useState(7);
     const [showGovtPmsScheme, setShowGovtPmsScheme] = useState(true);
+    const [requireOtpForVisitorRegistration, setRequireOtpForVisitorRegistration] = useState(true);
 
     // Email addresses state
     const [emails, setEmails] = useState([
@@ -162,12 +163,14 @@ const Settings = () => {
                     contactPerson: sContactPerson, contactDesignation: sContactDesignation,
                     fullPaymentDiscount: sDisc, availableTdsRates: sTds, authorizedSignature, companyStamp,
                     showBrochurePopUp: sShowPopUp, brochurePopUpDelay: sPopUpDelay, showGovtPmsScheme: sShowPms,
+                    requireOtpForVisitorRegistration: sRequireOtp,
                     downloadBrochurePdf
                 } = res.data.data;
 
                 if (sShowPopUp !== undefined) setShowBrochurePopUp(sShowPopUp);
                 if (sPopUpDelay !== undefined) setBrochurePopUpDelay(sPopUpDelay);
                 if (sShowPms !== undefined) setShowGovtPmsScheme(sShowPms);
+                if (sRequireOtp !== undefined) setRequireOtpForVisitorRegistration(sRequireOtp);
 
                 if (logo) {
                     setLogoPreview(`${SERVER_URL}${logo}`);
@@ -327,15 +330,14 @@ const Settings = () => {
             formData.append('msmeLogoTitle', msmeLogoTitle);
             formData.append('isMsmeLogoActive', isMsmeLogoActive);
             
-            // Add selected website
             formData.append('website', selectedWebsite);
-
-            // Multiple MSME Logos
-            const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
-            formData.append('msmeLogos', JSON.stringify(msmeLogosData));
             formData.append('showBrochurePopUp', showBrochurePopUp);
             formData.append('brochurePopUpDelay', brochurePopUpDelay);
             formData.append('showGovtPmsScheme', showGovtPmsScheme);
+            formData.append('requireOtpForVisitorRegistration', requireOtpForVisitorRegistration);
+
+            const msmeLogosData = msmeLogos.map(({ id, preview, ...rest }) => rest);
+            formData.append('msmeLogos', JSON.stringify(msmeLogosData));
 
 
             const res = await api.put('/api/settings', formData, {
@@ -1253,6 +1255,23 @@ const Settings = () => {
                                         className="sr-only peer"
                                         checked={showGovtPmsScheme}
                                         onChange={(e) => setShowGovtPmsScheme(e.target.checked)}
+                                    />
+                                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
+                                </label>
+                            </div>
+                            
+                            {/* Visitor Registration OTP Settings */}
+                            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-100 mt-4">
+                                <div>
+                                    <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wider">Require OTP for Visitor Registration</h3>
+                                    <p className="text-[10px] text-gray-500 mt-0.5 uppercase">Toggle OTP verification for web visitors</p>
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        className="sr-only peer"
+                                        checked={requireOtpForVisitorRegistration}
+                                        onChange={(e) => setRequireOtpForVisitorRegistration(e.target.checked)}
                                     />
                                     <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#23471d]"></div>
                                 </label>

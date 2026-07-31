@@ -6,11 +6,11 @@ import * as XLSX from "xlsx";
 const getValue = (obj, path) =>
   path.split(".").reduce((acc, part) => acc && acc[part], obj) || "";
 
-const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick }) => {
+const VisitorGloballytable = ({ rows = [], colomns = [], onRowClick, selectedRows = [], setSelectedRows }) => {
   const navigate = useNavigate();
   const [filters, setFilters] = useState({});
   const [globalSearch, setGlobalSearch] = useState("");
-  const [selectedRows, setSelectedRows] = useState([]);
+  // const [selectedRows, setSelectedRows] = useState([]);
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [pageSize, setPageSize] = useState(10);
   const [currentPage, setCurrentPage] = useState(1);
