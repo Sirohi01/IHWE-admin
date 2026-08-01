@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchCompanies } from "../../features/company/companySlice";
+import { useSelector } from "react-redux";
+import api from "../../lib/api";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -54,7 +54,6 @@ function useCountUp(target, duration = 1200) {
 }
 
 const HotClientList = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   // State
@@ -74,33 +73,55 @@ const HotClientList = () => {
   const { user } = useSelector(state => state.auth);
   const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
 
-  // Redux data
-  const companiesState = useSelector((state) => state.companies);
-  const allCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
-  const isLoading = companiesState?.loading ?? false;
-
-  const pagination = companiesState?.pagination;
+  // Hot Lead = a PI/Estimate exists for this event and no payment has come
+  // in yet — independent of the pipeline status field (a lead can sit in
+  // "Follow-up" and still be Hot the moment a PI exists for it). See
+  // getHotLeadCompanies on the backend.
+  const [hotLeads, setHotLeads] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      dispatch(fetchCompanies({
-        page,
-        limit,
-        search: searchTerm,
-        status: filterStatus || 'Hot Lead',
-        source: filterSource,
-        industry: filterIndustry,
-        eventId: currentEventId,
-      }));
-    }, 400);
-
-    return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
+    if (!currentEventId) { setHotLeads([]); return; }
+    let cancelled = false;
+    setIsLoading(true);
+    const params = new URLSearchParams({
+      eventId: currentEventId,
+      ...(user?.username && { username: user.username }),
+      ...(user?.role && { role: user.role }),
+    });
+    api.get(`/api/companies/hot-leads?${params}`)
+      .then((res) => {
+        if (!cancelled && res.data?.success) setHotLeads(Array.isArray(res.data.data) ? res.data.data : []);
+      })
+      .catch(() => { if (!cancelled) setHotLeads([]); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [currentEventId, user?.username, user?.role]);
 
   // Hook for accurate stats
-  const { totalLeads: hookTotal, statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId);
+  const { statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId);
 
-  const totalLeads = pagination?.total || allCompanies.length;
+  // Frontend search/filter + pagination over the hot-lead set
+  const filteredLeads = hotLeads.filter((c) => {
+    if (filterSource && (c.dataSource || 'Website') !== filterSource) return false;
+    if (filterIndustry && (c.businessNature || '') !== filterIndustry) return false;
+    if (filterStatus && (c.companyStatus || '') !== filterStatus) return false;
+    if (filterLeadScore) {
+      const score = c.leadScore ?? getLeadScore(c.companyStatus);
+      if (filterLeadScore === '90' && score < 90) return false;
+      if (filterLeadScore === '80' && !(score >= 80 && score < 90)) return false;
+      if (filterLeadScore === '70' && !(score >= 70 && score < 80)) return false;
+    }
+    if (searchTerm) {
+      const s = `${c.companyName || ''} ${c.email || ''} ${c.contacts?.[0]?.mobile || ''}`.toLowerCase();
+      if (!s.includes(searchTerm.toLowerCase())) return false;
+    }
+    return true;
+  });
+
+  const totalLeads = filteredLeads.length;
+  const pagination = { total: totalLeads, totalPages: Math.max(1, Math.ceil(totalLeads / limit)) };
+  const allCompanies = filteredLeads.slice((page - 1) * limit, page * limit);
 
   const circumference = 2 * Math.PI * 32;
   const [mounted, setMounted] = useState(false);
@@ -134,9 +155,9 @@ const HotClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
-  const uniqueIndustries = [...new Set(allCompanies.map(r => r.businessNature).filter(Boolean))];
-  const uniqueStatuses = [...new Set(allCompanies.map(r => r.companyStatus).filter(Boolean))];
+  const uniqueSources = [...new Set(hotLeads.map(r => r.dataSource).filter(Boolean))];
+  const uniqueIndustries = [...new Set(hotLeads.map(r => r.businessNature).filter(Boolean))];
+  const uniqueStatuses = [...new Set(hotLeads.map(r => r.companyStatus).filter(Boolean))];
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -183,13 +204,13 @@ const HotClientList = () => {
   const scoreOf = (c) => c.leadScore ?? getLeadScore(c.companyStatus);
 
   const scoreDist = [
-    { label: "90 - 100", count: allCompanies.filter(c => scoreOf(c) >= 90).length, color: "bg-rose-500" },
-    { label: "80 - 89", count: allCompanies.filter(c => scoreOf(c) >= 80 && scoreOf(c) < 90).length, color: "bg-orange-500" },
-    { label: "70 - 79", count: allCompanies.filter(c => scoreOf(c) >= 70 && scoreOf(c) < 80).length, color: "bg-yellow-500" },
-    { label: "Below 70", count: allCompanies.filter(c => scoreOf(c) < 70).length, color: "bg-emerald-500" },
-  ].map(s => ({ ...s, pct: Math.round((s.count / Math.max(allCompanies.length, 1)) * 100) + '%' }));
+    { label: "90 - 100", count: filteredLeads.filter(c => scoreOf(c) >= 90).length, color: "bg-rose-500" },
+    { label: "80 - 89", count: filteredLeads.filter(c => scoreOf(c) >= 80 && scoreOf(c) < 90).length, color: "bg-orange-500" },
+    { label: "70 - 79", count: filteredLeads.filter(c => scoreOf(c) >= 70 && scoreOf(c) < 80).length, color: "bg-yellow-500" },
+    { label: "Below 70", count: filteredLeads.filter(c => scoreOf(c) < 70).length, color: "bg-emerald-500" },
+  ].map(s => ({ ...s, pct: Math.round((s.count / Math.max(filteredLeads.length, 1)) * 100) + '%' }));
 
-  const topHotLeads = [...allCompanies]
+  const topHotLeads = [...filteredLeads]
     .sort((a, b) => scoreOf(b) - scoreOf(a))
     .slice(0, 3)
     .map(c => ({
@@ -332,7 +353,7 @@ const HotClientList = () => {
         </tr>
       ) : allCompanies.map((row, i) => {
         const isSelected = selectedIds.includes(row._id);
-        const style = getStatusStyle(row.companyStatus || "Est./PI Sent");
+        const style = getStatusStyle(row.status || row.companyStatus || "Hot Lead");
         const statusBg = style.split(' ')[0];
         const statusText = style.split(' ')[1];
         const statusDot = style.split(' ')[3]?.replace('dot-', 'bg-') || "bg-slate-500";
@@ -362,7 +383,7 @@ const HotClientList = () => {
             <td className="px-2 py-2 text-center">
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusBg} ${statusText} border-transparent`}>
                 <span className={`w-1 h-1 rounded-full ${statusDot}`}></span>
-                {toTitleCase(row.companyStatus || "Est./PI Sent")}
+                {toTitleCase(row.status || row.companyStatus || "Hot Lead")}
               </span>
             </td>
             <td className="px-2 py-1.5">
