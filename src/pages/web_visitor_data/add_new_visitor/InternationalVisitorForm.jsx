@@ -9,7 +9,15 @@ import { fetchNatures } from "../../../features/add_by_admin/nature/natureSlice"
 import { showError, showSuccess } from "../../../utils/toastMessage";
 import Swal from "sweetalert2";
 import { createActivityLogThunk } from "../../../features/activityLog/activityLogSlice";
-import { User, Building2, Globe, MapPin, CheckSquare, Send, Briefcase, Plane } from "lucide-react";
+import { User, Building2, Globe, MapPin, CheckSquare, Send, Briefcase, Plane, Upload } from "lucide-react";
+
+const DOCUMENT_FIELDS = [
+  { key: "passport", label: "Passport Copy" },
+  { key: "visitingCard", label: "Visiting Card" },
+  { key: "companyProfile", label: "Company Profile" },
+  { key: "visaDocs", label: "Visa Documents" },
+  { key: "photoId", label: "Photo ID" },
+];
 
 // Must stay identical to PURPOSE_OPTIONS/INTEREST_OPTIONS in
 // frontend/src/pages/visitors/international_vistor/AddInternationalVistor.tsx
@@ -76,6 +84,7 @@ const InternationalVisitorForm = ({
     purposeOfVisit: [],
     areaOfInterest: [],
   });
+  const [files, setFiles] = useState({});
 
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.internationalVisitors);
@@ -164,6 +173,7 @@ const InternationalVisitorForm = ({
       purposeOfVisit: [],
       areaOfInterest: [],
     });
+    setFiles({});
   };
 
   const handleCheckboxList = (field, opt, checked) => {
@@ -195,7 +205,19 @@ const InternationalVisitorForm = ({
     e.preventDefault();
     if (!validate()) return;
     try {
-      await dispatch(createInternationalVisitor(corporateData)).unwrap();
+      const formData = new FormData();
+      Object.entries(corporateData).forEach(([key, value]) => {
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value ?? "");
+        }
+      });
+      Object.entries(files).forEach(([key, file]) => {
+        if (file) formData.append(key, file);
+      });
+
+      await dispatch(createInternationalVisitor(formData)).unwrap();
 
       // Log the activity
       const userId = sessionStorage.getItem("user_id");
@@ -613,6 +635,23 @@ const InternationalVisitorForm = ({
           </div>
         </section>
       </div>
+
+      {/* SECTION 3B: DOCUMENT UPLOAD */}
+      <section>
+        <h3 className={sectionHeaderClass}>
+          <Upload className="w-5 h-5 text-[#d26019]" /> Document Upload
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2">
+          {DOCUMENT_FIELDS.map(({ key, label }) => (
+            <label key={key} className="flex flex-col items-center justify-center gap-2 p-4 border-2 border-dashed border-slate-200 rounded-sm cursor-pointer hover:border-[#23471d]/40 hover:bg-green-50/30 transition-all group">
+              <Upload size={16} className="text-slate-300 group-hover:text-[#23471d] transition-colors" />
+              <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider text-center group-hover:text-[#23471d]">{label}</span>
+              {files[key] && <span className="text-[8px] text-green-600 font-bold truncate w-full text-center">{files[key]?.name}</span>}
+              <input type="file" className="hidden" onChange={(e) => setFiles(prev => ({ ...prev, [key]: e.target.files?.[0] || null }))} />
+            </label>
+          ))}
+        </div>
+      </section>
 
       {/* SECTION 4: OPTIONS */}
       <section className="bg-[#f9f9f9] py-3 px-5 border-l-4 border-[#23471d] space-y-6">

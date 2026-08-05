@@ -773,7 +773,7 @@ const InternationalOverview = () => {
                         className="rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full"
                       >
                         <option value="">Select User</option>
-                        {Array.isArray(users) && users.filter(u => u.status === "Active").map(u => (
+                        {Array.isArray(users) && users.map(u => (
                           <option key={u._id} value={u.username}>{u.username}</option>
                         ))}
                       </select>

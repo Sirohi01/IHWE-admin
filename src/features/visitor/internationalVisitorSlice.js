@@ -43,10 +43,14 @@ export const createInternationalVisitor = createAsyncThunk(
   async (data, { dispatch, rejectWithValue }) => {
     const { userId, userName } = getUserInfo();
     try {
-      const res = await api.post("/api/international-visitors", {
-        ...data,
-        created_by: userName,
-      });
+      const isFormData = data instanceof FormData;
+      if (isFormData) data.append("created_by", userName);
+
+      const res = await api.post(
+        "/api/international-visitors",
+        isFormData ? data : { ...data, created_by: userName },
+        isFormData ? { headers: { "Content-Type": "multipart/form-data" } } : undefined,
+      );
 
       const visitorData = res.data.data || res.data;
 
