@@ -19,7 +19,9 @@ import {
   Clock,
   Navigation,
   Save,
-  Pencil
+  Pencil,
+  Upload,
+  X
 } from "lucide-react";
 import Swal from "sweetalert2";
 import {
@@ -35,6 +37,29 @@ import {
 } from "../../../features/visitor/visitorReviewSlice";
 import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
 import { fetchUsers, fetchAdmins } from "../../../features/auth/userSlice";
+
+// Must stay identical to the option lists used on the website's international
+// registration form and the admin "Add International Visitor" form.
+const PURPOSE_OPTIONS = [
+  "Business Networking", "Product Sourcing", "Distributor Search",
+  "Franchise Opportunity", "Investment Opportunity", "Medical Tourism",
+  "Healthcare Collaboration", "Wellness Industry Exploration",
+  "Ayurveda & AYUSH Interest", "Conference Participation",
+  "Knowledge Sessions", "Startup Collaboration", "Government Delegation", "General Visit",
+];
+
+const INTEREST_OPTIONS = PURPOSE_OPTIONS;
+
+const DOCUMENT_FIELDS = [
+  { key: "passport", urlField: "passportCopyUrl", label: "Passport Copy" },
+  { key: "visitingCard", urlField: "visitingCardUrl", label: "Visiting Card" },
+  { key: "companyProfile", urlField: "companyProfileUrl", label: "Company Profile" },
+  { key: "visaDocs", urlField: "visaDocsUrl", label: "Visa Docs" },
+  { key: "photoId", urlField: "photoIdUrl", label: "Photo ID" },
+];
+
+const EDIT_INPUT_CLS = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full";
+const EDIT_LABEL_CLS = "text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1 block";
 
 /* ─── Shared cell styles ───────────────────────────────────────────────────── */
 const LC_CLS = "bg-[#fafafa] p-3 text-[11px] font-bold text-slate-600 uppercase tracking-tighter md:border-r border-slate-200 flex items-center min-w-[120px] order-none";
@@ -91,6 +116,36 @@ function Section({ title, children }) {
   );
 }
 
+/* ─── Edit-mode field helpers ───────────────────────────────────────────────── */
+function EditField({ label, value, onChange, type = "text" }) {
+  return (
+    <div>
+      <label className={EDIT_LABEL_CLS}>{label}</label>
+      <input
+        type={type}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className={EDIT_INPUT_CLS}
+      />
+    </div>
+  );
+}
+
+function EditYesNo({ label, value, onChange }) {
+  return (
+    <div>
+      <label className={EDIT_LABEL_CLS}>{label}</label>
+      <div className="flex gap-4 mt-1.5">
+        {["yes", "no"].map((val) => (
+          <label key={val} className="flex items-center gap-2 cursor-pointer text-[12px] font-medium text-gray-700 capitalize">
+            <input type="radio" checked={value === val} onChange={() => onChange(val)} className="w-3.5 h-3.5 text-[#23471d]" /> {val}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 const InternationalOverview = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -116,6 +171,11 @@ const InternationalOverview = () => {
   const [forwardTo, setForwardTo] = useState("");
   const [popUp, setPopUp] = useState(false);
   const [Flip, setFlip] = useState(false);
+
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [editFiles, setEditFiles] = useState({});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (internationalVisitors.length === 0) {
@@ -230,6 +290,73 @@ const InternationalOverview = () => {
     }
   };
 
+  const startEdit = (currentVisitor) => {
+    setEditData({
+      ...currentVisitor,
+      purposeOfVisit: Array.isArray(currentVisitor.purposeOfVisit) ? currentVisitor.purposeOfVisit : [],
+      areaOfInterest: Array.isArray(currentVisitor.areaOfInterest) ? currentVisitor.areaOfInterest : [],
+    });
+    setEditFiles({});
+    setEditMode(true);
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditData(null);
+    setEditFiles({});
+  };
+
+  const setField = (field, value) => setEditData((prev) => ({ ...prev, [field]: value }));
+
+  const toggleListItem = (field, opt, checked) => {
+    setEditData((prev) => ({
+      ...prev,
+      [field]: checked ? [...prev[field], opt] : prev[field].filter((i) => i !== opt),
+    }));
+  };
+
+  const handleFileSelect = (key, file) => setEditFiles((prev) => ({ ...prev, [key]: file }));
+
+  const handleSaveEdit = async () => {
+    if (!editData) return;
+    setSaving(true);
+    try {
+      const formData = new FormData();
+      const skipKeys = new Set(["_id", "__v", "createdAt", "updatedAt", "qrCode", "created_by", "updated_by",
+        "passportCopyUrl", "visitingCardUrl", "companyProfileUrl", "visaDocsUrl", "photoIdUrl"]);
+      Object.entries(editData).forEach(([key, value]) => {
+        if (skipKeys.has(key)) return;
+        if (Array.isArray(value)) {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, value ?? "");
+        }
+      });
+      Object.entries(editFiles).forEach(([key, file]) => {
+        if (file) formData.append(key, file);
+      });
+
+      await dispatch(updateInternationalVisitor({ id, data: formData })).unwrap();
+
+      Swal.fire({
+        title: "Saved",
+        text: "Visitor details updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#23471d",
+      });
+      cancelEdit();
+    } catch (err) {
+      Swal.fire({
+        title: "Error",
+        text: err?.message || "Failed to update visitor. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center">
@@ -265,15 +392,31 @@ const InternationalOverview = () => {
           </p>
         </div>
         <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-          <button onClick={() => navigate("/ihweClientData2026/internationalVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-            <LayoutGrid size={12} /> List View
-          </button>
-          <button onClick={() => window.print()} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-            <Printer size={12} /> Print
-          </button>
-          <button onClick={() => navigate(-1)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-            <ArrowLeft size={12} /> Back
-          </button>
+          {editMode ? (
+            <>
+              <button onClick={handleSaveEdit} disabled={saving} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#23471d] hover:bg-[#1a3516] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap disabled:opacity-50">
+                <Save size={12} /> {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button onClick={cancelEdit} disabled={saving} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <X size={12} /> Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => startEdit(visitor)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#d26019] hover:bg-[#a84c14] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <Pencil size={12} /> Edit
+              </button>
+              <button onClick={() => navigate("/ihweClientData2026/internationalVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <LayoutGrid size={12} /> List View
+              </button>
+              <button onClick={() => window.print()} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <Printer size={12} /> Print
+              </button>
+              <button onClick={() => navigate(-1)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <ArrowLeft size={12} /> Back
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -298,7 +441,174 @@ const InternationalOverview = () => {
 
         {/* ── DETAILS AREA ── */}
         <div className="space-y-2">
+          {editMode && editData ? (
+            <>
+              <Section title="Visitor Information">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  <EditField label="First Name" value={editData.firstName} onChange={(v) => setField("firstName", v)} />
+                  <EditField label="Last Name" value={editData.lastName} onChange={(v) => setField("lastName", v)} />
+                  <EditField label="Registering For" value={editData.registrationFor} onChange={(v) => setField("registrationFor", v)} />
+                  <EditField label="Email Id" value={editData.email} onChange={(v) => setField("email", v)} type="email" />
+                  <EditField label="Contact No." value={editData.mobile} onChange={(v) => setField("mobile", v)} />
+                  <div>
+                    <label className={EDIT_LABEL_CLS}>Current Status</label>
+                    <select value={editData.status || ""} onChange={(e) => setField("status", e.target.value)} className={EDIT_INPUT_CLS}>
+                      <option value="">-- Select Status --</option>
+                      {Array.isArray(statusOptions) && statusOptions.filter(opt => opt.status === "active").map(opt => (
+                        <option key={opt._id} value={opt.name}>{opt.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </Section>
 
+              <Section title="Personal & Passport Details">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  <div>
+                    <label className={EDIT_LABEL_CLS}>Gender</label>
+                    <select value={editData.gender || ""} onChange={(e) => setField("gender", e.target.value)} className={EDIT_INPUT_CLS}>
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                  </div>
+                  <EditField label="Date of Birth" value={editData.dob} onChange={(v) => setField("dob", v)} type="date" />
+                  <EditField label="Nationality" value={editData.nationality} onChange={(v) => setField("nationality", v)} />
+                  <EditField label="Passport No." value={editData.passportNo} onChange={(v) => setField("passportNo", v)} />
+                  <EditField label="Occupation" value={editData.occupation} onChange={(v) => setField("occupation", v)} />
+                  <EditField label="Personal Email" value={editData.personalEmail} onChange={(v) => setField("personalEmail", v)} type="email" />
+                  <EditField label="WhatsApp No." value={editData.whatsappNo} onChange={(v) => setField("whatsappNo", v)} />
+                  <EditField label="India Contact No." value={editData.indiaContactNo} onChange={(v) => setField("indiaContactNo", v)} />
+                  <EditField label="Postal Code" value={editData.companyPincode} onChange={(v) => setField("companyPincode", v)} />
+                  <div className="lg:col-span-3">
+                    <EditField label="Residential Address" value={editData.address} onChange={(v) => setField("address", v)} />
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Company & Professional Bio">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  <EditField label="Company Name" value={editData.companyName} onChange={(v) => setField("companyName", v)} />
+                  <EditField label="Designation" value={editData.designation} onChange={(v) => setField("designation", v)} />
+                  <EditField label="Industry/Sector" value={editData.industrySector} onChange={(v) => setField("industrySector", v)} />
+                  <EditField label="Company Website" value={editData.companyWebsite} onChange={(v) => setField("companyWebsite", v)} />
+                  <EditField label="Company Size" value={editData.companySize} onChange={(v) => setField("companySize", v)} />
+                  <EditYesNo label="WhatsApp Updates?" value={editData.whatsappUpdates} onChange={(v) => setField("whatsappUpdates", v)} />
+                  <EditYesNo label="B2B Meeting?" value={editData.b2bMeeting} onChange={(v) => setField("b2bMeeting", v)} />
+                  <div className="flex items-center gap-2 pt-5">
+                    <input type="checkbox" checked={!!editData.subscribe} onChange={(e) => setField("subscribe", e.target.checked)} className="w-4 h-4 text-[#23471d]" />
+                    <label className="text-[12px] font-medium text-slate-700">Subscribed to Newsletter</label>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Location">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  <EditField label="Country" value={editData.country} onChange={(v) => setField("country", v)} />
+                  <EditField label="State" value={editData.state} onChange={(v) => setField("state", v)} />
+                  <EditField label="City" value={editData.city} onChange={(v) => setField("city", v)} />
+                </div>
+              </Section>
+
+              <Section title="Visit Planning & Conference">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  <div>
+                    <label className={EDIT_LABEL_CLS}>Preferred Visit Days</label>
+                    <select value={editData.preferredDate || ""} onChange={(e) => setField("preferredDate", e.target.value)} className={EDIT_INPUT_CLS}>
+                      <option value="">Select Days</option>
+                      <option value="1 Day">1 Day</option>
+                      <option value="2 Days">2 Days</option>
+                      <option value="3 Days">3 Days</option>
+                      <option value="All Days">All Days</option>
+                    </select>
+                  </div>
+                  <EditYesNo label="Invitation Letter Needed?" value={editData.invitationLetter} onChange={(v) => setField("invitationLetter", v)} />
+                  <EditYesNo label="Hotel Assistance Needed?" value={editData.hotelAssistance} onChange={(v) => setField("hotelAssistance", v)} />
+                  <EditYesNo label="Airport Pickup Needed?" value={editData.airportPickup} onChange={(v) => setField("airportPickup", v)} />
+                  <EditYesNo label="Translator Support Needed?" value={editData.translatorSupport} onChange={(v) => setField("translatorSupport", v)} />
+                  <EditYesNo label="Conference Interest?" value={editData.conferenceInterest} onChange={(v) => setField("conferenceInterest", v)} />
+                  {editData.conferenceInterest === "yes" && (
+                    <div>
+                      <label className={EDIT_LABEL_CLS}>Interested As</label>
+                      <select value={editData.conferenceRole || ""} onChange={(e) => setField("conferenceRole", e.target.value)} className={EDIT_INPUT_CLS}>
+                        <option value="">Select Role</option>
+                        {["Delegate", "Attendee", "Speaker", "Panel Participant", "Industry Expert"].map(r => (
+                          <option key={r} value={r.toLowerCase().replace(" ", "-")}>{r}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </div>
+              </Section>
+
+              <Section title="Requirements & Interests">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+                  <div>
+                    <label className={EDIT_LABEL_CLS}>Purpose of Visit</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 border border-slate-200 rounded-sm mt-1">
+                      {PURPOSE_OPTIONS.map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editData.purposeOfVisit.includes(opt)}
+                            onChange={(e) => toggleListItem("purposeOfVisit", opt, e.target.checked)}
+                            className="w-3.5 h-3.5 text-[#23471d]"
+                          />
+                          <span className="text-[12px] font-medium text-slate-600">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className={EDIT_LABEL_CLS}>Area of Interest</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-50 p-3 border border-slate-200 rounded-sm mt-1">
+                      {INTEREST_OPTIONS.map((opt) => (
+                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={editData.areaOfInterest.includes(opt)}
+                            onChange={(e) => toggleListItem("areaOfInterest", opt, e.target.checked)}
+                            className="w-3.5 h-3.5 text-[#23471d]"
+                          />
+                          <span className="text-[12px] font-medium text-slate-600">{opt}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="lg:col-span-2">
+                    <EditField label="Specific Requirement" value={editData.specificRequirement} onChange={(v) => setField("specificRequirement", v)} />
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="Uploaded Documents">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+                  {DOCUMENT_FIELDS.map(({ key, urlField, label }) => {
+                    const existingUrl = visitor[urlField];
+                    const selectedFile = editFiles[key];
+                    return (
+                      <div key={key} className="border border-slate-200 p-3 rounded-[2px] bg-slate-50">
+                        <span className="block text-[11px] font-bold text-slate-800 uppercase mb-2">{label}</span>
+                        {existingUrl && !selectedFile && (
+                          <a href={(import.meta.env.VITE_API_URL || "http://localhost:5000").replace(/\/api$/, "") + existingUrl} target="_blank" rel="noreferrer" className="text-blue-600 text-xs font-medium hover:underline block mb-2">View Current Document</a>
+                        )}
+                        {selectedFile && (
+                          <span className="text-[11px] text-green-700 font-semibold block mb-2 truncate">Selected: {selectedFile.name}</span>
+                        )}
+                        <label className="flex items-center justify-center gap-2 px-3 py-2 border-2 border-dashed border-slate-300 rounded-sm cursor-pointer hover:border-[#23471d]/50 hover:bg-white transition-all">
+                          <Upload size={13} className="text-slate-400" />
+                          <span className="text-[10px] font-bold text-slate-500 uppercase">{existingUrl ? "Replace File" : "Upload File"}</span>
+                          <input type="file" className="hidden" onChange={(e) => handleFileSelect(key, e.target.files?.[0] || null)} />
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Section>
+            </>
+          ) : (
+          <>
           <Section title="Visitor Information">
             <TR3
               l1="Registration Id" v1={visitor.registrationId}
@@ -411,7 +721,8 @@ const InternationalOverview = () => {
               l3="Record ID" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
             />
           </Section> */}
-
+          </>
+          )}
         </div>
 
         {/* ── CRM FORM (Pop-Up) ── */}
