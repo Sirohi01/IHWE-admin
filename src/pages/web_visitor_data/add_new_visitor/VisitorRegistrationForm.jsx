@@ -83,7 +83,7 @@ const VisitorRegistrationForm = () => {
           </div>
         </div>
         <div className="px-8 py-6 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
-          <VisitorRegistration />
+          <VisitorRegistration initialType="international" hideTabs={true} />
         </div>
       </div>
     );

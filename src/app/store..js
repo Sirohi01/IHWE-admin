@@ -21,6 +21,7 @@ import creditNoteReducer from "../features/creditNote/creditNoteSlice";
 import paymentReducer from "../features/payment/paymentSlice";
 import activityLogReducer from "../features/activityLog/activityLogSlice";
 import corporateVisitorReducer from "../features/visitor/corporateVisitorSlice";
+import internationalVisitorReducer from "../features/visitor/internationalVisitorSlice";
 import generalVisitorReducer from "../features/visitor/generalVisitorSlice";
 import healthCampVisitorReducer from "../features/visitor/freeHealthCampSlice";
 import visitorReviewReducer from "../features/visitor/visitorReviewSlice";
@@ -59,6 +60,7 @@ export const store = configureStore({
     creditnotes: creditNoteReducer,
     payment: paymentReducer,
     corporateVisitors: corporateVisitorReducer,
+    internationalVisitors: internationalVisitorReducer,
     generalVisitors: generalVisitorReducer,
     healthCampVisitors: healthCampVisitorReducer,
     visitorReview: visitorReviewReducer,

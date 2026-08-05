@@ -17,6 +17,7 @@ import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
 import { fetchStates } from "../../../features/state/stateSlice";
 import { createCorporateVisitor } from "../../../features/visitor/corporateVisitorSlice";
 import { createGeneralVisitor } from "../../../features/visitor/generalVisitorSlice";
+import { createInternationalVisitor } from "../../../features/visitor/internationalVisitorSlice";
 
 const PURPOSE_GENERAL = [
     { key: "businessNetworking", label: "Business Networking" },
@@ -65,6 +66,7 @@ const getInitialFormData = () => ({
     firstName: "",
     lastName: "",
     designation: "",
+    nationality: "",
     gender: "",
     dob: "",
     mobileNo: "",
@@ -108,8 +110,9 @@ const AddDomesticVisitor = () => {
     const { natures = [] } = useSelector((state) => state.natures || {});
     const { loading: corporateLoading = false } = useSelector((state) => state.corporateVisitors || {});
     const { loading: generalLoading = false } = useSelector((state) => state.generalVisitors || {});
+    const { loading: internationalLoading = false } = useSelector((state) => state.internationalVisitors || {});
 
-    const loading = corporateLoading || generalLoading;
+    const loading = corporateLoading || generalLoading || internationalLoading;
 
     const labelClasses = "text-[10px] font-bold text-slate-700 uppercase tracking-widest";
     const inputClasses =
@@ -236,6 +239,7 @@ const AddDomesticVisitor = () => {
         switch (name) {
             case "firstName":
             case "lastName":
+            case "nationality":
                 processedValue = value.replace(/[^a-zA-Z\s]/g, "");
                 break;
             case "mobileNo":
@@ -311,7 +315,7 @@ const AddDomesticVisitor = () => {
         if (!formData.companyPincode.trim()) return "Pincode is required.";
         if (!/^\d{6}$/.test(formData.companyPincode)) return "Pincode must be exactly 6 digits.";
 
-        if (visitorType === "corporate") {
+        if (visitorType === "corporate" || visitorType === "international") {
             if (!formData.companyName.trim()) return "Company name is required.";
             // if (!formData.companyWebsite.trim()) return "Company website is required.";
             // if (!formData.companyWebsite.includes('.')) {
@@ -322,6 +326,8 @@ const AddDomesticVisitor = () => {
             if (!formData.companySize) return "Company size is required.";
             if (!formData.b2bMeeting) return "Please select if you want to schedule B2B meetings.";
         }
+
+        if (visitorType === "international" && !formData.nationality.trim()) return "Nationality is required.";
 
         if (formData.purposeOfVisit.length === 0) return "Select at least one purpose of visit.";
         if (formData.areaOfInterest.length === 0) return "Select at least one area of interest.";
@@ -376,6 +382,34 @@ const AddDomesticVisitor = () => {
         visitorCategory: "Domestic Visitor",
     });
 
+    const buildInternationalPayload = () => ({
+        registrationFor: formData.registrationFor,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        mobileNo: formData.mobileNo, // Backend maps this to mobile if missing
+        mobile: formData.mobileNo,
+        designation: formData.designation,
+        nationality: formData.nationality,
+        gender: formData.gender,
+        dateOfBirth: formData.dob,
+        companyName: formData.companyName,
+        companyWebsite: formData.companyWebsite,
+        industrySector: formData.industry?.toLowerCase() === 'others' ? formData.otherIndustry : formData.industry,
+        companySize: formData.companySize,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        companyPincode: formData.companyPincode,
+        b2bMeeting: formData.b2bMeeting,
+        whatsappUpdates: formData.subscribeNewsletter ? "yes" : "no",
+        specificRequirement: formData.anyRequirement,
+        subscribe: formData.subscribeNewsletter,
+        purposeOfVisit: buildBooleanSelectionMap(PURPOSE_CORPORATE, formData.purposeOfVisit),
+        areaOfInterest: buildBooleanSelectionMap(INTEREST_CORPORATE, formData.areaOfInterest),
+        visitorCategory: "International Visitor",
+    });
+
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -393,13 +427,15 @@ const AddDomesticVisitor = () => {
         try {
             if (visitorType === "corporate") {
                 await dispatch(createCorporateVisitor(buildCorporatePayload())).unwrap();
+            } else if (visitorType === "international") {
+                await dispatch(createInternationalVisitor(buildInternationalPayload())).unwrap();
             } else {
                 await dispatch(createGeneralVisitor(buildGeneralPayload())).unwrap();
             }
 
             Swal.fire({
                 title: "Success!",
-                text: `${formData.firstName} has been registered as a ${visitorType === "corporate" ? "Corporate" : "General"} Visitor.`,
+                text: `${formData.firstName} has been registered as a ${visitorType === "corporate" ? "Corporate" : visitorType === "international" ? "International" : "General"} Visitor.`,
                 icon: "success",
                 confirmButtonColor: "#23471d",
             });
@@ -421,7 +457,7 @@ const AddDomesticVisitor = () => {
             <div className="mx-auto rounded-sm border border-slate-200 bg-white shadow-sm">
                 <div className="flex justify-between  border-b border-slate-200 px-6 py-1.5">
                     <div>
-                        <h1 className="text-xl font-semibold text-[#23471d]">Add Domestic Visitor</h1>
+                        <h1 className="text-xl font-semibold text-[#23471d]">Add New Visitor</h1>
                         <p className=" text-sm text-slate-500">
                             Visitor registration form connected to the existing visitor APIs.
                         </p>
@@ -452,6 +488,19 @@ const AddDomesticVisitor = () => {
                                 />
                                 <span className="flex items-center gap-2 text-[13px] font-semibold text-slate-700">
                                     General Visitor
+                                </span>
+                            </label>
+                            <label className="flex cursor-pointer items-center space-x-3">
+                                <input
+                                    type="radio"
+                                    name="visitorType"
+                                    value="international"
+                                    checked={visitorType === "international"}
+                                    onChange={(e) => setVisitorType(e.target.value)}
+                                    className="h-5 w-5 border-slate-400 text-[#23471d] focus:ring-[#23471d]"
+                                />
+                                <span className="flex items-center gap-2 text-[13px] font-semibold text-slate-700">
+                                    International Visitor
                                 </span>
                             </label>
                         </div>
@@ -496,7 +545,13 @@ const AddDomesticVisitor = () => {
                                 <label className={labelClasses}>LAST NAME *</label>
                                 <input name="lastName" value={formData.lastName} onChange={handleInputChange} required placeholder="Enter Last Name" className={inputClasses} />
                             </div>
-                            {visitorType === "corporate" && (
+                            {visitorType === "international" && (
+                                <div>
+                                    <label className={labelClasses}>NATIONALITY *</label>
+                                    <input name="nationality" value={formData.nationality} onChange={handleInputChange} required placeholder="Enter Nationality" className={inputClasses} />
+                                </div>
+                            )}
+                            {(visitorType === "corporate" || visitorType === "international") && (
                                 <div>
                                     <label className={labelClasses}>DESIGNATION *</label>
                                     <input name="designation" value={formData.designation} onChange={handleInputChange} required placeholder="Enter Designation.." className={inputClasses} />
@@ -538,7 +593,7 @@ const AddDomesticVisitor = () => {
                             Company & Industry Information
                         </h3>
                         <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2 lg:grid-cols-5">
-                            {visitorType === "corporate" && (
+                            {(visitorType === "corporate" || visitorType === "international") && (
                                 <>
                                     <div className="lg:col-span-2">
                                         <label className={labelClasses}>COMPANY NAME *</label>
@@ -625,7 +680,7 @@ const AddDomesticVisitor = () => {
                         <div className="space-y-4 rounded-[2px] border border-slate-300 bg-slate-50/50 p-5 shadow-sm">
                             <label className="block border-b border-slate-200 pb-2 text-[11px] font-bold uppercase tracking-wider text-[#23471d]">Purpose of Visit *</label>
                             <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
-                                {(visitorType === "corporate" ? PURPOSE_CORPORATE : PURPOSE_GENERAL).map((option) => (
+                                {(visitorType === "corporate" || visitorType === "international" ? PURPOSE_CORPORATE : PURPOSE_GENERAL).map((option) => (
                                     <label key={option.key} className="group flex cursor-pointer items-center gap-3">
                                         <input
                                             type="checkbox"
@@ -642,7 +697,7 @@ const AddDomesticVisitor = () => {
                         <div className="space-y-4 rounded-[2px] border border-slate-300 bg-slate-50/50 p-5 shadow-sm">
                             <label className="block border-b border-slate-200 pb-2 text-[11px] font-bold uppercase tracking-wider text-[#23471d]">Area of Interest *</label>
                             <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
-                                {(visitorType === "corporate" ? INTEREST_CORPORATE : INTEREST_GENERAL).map((option) => (
+                                {(visitorType === "corporate" || visitorType === "international" ? INTEREST_CORPORATE : INTEREST_GENERAL).map((option) => (
                                     <label key={option.key} className="group flex cursor-pointer items-center gap-3">
                                         <input
                                             type="checkbox"
@@ -657,7 +712,7 @@ const AddDomesticVisitor = () => {
                         </div>
                     </div>
 
-                    {visitorType === "corporate" && (
+                    {(visitorType === "corporate" || visitorType === "international") && (
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-4">
                             <div className="space-y-2 text-left">
                                 <label className="text-[11px] font-bold text-slate-900 uppercase tracking-wider block">Would you like to schedule B2B meetings? *</label>
@@ -696,7 +751,7 @@ const AddDomesticVisitor = () => {
                         </div>
                     )}
 
-                    {visitorType === "corporate" && (
+                    {(visitorType === "corporate" || visitorType === "international") && (
                         <div className="space-y-2">
                             <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-900">Any Specific requirement</label>
                             <input

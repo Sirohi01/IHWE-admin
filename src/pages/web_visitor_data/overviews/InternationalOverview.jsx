@@ -23,9 +23,9 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import {
-  fetchCorporateVisitors,
-  updateCorporateVisitor,
-} from "../../../features/visitor/corporateVisitorSlice";
+  fetchInternationalVisitors,
+  updateInternationalVisitor,
+} from "../../../features/visitor/internationalVisitorSlice";
 import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
 import {
   createVisitorReview,
@@ -91,13 +91,13 @@ function Section({ title, children }) {
   );
 }
 
-const CorporateOverview = () => {
+const InternationalOverview = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { corporateVisitors, loading } = useSelector(
-    (state) => state.corporateVisitors,
+  const { internationalVisitors, loading } = useSelector(
+    (state) => state.internationalVisitors,
   );
 
   const { events } = useSelector((state) => state.crmEvents);
@@ -118,8 +118,8 @@ const CorporateOverview = () => {
   const [Flip, setFlip] = useState(false);
 
   useEffect(() => {
-    if (corporateVisitors.length === 0) {
-      dispatch(fetchCorporateVisitors());
+    if (internationalVisitors.length === 0) {
+      dispatch(fetchInternationalVisitors());
     }
     dispatch(fetchEvents());
     dispatch(fetchStatusOptions());
@@ -128,9 +128,9 @@ const CorporateOverview = () => {
     return () => {
       dispatch(clearVisitorReviews());
     };
-  }, [dispatch, id, corporateVisitors.length]);
+  }, [dispatch, id, internationalVisitors.length]);
 
-  const visitor = corporateVisitors.find((v) => v._id === id);
+  const visitor = internationalVisitors.find((v) => v._id === id);
 
   const formatDate = (iso) => {
     if (!iso) return "N/A";
@@ -173,7 +173,7 @@ const CorporateOverview = () => {
       ).unwrap();
 
       await dispatch(
-        updateCorporateVisitor({
+        updateInternationalVisitor({
           id,
           data: { status, updated_by: userName },
         }),
@@ -258,14 +258,14 @@ const CorporateOverview = () => {
       <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-100 gap-4">
         <div className="flex flex-col items-center lg:items-start gap-1">
           <h1 className="text-xl font-bold text-slate-500 uppercase tracking-tight leading-none text-center lg:text-left">
-            CORPORATE VISITOR DATA
+            International Visitor DATA
           </h1>
           <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1 text-center lg:text-left">
             Visitor Registration Portal
           </p>
         </div>
         <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-          <button onClick={() => navigate("/ihweClientData2026/CorporateVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+          <button onClick={() => navigate("/ihweClientData2026/internationalVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
             <LayoutGrid size={12} /> List View
           </button>
           <button onClick={() => window.print()} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
@@ -312,6 +312,25 @@ const CorporateOverview = () => {
             />
           </Section>
 
+          <Section title="Personal & Passport Details">
+            <TR3
+              l1="Gender" v1={visitor.gender}
+              l2="Date of Birth" v2={visitor.dob}
+              l3="Nationality" v3={visitor.nationality}
+            />
+            <TR3
+              l1="Passport No." v1={visitor.passportNo}
+              l2="Occupation" v2={visitor.occupation}
+              l3="Personal Email" v3={visitor.personalEmail}
+            />
+            <TR3
+              l1="WhatsApp No." v1={visitor.whatsappNo}
+              l2="India Contact No." v2={visitor.indiaContactNo}
+              l3="Postal Code" v3={visitor.companyPincode}
+            />
+            <TR1 label="Residential Address" value={visitor.address} />
+          </Section>
+
           <Section title="Company & Professional Bio">
             <TR3
               l1="Company Name" v1={visitor.companyName}
@@ -327,6 +346,20 @@ const CorporateOverview = () => {
               l2="B2B Meeting" v2={visitor.b2bMeeting}
               l3="Subscribe" v3={visitor.subscribe ? "✅ Yes" : "❌ No"}
             />
+          </Section>
+
+          <Section title="Visit Planning & Conference">
+            <TR3
+              l1="Preferred Visit Days" v1={visitor.preferredDate}
+              l2="Invitation Letter Needed?" v2={visitor.invitationLetter}
+              l3="Hotel Assistance Needed?" v3={visitor.hotelAssistance}
+            />
+            <TR3
+              l1="Airport Pickup Needed?" v1={visitor.airportPickup}
+              l2="Translator Support Needed?" v2={visitor.translatorSupport}
+              l3="Conference Interest" v3={visitor.conferenceInterest}
+            />
+            <TR1 label="Interested As" value={visitor.conferenceRole} />
           </Section>
 
           <Section title="Requirements & Interests">
@@ -563,4 +596,7 @@ const CorporateOverview = () => {
   );
 };
 
-export default CorporateOverview;
+export default InternationalOverview;
+
+
+

@@ -173,6 +173,7 @@ export const menuItems = [
     children: [
       { label: "Add Visitor", path: "/ihweClientData2026/VisitorRegistrationForm" },
       { label: "Corporate Visitors", path: "/ihweClientData2026/CorporateVisitorsList" },
+      { label: "International Visitors", path: "/ihweClientData2026/InternationalVisitorsList" },
       { label: "General Visitors", path: "/ihweClientData2026/GeneralVisitorsList" },
       { label: "Health Camp Visitors", path: "/ihweClientData2026/FreeHealthCampVisitorsList" },
       { label: "Visitor Reviews", path: "/ihweClientData2026/VisitorReview" },

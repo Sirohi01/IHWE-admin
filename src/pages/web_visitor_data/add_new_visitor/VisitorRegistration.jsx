@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import CorporateVisitorForm from "./CorporateVisitorForm";
+import InternationalVisitorForm from "./InternationalVisitorForm";
 import GeneralVisitorForm from "./GeneralVisitorForm";
 import FreeHealthCampForm from "./FreeHealthCampForm";
 import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
@@ -90,6 +91,7 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
                 <div className="flex gap-4">
                   {[
                     { value: "corporate", label: "Corporate Visitor" },
+                    { value: "international", label: "International Visitor" },
                     { value: "general", label: "General Visitor" },
                     { value: "freeHealth", label: "Free Health Camp" },
                   ].map(({ value, label }) => (
@@ -116,9 +118,18 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
             </div>
           </div>
 
-          <div className="mt-1 px-6">
+          <div className="bg-white p-6 shadow-sm border border-t-0 border-gray-200">
             {visitorType === "corporate" && (
               <CorporateVisitorForm
+                registrationOptions={registrationOptions}
+                industrySectors={industrySectors}
+                countries={countryNames}
+                states={stateNames}
+                cities={cityNames}
+              />
+            )}
+            {visitorType === "international" && (
+              <InternationalVisitorForm
                 registrationOptions={registrationOptions}
                 industrySectors={industrySectors}
                 countries={countryNames}

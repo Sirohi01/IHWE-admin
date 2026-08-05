@@ -166,10 +166,12 @@ const VisitorRegistration = lazy(() => import("../pages/web_visitor_data/add_new
 const VisitorRegistrationForm = lazy(() => import("../pages/web_visitor_data/add_new_visitor/VisitorRegistrationForm"));
 
 const CorporateVisitorsList = lazy(() => import("../pages/web_visitor_data/CorporateVisitorsList"));
+const InternationalVisitorsList = lazy(() => import("../pages/web_visitor_data/InternationalVisitorsList"));
 const GeneralVisitorsList = lazy(() => import("../pages/web_visitor_data/GeneralVisitorsList"));
 const HealthCampVisitorsList = lazy(() => import("../pages/web_visitor_data/HealthCampVisitorsList"));
 
 const CorporateOverview = lazy(() => import("../pages/web_visitor_data/overviews/CorporateOverview"));
+const InternationalOverview = lazy(() => import("../pages/web_visitor_data/overviews/InternationalOverview"));
 const GeneralOverview = lazy(() => import("../pages/web_visitor_data/overviews/GeneralOverview"));
 const HealthCampOverview = lazy(() => import("../pages/web_visitor_data/overviews/HealthCampOverview"));
 const UserList = lazy(() => import("../pages/users/UserList"));
@@ -715,14 +717,18 @@ export default function AppRoutes() {
               path="ihweClientData2026/VisitorRegistration"
               element={<VisitorRegistration />}
             />
-            <Route
-              path="ihweClientData2026/CorporateVisitorsList"
-              element={<CorporateVisitorsList />}
-            />
-            <Route
-              path="ihweClientData2026/GeneralVisitorsList"
-              element={<GeneralVisitorsList />}
-            />
+              <Route
+                path="ihweClientData2026/CorporateVisitorsList"
+                element={<CorporateVisitorsList />}
+              />
+              <Route
+                path="ihweClientData2026/InternationalVisitorsList"
+                element={<InternationalVisitorsList />}
+              />
+              <Route
+                path="ihweClientData2026/GeneralVisitorsList"
+                element={<GeneralVisitorsList />}
+              />
             <Route
               path="ihweClientData2026/FreeHealthCampVisitorsList"
               element={<HealthCampVisitorsList />}
@@ -731,14 +737,18 @@ export default function AppRoutes() {
               path="ihweClientData2026/VisitorReview"
               element={<VisitorReviewLogs />}
             />
-            <Route
-              path="ihweClientData2026/CorporateOverview"
-              element={<CorporateOverview />}
-            />
-            <Route
-              path="ihweClientData2026/GeneralOverview"
-              element={<GeneralOverview />}
-            />
+              <Route
+                path="ihweClientData2026/corporateVisitors/:id"
+                element={<CorporateOverview />}
+              />
+              <Route
+                path="ihweClientData2026/internationalVisitors/:id"
+                element={<InternationalOverview />}
+              />
+              <Route
+                path="ihweClientData2026/generalVisitors/:id"
+                element={<GeneralOverview />}
+              />
             <Route
               path="ihweClientData2026/HealthCampOverview"
               element={<HealthCampOverview />}
@@ -748,7 +758,11 @@ export default function AppRoutes() {
               element={<CorporateOverview />}
             />
             <Route
-              path="webVisitorData/generalVisitorDetails/:id"
+              path="webVisitorData/InternationalVisitorDetails/:id"
+                element={<InternationalOverview />}
+              />
+              <Route
+                path="webVisitorData/generalVisitorDetails/:id"
               element={<GeneralOverview />}
             />
             <Route
