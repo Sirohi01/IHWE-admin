@@ -162,7 +162,7 @@ const PaymentList = () => {
     };
 
     const openReceipt = async (pmt) => {
-        const receiptWindow = window.open('', '_blank', 'noopener,noreferrer');
+        const receiptWindow = window.open('', '_blank');
 
         try {
             const res = await api.get(`/api/payments/${pmt._id}/receipt`, {
