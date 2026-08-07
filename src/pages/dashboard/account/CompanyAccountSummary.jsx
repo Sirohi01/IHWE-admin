@@ -118,17 +118,25 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
               <Mail size={15} className="text-[#194090]" />
               <a href={`mailto:${companyInfo?.email}`} className="truncate hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
             </div>
-            <div className="flex items-center gap-1.5">
+            {/* <div className="flex items-center gap-1.5">
               <span className="font-normal text-slate-700 whitespace-nowrap">Stall No.</span>
               <span>{companyInfo?.stallNo}</span>
+            </div> */}
+            <div className="flex items-center gap-1.5">
+              <span className="font-normal text-slate-700 whitespace-nowrap">GST No.</span>
+              <span className="truncate">{companyInfo?.gstNo || "N/A"}</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone size={15} className="text-[#194090]" />
               <span>{companyInfo?.mobile}</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            {/* <div className="flex items-center gap-1.5">
               <span className="font-normal text-slate-700 whitespace-nowrap">Stall Size</span>
               <span>{companyInfo?.stallSize}</span>
+            </div> */}
+            <div className="flex items-center gap-1.5">
+              <span className="font-normal text-slate-700 whitespace-nowrap">Address</span>
+              <span className="truncate" title={companyInfo?.address}>{companyInfo?.address || "N/A"}</span>
             </div>
             <div className="flex items-center gap-2 sm:col-span-1">
               <User size={15} className="text-[#194090]" />

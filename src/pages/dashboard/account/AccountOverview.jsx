@@ -11,6 +11,7 @@ import {
   User, ArrowRight, FilePlus, CreditCard, Activity,
   FileMinus, FileWarning,
   Truck,
+  ArrowLeft,
 } from "lucide-react";
 
 const AccountOverview = () => {
@@ -114,14 +115,20 @@ const AccountOverview = () => {
     <div className="bg-[#f8f9fc] p-4">
 
       {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-sm text-[#194090] font-normal mb-1">
-        <span>Exhibitors</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-800">{companyInfo?.name}</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-500 font-normal">Accounts</span>
-        <ChevronRight size={14} className="text-gray-400" />
-        <span className="text-slate-500 font-normal">Overview</span>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="flex items-center gap-2 text-sm text-[#194090] font-normal min-w-0">
+          <span>Exhibitors</span>
+          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+          <span className="text-slate-800 truncate">{companyInfo?.name}</span>
+          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+          <span className="text-slate-500 font-normal">Accounts</span>
+          <ChevronRight size={14} className="text-gray-400 shrink-0" />
+          <span className="text-slate-500 font-normal">Overview</span>
+        </div>
+        <button onClick={() => navigate(scopedPath(`/client-overview/${id}`))} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-[#f8f9fc] border border-gray-200 rounded-md transition-colors text-[#1a2b4b] text-[11px] font-normal shadow-sm shrink-0">
+          <ArrowLeft size={13} className="text-[#194090]" />
+          <span>Client Overview</span>
+        </button>
       </div>
 
       <CompanyAccountSummary companyInfo={companyInfo} financials={financials} />
@@ -389,10 +396,10 @@ const AccountOverview = () => {
             <Phone size={15} className="text-[#194090] shrink-0" />
             <span className="whitespace-nowrap">{companyInfo?.mobile}</span>
           </div>
-          <div className="flex items-center gap-1 max-w-[280px] sm:max-w-sm">
+          {/* <div className="flex items-center gap-1 max-w-[280px] sm:max-w-sm">
             <MapPin size={15} className="text-[#194090] shrink-0" />
             <span className="truncate" title={companyInfo?.address}>{companyInfo?.address}</span>
-          </div>
+          </div> */}
         </div>
       </div>
 
