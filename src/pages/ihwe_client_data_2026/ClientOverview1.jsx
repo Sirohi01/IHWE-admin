@@ -1090,6 +1090,20 @@ const ClientOverview1 = () => {
                       <span className="font-semibold text-[#0A2947]">{company?.gstNumber || company?.gstNo}</span>
                     </div>
                   )}
+
+                  {(company?.address || company?.city || company?.state || company?.country || company?.pincode) && (
+                    <div className="flex items-start gap-2 text-[11px]">
+                      <MapPin className="text-rose-600 flex-shrink-0 mt-0.5" size={14} />
+                      <span className="font-semibold text-[#0A2947] break-words">
+                        {[
+                          company?.address,
+                          [company?.city, company?.pincode ? `- ${company.pincode}` : ''].filter(Boolean).join(' '),
+                          company?.state,
+                          company?.country,
+                        ].filter(Boolean).join(', ')}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1102,23 +1116,6 @@ const ClientOverview1 = () => {
                 </p>
               </div>
             </div>
-
-            {(company?.address || company?.city || company?.state || company?.country || company?.pincode) && (
-              <>
-                <hr className="my-2 border-slate-100" />
-                <div className="flex items-start gap-2 text-[11px] px-1">
-                  <MapPin className="text-rose-600 flex-shrink-0 mt-0.5" size={14} />
-                  <span className="font-semibold text-[#0A2947] break-words">
-                    {[
-                      company?.address,
-                      [company?.city, company?.pincode ? `- ${company.pincode}` : ''].filter(Boolean).join(' '),
-                      company?.state,
-                      company?.country,
-                    ].filter(Boolean).join(', ')}
-                  </span>
-                </div>
-              </>
-            )}
           </div>
 
           {/* INFO CARDS */}
