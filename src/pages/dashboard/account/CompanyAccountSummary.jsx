@@ -113,45 +113,37 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-4 text-[13px] text-slate-600">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-3 text-[13px] text-slate-600">
             <div className="flex items-center gap-2">
               <Mail size={15} className="text-[#194090]" />
               <a href={`mailto:${companyInfo?.email}`} className="truncate hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
-            </div>
-            {/* <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Stall No.</span>
-              <span>{companyInfo?.stallNo}</span>
-            </div> */}
-            <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">GST No.</span>
-              <span className="truncate">{companyInfo?.gstNo || "N/A"}</span>
             </div>
             <div className="flex items-center gap-2">
               <Phone size={15} className="text-[#194090]" />
               <span>{companyInfo?.mobile}</span>
             </div>
-            {/* <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Stall Size</span>
-              <span>{companyInfo?.stallSize}</span>
-            </div> */}
             <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Address</span>
-              <span className="truncate" title={companyInfo?.address}>{companyInfo?.address || "N/A"}</span>
+              <span className="font-normal text-slate-700 whitespace-nowrap">GST No.:</span>
+              <span className="truncate">{companyInfo?.gstNo || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-2 sm:col-span-1">
+            <div className="flex items-center gap-1.5">
+              <span className="font-normal text-slate-700 whitespace-nowrap">Category:</span>
+              <span className="truncate">{companyInfo?.category}</span>
+            </div>
+            <div className="flex items-center gap-2">
               <User size={15} className="text-[#194090]" />
               <span className="truncate">Contact Person: {companyInfo?.contactPerson}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Category</span>
-              <span className="truncate">{companyInfo?.category}</span>
-            </div>
-            <div className="flex items-center gap-2 sm:col-span-1">
+            <div className="flex items-center gap-2">
               <Briefcase size={15} className="text-[#194090]" />
               <span className="truncate">Designation: {companyInfo?.designation || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-1.5 sm:col-start-2">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Registration Date</span>
+            <div className="flex items-start gap-1.5 sm:col-span-2">
+              <span className="font-normal text-slate-700 whitespace-nowrap">Address:</span>
+              <span className="break-words">{companyInfo?.address || "N/A"}</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="font-normal text-slate-700 whitespace-nowrap">Registration Date:</span>
               <span>
                 {companyInfo?.registrationDate
                   ? new Date(companyInfo.registrationDate).toLocaleDateString("en-GB", {

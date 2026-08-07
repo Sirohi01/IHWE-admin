@@ -351,22 +351,40 @@ export const PerformaInvoices = () => {
 
                     setItems(formattedItems);
 
+                    // Editing/viewing an already-issued PI (existingEstimate) must stay faithful to what
+                    // was actually issued, so its own saved GST/address/location win. A brand-new PI that's
+                    // only borrowing item/layout data from a past one (templateEstimate) should instead use
+                    // the client's current profile as the source of truth, falling back to the template only
+                    // when the profile itself has nothing set.
+                    const useProfileFirst = !existingEstimate;
                     setForm(prev => ({
                         ...prev,
                         estimateNo: existingEstimate ? estimateForPrefill.est_no : prev.estimateNo,
                         supplyDate: estimateForPrefill.supply_date || new Date().toISOString().split('T')[0],
                         consigneeName: estimateForPrefill.company_name || (estimateForPrefill.consignee_name !== PROFORMA_EVENT_NAME ? estimateForPrefill.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
-                        consigneeAddress: estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || '',
+                        consigneeAddress: useProfileFirst
+                            ? (companyInfo?.address || companyInfo?.companyAddress || estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || '')
+                            : (estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || ''),
                         consigneePerson: companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || estimateForPrefill.consignee_person || '',
                         consigneePhone: companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || estimateForPrefill.consignee_phone || '',
                         consigneeEventName: estimateForPrefill.event_name || PROFORMA_EVENT_NAME,
                         consigneeEventAddress: estimateForPrefill.event_place_of_supply || PROFORMA_PLACE_OF_SUPPLY,
                         consigneeGstin: estimateForPrefill.event_gst_no || PROFORMA_EVENT_GST_NO,
-                        gstin: estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || companyInfo?.gst || companyInfo?.gstNo || '',
-                        country: estimateForPrefill.country || companyInfo?.country || '',
-                        state: estimateForPrefill.state || companyInfo?.state || '',
-                        city: estimateForPrefill.city || companyInfo?.city || '',
-                        pinCode: estimateForPrefill.pincode || companyInfo?.pinCode || companyInfo?.pincode || '',
+                        gstin: useProfileFirst
+                            ? (companyInfo?.gstNumber || companyInfo?.gst || companyInfo?.gstNo || estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || '')
+                            : (estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || companyInfo?.gst || companyInfo?.gstNo || companyInfo?.gstNumber || ''),
+                        country: useProfileFirst
+                            ? (companyInfo?.country || estimateForPrefill.country || '')
+                            : (estimateForPrefill.country || companyInfo?.country || ''),
+                        state: useProfileFirst
+                            ? (companyInfo?.state || estimateForPrefill.state || '')
+                            : (estimateForPrefill.state || companyInfo?.state || ''),
+                        city: useProfileFirst
+                            ? (companyInfo?.city || estimateForPrefill.city || '')
+                            : (estimateForPrefill.city || companyInfo?.city || ''),
+                        pinCode: useProfileFirst
+                            ? (companyInfo?.pinCode || companyInfo?.pincode || estimateForPrefill.pincode || '')
+                            : (estimateForPrefill.pincode || companyInfo?.pinCode || companyInfo?.pincode || ''),
                     }));
 
                     if (!existingEstimate) {
@@ -391,7 +409,7 @@ export const PerformaInvoices = () => {
                         consigneeEventName: PROFORMA_EVENT_NAME,
                         consigneeEventAddress: PROFORMA_PLACE_OF_SUPPLY,
                         consigneeGstin: PROFORMA_EVENT_GST_NO,
-                        gstin: companyInfo.gst || companyInfo.gstNo || '',
+                        gstin: companyInfo.gst || companyInfo.gstNo || companyInfo.gstNumber || '',
                         country: companyInfo.country || '',
                         state: companyInfo.state || '',
                         city: companyInfo.city || '',

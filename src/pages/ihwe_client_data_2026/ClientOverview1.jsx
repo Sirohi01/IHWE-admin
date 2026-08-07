@@ -5,6 +5,7 @@ import {
   Phone,
   Mail,
   Globe,
+  MapPin,
   Calendar,
   Shield,
   MessageSquare,
@@ -38,6 +39,7 @@ import {
 import { fetchStatusOptions } from "../../features/add_by_admin/statusOption/statusOptionSlice";
 import { fetchNextActions } from "../../features/add_by_admin/nextAction/nextActionSlice";
 import { fetchAdmins } from "../../features/auth/userSlice";
+import { fetchCountries } from "../../features/add_by_admin/country/countrySlice";
 
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -48,6 +50,14 @@ import WhatsAppModal from "./communication/WhatsAppModal";
 import EmailModal from "./communication/EmailModal";
 import CallLogModal from "./communication/CallLogModal";
 import SearchableDropdown from "../../components/SearchableDropdown";
+const getArrayFromSlice = (sliceState, fallbackKey) => {
+  if (Array.isArray(sliceState)) return sliceState;
+  if (sliceState && typeof sliceState === "object" && fallbackKey in sliceState && Array.isArray(sliceState[fallbackKey])) {
+    return sliceState[fallbackKey];
+  }
+  return [];
+};
+
 const getMediaUrl = (value) => {
   if (!value) return "";
   const normalized = String(value).replace(/\\/g, "/");
@@ -121,6 +131,11 @@ const ClientOverview1 = () => {
 
   const { nextActions } = useSelector((state) => state.nextActions);
   const { users } = useSelector((state) => state.users);
+
+  const countriesState = useSelector((state) => state.countries);
+  const countriesArray = getArrayFromSlice(countriesState, "countries")
+    .slice()
+    .sort((a, b) => (a?.name || "").localeCompare(b?.name || ""));
   const { user: authUser } = useSelector((state) => state.auth || {});
 
   let currentUserName = localStorage.getItem('user_name') || sessionStorage.getItem('user_name') || '';
@@ -222,30 +237,30 @@ const ClientOverview1 = () => {
               data.contacts = resContacts.data?.data || [];
             } catch (e) { console.log(e); }
             setCompany(data);
-          } catch(err2) {
-             console.log("Not found in exhibitor-registration, trying referrals...");
-             try {
-                const resRef = await api.get(`/api/referrals/${id}`);
-                let refData = resRef.data.data || resRef.data;
-                refData = {
-                    ...refData,
-                    companyName: refData.companyName,
-                    mobileNo: refData.mobileNumber,
-                    email: refData.emailId,
-                    industrySector: refData.category,
-                    aboutCompany: refData.remarks,
-                    companyStatus: refData.status,
-                    contacts: [{
-                        firstName: refData.contactPerson,
-                        mobile: refData.mobileNumber,
-                        email: refData.emailId
-                    }]
-                };
-                setCompany(refData);
-             } catch(err3) {
-                console.log("Not found in referrals either.");
-                throw err3;
-             }
+          } catch (err2) {
+            console.log("Not found in exhibitor-registration, trying referrals...");
+            try {
+              const resRef = await api.get(`/api/referrals/${id}`);
+              let refData = resRef.data.data || resRef.data;
+              refData = {
+                ...refData,
+                companyName: refData.companyName,
+                mobileNo: refData.mobileNumber,
+                email: refData.emailId,
+                industrySector: refData.category,
+                aboutCompany: refData.remarks,
+                companyStatus: refData.status,
+                contacts: [{
+                  firstName: refData.contactPerson,
+                  mobile: refData.mobileNumber,
+                  email: refData.emailId
+                }]
+              };
+              setCompany(refData);
+            } catch (err3) {
+              console.log("Not found in referrals either.");
+              throw err3;
+            }
           }
         } else {
           throw err;
@@ -493,24 +508,94 @@ const ClientOverview1 = () => {
     landline: "",
     website: "",
     companyDescription: "",
+    address: "",
+    country: "",
+    state: "",
+    city: "",
+    pincode: "",
+    category: "",
+    businessNature: "",
+    dataSource: "",
+    gstNumber: "",
+    panNo: "",
+    udyamNumber: "",
   });
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [logoVerification, setLogoVerification] = useState({ status: "idle", message: "" });
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
-  const handleOpenEditProfile = () => {
+  useEffect(() => {
+    if (isEditProfileOpen) {
+      dispatch(fetchCountries());
+    }
+  }, [isEditProfileOpen, dispatch]);
+
+  const handleProfilePincodeChange = async (val) => {
+    const numericVal = val.replace(/\D/g, "").slice(0, 6);
+    setEditProfileData(prev => ({ ...prev, pincode: numericVal }));
+
+    if (numericVal.length === 6) {
+      try {
+        const response = await fetch(`https://api.postalpincode.in/pincode/${numericVal}`);
+        const data = await response.json();
+        if (data && data[0] && data[0].Status === "Success") {
+          const postOffice = data[0].PostOffice[0];
+          setEditProfileData(prev => ({
+            ...prev,
+            state: postOffice.State || prev.state,
+            city: postOffice.District || prev.city,
+            country: "India",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching pincode details:", error);
+      }
+    }
+  };
+
+  const handleOpenEditProfile = async () => {
     setEditProfileData({
       companyName: isExhibitor ? (company.exhibitorName || "") : (company.companyName || ""),
       landline: company.landlineNo || company.landline || "",
       email: company.officialEmail || company.companyEmail || (isExhibitor ? company.contacts?.[0]?.email : company.email) || "",
       website: company.website || "",
       companyDescription: company.companyDescription || company.aboutCompany || "",
+      address: company.address || "",
+      country: company.country || "",
+      state: company.state || "",
+      city: company.city || "",
+      pincode: company.pincode || company.pinCode || "",
+      category: company.category || company.typeOfBusiness || "",
+      businessNature: company.businessNature || company.industrySector || "",
+      dataSource: company.dataSource || company.referredBy || "",
+      gstNumber: company.gstNumber || company.gstNo || "",
+      panNo: company.panNo || "",
+      udyamNumber: company.udyamNumber || company.msme?.udyamRegNo || "",
     });
     setLogoFile(null);
     setLogoPreview(company?.companyLogoUrl || company?.companyLogo || "");
     setLogoVerification({ status: "idle", message: "" });
     setIsEditProfileOpen(true);
+
+    // GST may have only ever been entered directly on a Proforma/Estimate (never saved to the
+    // profile). If the profile field is blank, backfill from that client's most recent estimate
+    // instead of leaving it empty — never overwrites a value already present on the profile.
+    if (!(company.gstNumber || company.gstNo)) {
+      const lookupId = getCrmTargetId() || getExhibitorTargetId();
+      if (lookupId) {
+        try {
+          const res = await api.get(`/api/estimates/grouped/${lookupId}`);
+          const latestWithGst = (res.data?.data || []).find((est) => est.company_gst_no || est.gst_no);
+          const fallbackGst = latestWithGst?.company_gst_no || latestWithGst?.gst_no;
+          if (fallbackGst) {
+            setEditProfileData((prev) => (prev.gstNumber ? prev : { ...prev, gstNumber: fallbackGst }));
+          }
+        } catch (err) {
+          console.log("No prior estimate GST found for this client", err);
+        }
+      }
+    }
   };
 
   const handleProfileChange = (e) => {
@@ -580,7 +665,6 @@ const ClientOverview1 = () => {
     const requiredValues = [
       editProfileData.companyName,
       editProfileData.email,
-      editProfileData.landline,
       editProfileData.website,
       editProfileData.companyDescription
     ];
@@ -649,7 +733,17 @@ const ClientOverview1 = () => {
           landlineNo: editProfileData.landline,
           website: editProfileData.website,
           aboutCompany: editProfileData.companyDescription,
-          companyLogoUrl: photoUrl
+          companyLogoUrl: photoUrl,
+          address: editProfileData.address,
+          country: editProfileData.country,
+          state: editProfileData.state,
+          city: editProfileData.city,
+          pincode: editProfileData.pincode,
+          typeOfBusiness: editProfileData.category,
+          industrySector: editProfileData.businessNature,
+          gstNo: editProfileData.gstNumber,
+          panNo: editProfileData.panNo,
+          'msme.udyamRegNo': editProfileData.udyamNumber,
         };
         await api.put(`/api/exhibitor-registration/${exhibitorTargetId}`, exhibitorDataToUpdate);
       }
@@ -989,6 +1083,13 @@ const ClientOverview1 = () => {
                       {company?.website}
                     </a>
                   </div>
+
+                  {(company?.gstNumber || company?.gstNo) && (
+                    <div className="flex items-center gap-2 text-[11px]">
+                      <Receipt className="text-amber-600 flex-shrink-0" size={14} />
+                      <span className="font-semibold text-[#0A2947]">{company?.gstNumber || company?.gstNo}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1001,6 +1102,23 @@ const ClientOverview1 = () => {
                 </p>
               </div>
             </div>
+
+            {(company?.address || company?.city || company?.state || company?.country || company?.pincode) && (
+              <>
+                <hr className="my-2 border-slate-100" />
+                <div className="flex items-start gap-2 text-[11px] px-1">
+                  <MapPin className="text-rose-600 flex-shrink-0 mt-0.5" size={14} />
+                  <span className="font-semibold text-[#0A2947] break-words">
+                    {[
+                      company?.address,
+                      [company?.city, company?.pincode ? `- ${company.pincode}` : ''].filter(Boolean).join(' '),
+                      company?.state,
+                      company?.country,
+                    ].filter(Boolean).join(', ')}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
 
           {/* INFO CARDS */}
@@ -1344,16 +1462,24 @@ const ClientOverview1 = () => {
       {/* EDIT PROFILE MODAL */}
       {isEditProfileOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[1050] flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl overflow-hidden animate-fadeIn">
             <div className="flex items-center justify-between p-5 border-b border-gray-200">
               <h2 className="text-xl font-bold text-gray-800">Edit Company Profile</h2>
-              <button onClick={() => setIsEditProfileOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors">
-                ×
-              </button>
+              <div className="flex items-center gap-3">
+                <button type="button" onClick={() => setIsEditProfileOpen(false)} className="px-4 py-2 rounded-xl border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50 transition-colors">
+                  Cancel
+                </button>
+                <button type="submit" form="editCompanyProfileForm" disabled={isSavingProfile || logoVerification.status === "scanning" || logoVerification.status === "invalid"} className="px-4 py-2 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70">
+                  {isSavingProfile ? "Saving..." : logoVerification.status === "scanning" ? "Scanning..." : "Save Changes"}
+                </button>
+                <button onClick={() => setIsEditProfileOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-500 hover:text-red-500 transition-colors">
+                  ×
+                </button>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveProfile} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form id="editCompanyProfileForm" onSubmit={handleSaveProfile} className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Company Name <span className="text-red-500">*</span></label>
                   <input type="text" id="companyName" value={editProfileData.companyName} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
@@ -1370,26 +1496,106 @@ const ClientOverview1 = () => {
                     </label>
                   </div>
                 </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Type of Business</label>
+                  <select id="category" value={editProfileData.category} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500">
+                    <option value="">Select Here</option>
+                    <option>Pvt. Ltd. Company</option>
+                    <option>Pub. Ltd. Company</option>
+                    <option>Partnership Company</option>
+                    <option>Limited Liability Partnership (LLP)</option>
+                    <option>One Person Company</option>
+                    <option>Sole Proprietorship</option>
+                    <option>Section 8 Company</option>
+                    <option>Others</option>
+                  </select>
+                </div>
                 {logoVerification.message && (
-                  <div className="md:col-span-2 -mt-3">
+                  <div className="md:col-span-3 -mt-3">
                     <p className={`text-xs font-semibold ${logoVerification.status === "invalid" ? "text-red-500" : "text-green-600"}`}>
                       {logoVerification.message}
                     </p>
                   </div>
                 )}
                 <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Industry / Sector</label>
+                  <select id="businessNature" value={editProfileData.businessNature} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500">
+                    <option value="">Select Here</option>
+                    <option>Medical &amp; Healthcare</option>
+                    <option>AYUSH &amp; Traditional Medicine</option>
+                    <option>Wellness, Fitness &amp; Lifestyle</option>
+                    <option>Nutrition, Organic &amp; Health Foods</option>
+                    <option>Beauty, Personal Care &amp; Aesthetic Wellness</option>
+                    <option>Mental Health, Yoga &amp; Spiritual Wellness</option>
+                    <option>Medical Technology, Diagnostics &amp; Devices</option>
+                    <option>Institutions, Government Bodies &amp; Startups</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Source</label>
+                  <select id="dataSource" value={editProfileData.dataSource} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500">
+                    <option value="">Select Here</option>
+                    <option>Direct Calling</option>
+                    <option>Direct Website</option>
+                    <option>Email Marketing</option>
+                    <option>Google (GMB / GMV)</option>
+                    <option>Referral</option>
+                    <option>Social Media</option>
+                    <option>WhatsApp Marketing</option>
+                    <option>Others</option>
+                  </select>
+                </div>
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Company Email <span className="text-red-500">*</span></label>
                   <input type="email" id="email" value={editProfileData.email} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">Landline <span className="text-red-500">*</span></label>
-                  <input type="text" id="landline" value={editProfileData.landline} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Landline</label>
+                  <input type="text" id="landline" value={editProfileData.landline} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
                 </div>
-                <div className="md:col-span-2">
+                <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Website <span className="text-red-500">*</span></label>
                   <input type="text" id="website" value={editProfileData.website} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" required />
                 </div>
-                <div className="md:col-span-2">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">GST Number</label>
+                  <input type="text" id="gstNumber" value={editProfileData.gstNumber} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">PAN Number</label>
+                  <input type="text" id="panNo" value={editProfileData.panNo} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Udyam/MSME Number</label>
+                  <input type="text" id="udyamNumber" value={editProfileData.udyamNumber} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Pincode</label>
+                  <input type="text" id="pincode" maxLength={6} value={editProfileData.pincode} onChange={(e) => handleProfilePincodeChange(e.target.value)} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" placeholder="6-digit pincode" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Country</label>
+                  <SearchableDropdown
+                    name="country"
+                    value={editProfileData.country}
+                    onChange={(e) => setEditProfileData(prev => ({ ...prev, country: e.target.value, state: "", city: "" }))}
+                    placeholder="Select Country"
+                    options={countriesArray.map(c => ({ label: c?.name, value: c?.name }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">State</label>
+                  <input type="text" id="state" value={editProfileData.state} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" placeholder="Auto-filled from Pincode" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">City</label>
+                  <input type="text" id="city" value={editProfileData.city} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" placeholder="Auto-filled from Pincode" />
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">Address</label>
+                  <input type="text" id="address" value={editProfileData.address} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-xl border border-gray-300 outline-none focus:border-green-500" />
+                </div>
+                <div className="md:col-span-3">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">Company Description (About) <span className="text-red-500">*</span></label>
                   <textarea
                     id="companyDescription"
@@ -1410,15 +1616,6 @@ const ClientOverview1 = () => {
                       : `Character requirement met. (${editProfileData.companyDescription.length}/300)`}
                   </div>
                 </div>
-              </div>
-
-              <div className="pt-4 flex justify-end gap-3 border-t border-gray-100">
-                <button type="button" onClick={() => setIsEditProfileOpen(false)} className="px-6 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-colors">
-                  Cancel
-                </button>
-                <button type="submit" disabled={isSavingProfile || logoVerification.status === "scanning" || logoVerification.status === "invalid"} className="px-6 py-2.5 rounded-xl bg-green-600 text-white font-semibold hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70">
-                  {isSavingProfile ? "Saving..." : logoVerification.status === "scanning" ? "Scanning..." : "Save Changes"}
-                </button>
               </div>
             </form>
           </div>
