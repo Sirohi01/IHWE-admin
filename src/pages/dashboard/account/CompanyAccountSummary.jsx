@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Mail, Phone, User, FileText, Receipt, Wallet, Briefcase } from "lucide-react";
+import { Mail, Phone, User, FileText, Receipt, Wallet, Briefcase, FileCheck2, Tag, MapPin, CalendarDays } from "lucide-react";
 import api, { SERVER_URL } from "../../../lib/api";
 
 export const formatCurrency = (amount) => {
@@ -113,38 +113,44 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-3 text-[13px] text-slate-600">
-            <div className="flex items-center gap-2">
-              <Mail size={15} className="text-[#194090]" />
-              <a href={`mailto:${companyInfo?.email}`} className="truncate hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-[13px]">
+            <div className="flex items-center gap-2 min-w-0">
+              <Mail size={15} className="text-[#194090] flex-shrink-0" />
+              <a href={`mailto:${companyInfo?.email}`} className="truncate text-slate-700 hover:text-[#194090] hover:underline">{companyInfo?.email}</a>
             </div>
-            <div className="flex items-center gap-2">
-              <Phone size={15} className="text-[#194090]" />
-              <span>{companyInfo?.mobile}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Phone size={15} className="text-[#194090] flex-shrink-0" />
+              <span className="truncate text-slate-700">{companyInfo?.mobile || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">GST No.:</span>
-              <span className="truncate">{companyInfo?.gstNo || "N/A"}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <FileCheck2 size={15} className="text-[#194090] flex-shrink-0" />
+              <span className="text-slate-400 whitespace-nowrap">GST No.:</span>
+              <span className="truncate text-slate-700 font-medium">{companyInfo?.gstNo || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Category:</span>
-              <span className="truncate">{companyInfo?.category}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Tag size={15} className="text-[#194090] flex-shrink-0" />
+              <span className="text-slate-400 whitespace-nowrap">Category:</span>
+              <span className="truncate text-slate-700 font-medium">{companyInfo?.category || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <User size={15} className="text-[#194090]" />
-              <span className="truncate">Contact Person: {companyInfo?.contactPerson}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <User size={15} className="text-[#194090] flex-shrink-0" />
+              <span className="text-slate-400 whitespace-nowrap">Contact:</span>
+              <span className="truncate text-slate-700 font-medium">{companyInfo?.contactPerson || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <Briefcase size={15} className="text-[#194090]" />
-              <span className="truncate">Designation: {companyInfo?.designation || "N/A"}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Briefcase size={15} className="text-[#194090] flex-shrink-0" />
+              <span className="text-slate-400 whitespace-nowrap">Designation:</span>
+              <span className="truncate text-slate-700 font-medium">{companyInfo?.designation || "N/A"}</span>
             </div>
-            <div className="flex items-start gap-1.5 sm:col-span-2">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Address:</span>
-              <span className="break-words">{companyInfo?.address || "N/A"}</span>
+            <div className="flex items-start gap-2 sm:col-span-2 min-w-0">
+              <MapPin size={15} className="text-[#194090] flex-shrink-0 mt-0.5" />
+              <span className="text-slate-400 whitespace-nowrap">Address:</span>
+              <span className="break-words text-slate-700 font-medium">{companyInfo?.address || "N/A"}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-normal text-slate-700 whitespace-nowrap">Registration Date:</span>
-              <span>
+            <div className="flex items-center gap-2 min-w-0">
+              <CalendarDays size={15} className="text-[#194090] flex-shrink-0" />
+              <span className="text-slate-400 whitespace-nowrap">Registered:</span>
+              <span className="text-slate-700 font-medium">
                 {companyInfo?.registrationDate
                   ? new Date(companyInfo.registrationDate).toLocaleDateString("en-GB", {
                     day: "2-digit",
@@ -163,7 +169,7 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
         {/* Card 1: Total Amount */}
         <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-red-200 transition-all duration-300 p-3.5 flex flex-col justify-between h-full">
           <div className="absolute left-0 top-0 w-1 h-full bg-red-500 rounded-l-xl" />
-          
+
           <div className="flex justify-between items-start ml-1 relative z-10 mb-2">
             <div>
               <p className="text-[10px] font-normal text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Amount</p>
@@ -197,7 +203,7 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
         {/* Card 2: Received Amount */}
         <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-emerald-200 transition-all duration-300 p-3.5 flex flex-col justify-between h-full">
           <div className="absolute left-0 top-0 w-1 h-full bg-emerald-500 rounded-l-xl" />
-          
+
           <div className="flex justify-between items-start ml-1 relative z-10 mb-2">
             <div>
               <p className="text-[10px] font-normal text-slate-500 uppercase tracking-wider whitespace-nowrap">Received Amount</p>
@@ -231,7 +237,7 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
         {/* Card 3: Pending Amount */}
         <div className="group relative bg-white rounded-xl shadow-sm border border-gray-200/60 hover:shadow-md hover:border-indigo-200 transition-all duration-300 p-3.5 flex flex-col justify-between h-full">
           <div className="absolute left-0 top-0 w-1 h-full bg-indigo-500 rounded-l-xl" />
-          
+
           <div className="flex justify-between items-start ml-1 relative z-10 mb-2">
             <div>
               <p className="text-[10px] font-normal text-slate-500 uppercase tracking-wider whitespace-nowrap">Pending Amount</p>
@@ -243,8 +249,8 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
           </div>
 
           <div className="ml-1 relative z-10 my-auto">
-             <span className="text-[11px] font-normal text-slate-500 whitespace-nowrap">Pending %</span>
-             <p className="text-[13px] font-normal text-[#1a2b4b] mt-0.5">{balPct}%</p>
+            <span className="text-[11px] font-normal text-slate-500 whitespace-nowrap">Pending %</span>
+            <p className="text-[13px] font-normal text-[#1a2b4b] mt-0.5">{balPct}%</p>
           </div>
 
           <div className="pt-2 border-t border-gray-50 ml-1 relative z-10 flex flex-col gap-1">
