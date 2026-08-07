@@ -204,6 +204,7 @@ const PaymentManagement = () => {
         if (!file) return;
         setEventLogoFile(file);
         setEventLogoPreview(URL.createObjectURL(file));
+        setRemoveEventLogo(false);
     };
 
     const handleHeaderLogoChange = (e) => {
@@ -211,6 +212,7 @@ const PaymentManagement = () => {
         if (!file) return;
         setHeaderLogoFile(file);
         setHeaderLogoPreview(URL.createObjectURL(file));
+        setRemoveHeaderLogo(false);
     };
 
     const handleStampChange = (e) => {
@@ -218,6 +220,7 @@ const PaymentManagement = () => {
         if (!file) return;
         setStampFile(file);
         setStampPreview(URL.createObjectURL(file));
+        setRemoveStamp(false);
     };
 
     const handleSignatureChange = (e) => {
@@ -271,10 +274,11 @@ const PaymentManagement = () => {
     const handlePreview = async () => {
         setIsPreviewing(true);
         try {
-            const res = await api.get('/api/payment-receipt-settings/preview', { responseType: 'blob' });
+            const res = await api.get(`/api/payment-receipt-settings/preview?t=${Date.now()}`, { responseType: 'blob' });
             const blob = new Blob([res.data], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
             window.open(url, '_blank', 'noopener,noreferrer');
+            setTimeout(() => window.URL.revokeObjectURL(url), 60_000);
         } catch (error) {
             console.error('Error generating preview:', error);
             Swal.fire('Error', 'Failed to generate preview', 'error');
