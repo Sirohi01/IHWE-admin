@@ -812,7 +812,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Proforma Invoice Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceDate}</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
@@ -1438,7 +1438,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                             <td style={{ border: 'none', padding: '8px', verticalAlign: 'top', textAlign: 'center', width: '33.33%' }}>
                                                 <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
                                                     {sigUrl && <img src={sigUrl} alt="Signature" style={{ maxHeight: 45, maxWidth: 100 }} />}
-                                                    {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 45, maxWidth: 45 }} />}
+                                                    {stampUrl && <img src={stampUrl} alt="Stamp" style={{ maxHeight: 80, maxWidth: 80 }} />}
                                                 </div>
                                             </td>
                                         </tr>

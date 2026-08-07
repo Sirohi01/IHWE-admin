@@ -139,7 +139,6 @@ const EstimateDetails = () => {
     <>
       <div className="bg-white shadow-md mt-1 p-6 min-h-screen font-inter animate-fadeIn">
 
-        {/* ── HEADER AREA ── */}
         <div className="flex flex-col lg:flex-row justify-between items-center pb-4 border-b border-gray-300 gap-4">
           <div className="flex flex-col items-center lg:items-start gap-1">
             <h1 className="text-xl font-semibold text-slate-600 uppercase tracking-tight leading-none text-center lg:text-left">
