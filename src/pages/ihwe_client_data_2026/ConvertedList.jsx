@@ -102,8 +102,6 @@ const ConvertedList = () => {
     try {
       const regParams = new URLSearchParams({
         ...(currentEventId && { eventId: currentEventId }),
-        ...(user?.username && { username: user.username }),
-        ...(user?.role && { role: user.role }),
       });
       const [regRes, compRes, reviewRes, eventsRes, settingsRes] = await Promise.all([
         api.get(`/api/companies/converted?${regParams}`),

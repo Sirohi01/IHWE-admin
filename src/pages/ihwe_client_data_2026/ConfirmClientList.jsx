@@ -132,8 +132,6 @@ const ConfirmClientList = () => {
     try {
       const params = new URLSearchParams({
         eventId: effectiveEventId,
-        ...(user?.username && { username: user.username }),
-        ...(user?.role && { role: user.role }),
       });
       const regRes = await api.get(`/api/companies/booked?${params}`);
       if (regRes.data?.success) {
@@ -144,7 +142,7 @@ const ConfirmClientList = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user?.username, user?.role, effectiveEventId]);
+  }, [effectiveEventId]);
 
   // Fetch static data only once (cached)
   const fetchStaticData = async () => {
