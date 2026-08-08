@@ -141,7 +141,7 @@ const PaymentEdit = () => {
       setShowCardFields(true);
     } else if (data.payment_mode === "e-Wallet Payments") {
       setShowEwalletFields(true);
-    } else if (data.payment_mode === "NEFT/RTGS Payments") {
+    } else if (data.payment_mode === "NEFT Payments" || data.payment_mode === "RTGS Payments" || data.payment_mode === "NEFT/RTGS Payments") {
       setShowNeftFields(true);
     } else if (data.payment_mode === "UPI Payments") {
       setShowUpiFields(true);
@@ -513,7 +513,8 @@ const PaymentEdit = () => {
                 <option value="Cash Payments">Cash Payments</option>
                 <option value="Card Payments">Card Payments</option>
                 <option value="e-Wallet Payments">e-Wallet Payments</option>
-                <option value="NEFT/RTGS Payments">NEFT/RTGS Payments</option>
+                <option value="NEFT Payments">NEFT Payments</option>
+                <option value="RTGS Payments">RTGS Payments</option>
                 <option value="UPI Payments">UPI Payments</option>
               </select>
             </div>

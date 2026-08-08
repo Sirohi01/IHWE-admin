@@ -16,7 +16,7 @@ const formatCurrency = (amount) => {
   }).format(amount || 0);
 };
 
-const PAYMENT_MODE_OPTIONS = ["NEFT / RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
+const PAYMENT_MODE_OPTIONS = ["NEFT", "RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
 const PAYMENT_TYPE_OPTIONS = ["Advance Payment", "Final Payment", "Full Payment", "Running Payment"];
 const getAutomaticNarration = (paymentType) => paymentType.replace(/\s+Payment$/i, "");
 
