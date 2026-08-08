@@ -89,19 +89,30 @@ const HotClientList = () => {
       ...(user?.username && { username: user.username }),
       ...(user?.role && { role: user.role }),
     });
-    api.get(`/api/companies/hot-leads?${params}`)
-      .then((res) => {
-        if (!cancelled && res.data?.success) setHotLeads(Array.isArray(res.data.data) ? res.data.data : []);
+    Promise.all([
+      api.get(`/api/companies/hot-leads?${params}`),
+      api.get(`/api/companies/booked?${params}`).catch(() => ({ data: { data: [] } })),
+    ])
+      .then(([hotRes, bookedRes]) => {
+        if (!cancelled && hotRes.data?.success) {
+          const bookedRows = Array.isArray(bookedRes.data?.data) ? bookedRes.data.data : [];
+          const bookedCompanyIds = new Set(
+            bookedRows.flatMap((row) => [row.clientId, row.companyId]
+              .filter(Boolean)
+              .map(String)),
+          );
+          const rows = Array.isArray(hotRes.data.data) ? hotRes.data.data : [];
+          setHotLeads(rows.filter((row) => {
+            const companyId = String(row.clientId || row.companyId || row._id || "");
+            return !bookedCompanyIds.has(companyId);
+          }));
+        }
       })
       .catch(() => { if (!cancelled) setHotLeads([]); })
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, [currentEventId, user?.username, user?.role]);
-
-  // Hook for accurate stats
   const { statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId);
-
-  // Frontend search/filter + pagination over the hot-lead set
   const filteredLeads = hotLeads.filter((c) => {
     if (filterSource && (c.dataSource || 'Website') !== filterSource) return false;
     if (filterIndustry && (c.businessNature || '') !== filterIndustry) return false;
@@ -136,12 +147,12 @@ const HotClientList = () => {
       },
       { threshold: 0.1 }
     );
-    
+
     const element = document.getElementById('hot-donut-chart-container');
     if (element) {
       observer.observe(element);
     }
-    
+
     return () => observer.disconnect();
   }, []);
 
@@ -470,12 +481,12 @@ const HotClientList = () => {
                 let cumulativeAngle = 0;
                 return overviewData.filter(d => d.value > 0).map((d, i) => {
                   const segLen = (d.value / validTotal) * circumference - gap;
-                  const duration = (d.value / validTotal) * 2.0; 
+                  const duration = (d.value / validTotal) * 2.0;
                   const delay = (cumulativeAngle / 360) * 2.0;
                   const currentAngle = cumulativeAngle;
-                  
+
                   cumulativeAngle += (d.value / validTotal) * 360;
-                  
+
                   return (
                     <g key={i} style={{ transform: `rotate(${currentAngle}deg)`, transformOrigin: 'center' }}>
                       <circle
@@ -486,8 +497,8 @@ const HotClientList = () => {
                         strokeDasharray={circumference}
                         strokeDashoffset={mounted ? circumference - Math.max(segLen, 0) : circumference}
                         strokeLinecap="butt"
-                        style={{ 
-                          transition: `stroke-dashoffset ${duration}s linear ${delay}s` 
+                        style={{
+                          transition: `stroke-dashoffset ${duration}s linear ${delay}s`
                         }}
                       />
                     </g>
@@ -504,8 +515,8 @@ const HotClientList = () => {
           {/* Legend (Right) */}
           <div className="flex-1 space-y-2 text-[11px] font-semibold text-slate-600 pl-0 min-w-0">
             {overviewData.map((d, i) => (
-              <motion.div 
-                key={i} 
+              <motion.div
+                key={i}
                 initial={{ opacity: 0, x: 10 }}
                 animate={mounted ? { opacity: 1, x: 0 } : { opacity: 0, x: 10 }}
                 transition={{ delay: 0.1 + (i * 0.1), duration: 0.3 }}
@@ -581,11 +592,11 @@ const HotClientList = () => {
         <div className="grid grid-cols-2 gap-2">
           <button className="h-[34px] rounded-lg bg-[#EEF9F2] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <FaWhatsapp size={12} className="text-green-600 shrink-0" />
-            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Send Bulk<br/>WhatsApp</span>
+            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Send Bulk<br />WhatsApp</span>
           </button>
           <button onClick={() => navigate("/ihweClientData2026/warmClientsList")} className="h-[34px] rounded-lg bg-[#FFF3E0] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <CalendarDays size={12} className="text-orange-600 shrink-0" />
-            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Schedule<br/>Follow-Up</span>
+            <span className="text-[9px] font-bold text-[#15173D] leading-tight text-left">Schedule<br />Follow-Up</span>
           </button>
           <button className="h-[34px] rounded-lg bg-[#F3E8FF] flex items-center justify-center gap-1.5 hover:opacity-90 transition-opacity">
             <Mail size={12} className="text-purple-600 shrink-0" />
