@@ -108,9 +108,6 @@ const CompanyAccountSummary = ({ companyInfo, financials }) => {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-1">
             <h1 className="text-[18px] font-normal text-[#1a2b4b]">{companyInfo?.name}</h1>
-            <span className={`px-3 py-1 rounded-full text-xs font-normal ${statusClass}`}>
-              {companyInfo?.statusLabel || "Lead"}
-            </span>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-[13px]">
