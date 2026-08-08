@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import api from "../../lib/api";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { useEventContext } from "../../context/EventContext";
 import {
