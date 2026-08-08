@@ -327,7 +327,7 @@ const PaymentManagement = () => {
                                 </div>
                             </div>
                             <div className="space-y-3 text-[13px] font-medium text-[#17213d] md:pt-1">
-                                <div><span className="font-extrabold">GSTIN:</span> <span className="ml-1">{companyInfo.companyGst || 'N/A'}</span></div>
+                                <div style={{ marginTop: 4 }}><span className="font-extrabold">GSTIN:</span> <span className="ml-1">{companyInfo.companyGst || 'N/A'}</span></div>
                                 <div><span className="font-extrabold">CIN:</span> <span className="ml-1">{companyInfo.companyCin || 'N/A'}</span></div>
                                 <div><span className="font-extrabold">Email:</span> <span className="ml-1">{companyInfo.contactEmail || 'N/A'}</span></div>
                             </div>
