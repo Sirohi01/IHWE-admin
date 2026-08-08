@@ -267,30 +267,32 @@ const AddPayment = () => {
         <div className="flex-1 min-w-[250px]">
           <div className="text-[11px] text-slate-500 font-medium mb-0.5">Exhibitor</div>
           <div className="text-base font-bold text-slate-900 truncate">{companyInfo?.name || "N/A"}</div>
-          <div className="text-[11px] text-slate-500 mt-0.5">
-            Stall No. {companyInfo?.stallNo || 'N/A'} {companyInfo?.stallSize ? `• ${companyInfo.stallSize}` : ''} • IHWE 2026
-          </div>
+          {companyInfo?.stallNo && companyInfo?.stallNo !== 'N/A' && (
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              Stall No. {companyInfo?.stallNo} {companyInfo?.stallSize && companyInfo?.stallSize !== 'N/A' ? `• ${companyInfo?.stallSize}` : ''} • IHWE 2026
+            </div>
+          )}
         </div>
 
         <div className="w-px h-10 bg-slate-200 hidden lg:block" />
 
         <div className="min-w-[120px]">
           <div className="text-[11px] text-slate-500 font-medium mb-0.5">Total Payable</div>
-          <div className="text-xl font-bold text-slate-900">₹ {formatCurrency(financials?.totalDue)}</div>
+          <div className="text-xl font-bold text-slate-900"> {formatCurrency(financials?.totalDue)}</div>
         </div>
 
         <div className="w-px h-10 bg-slate-200 hidden lg:block" />
 
         <div className="min-w-[120px]">
           <div className="text-[11px] text-slate-500 font-medium mb-0.5">Received</div>
-          <div className="text-xl font-bold text-emerald-500">₹ {formatCurrency(financials?.paidAmount)}</div>
+          <div className="text-xl font-bold text-emerald-500"> {formatCurrency(financials?.paidAmount)}</div>
         </div>
 
         <div className="w-px h-10 bg-slate-200 hidden lg:block" />
 
         <div className="min-w-[120px]">
           <div className="text-[11px] text-slate-500 font-medium mb-0.5">Outstanding</div>
-          <div className="text-xl font-bold text-rose-500">₹ {formatCurrency(financials?.remainingBalance)}</div>
+          <div className="text-xl font-bold text-rose-500"> {formatCurrency(financials?.remainingBalance)}</div>
         </div>
 
         <div className="w-px h-10 bg-slate-200 hidden lg:block" />
@@ -601,7 +603,7 @@ const AddPayment = () => {
 
               <div className="bg-[#111827] text-white rounded-lg p-2.5 flex justify-between items-center mt-2">
                 <span className="text-[13px] font-medium text-slate-300">Balance After Posting</span>
-                <span className="text-[18px] font-bold">₹{formatCurrency(balanceAfterPosting)}</span>
+                <span className="text-[18px] font-bold">{formatCurrency(balanceAfterPosting)}</span>
               </div>
             </div>
           </div>
