@@ -75,6 +75,7 @@ const PaymentEdit = () => {
       if (paymentToEdit) {
         const formattedData = {
           ...paymentToEdit,
+          status_short: paymentToEdit.status_short || paymentToEdit.pymnt_type || "",
           payment_date: paymentToEdit.payment_date
             ? paymentToEdit.payment_date.split("T")[0]
             : "",
@@ -237,7 +238,11 @@ const PaymentEdit = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await dispatch(updatePayment({ id, updatedData: formData })).unwrap();
+      const updatedData = {
+        ...formData,
+        pymnt_type: formData.status_short || formData.pymnt_type || "",
+      };
+      await dispatch(updatePayment({ id, updatedData })).unwrap();
       showSuccess("Payment updated successfully!");
       if (formData.ex_no) {
         navigate(`/ihweClientData2026/payments/${formData.ex_no}`);
@@ -486,10 +491,10 @@ const PaymentEdit = () => {
                 required
               >
                 <option value="">Select Here</option>
-                <option value="Advance PYMT">Advance PYMT</option>
-                <option value="Running PYMT">Running PYMT</option>
-                <option value="Final PYMT">Final PYMT</option>
-                <option value="ADJMT PYMT">ADJMT PYMT</option>
+                <option value="Advance Payment">Advance Payment</option>
+                <option value="Final Payment">Final Payment</option>
+                <option value="Full Payment">Full Payment</option>
+                <option value="Running Payment">Running Payment</option>
               </select>
             </div>
 

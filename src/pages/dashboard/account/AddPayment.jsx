@@ -17,6 +17,7 @@ const formatCurrency = (amount) => {
 };
 
 const PAYMENT_MODE_OPTIONS = ["Bank Transfer / NEFT / RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
+const PAYMENT_TYPE_OPTIONS = ["Advance Payment", "Final Payment", "Full Payment", "Running Payment"];
 
 const nowLocalDate = () => {
   const d = new Date();
@@ -57,6 +58,7 @@ const AddPayment = () => {
   const [selectedDocId, setSelectedDocId] = useState("");
   const [paymentDate, setPaymentDate] = useState(nowLocalDate());
   const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE_OPTIONS[0]);
+  const [paymentType, setPaymentType] = useState(PAYMENT_TYPE_OPTIONS[0]);
   const [referenceNo, setReferenceNo] = useState("");
   const [amountReceived, setAmountReceived] = useState("");
   const [bankName, setBankName] = useState("");
@@ -181,6 +183,10 @@ const AddPayment = () => {
       toast.error("Please select a payment mode.");
       return;
     }
+    if (!paymentType) {
+      toast.error("Please select a payment type.");
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -191,7 +197,8 @@ const AddPayment = () => {
       formData.append("amount_text", String(parsedAmountReceived));
       formData.append("tds_text", String(parsedTds));
       formData.append("payment_date", paymentDate);
-      formData.append("pymnt_type", "Advance Payment"); // Default since we removed it from UI
+      formData.append("pymnt_type", paymentType);
+      formData.append("status_short", paymentType);
       formData.append("payment_mode", paymentMode);
       formData.append("utr_no", referenceNo);
       formData.append("bankId", bankName);
@@ -375,6 +382,18 @@ const AddPayment = () => {
                   className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
                 >
                   {PAYMENT_MODE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Type of Payment *</label>
+                <select
+                  value={paymentType}
+                  onChange={(e) => setPaymentType(e.target.value)}
+                  required
+                  className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
+                >
+                  {PAYMENT_TYPE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
 
@@ -626,6 +645,10 @@ const AddPayment = () => {
               <div className="flex justify-between items-start">
                 <span className="text-slate-500">Received From</span>
                 <span className="font-semibold text-slate-900 text-right w-2/3 truncate">{companyInfo?.name || "-"}</span>
+              </div>
+              <div className="flex justify-between items-start">
+                <span className="text-slate-500">Payment Type</span>
+                <span className="font-semibold text-slate-900 text-right">{paymentType || "-"}</span>
               </div>
               <div className="flex justify-between items-start">
                 <span className="text-slate-500">Status</span>

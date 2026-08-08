@@ -140,6 +140,8 @@ const Payments = ({ client, onBack }) => {
     resetConditionalFields();
     // Set visibility based on payment type
     if (
+      data.status_short === "Advance Payment" ||
+      data.status_short === "Running Payment" ||
       data.status_short === "Advance PYMT" ||
       data.status_short === "Running PYMT"
     ) {
@@ -265,12 +267,15 @@ const Payments = ({ client, onBack }) => {
       companyId: id,
       added_by: added_By,
       status_short: reviewData.status_short,
+      pymnt_type: reviewData.status_short,
     };
 
     try {
       await dispatch(createPayment(finalFormData)).unwrap();
       showSuccess("New payment added successfully.");
       if (
+        reviewData.status_short === "Advance Payment" ||
+        reviewData.status_short === "Running Payment" ||
         reviewData.status_short === "Advance PYMT" ||
         reviewData.status_short === "Running PYMT"
       ) {
@@ -530,10 +535,10 @@ const Payments = ({ client, onBack }) => {
                 required
               >
                 <option value="">Select Here</option>
-                <option value="Advance PYMT">Advance PYMT</option>
-                <option value="Running PYMT">Running PYMT</option>
-                <option value="Final PYMT">Final PYMT</option>
-                <option value="ADJMT PYMT">ADJMT PYMT</option>
+                <option value="Advance Payment">Advance Payment</option>
+                <option value="Final Payment">Final Payment</option>
+                <option value="Full Payment">Full Payment</option>
+                <option value="Running Payment">Running Payment</option>
               </select>
             </div>
             <div className="flex flex-col md:col-span-1">
