@@ -155,6 +155,8 @@ export const estimateToInvoiceForm = (estimate, client, prev = {}) => {
 
   return {
     ...prev,
+    eventId: estimate?.eventId?._id || estimate?.eventId || prev.eventId || "",
+    crmEventId: estimate?.crmEventId?._id || estimate?.crmEventId || prev.crmEventId || "",
     companyId: estimate?.companyId || client?.clientId || client?._id || prev.companyId,
     clientName: companyName || prev.clientName,
     gstin: estimate?.company_gst_no || estimate?.gst_no || clientData.gst || prev.gstin,
@@ -181,8 +183,25 @@ export const estimateToInvoiceForm = (estimate, client, prev = {}) => {
 
 export const clientToInvoiceForm = (client, id, prev = {}) => {
   const clientData = getClientDisplayData(client);
+  const assignments = Array.isArray(client?.eventAssignments) ? client.eventAssignments : [];
+  const preferredAssignment = assignments.find((assignment) =>
+    assignment?.registrationEventId
+    && String(assignment?.eventId?._id || assignment?.eventId || "") === String(client?.eventId?._id || client?.eventId || "")
+  ) || assignments.find((assignment) => assignment?.registrationEventId) || null;
   return {
     ...prev,
+    eventId: preferredAssignment?.registrationEventId?._id
+      || preferredAssignment?.registrationEventId
+      || client?.registrationEventId?._id
+      || client?.registrationEventId
+      || (client?.participation ? (client?.eventId?._id || client?.eventId) : "")
+      || prev.eventId
+      || "",
+    crmEventId: preferredAssignment?.eventId?._id
+      || preferredAssignment?.eventId
+      || (!client?.participation ? (client?.eventId?._id || client?.eventId) : "")
+      || prev.crmEventId
+      || "",
     companyId: client?.clientId || client?._id || id || prev.companyId,
     clientName: clientData.name || prev.clientName,
     gstin: clientData.gst || prev.gstin,

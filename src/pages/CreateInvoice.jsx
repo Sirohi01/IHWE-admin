@@ -22,6 +22,7 @@ import {
     loadClientLikeProforma,
 } from '../utils/invoicePrefill';
 import { getCurrentUserName } from '../utils/currentUser';
+import { resolveLinkedIds } from '../utils/resolveLinkedIds';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const newItem = () => ({
@@ -155,15 +156,23 @@ const CreateInvoice = () => {
 
     const fetchEstimates = async () => {
         try {
-            const [estRes, invRes] = await Promise.all([
+            const [estRes, invRes, linkedIds] = await Promise.all([
                 api.get('/api/estimates'),
-                api.get('/api/invoices')
+                api.get('/api/invoices'),
+                id ? resolveLinkedIds(id) : Promise.resolve([]),
             ]);
 
             const fetchedEstimates = Array.isArray(estRes.data) ? estRes.data : (estRes.data?.data || []);
             const fetchedInvoices = Array.isArray(invRes.data) ? invRes.data : (invRes.data?.data || []);
+            const linkedIdSet = new Set(linkedIds.map(String));
+            const accountEstimates = id
+                ? fetchedEstimates.filter((estimate) =>
+                    linkedIdSet.has(String(estimate.companyId || ''))
+                    && !isCancelledDoc(estimate)
+                )
+                : fetchedEstimates.filter((estimate) => !isCancelledDoc(estimate));
 
-            setEstimates(fetchedEstimates);
+            setEstimates(accountEstimates);
             setExistingInvoices(fetchedInvoices);
         } catch (err) {
             console.error("Failed to fetch estimates and invoices", err);
@@ -171,7 +180,7 @@ const CreateInvoice = () => {
     };
     useEffect(() => {
         fetchEstimates();
-    }, []);
+    }, [id]);
 
     useEffect(() => {
         if (id) {
@@ -314,6 +323,8 @@ const CreateInvoice = () => {
     // ── form state ──────────────────────────────────────────────────────────────
     const [form, setForm] = useState({
         companyId: '',
+        eventId: '',
+        crmEventId: '',
         clientName: '',
         gstin: '',
         invoiceType: 'Standard',
@@ -641,7 +652,8 @@ const CreateInvoice = () => {
 
         const payload = {
             companyId: form.companyId || id,
-            ...(!isEditMode && crmEventId ? { crmEventId } : {}),
+            ...(!isEditMode && (crmEventId || form.crmEventId) ? { crmEventId: crmEventId || form.crmEventId } : {}),
+            ...(!isEditMode && form.eventId ? { eventId: form.eventId } : {}),
             source_estimate_id: resolvedSourceEstimateId || sourceEstimateId || '',
             estimate_no: selectedPi || '',
             delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],

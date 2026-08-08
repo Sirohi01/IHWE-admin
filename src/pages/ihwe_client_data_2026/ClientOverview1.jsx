@@ -502,6 +502,7 @@ const ClientOverview1 = () => {
   const [contactPhotoFile, setContactPhotoFile] = useState(null);
   const [contactPhotoPreview, setContactPhotoPreview] = useState("");
   const [isSavingContact, setIsSavingContact] = useState(false);
+  const [isSendingRegistration, setIsSendingRegistration] = useState(false);
   const [editProfileData, setEditProfileData] = useState({
     companyName: "",
     email: "",
@@ -523,6 +524,29 @@ const ClientOverview1 = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [logoVerification, setLogoVerification] = useState({ status: "idle", message: "" });
+
+  const handleSendRegistration = async () => {
+    const registrationId = company?.exhibitorRegistrationId || company?._id || id;
+    const confirmation = await Swal.fire({
+      icon: "warning",
+      title: "Send Registration?",
+      text: "This will generate fresh exhibitor login credentials and manually send the registration email and WhatsApp.",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Send",
+      confirmButtonColor: "#124170",
+    });
+    if (!confirmation.isConfirmed) return;
+
+    try {
+      setIsSendingRegistration(true);
+      const response = await api.post(`/api/exhibitor-registration/${registrationId}/send-registration`);
+      await Swal.fire("Sent!", response.data?.message || "Registration communication sent successfully.", "success");
+    } catch (error) {
+      await Swal.fire("Not Sent", error.response?.data?.message || "Registration communication failed.", "error");
+    } finally {
+      setIsSendingRegistration(false);
+    }
+  };
   const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   useEffect(() => {
@@ -972,6 +996,15 @@ const ClientOverview1 = () => {
           <button disabled className="px-2.5 py-1.5 bg-slate-100 text-slate-400 rounded-md text-[10px] font-bold cursor-not-allowed shadow-sm border border-slate-200">
             Add MSME Details
           </button>
+          {isExhibitor && (
+            <button
+              onClick={handleSendRegistration}
+              disabled={isSendingRegistration}
+              className="px-2.5 py-1.5 bg-indigo-600 text-white rounded-md text-[10px] font-bold hover:bg-indigo-700 transition-all shadow-sm flex items-center gap-1 disabled:opacity-60"
+            >
+              <Mail size={12} /> {isSendingRegistration ? "Sending..." : "Send Registration"}
+            </button>
+          )}
           <button onClick={() => setShowWhatsAppModal(true)} className="px-2.5 py-1.5 bg-[#0D530E] text-white rounded-md text-[10px] font-bold hover:bg-[#093a0a] transition-all shadow-sm flex items-center gap-1">
             <FaWhatsapp size={12} /> Send WhatsApp
           </button>

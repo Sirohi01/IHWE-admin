@@ -5,6 +5,7 @@ import api from '../../../lib/api';
 import Swal from 'sweetalert2';
 import CommunicationModal from '../../../components/CommunicationModal';
 import AccountNavigation from '../../../components/AccountNavigation';
+import { resolveLinkedIds } from '../../../utils/resolveLinkedIds';
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -75,13 +76,18 @@ const InvoiceList = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [accountName, setAccountName] = useState('');
     const [actionLoaders, setActionLoaders] = useState({});
+    const [linkedAccountIds, setLinkedAccountIds] = useState([]);
     const itemsPerPage = 10;
 
     useEffect(() => {
         const fetchInvoices = async () => {
             try {
-                const res = await api.get('/api/invoices');
-                setInvoices(res.data || []);
+                const [res, linkedIds] = await Promise.all([
+                    api.get('/api/invoices'),
+                    isAllList ? Promise.resolve([]) : resolveLinkedIds(id),
+                ]);
+                setInvoices(res.data?.data || res.data || []);
+                setLinkedAccountIds(linkedIds);
             } catch (err) {
                 console.error("Failed to fetch invoices", err);
             } finally {
@@ -89,7 +95,7 @@ const InvoiceList = () => {
             }
         };
         fetchInvoices();
-    }, []);
+    }, [id, isAllList]);
 
     useEffect(() => {
         if (isAllList) {
@@ -127,7 +133,8 @@ const InvoiceList = () => {
     };
 
     const filteredInvoices = invoices.filter(inv => {
-        if (!isAllList && String(inv.companyId || '') !== String(id)) return false;
+        if (!isAllList && !linkedAccountIds.includes(String(inv.companyId || ''))) return false;
+        if (crmEventId && String(inv.crmEventId || '') !== String(crmEventId)) return false;
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
