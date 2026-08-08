@@ -465,7 +465,7 @@ const AddPayment = () => {
               <div>
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">TDS Amount</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[13px]">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[13px]"></span>
                   <input
                     type="number"
                     value={tdsAmountInput}
@@ -480,7 +480,7 @@ const AddPayment = () => {
               <div>
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Credit Note / Adjustment</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[13px]">₹</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-[13px]"></span>
                   <input
                     type="number"
                     value={creditNoteAdjustment}
@@ -545,9 +545,9 @@ const AddPayment = () => {
                           <td className="px-4 py-2.5">
                             {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString("en-GB", { day: '2-digit', month: 'short', year: 'numeric' }) : "N/A"}
                           </td>
-                          <td className="px-4 py-2.5 font-medium">₹ {formatCurrency(outstandingForDoc)}</td>
+                          <td className="px-4 py-2.5 font-medium"> {formatCurrency(outstandingForDoc)}</td>
                           <td className="px-4 py-2.5 font-semibold text-slate-900">
-                            {isSelected && parsedAmountReceived > 0 ? `₹ ${formatCurrency(parsedAmountReceived)}` : "₹ 0"}
+                            {isSelected && parsedAmountReceived > 0 ? ` ${formatCurrency(parsedAmountReceived)}` : " 0"}
                           </td>
                         </tr>
                       );
@@ -639,23 +639,23 @@ const AddPayment = () => {
             <div className="space-y-2.5 text-[13px]">
               <div className="flex justify-between items-center text-slate-600">
                 <span>Invoice / PI Amount</span>
-                <span className="font-semibold text-slate-900">₹{formatCurrency(invoiceAmount)}</span>
+                <span className="font-semibold text-slate-900">{formatCurrency(invoiceAmount)}</span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span>Already Received</span>
-                <span className="font-semibold text-slate-900">₹{formatCurrency(invoiceAmount - outstandingAmount)}</span>
+                <span className="font-semibold text-slate-900">{formatCurrency(invoiceAmount - outstandingAmount)}</span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span>Current Payment</span>
-                <span className="font-semibold text-slate-900">₹{formatCurrency(parsedAmountReceived)}</span>
+                <span className="font-semibold text-slate-900">{formatCurrency(parsedAmountReceived)}</span>
               </div>
               <div className="flex justify-between items-center text-slate-600">
                 <span>TDS Deduction</span>
-                <span className="font-semibold text-slate-900">₹{formatCurrency(parsedTds)}</span>
+                <span className="font-semibold text-slate-900">{formatCurrency(parsedTds)}</span>
               </div>
               <div className="flex justify-between items-center text-slate-600 mb-1.5">
                 <span>Credit Note / Adjustment</span>
-                <span className="font-semibold text-slate-900">₹{formatCurrency(parsedCreditNode)}</span>
+                <span className="font-semibold text-slate-900">{formatCurrency(parsedCreditNode)}</span>
               </div>
 
               <div className="bg-[#111827] text-white rounded-lg p-2.5 flex justify-between items-center mt-2">
