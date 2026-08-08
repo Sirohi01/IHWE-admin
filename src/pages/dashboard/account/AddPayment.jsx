@@ -67,6 +67,7 @@ const AddPayment = () => {
   const [adjustmentReason, setAdjustmentReason] = useState("");
 
   const [internalRemarks, setInternalRemarks] = useState("");
+  const [customNarration, setCustomNarration] = useState("");
   const [proofFile, setProofFile] = useState(null);
 
   useEffect(() => {
@@ -196,6 +197,7 @@ const AddPayment = () => {
       formData.append("bankId", bankName);
       formData.append("ex_no", docType === "Invoice" ? selectedDoc.invoice_no : selectedDoc.est_no);
       formData.append("added_by", getCurrentUserName());
+      formData.append("customNarration", customNarration);
       formData.append("notes", internalRemarks);
       if (proofFile) formData.append("paymentProof", proofFile);
 
@@ -552,6 +554,15 @@ const AddPayment = () => {
                   onChange={(e) => setInternalRemarks(e.target.value)}
                   placeholder="Add remarks for accounts team, approval note or client communication..."
                   className="w-full border border-slate-200 rounded text-[12px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white h-[52px] resize-none"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Custom Narration</label>
+                <textarea
+                  value={customNarration}
+                  onChange={(e) => setCustomNarration(e.target.value)}
+                  placeholder="Leave blank to use the default receipt narration..."
+                  className="w-full border border-slate-200 rounded text-[12px] px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-400 bg-white h-[76px] resize-y"
                 />
               </div>
             </div>

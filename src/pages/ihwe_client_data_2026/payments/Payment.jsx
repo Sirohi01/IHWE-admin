@@ -22,7 +22,8 @@ const Payments = ({ client, onBack }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
-  const added_By = localStorage.getItem("user_name");
+  const adminInfo = JSON.parse(localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") || "{}");
+  const added_By = adminInfo._id || adminInfo.id || localStorage.getItem("user_name");
   const emptyFormData = {
     pymtAgainst: "",
     invoice_id: "",
@@ -47,6 +48,7 @@ const Payments = ({ client, onBack }) => {
     utr_no: "",
     transactionDetailsUpi: "",
     bankId: "",
+    customNarration: "",
   };
 
   const emptyReviewData = {
@@ -555,6 +557,22 @@ const Payments = ({ client, onBack }) => {
             </div>
 
             <div className="md:col-span-1 h-8"></div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 mb-4">
+            <div className="flex flex-col">
+              <label className="text-[13px] text-gray-900 font-medium mb-1">
+                Custom Narration
+              </label>
+              <textarea
+                name="customNarration"
+                value={formData.customNarration}
+                onChange={handleInputChange}
+                rows={3}
+                placeholder="Leave blank to use default receipt narration"
+                className="border border-gray-300 px-2 py-2 text-xs font-medium focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none resize-y"
+              />
+            </div>
           </div>
 
           {/* Conditional Sections */}
