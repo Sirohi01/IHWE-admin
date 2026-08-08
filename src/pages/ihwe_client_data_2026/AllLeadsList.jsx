@@ -105,6 +105,7 @@ const AllLeadsList = () => {
   const [endDate, setEndDate] = useState("");
   const [filterSource, setFilterSource] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [convertedCount, setConvertedCount] = useState(0);
 
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
   const { currentEventId } = useEventContext();
@@ -123,6 +124,23 @@ const AllLeadsList = () => {
     return () => clearTimeout(t);
   }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, currentEventId]);
 
+  useEffect(() => {
+    if (!currentEventId) { setConvertedCount(0); return; }
+    let cancelled = false;
+    const stored = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
+    let currentUser = {};
+    try { currentUser = stored ? JSON.parse(stored) : (user || {}); } catch { currentUser = user || {}; }
+    const params = new URLSearchParams({
+      eventId: currentEventId,
+      ...(currentUser?.username && { username: currentUser.username }),
+      ...(currentUser?.role && { role: currentUser.role }),
+    });
+    api.get(`/api/companies/converted?${params}`)
+      .then((res) => { if (!cancelled) setConvertedCount(Number(res.data?.total) || 0); })
+      .catch(() => { if (!cancelled) setConvertedCount(0); });
+    return () => { cancelled = true; };
+  }, [currentEventId, user]);
+
   const filtered = filterStatus
     ? companies.filter((c) => (c.companyStatus || "").toLowerCase().includes(filterStatus.toLowerCase()))
     : companies;
@@ -139,7 +157,7 @@ const AllLeadsList = () => {
       <AnimatedStatCard icon={<Package className="w-5 h-5 text-orange-600" strokeWidth={2.5} />} gradientTo="to-orange-50" iconBg="bg-orange-100" rawValue={companies.filter((c) => ["warm","follow"].some((k) => (c.companyStatus || "").toLowerCase().includes(k))).length} displayValue={(c) => Math.round(c)} label="FOLLOW-UPS" subLabel="Warm Leads" subColor="#d97706" />
       <AnimatedStatCard icon={<Banknote className="w-5 h-5 text-red-600" strokeWidth={2.5} />} gradientTo="to-red-50" iconBg="bg-red-100" rawValue={companies.filter((c) => (c.companyStatus || "").toLowerCase().includes("hot")).length} displayValue={(c) => Math.round(c)} label="HOT LEADS" subLabel="High Priority" subColor="#dc2626" />
       <AnimatedStatCard icon={<Clock className="w-5 h-5 text-rose-600" strokeWidth={2.5} />} gradientTo="to-rose-50" iconBg="bg-rose-100" rawValue={companies.filter((c) => ["cold","lost"].some((k) => (c.companyStatus || "").toLowerCase().includes(k))).length} displayValue={(c) => Math.round(c)} label="LOST / COLD" subLabel="Inactive" subColor="#e11d48" />
-      <AnimatedStatCard icon={<DollarSign className="w-5 h-5 text-purple-600" strokeWidth={2.5} />} gradientTo="to-purple-50" iconBg="bg-purple-100" rawValue={companies.filter((c) => (c.companyStatus || "").toLowerCase().includes("convert")).length} displayValue={(c) => Math.round(c)} label="CONVERTED" subLabel="Closed Won" subColor="#7c3aed" />
+      <AnimatedStatCard icon={<DollarSign className="w-5 h-5 text-purple-600" strokeWidth={2.5} />} gradientTo="to-purple-50" iconBg="bg-purple-100" rawValue={convertedCount} displayValue={(c) => Math.round(c)} label="CONVERTED" subLabel="Closed Won" subColor="#7c3aed" />
     </>
   );
 

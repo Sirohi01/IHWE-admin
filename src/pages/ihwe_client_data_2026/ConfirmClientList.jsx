@@ -463,7 +463,7 @@ const ConfirmClientList = () => {
       <th className="min-w-[150px] px-2 py-2 font-medium">Contact Details</th>
       <th className="min-w-[150px] px-2 py-2 font-medium text-left">Category</th>
       <th className="min-w-[125px] px-2 py-2 font-medium text-left">Source</th>
-      <th className="min-w-[125px] px-2 py-2 font-medium text-center">Stall Size</th>
+      <th className="min-w-[135px] px-2 py-2 font-medium text-center">Stall Info</th>
       <th className="min-w-[145px] px-2 py-2 font-medium text-center">Booking Date</th>
       <th className="min-w-[125px] px-2 py-2 font-medium text-left">Location</th>
       <th className="min-w-[90px] px-2 py-2 font-medium text-right">Revenue</th>
@@ -534,16 +534,19 @@ const ConfirmClientList = () => {
             </td>
             <td className="min-w-[185px] px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
-                <Link to={`/client-overview/${row._id}?source=exhibitor&eventId=${routeCrmEventId || currentEventId}`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                <Link to={row.exhibitorRegistrationId
+                  ? `/client-overview/${row.exhibitorRegistrationId}?source=exhibitor&eventId=${routeCrmEventId || currentEventId}`
+                  : `/crm-event/${routeCrmEventId || currentEventId}/client/${row.clientId || row.companyId || row._id}`
+                }>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
             <td className="min-w-[230px] max-w-[230px] px-2 py-2 text-left">
               <span
                 className="block w-[210px] overflow-hidden text-ellipsis whitespace-nowrap rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[9px] font-bold text-blue-700"
-                title={row.eventId?.name || "Event Not Assigned"}
+                title={row.eventId?.name || currentEvent?.event_name || currentEvent?.event_fullName || currentEvent?.name || "Event Not Assigned"}
               >
-                {row.eventId?.name || "Event Not Assigned"}
+                {row.eventId?.name || currentEvent?.event_name || currentEvent?.event_fullName || currentEvent?.name || "Event Not Assigned"}
               </span>
             </td>
             <td className="min-w-[150px] px-2 py-2">
@@ -593,12 +596,15 @@ const ConfirmClientList = () => {
                 @{toTitleCase(source)}
               </span>
             </td>
-            <td className="px-1 py-2 text-center">
-              <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
-                {isIncompleteBooking
-                  ? <span className="text-red-600 bg-red-50 border border-red-200 rounded px-1.5 py-0.5">Incomplete Booking</span>
-                  : `${row.participation?.stallSize || row.stallSize} sqm`}
-              </span>
+            <td className="min-w-[135px] px-1 py-2 text-center">
+              <div className="inline-flex flex-col items-center leading-tight">
+                <span className="text-[10px] font-bold leading-tight text-indigo-700">
+                  No. {row.stallNumber || row.participation?.stallFor || row.stallNo || row.stall_no || "N/A"}
+                </span>
+                <span className="text-[9px] font-bold leading-tight text-emerald-700">
+                  {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "Size N/A"}
+                </span>
+              </div>
             </td>
             <td className="px-1 py-2 text-center">
               <div className="flex items-center justify-center gap-1">

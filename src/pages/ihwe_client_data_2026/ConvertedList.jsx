@@ -424,7 +424,7 @@ const ConvertedList = () => {
       <th className="px-2 py-2 font-medium">Contact Details</th>
       <th className="px-2 py-2 font-medium text-center">Category</th>
       <th className="px-2 py-2 font-medium text-center">Source</th>
-      <th className="px-2 py-2 font-medium text-center">Stall Size</th>
+      <th className="min-w-[135px] px-2 py-2 font-medium text-center">Stall Info</th>
       <th className="px-2 py-2 font-medium text-center">Booking Date</th>
       <th className="px-2 py-2 font-medium text-center">Location</th>
       <th className="px-2 py-2 font-medium text-right">Revenue</th>
@@ -470,7 +470,10 @@ const ConvertedList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D' }}>
-                <Link to={`/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                <Link to={row.exhibitorRegistrationId
+                  ? `/client-overview/${row.exhibitorRegistrationId}?source=exhibitor&eventId=${currentEventId}`
+                  : `/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`
+                }>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
@@ -521,10 +524,15 @@ const ConvertedList = () => {
                 @{toTitleCase(source)}
               </span>
             </td>
-            <td className="px-2 py-2 text-center">
-              <span className="font-bold text-[10px]" style={{ color: '#016B61' }}>
-                {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "N/A"}
-              </span>
+            <td className="min-w-[135px] px-2 py-2 text-center">
+              <div className="inline-flex flex-col items-center leading-tight">
+                <span className="text-[10px] font-bold leading-tight text-indigo-700">
+                  No. {row.stallNumber || row.participation?.stallFor || row.stallNo || row.stall_no || "N/A"}
+                </span>
+                <span className="text-[9px] font-bold leading-tight text-emerald-700">
+                  {row.participation?.stallSize || row.stallSize ? `${row.participation?.stallSize || row.stallSize} sqm` : "Size N/A"}
+                </span>
+              </div>
             </td>
             <td className="px-2 py-2 text-center">
               <div className="flex flex-col items-center justify-center gap-0.5">

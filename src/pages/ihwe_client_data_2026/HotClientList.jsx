@@ -371,7 +371,10 @@ const HotClientList = () => {
             </td>
             <td className="px-2 py-2">
               <div className="font-bold text-[11px] cursor-pointer hover:text-emerald-600 hover:underline" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
-                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>{toTitleCase(row.companyName)}</Link>
+                <Link to={row.exhibitorRegistrationId
+                  ? `/client-overview/${row.exhibitorRegistrationId}?source=exhibitor&eventId=${currentEventId}`
+                  : `/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`
+                }>{toTitleCase(row.companyName)}</Link>
               </div>
             </td>
             <td className="px-2 py-2">
