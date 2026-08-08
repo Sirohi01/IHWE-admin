@@ -16,8 +16,9 @@ const formatCurrency = (amount) => {
   }).format(amount || 0);
 };
 
-const PAYMENT_MODE_OPTIONS = ["Bank Transfer / NEFT / RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
+const PAYMENT_MODE_OPTIONS = ["NEFT / RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
 const PAYMENT_TYPE_OPTIONS = ["Advance Payment", "Final Payment", "Full Payment", "Running Payment"];
+const getAutomaticNarration = (paymentType) => paymentType.replace(/\s+Payment$/i, "");
 
 const nowLocalDate = () => {
   const d = new Date();
@@ -58,7 +59,7 @@ const AddPayment = () => {
   const [selectedDocId, setSelectedDocId] = useState("");
   const [paymentDate, setPaymentDate] = useState(nowLocalDate());
   const [paymentMode, setPaymentMode] = useState(PAYMENT_MODE_OPTIONS[0]);
-  const [paymentType, setPaymentType] = useState(PAYMENT_TYPE_OPTIONS[0]);
+  const [paymentType, setPaymentType] = useState("");
   const [referenceNo, setReferenceNo] = useState("");
   const [amountReceived, setAmountReceived] = useState("");
   const [bankName, setBankName] = useState("");
@@ -69,6 +70,7 @@ const AddPayment = () => {
   const [adjustmentReason, setAdjustmentReason] = useState("");
 
   const [internalRemarks, setInternalRemarks] = useState("");
+  const [narrationMode, setNarrationMode] = useState("automatic");
   const [customNarration, setCustomNarration] = useState("");
   const [proofFile, setProofFile] = useState(null);
 
@@ -163,6 +165,8 @@ const AddPayment = () => {
   const parsedCreditNode = parseFloat(creditNoteAdjustment) || 0;
 
   const balanceAfterPosting = Math.max(0, outstandingAmount - parsedAmountReceived - parsedTds - parsedCreditNode);
+  const automaticNarration = getAutomaticNarration(paymentType);
+  const narration = narrationMode === "custom" ? customNarration.trim() : automaticNarration;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -204,7 +208,9 @@ const AddPayment = () => {
       formData.append("bankId", bankName);
       formData.append("ex_no", docType === "Invoice" ? selectedDoc.invoice_no : selectedDoc.est_no);
       formData.append("added_by", getCurrentUserName());
-      formData.append("customNarration", customNarration);
+      // An empty custom narration tells the receipt generator to build the complete
+      // automatic narration from the selected payment/document details.
+      formData.append("customNarration", narrationMode === "custom" ? customNarration.trim() : "");
       formData.append("notes", internalRemarks);
       if (proofFile) formData.append("paymentProof", proofFile);
 
@@ -270,7 +276,7 @@ const AddPayment = () => {
       </div>
 
       {/* Top Summary Banner */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-1 mb-3 flex flex-wrap lg:flex-nowrap items-center gap-4">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 px-3 py-1 mb-2 flex flex-wrap lg:flex-nowrap items-center gap-3">
         <div className="flex-1 min-w-[250px]">
           <div className="text-[11px] text-slate-500 font-medium mb-0.5">Exhibitor</div>
           <div className="text-base font-bold text-slate-900 truncate">{companyInfo?.name || "N/A"}</div>
@@ -312,19 +318,19 @@ const AddPayment = () => {
         </div>
       </div>
 
-      <form id="addPaymentForm" onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-3">
+      <form id="addPaymentForm" onSubmit={handleSubmit} className="grid grid-cols-1 xl:grid-cols-12 gap-2">
 
         {/* LEFT COLUMN */}
-        <div className="xl:col-span-8 flex flex-col gap-3">
+        <div className="xl:col-span-8 flex flex-col gap-2">
 
           {/* Payment Details Card */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div className="flex justify-between items-center mb-3">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-[15px] font-bold text-slate-900">Payment Details</h2>
               <span className="text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-medium">Manual Entry</span>
             </div>
 
-            <div className="mb-3">
+            <div className="mb-2">
               <label className="block text-[11px] text-slate-600 font-semibold mb-1.5">Payment For *</label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5">
                 {[
@@ -344,7 +350,7 @@ const AddPayment = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-2">
               <div>
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Select Proforma / Invoice *</label>
                 <select
@@ -393,6 +399,7 @@ const AddPayment = () => {
                   required
                   className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
                 >
+                  <option value="" disabled>Select payment type</option>
                   {PAYMENT_TYPE_OPTIONS.map((opt) => <option key={opt} value={opt}>{opt}</option>)}
                 </select>
               </div>
@@ -436,13 +443,13 @@ const AddPayment = () => {
           </div>
 
           {/* Deduction & Adjustment */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div className="flex justify-between items-center mb-3">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-[15px] font-bold text-slate-900">Deduction & Adjustment</h2>
               <span className="text-[11px] text-slate-400">Optional but important for reconciliation</span>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-3 gap-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-3 gap-y-2">
               <div>
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">TDS Deducted?</label>
                 <select
@@ -484,27 +491,26 @@ const AddPayment = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="md:col-span-3">
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Adjustment Reason</label>
-                <input
-                  type="text"
+                <textarea
                   value={adjustmentReason}
                   onChange={(e) => setAdjustmentReason(e.target.value)}
                   placeholder="e.g. Rate difference"
-                  className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
+                  className="w-full h-[72px] border border-slate-200 rounded text-[13px] px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-400 bg-white resize-y"
                 />
               </div>
             </div>
           </div>
 
           {/* Allocate Payment Table & Uploads */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <div className="flex justify-between items-center mb-3">
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
+            <div className="flex justify-between items-center mb-2">
               <h2 className="text-[15px] font-bold text-slate-900">Allocate Payment</h2>
               <span className="text-[11px] text-slate-400">Auto allocation can be edited</span>
             </div>
 
-            <div className="border border-slate-200 rounded-lg overflow-hidden mb-4">
+            <div className="border border-slate-200 rounded-lg overflow-hidden mb-2">
               <table className="w-full text-left">
                 <thead className="bg-slate-50 border-b border-slate-200 text-[11px] text-slate-500 font-semibold">
                   <tr>
@@ -551,7 +557,7 @@ const AddPayment = () => {
               </table>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               <div>
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Receipt Upload</label>
                 <label className="border border-slate-200 rounded flex items-center justify-center gap-2 py-2.5 cursor-pointer hover:bg-slate-50 transition text-center bg-white h-[52px]">
@@ -578,13 +584,45 @@ const AddPayment = () => {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Custom Narration</label>
-                <textarea
-                  value={customNarration}
-                  onChange={(e) => setCustomNarration(e.target.value)}
-                  placeholder="Leave blank to use the default receipt narration..."
-                  className="w-full border border-slate-200 rounded text-[12px] px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-400 bg-white h-[76px] resize-y"
-                />
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1.5">Narration</label>
+                <div className="flex flex-wrap items-center gap-5 mb-2">
+                  <label className="flex items-center gap-2 text-[12px] font-medium text-slate-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="narrationMode"
+                      value="automatic"
+                      checked={narrationMode === "automatic"}
+                      onChange={() => setNarrationMode("automatic")}
+                      className="accent-blue-600"
+                    />
+                    Automatic
+                  </label>
+                  <label className="flex items-center gap-2 text-[12px] font-medium text-slate-700 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="narrationMode"
+                      value="custom"
+                      checked={narrationMode === "custom"}
+                      onChange={() => setNarrationMode("custom")}
+                      className="accent-blue-600"
+                    />
+                    Custom
+                  </label>
+                </div>
+
+                {narrationMode === "automatic" ? (
+                  <div className="w-full border border-slate-200 rounded text-[12px] px-3 py-2 text-slate-700 bg-slate-50 min-h-[38px]">
+                    {automaticNarration || "Select Type of Payment to generate narration"}
+                  </div>
+                ) : (
+                  <textarea
+                    value={customNarration}
+                    onChange={(e) => setCustomNarration(e.target.value)}
+                    required
+                    placeholder="Enter custom narration..."
+                    className="w-full border border-slate-200 rounded text-[12px] px-3 py-2 text-slate-800 focus:outline-none focus:border-blue-400 bg-white h-[76px] resize-y"
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -592,11 +630,11 @@ const AddPayment = () => {
         </div>
 
         {/* RIGHT COLUMN */}
-        <div className="xl:col-span-4 flex flex-col gap-3">
+        <div className="xl:col-span-4 flex flex-col gap-2">
 
           {/* Payment Summary */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <h2 className="text-[15px] font-bold text-slate-900 mb-3">Payment Summary</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
+            <h2 className="text-[15px] font-bold text-slate-900 mb-2">Payment Summary</h2>
 
             <div className="space-y-2.5 text-[13px]">
               <div className="flex justify-between items-center text-slate-600">
@@ -628,8 +666,8 @@ const AddPayment = () => {
           </div>
 
           {/* Receipt Preview */}
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
-            <h2 className="text-[15px] font-bold text-slate-900 mb-3">Receipt Preview</h2>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-3">
+            <h2 className="text-[15px] font-bold text-slate-900 mb-2">Receipt Preview</h2>
 
             <div className="space-y-2.5 text-[12px]">
               <div className="flex justify-between items-start">
@@ -649,6 +687,10 @@ const AddPayment = () => {
               <div className="flex justify-between items-start">
                 <span className="text-slate-500">Payment Type</span>
                 <span className="font-semibold text-slate-900 text-right">{paymentType || "-"}</span>
+              </div>
+              <div className="flex justify-between items-start gap-3">
+                <span className="text-slate-500">Narration</span>
+                <span className="font-semibold text-slate-900 text-right break-words max-w-[65%]">{narration || "-"}</span>
               </div>
               <div className="flex justify-between items-start">
                 <span className="text-slate-500">Status</span>
