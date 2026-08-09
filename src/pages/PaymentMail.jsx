@@ -34,7 +34,7 @@ import {
 } from "lucide-react";
 import namogangelogo from "../assets/namogangelogo1.webp";
 import ihwelogo from "../assets/9th_certificate/9thlogo.png";
-
+import firstheader from "../assets/firstheade1.png";
 
 export default function PaymentMail() {
    const amount = "81,820";
@@ -48,107 +48,8 @@ export default function PaymentMail() {
    return (
       <div className="w-full max-w-[794px] mx-auto bg-white font-sans text-gray-800 shadow-2xl relative my-2 print:my-0 print:shadow-none flex flex-col">         {/* --- HEADER SECTION --- */}
 
-         <div className="relative w-full overflow-hidden bg-white h-[125px] border-b-[2px] border-[#1b3664]">
-
-            {/* 1 & 2. LEFT BLUE DIAGONAL & ORANGE STRIPE */}
-            {/* Orange stripe */}
-            <div
-               className="absolute top-0 left-[-20px] h-[130px] w-[130px] bg-[#f37021] z-[1]"
-               style={{ clipPath: 'polygon(0 0, 100% 0, 30% 100%, 0 100%)' }}
-            ></div>
-            {/* Blue shape */}
-            <div
-               className="absolute top-0 left-[-20px] h-[130px] w-[120px] bg-[#1b3664] z-[2]"
-               style={{ clipPath: 'polygon(0 0, 100% 0, 30% 100%, 0 100%)' }}
-            ></div>
-
-            {/* 3, 4, 5. LOGO & TAGLINE */}
-            <div className="absolute top-[28px] left-[90px] z-10 flex flex-col items-center">
-               <img src={namogangelogo} alt="Namo Gange" className="w-[190px] object-contain" />
-               <p className="text-[#009ee3] font-serif italic text-[12px] font-medium tracking-wide mt-1 leading-none">Together for Healthier Tomorrow</p>
-            </div>
-
-            {/* 6, 7, 8, 9. TOP-RIGHT BLUE FEATURE BANNER */}
-            <div className="absolute top-0 right-[-10px] w-[450px] h-[45px] bg-[#1b3664] rounded-l-[28px] flex items-center justify-start pl-6 z-20">
-               <div className="flex items-center justify-between w-[95%] h-full">
-                  <div className="flex flex-col items-center justify-center border-b-[2px] border-[#f37021] h-[90%] w-1/4">
-                     <BadgeCheck size={14} className="text-white mb-0.5" strokeWidth={1.5} />
-                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Trusted<br />since 2016</span>
-                  </div>
-                  <div className="w-px h-[24px] bg-white/40"></div>
-                  <div className="flex flex-col items-center justify-center border-b-[2px] border-transparent h-[90%] w-1/4">
-                     <Handshake size={14} className="text-white mb-0.5" strokeWidth={1.5} />
-                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Building<br />Partnerships</span>
-                  </div>
-                  <div className="w-px h-[24px] bg-white/40"></div>
-                  <div className="flex flex-col items-center justify-center border-b-[2px] border-transparent h-[90%] w-1/4">
-                     <Users size={14} className="text-white mb-0.5" strokeWidth={1.5} />
-                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Empowering<br />Communities</span>
-                  </div>
-                  <div className="w-px h-[24px] bg-white/40"></div>
-                  <div className="flex flex-col items-center justify-center border-b-[2px] border-transparent h-[90%] w-1/4">
-                     <Globe size={14} className="text-white mb-0.5" strokeWidth={1.5} />
-                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Global<br />Vision</span>
-                  </div>
-               </div>
-            </div>
-
-            {/* 10, 11. CONTACT ROW */}
-            <div className="absolute top-[52px] right-[0px] flex items-center gap-2.5 z-10">
-               <div className="flex items-center gap-1.5">
-                  <div className="w-[18px] h-[18px] rounded-full bg-[#1b3664] flex items-center justify-center"><Mail size={9} className="text-white" /></div>
-                  <span className="text-[10px] font-medium text-gray-800 tracking-wide">info@namogangewellness.com</span>
-               </div>
-               <div className="w-px h-[12px] bg-gray-300"></div>
-               <div className="flex items-center gap-1.5">
-                  <div className="w-[18px] h-[18px] rounded-full bg-[#1b3664] flex items-center justify-center"><Globe size={9} className="text-white" /></div>
-                  <span className="text-[10px] font-medium text-gray-800 tracking-wide">www.namogangewellness.com</span>
-               </div>
-               <div className="w-px h-[12px] bg-gray-300"></div>
-               <div className="flex items-center gap-1.5">
-                  <div className="w-[18px] h-[18px] rounded-full bg-[#1b3664] flex items-center justify-center"><Phone size={9} className="text-white" /></div>
-                  <span className="text-[10px] font-medium text-gray-800 tracking-wide">+91 96549 00525</span>
-               </div>
-            </div>
-
-            {/* 12, 13, 14. CATEGORY ROW */}
-            <div className="absolute top-[82px] right-[30px] flex items-end justify-between w-[430px] z-20">
-               <div className="flex flex-col items-center">
-                  <HeartPulse size={15} className="text-[#1b3664] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#1b3664]">Healthcare</span>
-               </div>
-               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
-               <div className="flex flex-col items-center">
-                  <Leaf size={15} className="text-[#0f8b4d] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#0f8b4d]">Wellness</span>
-               </div>
-               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
-               <div className="flex flex-col items-center">
-                  <Salad size={15} className="text-[#f37021] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#f37021]">Nutrition</span>
-               </div>
-               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
-               <div className="flex flex-col items-center">
-                  <Microscope size={15} className="text-[#6b21a8] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#6b21a8]">Research</span>
-               </div>
-               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
-               <div className="flex flex-col items-center">
-                  <Store size={15} className="text-[#0891b2] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#0891b2]">Exhibitions</span>
-               </div>
-               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
-               <div className="flex flex-col items-center">
-                  <Presentation size={15} className="text-[#be123c] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#be123c]">Conferences</span>
-               </div>
-               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
-               <div className="flex flex-col items-center">
-                  <Trophy size={15} className="text-[#d97706] mb-0.5" strokeWidth={1.5} />
-                  <span className="text-[8.5px] font-bold text-[#d97706]">Awards</span>
-               </div>
-            </div>
-
+         <div className="w-full">
+            <img src={firstheader} alt="Header" className="w-full h-auto block" />
          </div>
 
          <div className="px-8 mt-2">
@@ -254,7 +155,7 @@ export default function PaymentMail() {
                         <CalendarClock size={14} className="text-[#1b3664]" />
                         <p className="text-[10px] text-gray-700 font-medium">We request you to kindly make the balance payment at your earliest convenience.</p>
                      </div>
-                  <div className="bg-[#1b3664] text-white flex items-center justify-center px-5 h-full font-extrabold text-[11px] border-t-[3px] border-[#1b3664]">
+                     <div className="bg-[#1b3664] text-white flex items-center justify-center px-5 h-full font-extrabold text-[11px] border-t-[3px] border-[#1b3664]">
                         <span className="text-yellow-300 mr-2 font-semibold tracking-wider text-[10px] uppercase">PAYMENT DUE DATE:</span> {dueDate}
                      </div>
                   </div>
