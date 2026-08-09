@@ -101,6 +101,10 @@ export default function AccessoryOrders() {
     const formatDate = (value) => value
         ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—';
+    const formatDateWithDay = (value) => value
+        ? new Date(value).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+        ` / ${new Date(value).toLocaleDateString('en-IN', { weekday: 'long' })}`
+        : '—';
     const formatTime = (value) => value
         ? new Date(value).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })
         : '—';
@@ -561,7 +565,7 @@ export default function AccessoryOrders() {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-0">
                                         {[
                                             ['Transaction Reference Number (UTR No.)', selectedOrder.bankTransferDetails?.transactionReferenceNumber || selectedOrder.transactionId],
-                                            ['Transaction Date', formatDate(selectedOrder.bankTransferDetails?.transactionDate)],
+                                            ['Transaction Date', formatDateWithDay(selectedOrder.bankTransferDetails?.transactionDate)],
                                             ['Transaction Time', selectedOrder.bankTransferDetails?.transactionTime],
                                             ['Transferred Amount', fmt(selectedOrder.bankTransferDetails?.transferredAmount || selectedOrder.grandTotal)],
                                             ['Sender Bank Name', selectedOrder.bankTransferDetails?.senderBankName],
