@@ -70,9 +70,11 @@ const AccountOverview = () => {
     setCommModal({ isOpen: true, type: "email", docType: "proforma", docId });
   };
 
-  const handleShareBankDetails = (docNo) => {
+  const handleShareBankDetails = (docNo, amount) => {
     const params = new URLSearchParams();
     if (docNo) params.set("doc", docNo);
+    if (amount) params.set("amount", amount);
+    if (data.companyInfo?.name) params.set("clientName", data.companyInfo.name);
     params.set("share", "1");
     if (eventId) params.set("eventId", eventId);
     if (crmEventId) params.set("crmEventId", crmEventId);
@@ -313,7 +315,7 @@ const AccountOverview = () => {
                                 <Mail size={13} />
                               </button>
                               <button
-                                onClick={() => handleShareBankDetails(doc.documentNo)}
+                                onClick={() => handleShareBankDetails(doc.documentNo, doc.amount)}
                                 className="text-[#7e22ce] hover:text-purple-800"
                                 title="Bank Details"
                               >

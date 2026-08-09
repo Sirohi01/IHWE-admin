@@ -13,6 +13,7 @@ import {
   Wallet,
   Share2,
   Trash2,
+  Link2,
 } from "lucide-react";
 import api, { SERVER_URL } from "../../lib/api";
 import { updateBank, deleteBank } from "../../features/add_by_admin/banks/bankSlice";
@@ -45,6 +46,7 @@ const FIELD_LABELS = {
   upiEnabled: "UPI Enabled",
   upiId: "UPI ID",
   upiRegisteredName: "UPI Registered Name",
+  paymentGatewayLink: "Payment Gateway Link",
   applicableEventName: "Applicable Event",
   isPrimary: "Primary Account",
   showOnProformaInvoice: "Show on Proforma Invoice",
@@ -70,10 +72,7 @@ const describeLogFields = (fields) => {
 
 const TABS = [
   { key: "account", label: "Account Details" },
-  { key: "transaction", label: "Transaction Usage" },
-  { key: "documents", label: "Documents" },
   { key: "activity", label: "Activity Log" },
-  { key: "share", label: "Share History" },
 ];
 
 const InfoRow = ({ label, value }) => (
@@ -102,10 +101,21 @@ const SectionCard = ({ icon: Icon, iconColor, number, title, children }) => (
   </div>
 );
 
-const EmptyTab = ({ label }) => (
-  <div className="bg-white rounded-lg border border-gray-100 p-10 text-center text-slate-400 text-[13px]">
-    No {label.toLowerCase()} recorded yet.
-  </div>
+const InlineFieldList = ({ fields }) => (
+  <p className="mt-2 text-[11px] text-slate-600 leading-relaxed">
+    {fields.map((f, i) => {
+      const isEmpty = f.value === "—";
+      return (
+        <React.Fragment key={f.label}>
+          <span className="font-medium text-slate-700">{f.label}:</span>{" "}
+          <span className={isEmpty ? "text-red-500 font-semibold" : ""}>
+            {isEmpty ? "Not Available" : f.value}
+          </span>
+          {i < fields.length - 1 && <span className="text-slate-300 mx-1.5">|</span>}
+        </React.Fragment>
+      );
+    })}
+  </p>
 );
 
 const BankAccountDetail = () => {
@@ -114,6 +124,8 @@ const BankAccountDetail = () => {
   const location = useLocation();
   const queryBankId = searchParams.get("bankId") || "";
   const docParam = searchParams.get("doc") || "";
+  const clientNameParam = searchParams.get("clientName") || "";
+  const amountParam = searchParams.get("amount") || "";
   // The dedicated share-payment-details route exists only to share, so it always opens
   // the panel — regardless of query params, which may be missing on old/bookmarked links.
   const isShareRoute = location.pathname.includes("share-payment-details");
@@ -356,7 +368,25 @@ const BankAccountDetail = () => {
             </SectionCard>
           </div>
 
-          <SectionCard number={3} title="Usage & Settings">
+          <SectionCard icon={Link2} iconColor="text-teal-500" number={3} title="Payment Gateway">
+            {bank.paymentGatewayLink ? (
+              <div className="flex items-center justify-between py-1.5 text-[12.5px]">
+                <span className="text-slate-500">Payment Gateway Link</span>
+                <a
+                  href={bank.paymentGatewayLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-semibold text-blue-600 hover:underline truncate max-w-[70%]"
+                >
+                  {bank.paymentGatewayLink}
+                </a>
+              </div>
+            ) : (
+              <p className="text-[12px] text-slate-400 py-1.5">No payment gateway link added.</p>
+            )}
+          </SectionCard>
+
+          <SectionCard number={4} title="Usage & Settings">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
               <div>
                 <InfoRow label="Purpose / Usage" value={formatPurpose(bank.purpose)} />
@@ -397,7 +427,7 @@ const BankAccountDetail = () => {
             </div>
           </SectionCard>
 
-          <SectionCard number={4} title="Audit Information">
+          <SectionCard number={5} title="Audit Information">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6">
               <div>
                 <InfoRow label="Created By" value={bank.added_by || "—"} />
@@ -414,22 +444,14 @@ const BankAccountDetail = () => {
 
       {tab === "activity" && (
         <div className="bg-white rounded-lg border border-gray-100 p-4 space-y-3">
-          <div className="border border-slate-100 rounded-[2px] px-4 py-3 flex items-start gap-3">
+          <div className="border border-slate-100 rounded-[2px] px-4 py-3 flex flex-col items-start gap-2">
             <div className="w-8 h-8 rounded-full bg-green-50 flex items-center justify-center shrink-0">
               <Wallet size={14} className="text-green-600" />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 w-full">
               <p className="text-[12px] font-medium text-slate-700">Account added</p>
               <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(bank.added)}</p>
-              {createdFields.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {createdFields.map((c) => (
-                    <li key={c.label} className="text-[11px] text-slate-600">
-                      <span className="font-medium text-slate-700">{c.label}:</span> {c.value}
-                    </li>
-                  ))}
-                </ul>
-              )}
+              {createdFields.length > 0 && <InlineFieldList fields={createdFields} />}
             </div>
           </div>
 
@@ -441,22 +463,14 @@ const BankAccountDetail = () => {
             updateLogs.map((log) => {
               const changes = describeLogFields(log.data?.updated_fields);
               return (
-                <div key={log._id} className="border border-slate-100 rounded-[2px] px-4 py-3 flex items-start gap-3">
+                <div key={log._id} className="border border-slate-100 rounded-[2px] px-4 py-3 flex flex-col items-start gap-2">
                   <div className="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                     <Pencil size={13} className="text-blue-600" />
                   </div>
-                  <div className="min-w-0 flex-1">
+                  <div className="min-w-0 flex-1 w-full">
                     <p className="text-[12px] font-medium text-slate-700">Updated by {log.user}</p>
                     <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(log.createdAt)}</p>
-                    {changes.length > 0 && (
-                      <ul className="mt-2 space-y-1">
-                        {changes.map((c) => (
-                          <li key={c.label} className="text-[11px] text-slate-600">
-                            <span className="font-medium text-slate-700">{c.label}:</span> {c.value}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {changes.length > 0 && <InlineFieldList fields={changes} />}
                   </div>
                 </div>
               );
@@ -465,9 +479,6 @@ const BankAccountDetail = () => {
         </div>
       )}
 
-      {tab === "transaction" && <EmptyTab label="Transaction Usage" />}
-      {tab === "documents" && <EmptyTab label="Documents" />}
-      {tab === "share" && <EmptyTab label="Share History" />}
     </div>
 
     {shareOpen && (
@@ -475,6 +486,8 @@ const BankAccountDetail = () => {
         <PaymentDetailsCard
           bank={bank}
           docLabel={docParam || bank.accountDisplayName || bank.bankname}
+          clientName={clientNameParam}
+          amount={amountParam}
           onClose={() => setShareOpen(false)}
         />
       </aside>

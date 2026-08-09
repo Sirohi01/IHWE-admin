@@ -59,6 +59,7 @@ const emptyForm = {
   upiRegisteredName: "",
   qrCodeFile: null,
   qrCodePreview: "",
+  paymentGatewayLink: "",
   purpose: ["Exhibitor Collection"],
   applicableEvent: "",
   isPrimary: false,
@@ -232,6 +233,7 @@ const FIELD_LABELS = {
   upiEnabled: "UPI Enabled",
   upiId: "UPI ID",
   upiRegisteredName: "UPI Registered Name",
+  paymentGatewayLink: "Payment Gateway Link",
   purpose: "Purpose",
   applicableEventName: "Applicable Event",
   isPrimary: "Primary Account",
@@ -397,6 +399,9 @@ const AddBank = () => {
       if (!formData.upiRegisteredName.trim())
         validationErrors.upiRegisteredName = "UPI Registered Name is required.";
     }
+    if (formData.paymentGatewayLink.trim() && !/^https?:\/\/.+/i.test(formData.paymentGatewayLink.trim())) {
+      validationErrors.paymentGatewayLink = "Enter a valid link starting with http:// or https://.";
+    }
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -444,6 +449,7 @@ const AddBank = () => {
       upiEnabled: formData.upiEnabled,
       upiId: formData.upiEnabled ? formData.upiId.trim() : "",
       upiRegisteredName: formData.upiEnabled ? formData.upiRegisteredName.trim() : "",
+      paymentGatewayLink: formData.paymentGatewayLink.trim(),
       purpose: formData.purpose,
       applicableEvent: formData.applicableEvent,
       applicableEventName: selectedEvent?.name || "",
@@ -512,6 +518,7 @@ const AddBank = () => {
       upiRegisteredName: item.upiRegisteredName || "",
       qrCodeFile: null,
       qrCodePreview: item.qrCodeUrl ? `${SERVER_URL}${item.qrCodeUrl}` : "",
+      paymentGatewayLink: item.paymentGatewayLink || "",
       purpose: Array.isArray(item.purpose) ? item.purpose : item.purpose ? [item.purpose] : [],
       applicableEvent: item.applicableEvent || "",
       isPrimary: !!item.isPrimary,
@@ -1037,6 +1044,26 @@ const AddBank = () => {
               <div className="space-y-4 pt-6 border-t border-slate-100">
                 <h3 className={sectionHeaderClass}>
                   <span className="w-5 h-5 rounded-full bg-[#23471d] text-white text-[10px] flex items-center justify-center">3</span>
+                  Payment Gateway
+                </h3>
+                <div>
+                  <label className={labelCls}>Payment Gateway Link (Optional)</label>
+                  <input
+                    type="url"
+                    name="paymentGatewayLink"
+                    value={formData.paymentGatewayLink}
+                    onChange={handleChange}
+                    className={inputCls}
+                    placeholder="e.g. https://pay.razorpay.com/..."
+                  />
+                  {errors.paymentGatewayLink && <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.paymentGatewayLink}</p>}
+                </div>
+              </div>
+
+              {/* SECTION 4 */}
+              <div className="space-y-4 pt-6 border-t border-slate-100">
+                <h3 className={sectionHeaderClass}>
+                  <span className="w-5 h-5 rounded-full bg-[#23471d] text-white text-[10px] flex items-center justify-center">4</span>
                   Usage &amp; Settings
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
