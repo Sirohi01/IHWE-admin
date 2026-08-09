@@ -289,7 +289,7 @@ export const menuItems = [
     label: "Accounts",
     icon: FileText,
     children: [
-      { label: "Payments", path: "/accounts/payments" },
+      { label: "Payment Collection", path: "/accounts/payments" },
       { label: "Receipts", path: "/accounts/receipts" },
       { label: "Accounts Receivable", path: "/accounts/ar" },
       { label: "Client Ledger", path: "/accounts/client-ledger" },
