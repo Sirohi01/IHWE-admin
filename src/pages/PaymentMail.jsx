@@ -20,7 +20,17 @@ import {
    Receipt,
    Banknote,
    IndianRupee,
-   CalendarClock
+   CalendarClock,
+   BadgeCheck,
+   Handshake,
+   Users,
+   HeartPulse,
+   Leaf,
+   Salad,
+   Microscope,
+   Store,
+   Presentation,
+   Trophy
 } from "lucide-react";
 import namogangelogo from "../assets/namogangelogo1.webp";
 import ihwelogo from "../assets/9th_certificate/9thlogo.png";
@@ -33,63 +43,115 @@ export default function PaymentMail() {
    const upiId = "ihwe.collect@kotak";
    const companyName = "Rohit Kumar";
    const invoiceNo = "PI/26-27/0123";
-   const dueDate = "20th August 2026";
+   const dueDate = "20th Aug 2026";
 
    return (
       <div className="w-full max-w-[794px] mx-auto bg-white font-sans text-gray-800 shadow-2xl relative my-2 print:my-0 print:shadow-none flex flex-col">         {/* --- HEADER SECTION --- */}
-         <div className="flex flex-row items-center justify-between pt-2 px-6 pb-2 w-full">
 
-            {/* Logo and Vertical Separator */}
-            <div className="flex items-center shrink-0">
-               <img src={namogangelogo} alt="Namo Gange" className="h-[85px] object-contain shrink-0" />
-               <div className="h-[80px] w-px bg-gray-300 mx-6 shrink-0"></div>
+         <div className="relative w-full overflow-hidden bg-white h-[125px] border-b-[2px] border-[#1b3664]">
+
+            {/* 1 & 2. LEFT BLUE DIAGONAL & ORANGE STRIPE */}
+            {/* Orange stripe */}
+            <div
+               className="absolute top-0 left-[-20px] h-[130px] w-[130px] bg-[#f37021] z-[1]"
+               style={{ clipPath: 'polygon(0 0, 100% 0, 30% 100%, 0 100%)' }}
+            ></div>
+            {/* Blue shape */}
+            <div
+               className="absolute top-0 left-[-20px] h-[130px] w-[120px] bg-[#1b3664] z-[2]"
+               style={{ clipPath: 'polygon(0 0, 100% 0, 30% 100%, 0 100%)' }}
+            ></div>
+
+            {/* 3, 4, 5. LOGO & TAGLINE */}
+            <div className="absolute top-[28px] left-[90px] z-10 flex flex-col items-center">
+               <img src={namogangelogo} alt="Namo Gange" className="w-[190px] object-contain" />
+               <p className="text-[#009ee3] font-serif italic text-[12px] font-medium tracking-wide mt-1 leading-none">Together for Healthier Tomorrow</p>
             </div>
 
-            {/* Center Text */}
-            <div className="flex flex-col items-center text-center shrink-0 flex-1">
-               <img src={ihwelogo} alt="IHWE" className="h-[75px] object-contain shrink-0" />
-               <p className="text-[12px] font-bold text-[#1b3664] tracking-widest flex items-center gap-1.5 whitespace-nowrap">
-                  21 – 23 AUGUST 2026
-               </p>
-            </div>
-
-            {/* Vertical Separator and Right Side */}
-            <div className="flex items-center shrink-0">
-               <div className="h-[80px] w-px bg-gray-300 mx-5 shrink-0"></div>
-               <div className="text-left flex flex-col justify-center shrink-0 w-[172px]">
-                  <p className="text-[10px] font-bold text-[#1b3664] tracking-wider mb-0.5 uppercase whitespace-nowrap">INDIA'S LARGEST</p>
-                  <p className="text-[11px] font-black text-[#0f8b4d] mb-0.5 tracking-wide uppercase whitespace-nowrap">HEALTH & WELLNESS</p>
-                  <p className="text-[9px] font-bold text-[#1b3664] mb-2 tracking-wide uppercase whitespace-nowrap">EXHIBITION & CONFERENCE</p>
-                  <div className="flex items-center justify-between gap-1 w-[172px]">
-                     <div className="flex flex-col items-center border border-gray-300 rounded-md p-1 w-[40px] h-[46px] bg-white justify-center shrink-0 shadow-sm">
-                        <Building2 size={16} className="text-[#0f8b4d] mb-0.5" strokeWidth={1.5} />
-                        <span className="text-[5px] font-bold tracking-tighter text-[#1b3664]">EXHIBITION</span>
-                     </div>
-                     <div className="flex flex-col items-center border border-gray-300 rounded-md p-1 w-[40px] h-[46px] bg-white justify-center shrink-0 shadow-sm">
-                        <Globe size={16} className="text-blue-500 mb-0.5" strokeWidth={1.5} />
-                        <span className="text-[5px] font-bold tracking-tighter text-[#1b3664]">CONFERENCE</span>
-                     </div>
-                     <div className="flex flex-col items-center border border-gray-300 rounded-md p-1 w-[40px] h-[46px] bg-white justify-center shrink-0 shadow-sm">
-                        <Building2 size={16} className="text-purple-500 mb-0.5" strokeWidth={1.5} />
-                        <span className="text-[5px] font-bold tracking-tighter text-[#1b3664]">BUYER MEET</span>
-                     </div>
-                     <div className="flex flex-col items-center border border-gray-300 rounded-md p-1 w-[40px] h-[46px] bg-white justify-center shrink-0 shadow-sm">
-                        <Globe size={16} className="text-orange-500 mb-0.5" strokeWidth={1.5} />
-                        <span className="text-[5px] font-bold tracking-tighter text-[#1b3664]">AWARDS</span>
-                     </div>
+            {/* 6, 7, 8, 9. TOP-RIGHT BLUE FEATURE BANNER */}
+            <div className="absolute top-0 right-[-10px] w-[450px] h-[45px] bg-[#1b3664] rounded-l-[28px] flex items-center justify-start pl-6 z-20">
+               <div className="flex items-center justify-between w-[95%] h-full">
+                  <div className="flex flex-col items-center justify-center border-b-[2px] border-[#f37021] h-[90%] w-1/4">
+                     <BadgeCheck size={14} className="text-white mb-0.5" strokeWidth={1.5} />
+                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Trusted<br />since 2016</span>
+                  </div>
+                  <div className="w-px h-[24px] bg-white/40"></div>
+                  <div className="flex flex-col items-center justify-center border-b-[2px] border-transparent h-[90%] w-1/4">
+                     <Handshake size={14} className="text-white mb-0.5" strokeWidth={1.5} />
+                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Building<br />Partnerships</span>
+                  </div>
+                  <div className="w-px h-[24px] bg-white/40"></div>
+                  <div className="flex flex-col items-center justify-center border-b-[2px] border-transparent h-[90%] w-1/4">
+                     <Users size={14} className="text-white mb-0.5" strokeWidth={1.5} />
+                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Empowering<br />Communities</span>
+                  </div>
+                  <div className="w-px h-[24px] bg-white/40"></div>
+                  <div className="flex flex-col items-center justify-center border-b-[2px] border-transparent h-[90%] w-1/4">
+                     <Globe size={14} className="text-white mb-0.5" strokeWidth={1.5} />
+                     <span className="text-white text-[7.5px] font-bold leading-[1.1] text-center tracking-wide">Global<br />Vision</span>
                   </div>
                </div>
             </div>
+
+            {/* 10, 11. CONTACT ROW */}
+            <div className="absolute top-[52px] right-[0px] flex items-center gap-2.5 z-10">
+               <div className="flex items-center gap-1.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#1b3664] flex items-center justify-center"><Mail size={9} className="text-white" /></div>
+                  <span className="text-[10px] font-medium text-gray-800 tracking-wide">info@namogangewellness.com</span>
+               </div>
+               <div className="w-px h-[12px] bg-gray-300"></div>
+               <div className="flex items-center gap-1.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#1b3664] flex items-center justify-center"><Globe size={9} className="text-white" /></div>
+                  <span className="text-[10px] font-medium text-gray-800 tracking-wide">www.namogangewellness.com</span>
+               </div>
+               <div className="w-px h-[12px] bg-gray-300"></div>
+               <div className="flex items-center gap-1.5">
+                  <div className="w-[18px] h-[18px] rounded-full bg-[#1b3664] flex items-center justify-center"><Phone size={9} className="text-white" /></div>
+                  <span className="text-[10px] font-medium text-gray-800 tracking-wide">+91 96549 00525</span>
+               </div>
+            </div>
+
+            {/* 12, 13, 14. CATEGORY ROW */}
+            <div className="absolute top-[82px] right-[30px] flex items-end justify-between w-[430px] z-20">
+               <div className="flex flex-col items-center">
+                  <HeartPulse size={15} className="text-[#1b3664] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#1b3664]">Healthcare</span>
+               </div>
+               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
+               <div className="flex flex-col items-center">
+                  <Leaf size={15} className="text-[#0f8b4d] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#0f8b4d]">Wellness</span>
+               </div>
+               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
+               <div className="flex flex-col items-center">
+                  <Salad size={15} className="text-[#f37021] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#f37021]">Nutrition</span>
+               </div>
+               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
+               <div className="flex flex-col items-center">
+                  <Microscope size={15} className="text-[#6b21a8] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#6b21a8]">Research</span>
+               </div>
+               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
+               <div className="flex flex-col items-center">
+                  <Store size={15} className="text-[#0891b2] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#0891b2]">Exhibitions</span>
+               </div>
+               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
+               <div className="flex flex-col items-center">
+                  <Presentation size={15} className="text-[#be123c] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#be123c]">Conferences</span>
+               </div>
+               <div className="w-px h-[20px] bg-gray-300 mb-0.5"></div>
+               <div className="flex flex-col items-center">
+                  <Trophy size={15} className="text-[#d97706] mb-0.5" strokeWidth={1.5} />
+                  <span className="text-[8.5px] font-bold text-[#d97706]">Awards</span>
+               </div>
+            </div>
+
          </div>
 
-         {/* 3-Color Divider Strip */}
-         <div className="flex h-[5px] w-full mb-2">
-            <div className="w-1/3 bg-[#0f8b4d]"></div>
-            <div className="w-1/3 bg-[#1b3664]"></div>
-            <div className="w-1/3 bg-[#f37021]"></div>
-         </div>
-
-         <div className="px-8">
+         <div className="px-8 mt-2">
 
             {/* --- BODY TEXT & REMINDER BOX --- */}
             <div className="flex flex-row justify-between mb-4 w-full">
@@ -192,7 +254,7 @@ export default function PaymentMail() {
                         <CalendarClock size={14} className="text-[#1b3664]" />
                         <p className="text-[10px] text-gray-700 font-medium">We request you to kindly make the balance payment at your earliest convenience.</p>
                      </div>
-                     <div className="bg-[#1b3664] text-white flex items-center justify-center px-5 h-full font-bold text-[11px] border-t-[3px] border-[#1b3664]">
+                  <div className="bg-[#1b3664] text-white flex items-center justify-center px-5 h-full font-extrabold text-[11px] border-t-[3px] border-[#1b3664]">
                         <span className="text-yellow-300 mr-2 font-semibold tracking-wider text-[10px] uppercase">PAYMENT DUE DATE:</span> {dueDate}
                      </div>
                   </div>
