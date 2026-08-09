@@ -63,6 +63,7 @@ const AddPayment = () => {
   const [referenceNo, setReferenceNo] = useState("");
   const [amountReceived, setAmountReceived] = useState("");
   const [bankName, setBankName] = useState("");
+  const [bankAccounts, setBankAccounts] = useState([]);
 
   const [deductTds, setDeductTds] = useState("No");
   const [tdsAmountInput, setTdsAmountInput] = useState("");
@@ -73,6 +74,15 @@ const AddPayment = () => {
   const [narrationMode, setNarrationMode] = useState("automatic");
   const [customNarration, setCustomNarration] = useState("");
   const [proofFile, setProofFile] = useState(null);
+
+  useEffect(() => {
+    api.get("/api/banks")
+      .then((res) => {
+        const list = Array.isArray(res.data) ? res.data : res.data?.data || [];
+        setBankAccounts(list.filter((b) => String(b.status || "").toLowerCase() === "active"));
+      })
+      .catch((err) => console.error("Error fetching bank accounts:", err));
+  }, []);
 
   useEffect(() => {
     if (!id) {
@@ -431,13 +441,19 @@ const AddPayment = () => {
 
               <div>
                 <label className="block text-[11px] text-slate-600 font-semibold mb-1">Bank Account</label>
-                <input
-                  type="text"
+                <select
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  placeholder="e.g. HDFC Bank"
                   className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
-                />
+                >
+                  <option value="">Select bank account</option>
+                  {bankAccounts.map((b) => (
+                    <option key={b._id} value={b.accountDisplayName || b.bankname}>
+                      {b.accountDisplayName || b.bankname}
+                      {b.accountno ? ` — A/C ${b.accountno}` : ""}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

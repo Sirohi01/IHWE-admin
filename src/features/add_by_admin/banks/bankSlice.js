@@ -5,6 +5,25 @@ import { createActivityLogThunk } from "../../activityLog/activityLogSlice";
 
 const BASE_URL = API_URL;
 
+// FormData lets multer read the QR file alongside the regular fields
+const toFormData = (bankData) => {
+  const formData = new FormData();
+  Object.entries(bankData).forEach(([key, value]) => {
+    if (key === "qrCodeFile") {
+      if (value instanceof File) formData.append("qrCode", value);
+      return;
+    }
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) {
+      if (value.length === 0) formData.append(key, "");
+      else value.forEach((v) => formData.append(key, v));
+      return;
+    }
+    formData.append(key, value);
+  });
+  return formData;
+};
+
 // ✅ Fetch All Banks
 export const fetchBanks = createAsyncThunk(
   "banks/fetchAll",
@@ -23,9 +42,9 @@ export const addBank = createAsyncThunk(
   "banks/create",
   async (bankData, { dispatch, rejectWithValue }) => {
     try {
-      const response = await axios.post(`${BASE_URL}/banks`, bankData, {
+      const response = await axios.post(`${BASE_URL}/banks`, toFormData(bankData), {
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       });
 
@@ -40,13 +59,13 @@ export const addBank = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Bank '${created.bankname || created.name || ""}' created by ${userName}`,
+            message: `Bank '${created.accountDisplayName || created.bankname || ""}' created by ${userName}`,
             link: `/banks`,
             section: "banks",
             data: {
               action: "CREATE",
               bank_id: created._id,
-              bank_name: created.bank_name || created.name,
+              bank_name: created.accountDisplayName || created.bankname,
               created_data: created,
             },
           }),
@@ -79,10 +98,10 @@ export const updateBank = createAsyncThunk(
 
       const response = await axios.put(
         `${BASE_URL}/banks/${id}`,
-        dataWithUser,
+        toFormData(dataWithUser),
         {
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "multipart/form-data",
           },
         },
       );
@@ -93,13 +112,13 @@ export const updateBank = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Bank '${updated.bankname || updated.name || updatedData.bankname || id}' updated by ${userName}`,
+            message: `Bank '${updated.accountDisplayName || updated.bankname || updatedData.accountDisplayName || id}' updated by ${userName}`,
             link: `/banks`,
             section: "banks",
             data: {
               action: "UPDATE",
               bank_id: id,
-              bank_name: updated.bankname || updated.name,
+              bank_name: updated.accountDisplayName || updated.bankname,
               updated_fields: updatedData,
               updated_data: updated,
             },
@@ -134,13 +153,13 @@ export const deleteBank = createAsyncThunk(
         dispatch(
           createActivityLogThunk({
             user_id: userId,
-            message: `Bank '${bankToDelete?.bank_name || bankToDelete?.name || id}' deleted by ${userName}`,
+            message: `Bank '${bankToDelete?.accountDisplayName || bankToDelete?.bankname || id}' deleted by ${userName}`,
             link: `/banks`,
             section: "banks",
             data: {
               action: "DELETE",
               bank_id: id,
-              bank_name: bankToDelete?.bank_name || bankToDelete?.name,
+              bank_name: bankToDelete?.accountDisplayName || bankToDelete?.bankname,
               deleted_data: bankToDelete || {},
             },
           }),
