@@ -22,45 +22,40 @@ import {
    IndianRupee,
    CalendarClock
 } from "lucide-react";
-import namogangelogo from "../assets/namogangelogo.webp";
-import ihweLogo from "../assets/logo.png"; // Fallback if needed
+import namogangelogo from "../assets/namogangelogo1.webp";
+import ihwelogo from "../assets/9th_certificate/9thlogo.png";
+
 
 export default function PaymentMail() {
    const amount = "81,820";
    const totalAmount = "1,16,820";
    const receivedAmount = "35,000";
    const upiId = "ihwe.collect@kotak";
-   const companyName = "[Client Name]";
+   const companyName = "Rohit Kumar";
    const invoiceNo = "PI/26-27/0123";
+   const dueDate = "20th August 2026";
 
    return (
-      <div className="w-full max-w-[794px] mx-auto bg-white font-sans text-gray-800 shadow-2xl relative my-8 print:my-0 print:shadow-none flex flex-col">         {/* --- HEADER SECTION --- */}
-         <div className="flex flex-row items-center justify-between pt-6 px-6 pb-4 w-full">
+      <div className="w-full max-w-[794px] mx-auto bg-white font-sans text-gray-800 shadow-2xl relative my-2 print:my-0 print:shadow-none flex flex-col">         {/* --- HEADER SECTION --- */}
+         <div className="flex flex-row items-center justify-between pt-2 px-6 pb-2 w-full">
 
             {/* Logo and Vertical Separator */}
             <div className="flex items-center shrink-0">
-               <img src={namogangelogo} alt="Namo Gange" className="h-[65px] object-contain shrink-0" />
+               <img src={namogangelogo} alt="Namo Gange" className="h-[85px] object-contain shrink-0" />
                <div className="h-[80px] w-px bg-gray-300 mx-6 shrink-0"></div>
             </div>
 
             {/* Center Text */}
             <div className="flex flex-col items-center text-center shrink-0 flex-1">
-               <h4 className="text-[12px] font-bold text-[#1b3664] mb-0.5 whitespace-nowrap">9th International</h4>
-               <h1 className="text-[29px] font-black text-[#1b3664] tracking-tight leading-none mb-1 whitespace-nowrap">
-                  HEALTH & WELLNESS
-               </h1>
-               <div className="flex items-center justify-center gap-2 mb-1.5 whitespace-nowrap">
-                  <h2 className="text-[25px] font-black text-[#009ee3] leading-none">EXPO 2026</h2>
-                  <span className="bg-[#e42e24] text-white text-[10px] font-bold px-2 py-0.5 rounded-md uppercase self-center">GLOBAL EDITION</span>
-               </div>
-               <p className="text-[9px] font-bold text-[#1b3664] tracking-widest flex items-center gap-1.5 whitespace-nowrap">
-                  21 – 23 AUGUST 2026 <span className="text-gray-400 font-normal">|</span> PRAGATI MAIDAN, NEW DELHI, INDIA
+               <img src={ihwelogo} alt="IHWE" className="h-[75px] object-contain shrink-0" />
+               <p className="text-[12px] font-bold text-[#1b3664] tracking-widest flex items-center gap-1.5 whitespace-nowrap">
+                  21 – 23 AUGUST 2026
                </p>
             </div>
 
             {/* Vertical Separator and Right Side */}
             <div className="flex items-center shrink-0">
-               <div className="h-[75px] w-px bg-gray-300 mx-5 shrink-0"></div>
+               <div className="h-[80px] w-px bg-gray-300 mx-5 shrink-0"></div>
                <div className="text-left flex flex-col justify-center shrink-0 w-[172px]">
                   <p className="text-[10px] font-bold text-[#1b3664] tracking-wider mb-0.5 uppercase whitespace-nowrap">INDIA'S LARGEST</p>
                   <p className="text-[11px] font-black text-[#0f8b4d] mb-0.5 tracking-wide uppercase whitespace-nowrap">HEALTH & WELLNESS</p>
@@ -88,29 +83,24 @@ export default function PaymentMail() {
          </div>
 
          {/* 3-Color Divider Strip */}
-         <div className="flex h-[5px] w-full mb-6">
+         <div className="flex h-[5px] w-full mb-2">
             <div className="w-1/3 bg-[#0f8b4d]"></div>
             <div className="w-1/3 bg-[#1b3664]"></div>
             <div className="w-1/3 bg-[#f37021]"></div>
          </div>
 
-         <div className="px-8 pb-4">
+         <div className="px-8">
 
             {/* --- BODY TEXT & REMINDER BOX --- */}
-            <div className="flex flex-row justify-between mb-8 w-full">
+            <div className="flex flex-row justify-between mb-4 w-full">
                <div className="flex-1 pr-4">
-                  <h3 className="text-[17px] font-bold text-[#1b3664] mb-3">Dear {companyName},</h3>
-                  <h2 className="text-[19px] font-bold text-[#f37021] mb-4">Namo Gange Namaskar!</h2>
-                  <p className="text-[13px] text-[#2d3748] mb-5 leading-[1.6]">
-                     Thank you for confirming your participation in the<br />
-                     <strong>9th International Health & Wellness Expo 2026<br />
-                        (IHWE – Global Edition).</strong>
+                  <h3 className="text-[17px] font-bold text-[#1b3664] mb-1">Dear {companyName},</h3>
+                  <h2 className="text-[19px] font-bold text-[#f37021] mb-1">Namo Gange Namaskar!</h2>
+                  <p className="text-[13px] text-[#2d3748] mb-3 leading-[1.6] text-justify">
+                     Thank you for confirming your participation in the <strong>9th International Health & Wellness Expo 2026 (IHWE – 2026), PRAGATI MAIDAN, NEW DELHI, INDIA</strong>.
                   </p>
-                  <p className="text-[13px] text-[#2d3748] leading-[1.6]">
-                     This is a gentle <strong className="text-[#0f8b4d]">FIRST REMINDER</strong> that the balance amount<br />
-                     against your booking is <strong>pending</strong>. We would be grateful if you<br />
-                     could arrange the balance payment at your earliest convenience<br />
-                     to help us keep your booking and account records up to date.
+                  <p className="text-[13px] text-[#2d3748] leading-[1.6] text-justify">
+                     This is a gentle <strong className="text-[#0f8b4d]">FIRST REMINDER</strong> that the balance amount against your booking is <strong>pending</strong>. We would be grateful if you could arrange the balance payment at your earliest convenience to help us keep your booking and account records up to date.
                   </p>
                </div>
 
@@ -146,7 +136,7 @@ export default function PaymentMail() {
             </div>
 
             {/* --- PAYMENT SUMMARY --- */}
-            <div className="mb-6 relative mt-4 w-full">
+            <div className="mb-2 relative mt-4 w-full">
                {/* Overlapping label */}
                <div className="absolute -top-2.5 left-5 bg-[#1b3664] text-white text-[9px] font-bold px-3 py-1 rounded-full shadow-sm tracking-wider z-10">
                   PAYMENT SUMMARY
@@ -160,8 +150,8 @@ export default function PaymentMail() {
                            <Receipt size={16} strokeWidth={1.5} />
                         </div>
                         <div>
-                           <p className="text-[7px] font-bold text-[#1b3664] mb-0.5 tracking-wider uppercase">PROFORMA INVOICE NO.</p>
-                           <p className="text-[13px] font-black text-gray-800 tracking-tight leading-none">{invoiceNo}</p>
+                           <p className="text-[9px] font-bold text-[#1b3664] mb-0.5 tracking-wider uppercase">PROFORMA INVOICE NO.</p>
+                           <p className="text-[12px] font-black text-gray-800 tracking-tight leading-none">{invoiceNo}</p>
                         </div>
                      </div>
 
@@ -170,8 +160,8 @@ export default function PaymentMail() {
                            <Banknote size={16} strokeWidth={1.5} />
                         </div>
                         <div>
-                           <p className="text-[7px] font-bold text-[#1b3664] mb-0.5 tracking-wider uppercase">TOTAL INVOICE AMOUNT</p>
-                           <p className="text-[15px] font-black text-[#1b3664] tracking-tight leading-none">₹ {totalAmount}</p>
+                           <p className="text-[9px] font-bold text-[#1b3664] mb-0.5 tracking-wider uppercase">TOTAL AMOUNT</p>
+                           <p className="text-[14px] font-black text-[#1b3664] tracking-tight leading-none">₹ {totalAmount}</p>
                         </div>
                      </div>
 
@@ -180,8 +170,8 @@ export default function PaymentMail() {
                            <IndianRupee size={16} strokeWidth={1.5} />
                         </div>
                         <div>
-                           <p className="text-[7px] font-bold text-[#0f8b4d] mb-0.5 tracking-wider uppercase">AMOUNT RECEIVED</p>
-                           <p className="text-[15px] font-black text-[#0f8b4d] tracking-tight leading-none">₹ {receivedAmount}</p>
+                           <p className="text-[9px] font-bold text-[#0f8b4d] mb-0.5 tracking-wider uppercase">RECEIVED TILL DATE</p>
+                           <p className="text-[14px] font-black text-[#0f8b4d] tracking-tight leading-none">₹ {receivedAmount}</p>
                         </div>
                      </div>
 
@@ -190,8 +180,8 @@ export default function PaymentMail() {
                            <IndianRupee size={16} strokeWidth={1.5} />
                         </div>
                         <div>
-                           <p className="text-[7px] font-bold text-[#e42e24] mb-0.5 tracking-wider uppercase">BALANCE PAYABLE</p>
-                           <p className="text-[15px] font-black text-[#e42e24] tracking-tight leading-none">₹ {amount}</p>
+                           <p className="text-[9px] font-bold text-[#e42e24] mb-0.5 tracking-wider uppercase">BALANCE PAYABLE</p>
+                           <p className="text-[14px] font-black text-[#e42e24] tracking-tight leading-none">₹ {amount}</p>
                         </div>
                      </div>
 
@@ -202,15 +192,15 @@ export default function PaymentMail() {
                         <CalendarClock size={14} className="text-[#1b3664]" />
                         <p className="text-[10px] text-gray-700 font-medium">We request you to kindly make the balance payment at your earliest convenience.</p>
                      </div>
-                     <div className="bg-[#1b3664] text-white flex items-center justify-center px-5 h-full font-bold text-[11px]">
-                        <span className="text-blue-200 mr-2 font-semibold tracking-wider text-[8px] uppercase">PAYMENT REFERENCE</span> {invoiceNo}
+                     <div className="bg-[#1b3664] text-white flex items-center justify-center px-5 h-full font-bold text-[11px] border-t-[3px] border-[#1b3664]">
+                        <span className="text-yellow-300 mr-2 font-semibold tracking-wider text-[10px] uppercase">PAYMENT DUE DATE:</span> {dueDate}
                      </div>
                   </div>
                </div>
             </div>
 
             {/* --- PAYMENT OPTIONS --- */}
-            <div className="mb-6 relative mt-8 w-full">
+            <div className="mb-2 relative mt-2 w-full">
 
                {/* Overlapping thin blue line and pill */}
                <div className="relative w-full mb-4 flex justify-center items-center">
@@ -221,164 +211,170 @@ export default function PaymentMail() {
                </div>
 
                {/* 3 Equal Cards Container */}
-               <div className="grid grid-cols-3 gap-3">
+               <div className="grid grid-cols-3 gap-2">
 
                   {/* Option 1: Bank Transfer */}
-                  <div className="border border-[#bce4c8] rounded-[16px] bg-[#f9fdfa] pt-5 px-3 pb-3 relative flex flex-col items-center shadow-sm h-full">
+                  <div className="border border-[#bce4c8] rounded-[16px] bg-[#f9fdfa] pt-4 px-2 pb-2 relative flex flex-col items-center shadow-sm h-full">
                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-[#0f8b4d] rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm ring-2 ring-white">
                         1
                      </div>
-                     <div className="mb-1.5">
-                        <Landmark size={36} className="text-[#0f8b4d] mx-auto" strokeWidth={1.2} />
+                     <div className="mb-1 bg-[#e6f4ea] p-2 rounded-full">
+                        <Landmark size={28} className="text-[#0f8b4d] mx-auto" strokeWidth={1.5} />
                      </div>
-                     <h3 className="text-[#0f8b4d] font-black text-[12px] tracking-wide text-center leading-tight mb-0.5">BANK TRANSFER</h3>
-                     <p className="text-[8px] text-[#0f8b4d] font-bold text-center mb-4 tracking-wider">NEFT / RTGS / IMPS</p>
+                     <h3 className="text-[#0f8b4d] font-black text-[11px] tracking-wide text-center leading-tight mb-0.5">BANK TRANSFER</h3>
+                     <p className="text-[8px] text-[#0f8b4d] font-bold text-center mb-2 tracking-wider">NEFT / RTGS / IMPS</p>
 
-                     <div className="w-full space-y-2 mb-4 px-1">
+                     <div className="w-full space-y-1 mb-2 px-1">
                         <div className="flex items-start gap-1.5">
                            <div className="flex justify-center mt-0.5"><div className="w-4 h-4 rounded-full border border-green-200 flex items-center justify-center bg-white"><Globe size={8} className="text-[#0f8b4d]" /></div></div>
-                           <div className="grid grid-cols-[68px_1fr] w-full">
-                              <p className="text-[9px] text-gray-700 font-medium">Account Name</p>
-                              <p className="text-[9px] font-bold text-gray-900 leading-tight">: Namo Gange Wellness Pvt. Ltd.</p>
+                           <div className="grid grid-cols-[68px_10px_1fr] w-full items-start">
+                              <p className="text-[11px] text-gray-700 font-semibold leading-tight">Account Name</p>
+                              <p className="text-[11px] font-bold text-gray-900">:</p>
+                              <p className="text-[11px] font-bold text-gray-900 leading-tight">Namo Gange Wellness<br />Pvt. Ltd.</p>
                            </div>
                         </div>
 
                         <div className="flex items-start gap-1.5">
                            <div className="flex justify-center mt-0.5"><div className="w-4 h-4 rounded-full border border-green-200 flex items-center justify-center bg-white"><Landmark size={8} className="text-[#0f8b4d]" /></div></div>
-                           <div className="grid grid-cols-[68px_1fr] w-full">
-                              <p className="text-[9px] text-gray-700 font-medium">Bank</p>
-                              <p className="text-[9px] font-bold text-gray-900 leading-tight">: Kotak Mahindra Bank</p>
+                           <div className="grid grid-cols-[68px_10px_1fr] w-full items-start">
+                              <p className="text-[11px] text-gray-700 font-semibold leading-tight">Bank</p>
+                              <p className="text-[11px] font-bold text-gray-900">:</p>
+                              <p className="text-[11px] font-bold text-gray-900 leading-tight">Kotak Mahindra Bank</p>
                            </div>
                         </div>
 
                         <div className="flex items-start gap-1.5">
                            <div className="flex justify-center mt-0.5"><div className="w-4 h-4 rounded-full border border-green-200 flex items-center justify-center bg-white"><CreditCard size={8} className="text-[#0f8b4d]" /></div></div>
-                           <div className="grid grid-cols-[68px_1fr] w-full">
-                              <p className="text-[9px] text-gray-700 font-medium">Account No.</p>
-                              <p className="text-[9px] font-bold text-gray-900 leading-tight">: 6812013962</p>
+                           <div className="grid grid-cols-[68px_10px_1fr] w-full items-start">
+                              <p className="text-[11px] text-gray-700 font-semibold leading-tight">Account No.</p>
+                              <p className="text-[11px] font-bold text-gray-900">:</p>
+                              <p className="text-[11px] font-bold text-gray-900 leading-tight">6812013962</p>
                            </div>
                         </div>
 
                         <div className="flex items-start gap-1.5">
                            <div className="flex justify-center mt-0.5"><div className="w-4 h-4 rounded-full border border-green-200 flex items-center justify-center bg-white"><Wallet size={8} className="text-[#0f8b4d]" /></div></div>
-                           <div className="grid grid-cols-[68px_1fr] w-full">
-                              <p className="text-[9px] text-gray-700 font-medium">IFSC Code</p>
-                              <p className="text-[9px] font-bold text-gray-900 leading-tight">: KKBK0004584</p>
+                           <div className="grid grid-cols-[68px_10px_1fr] w-full items-start">
+                              <p className="text-[11px] text-gray-700 font-semibold leading-tight">IFSC Code</p>
+                              <p className="text-[11px] font-bold text-gray-900">:</p>
+                              <p className="text-[11px] font-bold text-gray-900 leading-tight">KKBK0004584</p>
                            </div>
                         </div>
 
                         <div className="flex items-start gap-1.5">
                            <div className="flex justify-center mt-0.5"><div className="w-4 h-4 rounded-full border border-green-200 flex items-center justify-center bg-white"><ShieldCheck size={8} className="text-[#0f8b4d]" /></div></div>
-                           <div className="grid grid-cols-[68px_1fr] w-full">
-                              <p className="text-[9px] text-gray-700 font-medium">Account Type</p>
-                              <p className="text-[9px] font-bold text-gray-900 leading-tight">: Current Account</p>
+                           <div className="grid grid-cols-[68px_10px_1fr] w-full items-start">
+                              <p className="text-[11px] text-gray-700 font-semibold leading-tight">Account Type</p>
+                              <p className="text-[11px] font-bold text-gray-900">:</p>
+                              <p className="text-[11px] font-bold text-gray-900 leading-tight">Current Account</p>
                            </div>
                         </div>
 
                         <div className="flex items-start gap-1.5">
                            <div className="flex justify-center mt-0.5"><div className="w-4 h-4 rounded-full border border-green-200 flex items-center justify-center bg-white"><MapPin size={8} className="text-[#0f8b4d]" /></div></div>
-                           <div className="grid grid-cols-[68px_1fr] w-full">
-                              <p className="text-[9px] text-gray-700 font-medium">Branch</p>
-                              <p className="text-[9px] font-bold text-gray-900 leading-tight">: Connaught Place,<br />  New Delhi – 110001</p>
+                           <div className="grid grid-cols-[68px_10px_1fr] w-full items-start">
+                              <p className="text-[11px] text-gray-700 font-semibold leading-tight">Branch</p>
+                              <p className="text-[11px] font-bold text-gray-900">:</p>
+                              <p className="text-[11px] font-bold text-gray-900 leading-tight">Connaught Place</p>
                            </div>
                         </div>
                      </div>
 
-                     <div className="mt-auto w-full bg-[#e6f4ea] border border-[#bce4c8] p-2.5 rounded-lg flex items-center gap-1.5">
+                     <div className="mt-auto w-full bg-[#e6f4ea] border border-[#bce4c8] p-1.5 rounded-lg flex items-center gap-1.5">
                         <CheckCircle2 size={14} className="text-[#0f8b4d] shrink-0" />
-                        <p className="text-[8px] text-gray-800 font-medium leading-snug">Kindly share the UTR / Transaction ID after making the payment.</p>
+                        <p className="text-[10px] text-gray-800 font-medium leading-snug">Kindly share the UTR / Transaction ID after making the payment.</p>
                      </div>
                   </div>
 
                   {/* Option 2: UPI */}
-                  <div className="border border-blue-200 rounded-[16px] bg-[#f4f8fc] pt-5 px-3 pb-3 relative flex flex-col items-center shadow-sm h-full">
+                  <div className="border border-blue-200 rounded-[16px] bg-[#f4f8fc] pt-4 px-2 pb-2 relative flex flex-col items-center shadow-sm h-full">
                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-[#1b3664] rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm ring-2 ring-white">
                         2
                      </div>
 
-                     <div className="mb-1.5 h-[36px] flex items-center justify-center">
-                        <div className="flex text-[#1b3664] font-black italic text-[34px] tracking-tighter items-center leading-none">
+                     <div className="mb-1 bg-white p-1 rounded-full px-3 flex items-center justify-center shadow-sm border border-blue-100">
+                        <div className="flex text-[#1b3664] font-black italic text-[28px] tracking-tighter items-center leading-none">
                            <span>UPI</span>
-                           <span className="text-[#f37021] ml-1 text-[24px]">►</span>
+                           <span className="text-[#f37021] ml-1 text-[20px]">►</span>
                         </div>
                      </div>
 
-                     <h3 className="text-[#1b3664] font-black text-[12px] tracking-wide text-center mb-3">UPI / SCAN & PAY</h3>
+                     <h3 className="text-[#1b3664] font-black text-[11px] tracking-wide text-center mb-1">UPI / SCAN & PAY</h3>
 
-                     <p className="text-[8px] text-gray-600 font-bold text-center mb-1 uppercase">UPI ID / VPA</p>
-                     <div className="border border-blue-200 bg-white px-4 py-1 rounded-full mb-2 shadow-sm w-full max-w-[160px]">
-                        <p className="text-[#1b3664] font-bold text-[12px] tracking-wide text-center truncate">{upiId}</p>
+                     <p className="text-[10px] text-gray-600 font-bold text-center mb-0.5 uppercase">UPI ID / VPA</p>
+                     <div className="border border-blue-200 bg-white px-4 py-0.5 rounded-full mb-1 shadow-sm w-full max-w-[150px]">
+                        <p className="text-[#1b3664] font-bold text-[13px] tracking-wide text-center truncate">{upiId}</p>
                      </div>
 
-                     <p className="text-[9px] text-gray-600 text-center mb-3 leading-snug px-2 font-medium">
+                     <p className="text-[11px] text-gray-600 text-center mb-1.5 leading-snug px-2 font-medium">
                         Scan the QR Code using<br />any UPI-enabled application.
                      </p>
 
-                     <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-4 w-[110px] h-[110px] flex items-center justify-center">
-                        <QRCode value={`upi://pay?pa=${upiId}&pn=Namo Gange Wellness Pvt Ltd&cu=INR`} size={94} />
+                     <div className="bg-white p-2 rounded-xl border border-gray-200 shadow-sm mb-1.5 w-[100px] h-[100px] flex items-center justify-center">
+                        <QRCode value={`upi://pay?pa=${upiId}&pn=Namo Gange Wellness Pvt Ltd&cu=INR`} size={86} />
                      </div>
 
-                     <div className="flex items-center justify-center gap-2 mt-auto w-full">
-                        <span className="text-[9px] font-bold text-gray-700">G Pay</span>
-                        <span className="text-[9px] font-bold text-purple-600">PhonePe</span>
-                        <span className="text-[9px] font-bold text-blue-500">Paytm</span>
-                        <span className="text-[9px] font-bold text-gray-800 italic">BHIM</span>
+                     <div className="flex items-center justify-center gap-2 mt-auto w-full px-1 border-t border-blue-100 pt-1.5">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/f/f2/Google_Pay_Logo.svg" alt="GPay" className="h-[11px] object-contain" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/7/71/PhonePe_Logo.svg" alt="PhonePe" className="h-[13px] object-contain" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" alt="Paytm" className="h-[9px] object-contain" />
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/6/65/BHIM_logo.svg" alt="BHIM" className="h-[11px] object-contain" />
                      </div>
                   </div>
 
                   {/* Option 3: Online Payment */}
-                  <div className="border border-orange-200 rounded-[16px] bg-[#fff9f2] pt-5 px-3 pb-3 relative flex flex-col items-center shadow-sm h-full">
+                  <div className="border border-orange-200 rounded-[16px] bg-[#fff9f2] pt-4 px-2 pb-2 relative flex flex-col items-center shadow-sm h-full">
                      <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 bg-[#f37021] rounded-full flex items-center justify-center text-white font-bold text-[10px] shadow-sm ring-2 ring-white">
                         3
                      </div>
 
-                     <div className="mb-1.5">
-                        <Globe size={36} className="text-[#f37021] mx-auto" strokeWidth={1.2} />
+                     <div className="mb-1 bg-[#ffedd5] p-2 rounded-full">
+                        <Globe size={28} className="text-[#f37021] mx-auto" strokeWidth={1.5} />
                      </div>
 
-                     <h3 className="text-[#f37021] font-black text-[12px] tracking-wide text-center leading-tight mb-0.5">PAY ONLINE</h3>
-                     <p className="text-[8px] text-[#1b3664] font-bold text-center mb-3 tracking-wider">SECURE PAYMENT GATEWAY</p>
+                     <h3 className="text-[#f37021] font-black text-[11px] tracking-wide text-center leading-tight mb-0.5">PAY ONLINE</h3>
+                     <p className="text-[7.5px] text-[#1b3664] font-bold text-center mb-2 tracking-wider">SECURE PAYMENT GATEWAY</p>
 
-                     <p className="text-[10px] text-gray-700 text-center mb-3 leading-snug font-medium px-2">
+                     <p className="text-[12px] text-gray-700 text-center mb-2 leading-snug font-medium px-2">
                         You can pay securely using our<br />official online payment link.
                      </p>
 
-                     <button className="w-full max-w-[160px] bg-[#f37021] hover:bg-[#d95c14] text-white font-bold text-[10px] py-2 rounded-lg flex items-center justify-center gap-1 shadow-sm mb-4 transition-colors uppercase tracking-wide">
+                     <button className="w-full max-w-[160px] bg-[#f37021] hover:bg-[#d95c14] text-white font-bold text-[12px] py-1.5 rounded-lg flex items-center justify-center gap-1 shadow-sm mb-2 transition-colors uppercase tracking-wide">
                         <ShieldCheck size={14} />
                         PAY NOW ONLINE
                      </button>
 
                      <div className="w-full mt-auto">
-                        <p className="text-[7px] font-bold text-[#e42e24] tracking-wider text-center border-b border-orange-200 pb-1 mb-2 uppercase">SUPPORTED PAYMENT MODES</p>
+                        <p className="text-[9px] font-bold text-[#e42e24] tracking-wider text-center border-b border-orange-200 pb-1 mb-1.5 uppercase">SUPPORTED PAYMENT MODES</p>
                         <div className="grid grid-cols-2 gap-y-1.5 gap-x-1 px-1">
                            <div className="flex items-center gap-1">
                               <Smartphone size={12} className="text-[#1b3664]" />
-                              <span className="text-[8px] font-medium text-gray-700">UPI</span>
+                              <span className="text-[10px] font-medium text-gray-800">UPI</span>
                            </div>
                            <div className="flex items-center gap-1">
                               <Landmark size={12} className="text-[#1b3664]" />
-                              <span className="text-[8px] font-medium text-gray-700">Net Banking</span>
+                              <span className="text-[10px] font-medium text-gray-800">Net Banking</span>
                            </div>
                            <div className="flex items-center gap-1">
                               <CreditCard size={12} className="text-[#1b3664]" />
-                              <span className="text-[8px] font-medium text-gray-700">Credit Card</span>
+                              <span className="text-[10px] font-medium text-gray-800">Credit Card</span>
                            </div>
                            <div className="flex items-center gap-1">
                               <Wallet size={12} className="text-[#1b3664]" />
-                              <span className="text-[8px] font-medium text-gray-700">Wallets</span>
+                              <span className="text-[10px] font-medium text-gray-800">Wallets</span>
                            </div>
                            <div className="flex items-center gap-1">
                               <CreditCard size={12} className="text-[#1b3664]" />
-                              <span className="text-[8px] font-medium text-gray-700">Debit Card</span>
+                              <span className="text-[10px] font-medium text-gray-800">Debit Card</span>
                            </div>
                            <div className="flex items-center gap-1">
                               <Globe size={12} className="text-[#1b3664]" />
-                              <span className="text-[8px] font-medium text-gray-700">Other Modes</span>
+                              <span className="text-[10px] font-medium text-gray-800">Other Modes</span>
                            </div>
                         </div>
                      </div>
 
-                     <p className="text-[7px] text-gray-500 text-center mt-3 leading-snug">
+                     <p className="text-[10px] text-gray-800 text-center mt-2 font-medium leading-snug">
                         This is a secure payment gateway<br />powered by trusted partners.
                      </p>
                   </div>
@@ -387,13 +383,13 @@ export default function PaymentMail() {
             </div>
 
             {/* --- IMPORTANT NOTE BANNER --- */}
-            <div className="bg-[#f4f7fc] border border-blue-100 rounded-lg p-3 flex items-start gap-3 mb-6 w-full">
+            <div className="bg-[#f4f7fc] border border-blue-100 rounded-lg px-3 py-2 flex items-start gap-3 mb-2 w-full">
                <div className="w-6 h-6 rounded-full bg-[#1b3664] flex items-center justify-center text-white shrink-0 shadow-sm">
                   <span className="font-serif font-bold italic text-sm leading-none">i</span>
                </div>
                <div>
                   <h4 className="text-[#1b3664] font-bold text-[10px] tracking-wider mb-0.5 uppercase">IMPORTANT NOTE</h4>
-                  <p className="text-[10px] text-gray-700 font-medium leading-snug">
+                  <p className="text-[11px] text-gray-800 font-medium leading-snug">
                      If you have already made the payment, kindly ignore this reminder
                      and share the UTR / Transaction ID with our Accounts Team for reconciliation.
                   </p>
@@ -401,79 +397,75 @@ export default function PaymentMail() {
             </div>
 
             {/* --- FOOTER CONTACT & SECURITY --- */}
-            <div className="flex flex-row justify-between border-t border-gray-200 pt-5 pb-3 w-full">
-               <div>
-                  <p className="text-[10px] text-gray-800 mb-0.5">Warm Regards,</p>
-                  <p className="text-[12px] font-bold text-[#1b3664] mb-0.5">Accounts Team</p>
-                  <p className="text-[10px] font-bold text-gray-900 mb-0.5">Namo Gange Wellness Pvt. Ltd.</p>
-                  <p className="text-[8px] text-gray-600 italic">Organiser – 9th International Health & Wellness Expo 2026</p>
+            <div className="flex flex-row justify-between border-t border-gray-200 p-2 w-full">
+               <div className="flex flex-col">
+                  <p className="text-[11px] font-bold text-gray-800 mb-1">Warm Regards,</p>
+                  <p className="text-[11px] font-bold text-[#1b3664]">Mohit Tyagi</p>
+                  <p className="text-[11px] font-bold text-[#1b3664]">Manager  Department</p>
+                  <p className="text-[11px] font-bold text-[#1b3664]">Namo Gange Wellness Pvt. Ltd.</p>
                </div>
 
                <div className="space-y-1">
                   <div className="flex items-center gap-1.5">
                      <Phone size={12} className="text-[#1b3664] shrink-0" />
-                     <p className="text-[10px] text-gray-800 font-medium">+91 96549 00525</p>
+                     <p className="text-[10px] text-gray-900 font-bold">+91 96549 00525</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                      <Mail size={12} className="text-[#1b3664] shrink-0" />
-                     <p className="text-[10px] text-gray-800 font-medium">accounts@namogangewellness.com</p>
+                     <p className="text-[10px] text-gray-900 font-bold">accounts@namogangewellness.com</p>
                   </div>
                   <div className="flex items-center gap-1.5">
                      <Globe size={12} className="text-[#1b3664] shrink-0" />
-                     <p className="text-[10px] text-gray-800 font-medium">www.ihwe.in</p>
+                     <p className="text-[10px] text-gray-900 font-bold">www.ihwe.in</p>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                     <MapPin size={12} className="text-[#1b3664] shrink-0" />
-                     <p className="text-[10px] text-gray-800 font-medium">Pragati Maidan, New Delhi – 110001, India</p>
-                  </div>
+
                </div>
 
-               <div className="bg-[#f2f9f5] border border-green-200 rounded-lg p-2.5 w-[170px] flex items-start gap-2 shrink-0 shadow-sm">
-                  <ShieldCheck size={20} className="text-[#0f8b4d] shrink-0" strokeWidth={1.5} />
-                  <div>
-                     <p className="text-[9px] font-black text-[#0f8b4d] mb-0.5 tracking-wide uppercase">OFFICIAL & SECURE</p>
-                     <p className="text-[7px] text-gray-600 leading-snug font-medium">
-                        Please make payments only through our official bank account, verified UPI/QR Code or official payment link.
-                     </p>
-                  </div>
+               <div className="bg-[#f0fdf4] border border-green-200 rounded-md h-fit p-1.5 flex items-start gap-1.5 max-w-[170px] shrink-0 shadow-sm">
+                  <ShieldCheck size={14} className="text-[#0f8b4d] shrink-0 mt-0.5" strokeWidth={2} />
+                  <p className="text-[10px] text-gray-700 leading-[1.2]">
+                     <strong className="text-[#0f8b4d] block mb-0.5">OFFICIAL & SECURE</strong>
+                     Pay only through our official bank, verified UPI, or payment link.
+                  </p>
                </div>
             </div>
-
          </div>
 
          {/* --- BOTTOM BANNER --- */}
-         <div className="bg-gray-50 border-t border-gray-200 px-8 py-3 flex flex-row items-center justify-between w-full mt-auto rounded-b-lg">
-            <div className="flex flex-row items-center gap-6">
-               <img src={namogangelogo} alt="Namo Gange" className="h-[24px] object-contain" />
-               <div>
-                  <div className="flex items-center gap-1.5 text-[7px] text-gray-700 font-medium tracking-wide mb-0.5">
-                     <span>Healthcare</span><span className="text-gray-300">|</span>
-                     <span>Wellness</span><span className="text-gray-300">|</span>
-                     <span>Nutrition</span><span className="text-gray-300">|</span>
-                     <span>Research</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[7px] text-gray-700 font-medium tracking-wide">
-                     <span>Events</span><span className="text-gray-300">|</span>
-                     <span>Conferences</span><span className="text-gray-300">|</span>
-                     <span>Awards</span>
-                  </div>
-               </div>
+         <div className="bg-white border-t border-gray-200 px-8 py-2 flex flex-row items-center justify-between w-full mt-auto rounded-b-[16px]">
+
+
+
+            {/* Center: Links */}
+            <div className="flex flex-row items-start gap-1.5 pl-6 flex-1 text-[12px] text-gray-900 font-medium tracking-wide">
+
+               <span>Healthcare</span><span className="text-gray-700 mx-3 font-medium">|</span>
+               <span>Wellness</span><span className="text-gray-700 mx-3 font-medium">|</span>
+               <span>Nutrition</span><span className="text-gray-700 mx-3 font-medium">|</span>
+               <span>Research</span>
+
+
+               <span>Events</span><span className="text-gray-700 mx-3 font-medium">|</span>
+               <span>Conferences</span><span className="text-gray-700 mx-3 font-medium">|</span>
+               <span>Awards</span>
             </div>
 
-            <div className="flex flex-col items-end">
-               <p className="text-[7px] font-bold mb-1 tracking-widest text-[#1b3664]">FOLLOW US</p>
-               <div className="flex gap-1.5">
-                  <div className="w-5 h-5 rounded-full bg-[#3b5998] flex items-center justify-center shadow-sm">
-                     <Facebook size={10} className="text-white" />
+
+            {/* Right: Socials */}
+            <div className="flex flex-col items-start shrink-0">
+               <p className="text-[9px] font-black mb-1.5 tracking-widest text-[#1b3664]">FOLLOW US</p>
+               <div className="flex gap-2.5">
+                  <div className="w-[24px] h-[24px] rounded-full bg-[#3b5998] flex items-center justify-center shadow-sm">
+                     <Facebook size={12} className="text-white" />
                   </div>
-                  <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 flex items-center justify-center shadow-sm">
-                     <Instagram size={10} className="text-white" />
+                  <div className="w-[24px] h-[24px] rounded-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-600 flex items-center justify-center shadow-sm">
+                     <Instagram size={12} className="text-white" />
                   </div>
-                  <div className="w-5 h-5 rounded-full bg-[#007bb5] flex items-center justify-center shadow-sm">
-                     <Linkedin size={10} className="text-white" />
+                  <div className="w-[24px] h-[24px] rounded-full bg-[#007bb5] flex items-center justify-center shadow-sm">
+                     <Linkedin size={12} className="text-white" />
                   </div>
-                  <div className="w-5 h-5 rounded-full bg-[#ff0000] flex items-center justify-center shadow-sm">
-                     <Youtube size={10} className="text-white" />
+                  <div className="w-[24px] h-[24px] rounded-full bg-[#ff0000] flex items-center justify-center shadow-sm">
+                     <Youtube size={12} className="text-white" />
                   </div>
                </div>
             </div>
