@@ -13,8 +13,14 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
-      if (!selectedFile.name.match(/\.(xlsx|xls|csv)$/)) {
-        alert("Please select a valid Excel or CSV file.");
+      if (!selectedFile.name.match(/\.(xlsx|xls)$/i)) {
+        setUploadResult({ type: "error", message: "Please select an .xlsx or .xls Excel file." });
+        e.target.value = "";
+        return;
+      }
+      if (selectedFile.size > 5 * 1024 * 1024) {
+        setUploadResult({ type: "error", message: "Excel file must be 5 MB or smaller." });
+        e.target.value = "";
         return;
       }
       setFile(selectedFile);
@@ -42,7 +48,7 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
         setUploadResult({
           type: "success",
           message: response.data.message || "Upload successful!",
-          errors: response.data.errors || []
+          errors: response.data.warnings || []
         });
         if (onSuccess) onSuccess();
         setTimeout(() => {
@@ -59,7 +65,8 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
     } catch (error) {
       setUploadResult({
         type: "error",
-        message: error.response?.data?.message || "An error occurred during upload."
+        message: error.response?.data?.message || "An error occurred during upload.",
+        errors: error.response?.data?.errors || [],
       });
     } finally {
       setIsUploading(false);
@@ -104,7 +111,20 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
             <FileSpreadsheet className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-xs text-blue-800">
               <p className="font-semibold mb-1">Upload Instructions</p>
-              <p>Please download the template, fill it out exactly as shown, and upload it here. Ensure all mandatory fields are provided.</p>
+              <p>Please download the template, fill it exactly as shown, and keep all mandatory fields complete.</p>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <div className="rounded-md bg-white/80 border border-blue-200 px-2.5 py-2">
+                  <span className="block font-bold text-blue-900">Maximum rows</span>
+                  <span>100 visitors per upload</span>
+                </div>
+                <div className="rounded-md bg-white/80 border border-blue-200 px-2.5 py-2">
+                  <span className="block font-bold text-blue-900">File limit</span>
+                  <span>5 MB · .xlsx/.xls only</span>
+                </div>
+              </div>
+              <p className="mt-2 text-[11px] leading-4">
+                Visitor notifications are triggered only after the complete file is validated and successfully imported. A rejected file sends no notification.
+              </p>
               <button 
                 onClick={handleDownloadTemplate}
                 className="mt-2 text-blue-700 font-bold hover:underline flex items-center gap-1"
@@ -122,7 +142,7 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
               type="file" 
               ref={fileInputRef}
               onChange={handleFileChange}
-              accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
               className="hidden"
             />
             
@@ -146,7 +166,7 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
                   <Upload className="w-5 h-5 text-slate-400" />
                 </div>
                 <p className="text-sm font-semibold text-slate-700">Click to select file</p>
-                <p className="text-xs text-slate-500 mt-1">Excel or CSV only</p>
+                <p className="text-xs text-slate-500 mt-1">Excel only · up to 5 MB · maximum 100 rows</p>
               </div>
             )}
           </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -35,7 +35,7 @@ import {
   deleteVisitorReview,
 } from "../../../features/visitor/visitorReviewSlice";
 import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
-import { fetchUsers, fetchAdmins } from "../../../features/auth/userSlice";
+import { fetchAdmins } from "../../../features/auth/userSlice";
 // import { showSuccess } from "../../../utils/toastMessage";
 
 const EDIT_INPUT_CLS = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full";
@@ -184,7 +184,7 @@ const GeneralOverview = () => {
     const userName = user.name || sessionStorage.getItem("user_name") || "User";
 
     try {
-      const reviewResult = await dispatch(
+      await dispatch(
         createVisitorReview({
           visitor_id: id,
           visitor_status: status,
@@ -416,6 +416,11 @@ const GeneralOverview = () => {
               <EditField label="Country" value={editData.country} onChange={(v) => setField("country", v)} />
               <EditField label="State" value={editData.state} onChange={(v) => setField("state", v)} />
               <EditField label="City" value={editData.city} onChange={(v) => setField("city", v)} />
+              <EditField label="Postal Code" value={editData.pincode} onChange={(v) => setField("pincode", v)} />
+              <div className="lg:col-span-3"><EditField label="Address" value={editData.address} onChange={(v) => setField("address", v)} /></div>
+              <EditField label="Preferred Date" value={editData.preferredDate} onChange={(v) => setField("preferredDate", v)} type="date" />
+              <EditField label="Preferred Time Slot" value={editData.preferredTimeSlot} onChange={(v) => setField("preferredTimeSlot", v)} />
+              <EditField label="How Did You Hear" value={editData.howDidYouHear} onChange={(v) => setField("howDidYouHear", v)} />
               <div className="flex items-center gap-2 pt-5">
                 <input type="checkbox" checked={!!editData.subscribe} onChange={(e) => setField("subscribe", e.target.checked)} className="w-4 h-4 text-[#23471d]" />
                 <label className="text-[12px] font-medium text-slate-700">Subscribed to Newsletter</label>
@@ -459,7 +464,7 @@ const GeneralOverview = () => {
             />
             <TR3
               l1="Subscribe" v1={visitor.subscribe ? "✅ Yes" : "❌ No"}
-              l2="Address" v2={[visitor.city, visitor.state, visitor.country].filter(Boolean).join(", ")}
+              l2="Address" v2={[visitor.address, visitor.city, visitor.state, visitor.pincode, visitor.country].filter(Boolean).join(", ")}
               l3="Record Link" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
             />
           </Section>
@@ -469,13 +474,17 @@ const GeneralOverview = () => {
             <TR1 label="Area of Interest" value={Array.isArray(visitor.areaOfInterest) ? visitor.areaOfInterest.join(", ") : "—"} />
           </Section>
 
-          {/* <Section title="Metadata">
+          <Section title="Visit Preferences">
+            <TR3 l1="Preferred Date" v1={visitor.preferredDate ? formatDate(visitor.preferredDate) : "—"} l2="Time Slot" v2={visitor.preferredTimeSlot} l3="Source" v3={visitor.howDidYouHear} />
+          </Section>
+
+          <Section title="Metadata">
             <TR3
               l1="Created By" v1={`${visitor.created_by || "—"} | ${formatDate(visitor.createdAt)}`}
               l2="Updated By" v2={`${visitor.updated_by || "—"} | ${formatDate(visitor.updatedAt)}`}
               l3="Secure ID" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
             />
-          </Section> */}
+          </Section>
           </>
           )}
         </div>

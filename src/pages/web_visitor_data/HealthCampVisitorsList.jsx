@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { fetchHealthCampVisitors } from "../../features/visitor/freeHealthCampSlice";
 import ClientOverview from "../../components/ClientOverview";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -32,7 +32,10 @@ function useCountUp(target, duration = 1200) {
   useEffect(() => {
     if (!started) return;
     const numTarget = parseFloat(target) || 0;
-    if (numTarget === 0) { setCount(0); return; }
+    if (numTarget === 0) {
+      const frame = requestAnimationFrame(() => setCount(0));
+      return () => cancelAnimationFrame(frame);
+    }
     const startTime = performance.now();
     const tick = (now) => {
       const elapsed = now - startTime;
@@ -49,7 +52,6 @@ function useCountUp(target, duration = 1200) {
 
 const HealthCampVisitorsList = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const [selectedClient, setSelectedClient] = useState(null);
   const [modalQrCode, setModalQrCode] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);

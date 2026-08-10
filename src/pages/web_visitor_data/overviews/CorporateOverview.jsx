@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -35,7 +35,7 @@ import {
   deleteVisitorReview,
 } from "../../../features/visitor/visitorReviewSlice";
 import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
-import { fetchUsers, fetchAdmins } from "../../../features/auth/userSlice";
+import { fetchAdmins } from "../../../features/auth/userSlice";
 
 const EDIT_INPUT_CLS = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full";
 const EDIT_LABEL_CLS = "text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1 block";
@@ -198,7 +198,7 @@ const CorporateOverview = () => {
     const userName = user.name || sessionStorage.getItem("user_name") || "User";
 
     try {
-      const reviewResult = await dispatch(
+      await dispatch(
         createVisitorReview({
           visitor_id: id,
           visitor_status: status,
@@ -331,7 +331,6 @@ const CorporateOverview = () => {
   const fullName =
     `${visitor.firstName || ""} ${visitor.lastName || ""}`.trim();
 
-  const hasReviews = visitorReviews.length > 0;
 
   return (
     <div className="bg-white shadow-md mt-6 p-4 md:p-6 min-h-screen font-inter animate-fadeIn">
@@ -488,6 +487,7 @@ const CorporateOverview = () => {
             <TR1 label="Specific Req." value={visitor.specificRequirement} />
           </Section>
 
+          {[visitor.passportCopyUrl, visitor.visitingCardUrl, visitor.companyProfileUrl, visitor.visaDocsUrl, visitor.photoIdUrl].some(Boolean) && (
           <Section title="Uploaded Documents">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-2 px-4">
               {visitor.passportCopyUrl && (
@@ -522,14 +522,15 @@ const CorporateOverview = () => {
               )}
             </div>
           </Section>
+          )}
 
-          {/* <Section title="Metadata">
+          <Section title="Metadata">
             <TR3 
               l1="Created By" v1={`${visitor.created_by || "—"} | ${formatDate(visitor.createdAt)}`}
               l2="Updated By" v2={`${visitor.updated_by || "—"} | ${formatDate(visitor.updatedAt)}`}
               l3="Record ID" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
             />
-          </Section> */}
+          </Section>
           </>
           )}
         </div>
@@ -550,7 +551,6 @@ const CorporateOverview = () => {
                     value={status}
                     onChange={(e) => {
                       const value = e.target.value;
-                      const hideFor = ["Interested", "Hot Lead", "Cold Lead", "Hold", "Data Send"]; // Example logic
                       setFlip(value !== "");
                       setStatus(value);
                     }}

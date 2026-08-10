@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -35,7 +35,7 @@ import {
   deleteVisitorReview,
 } from "../../../features/visitor/visitorReviewSlice";
 import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
-import { fetchUsers, fetchAdmins } from "../../../features/auth/userSlice";
+import { fetchAdmins } from "../../../features/auth/userSlice";
 // import { showSuccess } from "../../../utils/toastMessage";
 
 const EDIT_INPUT_CLS = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full";
@@ -160,7 +160,6 @@ const HealthCampOverview = () => {
   const [selectedEvent, setSelectedEvent] = useState("");
   const [reminderDt, setReminderDt] = useState("");
   const [forwardTo, setForwardTo] = useState("");
-  const [showForm, setShowForm] = useState(false);
   const [popUp, setPopUp] = useState(false);
   const [Flip, setFlip] = useState(false);
 
@@ -211,7 +210,7 @@ const HealthCampOverview = () => {
     const userName = user.name || sessionStorage.getItem("user_name") || "User";
 
     try {
-      const reviewResult = await dispatch(
+      await dispatch(
         createVisitorReview({
           visitor_id: id,
           visitor_status: status,
@@ -349,7 +348,6 @@ const HealthCampOverview = () => {
 
   const fullName =
     `${visitor.firstName || ""} ${visitor.lastName || ""}`.trim();
-  const hasReviews = visitorReviews.length > 0;
 
   const serviceLabels = {
     generalHealth: "General Health",
@@ -450,6 +448,7 @@ const HealthCampOverview = () => {
                 </select>
               </div>
               <EditField label="Date of Birth" value={editData.dateOfBirth} onChange={(v) => setField("dateOfBirth", v)} type="date" />
+              <EditField label="Blood Group" value={editData.bloodGroup} onChange={(v) => setField("bloodGroup", v)} />
               <div>
                 <label className={EDIT_LABEL_CLS}>Current Status</label>
                 <select value={editData.status || ""} onChange={(e) => setField("status", e.target.value)} className={EDIT_INPUT_CLS}>
@@ -493,6 +492,7 @@ const HealthCampOverview = () => {
               <EditField label="Country" value={editData.country} onChange={(v) => setField("country", v)} />
               <EditField label="State" value={editData.state} onChange={(v) => setField("state", v)} />
               <EditField label="City" value={editData.city} onChange={(v) => setField("city", v)} />
+              <EditField label="Postal Code" value={editData.pincode} onChange={(v) => setField("pincode", v)} />
               <div className="lg:col-span-3">
                 <label className={EDIT_LABEL_CLS}>Checkup Services</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-3 border border-slate-200 rounded-sm mt-1">
@@ -528,8 +528,9 @@ const HealthCampOverview = () => {
             <TR3 
               l1="Gender" v1={visitor.gender} 
               l2="Date of Birth" v2={visitor.dateOfBirth} 
-              l3="Current Status" v3={<span className="text-green-700 font-bold uppercase tracking-tight">{visitor.status}</span>} 
+              l3="Blood Group" v3={visitor.bloodGroup} 
             />
+            <TR2 l1="Current Status" v1={<span className="text-green-700 font-bold uppercase tracking-tight">{visitor.status}</span>} l2="Postal Code" v2={visitor.pincode} />
           </Section>
 
           <Section title="Medical Profile">
