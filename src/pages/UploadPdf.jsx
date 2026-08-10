@@ -203,14 +203,14 @@ const UploadPdf = () => {
         {
             key: "pdfTitle",
             label: "PDF TITLE",
-            render: (row) => <div className="font-medium text-gray-800">{row.pdfTitle}</div>
+            render: (row) => <div className="font-medium text-gray-800">{row.pdfTitle || row.title}</div>
         },
         {
             key: "category",
             label: "CATEGORY",
             render: (row) => (
                 <div className="flex flex-col">
-                    <span className="text-sm font-semibold text-blue-600">{row.category}</span>
+                    <span className="text-sm font-semibold text-blue-600">{row.category || 'E-Brochure'}</span>
                     {row.subCategory && <span className="text-[10px] text-gray-400 uppercase">{row.subCategory}</span>}
                 </div>
             )
@@ -232,7 +232,7 @@ const UploadPdf = () => {
             key: "status",
             label: "STATUS",
             render: (row) => (
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${row.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${String(row.status).toLowerCase() === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
                     {row.status}
                 </span>
