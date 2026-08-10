@@ -47,7 +47,7 @@ import {
 
 export const menuItems = [
   {
-    type: "item",
+    type:   "item",
     label: "Sales Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
