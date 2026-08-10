@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
-import { Plus, Trash2, Edit, Calendar, MapPin, Percent, Activity, User, Clock, Eye, X, ChevronDown } from 'lucide-react';
+import { Plus, Trash2, Edit, Calendar, MapPin, Percent, Activity, User, Clock, Eye, X, ChevronDown, Upload } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { getCurrentUserName } from '../utils/currentUser';
 
@@ -165,13 +165,16 @@ const ManageEvents = () => {
     const [logsLoading, setLogsLoading] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [eventForm, setEventForm] = useState({ ...EMPTY_EVENT });
+    const [bookingFormFile, setBookingFormFile] = useState(null);
+    const [bookingFormInputKey, setBookingFormInputKey] = useState(0);
     const [isEditing, setIsEditing] = useState(null);
     const [viewEvent, setViewEvent] = useState(null);
     const [openConfigSections, setOpenConfigSections] = useState({
         earlyBird: false,
         fullPayment: false,
         installment: false,
-        reminders: false
+        reminders: false,
+        bookingForm: false
     });
 
     const getUserInfo = () => {
@@ -252,6 +255,8 @@ const ManageEvents = () => {
             paymentReminderConfigVersion: cleanEvent.paymentReminderConfigVersion || 2
         });
         setViewEvent(null);
+        setBookingFormFile(null);
+        setBookingFormInputKey((prev) => prev + 1);
     };
 
     useEffect(() => {
@@ -349,11 +354,21 @@ const ManageEvents = () => {
                 [isEditing ? 'updated_by' : 'added_by']: userName,
                 showInPaymentsFilter: Boolean(String(eventForm.paymentFilterName || '').trim())
             };
+            const requestBody = bookingFormFile
+                ? Object.entries(payload).reduce((formData, [key, value]) => {
+                    if (value === undefined || value === null) return formData;
+                    formData.append(key, Array.isArray(value) || typeof value === 'object' ? JSON.stringify(value) : value);
+                    return formData;
+                }, new FormData())
+                : payload;
+
+            if (bookingFormFile) requestBody.append('bookingForm', bookingFormFile);
+
             let response;
             if (isEditing) {
-                response = await api.put(`/api/events/${isEditing}`, payload);
+                response = await api.put(`/api/events/${isEditing}`, requestBody, bookingFormFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
             } else {
-                response = await api.post('/api/events', payload);
+                response = await api.post('/api/events', requestBody, bookingFormFile ? { headers: { 'Content-Type': 'multipart/form-data' } } : undefined);
             }
 
             if (response.data.success) {
@@ -364,6 +379,8 @@ const ManageEvents = () => {
                     showConfirmButton: false
                 });
                 setEventForm({ ...EMPTY_EVENT });
+                setBookingFormFile(null);
+                setBookingFormInputKey((prev) => prev + 1);
                 setIsEditing(null);
                 fetchEvents();
                 setTimeout(fetchEventActivityLogs, 300);
@@ -681,10 +698,39 @@ const ManageEvents = () => {
                                     </div>
                                     )}
                                 </div>
+
+                                <div className="border border-green-200 rounded-[2px] overflow-hidden">
+                                    <button
+                                        type="button"
+                                        onClick={() => toggleConfigSection('bookingForm')}
+                                        className="w-full flex items-center justify-between gap-3 px-3 py-2 bg-green-50 text-left"
+                                    >
+                                        <span className="text-[11px] font-black text-black uppercase tracking-tight flex items-center gap-2">
+                                            <Upload size={14} className="text-[#23471d]" /> Booking Form Upload
+                                        </span>
+                                        <ChevronDown size={14} className={`text-gray-500 transition-transform ${openConfigSections.bookingForm ? 'rotate-180' : ''}`} />
+                                    </button>
+                                    {openConfigSections.bookingForm && (
+                                    <div className="bg-white p-3 border-t border-green-200">
+                                        <input
+                                            key={bookingFormInputKey}
+                                            type="file"
+                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                            onChange={(e) => setBookingFormFile(e.target.files?.[0] || null)}
+                                            className="w-full px-3 py-2 border border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] file:mr-3 file:border-0 file:bg-[#23471d] file:px-3 file:py-1.5 file:text-[10px] file:font-black file:uppercase file:text-white"
+                                        />
+                                        {(bookingFormFile || eventForm.bookingFormUrl) && (
+                                            <p className="mt-2 text-[10px] font-semibold text-gray-600 truncate">
+                                                {bookingFormFile ? bookingFormFile.name : eventForm.bookingFormOriginalName || eventForm.bookingFormUrl}
+                                            </p>
+                                        )}
+                                    </div>
+                                    )}
+                                </div>
                             </div>
 
                             <div className="pt-4 border-t-2 border-gray-100 flex justify-end gap-2">
-                                {isEditing && <button type="button" onClick={() => { setIsEditing(null); setEventForm({ ...EMPTY_EVENT }); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
+                                {isEditing && <button type="button" onClick={() => { setIsEditing(null); setEventForm({ ...EMPTY_EVENT }); setBookingFormFile(null); setBookingFormInputKey((prev) => prev + 1); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
                                 <button type="submit" disabled={isLoading} className="px-8 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-sm">
                                     {isLoading ? 'Processing...' : (isEditing ? 'Update Event' : 'Create Event')}
                                 </button>

@@ -331,6 +331,7 @@ export const menuItems = [
       { label: "Event Highlights", path: "/event-highlights" },
       { label: "About Us", path: "/about-us" },
       { label: "Add PDF", path: "/add-pdf" },
+      { label: "Admin Brochures", path: "/upload-pdf" },
       { label: "Marquee Text", path: "/marquee-text" },
       { label: "Who We Are", path: "/who-we-are" },
       { label: "Featured Services", path: "/featured-services" },
