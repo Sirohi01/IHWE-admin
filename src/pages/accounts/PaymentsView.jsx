@@ -46,6 +46,12 @@ function useCountUp(target, duration = 1200) {
     return { ref, count };
 }
 
+const toTitleCase = (value = '') => String(value)
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+
 function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
     const { ref, count } = useCountUp(rawValue);
     return (
@@ -130,16 +136,14 @@ const PaymentList = () => {
             try {
                 const [eventsRes, paymentsRes] = await Promise.all([
                     api.get('/api/events').catch(() => ({ data: { data: [] } })),
-                    api.get('/api/payments').catch(() => ({ data: { data: [] } }))
+                    api.get('/api/accounts-receivable').catch(() => ({ data: { data: { rows: [] } } }))
                 ]);
-                const eventsData = eventsRes.data?.data || eventsRes.data || [];
+                const eventsData = (eventsRes.data?.data || eventsRes.data || [])
+                    .filter((event) => event.showInPaymentsFilter && String(event.paymentFilterName || '').trim());
                 eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
                 setEvents(eventsData);
-                if (eventsData.length > 0) {
-                    setFilterEvent(eventsData[0]._id);
-                }
                 
-                setPayments(paymentsRes.data?.data || paymentsRes.data || []);
+                setPayments(paymentsRes.data?.data?.rows || []);
             } catch (err) {
                 console.error("Failed to fetch data", err);
             } finally {
@@ -207,6 +211,9 @@ const PaymentList = () => {
         return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     };
 
+    const isPiNumber = (value) => /\/(PI|PFI)\//i.test(String(value || ''));
+    const pickFirst = (...values) => values.find(value => value !== undefined && value !== null && String(value).trim() !== '');
+
     const getPaymentDetailLines = (pmt) => {
         const lines = [];
         if (pmt.payment_mode) lines.push(pmt.payment_mode);
@@ -251,7 +258,12 @@ const PaymentList = () => {
         // Define columns
         worksheet.columns = [
             { header: 'S.No.', key: 'sno', width: 8 },
-            { header: 'Invoice No', key: 'invoice_no', width: 20 },
+            { header: 'PI No', key: 'pi_no', width: 22 },
+            { header: 'PI Date', key: 'pi_date', width: 16 },
+            { header: 'PI Total', key: 'pi_total', width: 18 },
+            { header: 'Invoice No', key: 'invoice_no', width: 22 },
+            { header: 'Invoice Date', key: 'invoice_date', width: 16 },
+            { header: 'Invoice Total', key: 'invoice_total', width: 18 },
             { header: 'Client / Company', key: 'client_name', width: 25 },
             { header: 'Received Amount', key: 'received', width: 20 },
             { header: 'TDS Deducted', key: 'tds', width: 20 },
@@ -275,10 +287,17 @@ const PaymentList = () => {
         filteredPayments.forEach((pmt, index) => {
             const rawStatus = String(pmt.status || 'Completed');
             const pmtStatus = (rawStatus.toLowerCase() === 'completed' || rawStatus === '1') ? 'Completed' : (rawStatus.toLowerCase() === 'overdue' ? 'Overdue' : 'Partially Paid');
+            const fallbackNo = pmt.invoice_no || pmt.invoice_id || 'N/A';
+            const fallbackIsPi = isPiNumber(fallbackNo);
 
             const row = worksheet.addRow({
                 sno: index + 1,
-                invoice_no: pmt.invoice_no || pmt.invoice_id || 'N/A',
+                pi_no: pmt.pi_no || (fallbackIsPi ? fallbackNo : 'N/A'),
+                pi_date: formatDate(pmt.pi_date || (fallbackIsPi ? pmt.invoice_date : '')),
+                pi_total: Number(pmt.pi_amount || (fallbackIsPi ? (pmt.invoice_amount || pmt.f_amount) : 0) || 0),
+                invoice_no: pmt.tax_invoice_no || (!fallbackIsPi ? fallbackNo : 'N/A'),
+                invoice_date: formatDate(pmt.tax_invoice_date || (!fallbackIsPi ? pmt.invoice_date : '')),
+                invoice_total: Number(pmt.tax_invoice_amount || (!fallbackIsPi ? (pmt.invoice_amount || pmt.f_amount) : 0) || 0),
                 client_name: pmt.client_name || 'N/A',
                 received: Number(pmt.amount_text || 0),
                 tds: Number(pmt.tds_text || 0),
@@ -297,6 +316,8 @@ const PaymentList = () => {
             row.getCell('date').alignment = { horizontal: 'center', vertical: 'middle' };
 
             // Currency formatting for amount columns
+            row.getCell('pi_total').numFmt = '₹#,##0.00';
+            row.getCell('invoice_total').numFmt = '₹#,##0.00';
             row.getCell('received').numFmt = '₹#,##0.00';
             row.getCell('tds').numFmt = '₹#,##0.00';
 
@@ -353,25 +374,19 @@ const PaymentList = () => {
 
     const filteredPayments = payments.filter(pmt => {
         // Event filter
-        if (filterEvent !== 'all' && String(pmt.eventId || '') !== String(filterEvent)) return false;
+        if (filterEvent !== 'all' && String(pmt.eventId || pmt.crmEventId || '') !== String(filterEvent)) return false;
 
         // filter by company if not all list
         if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
 
-        // Bank filter
-        if (filterBank && pmt.bankId !== filterBank) return false;
-
-        // Mode filter
-        if (filterMode && pmt.payment_mode !== filterMode) return false;
-
         // Status filter
-        const rawStatus = String(pmt.status || 'Completed');
-        const pmtStatus = (rawStatus.toLowerCase() === 'completed' || rawStatus === '1') ? 'Completed' : (rawStatus.toLowerCase() === 'overdue' ? 'Overdue' : 'Partially Paid');
-        if (filterStatus && pmtStatus !== filterStatus) return false;
+        if (filterStatus && pmt.status !== filterStatus) return false;
+
+        if ((parseFloat(pmt.outstanding) || 0) <= 0) return false;
 
         // Date filter
         if (filterDate !== 'all') {
-            const pmtDate = new Date(pmt.payment_date || pmt.added);
+            const pmtDate = new Date(pmt.dueDate || pmt.invDate);
             if (!isNaN(pmtDate.getTime())) {
                 const now = new Date();
                 if (filterDate === 'this_month') {
@@ -389,37 +404,61 @@ const PaymentList = () => {
         if (!searchQuery) return true;
         const q = searchQuery.toLowerCase();
         return (
-            (pmt.invoice_no || pmt.invoice_id || '').toLowerCase().includes(q) ||
-            (pmt.payment_mode || '').toLowerCase().includes(q) ||
-            (pmt.status_short || '').toLowerCase().includes(q) ||
-            (pmt.added_by || '').toLowerCase().includes(q)
+            (pmt.proformaNo || '').toLowerCase().includes(q) ||
+            (pmt.invoiceNo || pmt.invNo || '').toLowerCase().includes(q) ||
+            (pmt.client || '').toLowerCase().includes(q) ||
+            (pmt.handledBy || pmt.addedBy || '').toLowerCase().includes(q) ||
+            (pmt.status || '').toLowerCase().includes(q)
         );
     });
 
-    const uniqueBanks = [...new Set(payments.map(p => p.bankId).filter(Boolean))];
-    const uniqueModes = [...new Set(payments.map(p => p.payment_mode).filter(Boolean))];
+    const uniqueBanks = [];
+    const uniqueModes = [];
 
-    const groupedPayments = Object.values(filteredPayments.reduce((acc, pmt) => {
-        const invoiceKey = String(pmt.invoice_id || pmt.invoice_no || 'no-invoice');
-        if (!acc[invoiceKey]) {
-            acc[invoiceKey] = {
-                key: invoiceKey,
-                invoiceNo: pmt.invoice_no || pmt.invoice_id || 'N/A',
-                clientName: pmt.client_name || 'N/A',
-                invoiceDate: pmt.invoice_date || pmt.added,
-                invoiceAmount: Number(pmt.invoice_amount || pmt.f_amount || 0),
-                payments: [],
-                receivedTotal: 0,
-                tdsTotal: 0,
-            };
+    const getPaymentTypeLabel = (row) => {
+        const received = parseFloat(row.received || 0);
+        const receivedPct = parseFloat(row.receivedPct || 0);
+        const outstanding = parseFloat(row.outstanding || 0);
+
+        if (received <= 0) return 'Advance Req';
+        if (receivedPct >= 100 || outstanding <= 0) return 'Full';
+        return 'Running';
+    };
+
+    const getOverdueDays = (row, dueDateValue) => {
+        if (row.status === 'Overdue' && Number(row.overdueDays || 0) > 0) {
+            return Number(row.overdueDays);
         }
+        if (!dueDateValue) return 0;
 
-        acc[invoiceKey].payments.push(pmt);
-        acc[invoiceKey].receivedTotal += Number(pmt.amount_text || 0);
-        acc[invoiceKey].tdsTotal += Number(pmt.tds_text || 0);
-        acc[invoiceKey].invoiceAmount = Math.max(acc[invoiceKey].invoiceAmount, Number(pmt.invoice_amount || pmt.f_amount || 0));
-        return acc;
-    }, {}));
+        const dueDate = new Date(dueDateValue);
+        if (isNaN(dueDate.getTime())) return 0;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        dueDate.setHours(0, 0, 0, 0);
+
+        return Math.max(0, Math.floor((today - dueDate) / (1000 * 60 * 60 * 24)));
+    };
+
+    const groupedPayments = filteredPayments.map((row) => {
+        const dueDate = row.dueDate || row.installmentDueDate || row.invDate;
+        const overdueDays = getOverdueDays(row, dueDate);
+
+        return {
+            key: row.id,
+            companyId: row.companyId,
+            proformaNo: row.proformaNo || (row.docType === 'Proforma Invoice' ? row.invNo : ''),
+            invoiceNo: row.invoiceNo || (row.docType === 'Invoice' ? row.invNo : ''),
+            clientName: row.client || 'N/A',
+            pymtReq: row.outstanding || row.invValue || 0,
+            paymentType: getPaymentTypeLabel(row),
+            dueDate,
+            handledBy: toTitleCase(row.handledBy || row.addedBy || '') || '—',
+            status: overdueDays > 0 ? 'Overdue' : (row.status || 'Unpaid'),
+            overdueDays,
+        };
+    });
 
     const totalPages = Math.ceil(groupedPayments.length / itemsPerPage);
     const paginatedGroups = groupedPayments.slice(
@@ -435,23 +474,17 @@ const PaymentList = () => {
 
     const totalPayments = filteredPayments.length;
     const totalInvoices = groupedPayments.length;
-    const totalReceived = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.amount_text) || 0), 0);
-    const totalTds = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds_text) || 0), 0);
+    const totalReceived = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.received) || 0), 0);
+    const totalTds = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds) || 0), 0);
     const totalClients = new Set(filteredPayments.map(pmt => pmt.companyId).filter(Boolean)).size;
 
-    const totalInvoiceValue = groupedPayments.reduce((sum, group) => sum + (group.invoiceAmount || 0), 0);
+    const totalInvoiceValue = filteredPayments.reduce((sum, row) => sum + (row.invValue || 0), 0);
     const totalOutstanding = Math.max(0, totalInvoiceValue - totalReceived);
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const totalOverdue = groupedPayments.reduce((sum, group) => {
-        const outstanding = Math.max(0, (group.invoiceAmount || 0) - (group.receivedTotal || 0));
-        if (outstanding > 0 && new Date(group.invoiceDate) < thirtyDaysAgo) {
-            return sum + outstanding;
-        }
-        return sum;
-    }, 0);
+    const totalOverdue = filteredPayments.filter(row => row.status === 'Overdue').reduce((sum, row) => sum + (row.outstanding || 0), 0);
 
     const totalCreditNotes = filteredPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.debit_note_ammount || pmt.credit_note_amount) || 0), 0);
     const netAmountReceived = totalReceived - totalTds;
@@ -459,11 +492,11 @@ const PaymentList = () => {
 
     const now = new Date();
     const thisMonthPayments = filteredPayments.filter((pmt) => {
-        const d = new Date(pmt.payment_date || pmt.added);
+        const d = new Date(pmt.dueDate || pmt.invDate);
         return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     });
-    const thisMonthReceived = thisMonthPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.amount_text) || 0), 0);
-    const thisMonthTds = thisMonthPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds_text) || 0), 0);
+    const thisMonthReceived = thisMonthPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.received) || 0), 0);
+    const thisMonthTds = thisMonthPayments.reduce((sum, pmt) => sum + (parseFloat(pmt.tds) || 0), 0);
 
     const handleSendReceipt = async (pmtId, type) => {
         setSendingReceipt(prev => ({ ...prev, [`${pmtId}-${type}`]: true }));
@@ -491,7 +524,7 @@ const PaymentList = () => {
                     rawValue={totalPayments}
                     displayValue={(c) => Math.round(c)}
                     label="Total Payments"
-                    subLabel={`${totalInvoices} Invoices`} subColor="#2563eb"
+                    subLabel={`${totalInvoices} Documents`} subColor="#2563eb"
                 />
                 <AnimatedStatCard
                     icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
@@ -560,7 +593,7 @@ const PaymentList = () => {
                     </div>
                     <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
                         <p className="text-xs font-medium text-slate-500 leading-relaxed max-w-2xl">
-                            Internal transaction log — every payment recorded against an invoice, who recorded it and when. For the receipt document to send a client, see Receipts.
+                            Internal transaction log — every payment recorded against PI and invoice documents, who recorded it and when. For the receipt document to send a client, see Receipts.
                         </p>
                     </div>
                 </div>
@@ -568,7 +601,7 @@ const PaymentList = () => {
                     <div className="relative w-full sm:w-auto">
                         <input
                             type="text"
-                            placeholder="Search by invoice no., UTR, txn id..."
+                            placeholder="Search by PI no., invoice no., UTR, txn id..."
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                             className="w-full sm:w-[260px] border border-slate-200 rounded-lg pl-3 pr-9 py-2 text-xs font-medium bg-white shadow-sm focus:outline-none focus:border-[#124170] transition-colors placeholder:text-slate-400"
@@ -613,7 +646,7 @@ const PaymentList = () => {
                             className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] max-w-[150px] truncate focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
                         >
                             <option value="all">All Events</option>
-                            {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
+                            {events.map(event => <option key={event._id} value={event._id}>{event.paymentFilterName || event.name}</option>)}
                         </select>
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
@@ -652,8 +685,7 @@ const PaymentList = () => {
                             className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
                         >
                             <option value="">All Status</option>
-                            <option value="Completed">Completed</option>
-                            <option value="Partially Paid">Partially Paid</option>
+                            <option value="Unpaid">Unpaid</option>
                             <option value="Overdue">Overdue</option>
                         </select>
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -672,17 +704,17 @@ const PaymentList = () => {
 
             {/* -- Table Container -- */}
             <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
-                <table className="w-full min-w-[1120px] border-collapse text-left text-[11px] leading-tight">
+                <table className="w-full min-w-[1280px] border-collapse text-left text-[11px] leading-tight">
                     <thead>
                         <tr className="bg-white text-[8px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
                             <th className="px-3 py-2.5 text-center w-[40px]">S.No.</th>
-                            <th className="px-3 py-2.5 min-w-[160px]">Invoice Details</th>
-                            <th className="px-3 py-2.5 min-w-[160px]">Client / Company</th>
-                            <th className="px-3 py-2.5 min-w-[100px]">Received</th>
-                            <th className="px-3 py-2.5 min-w-[100px]">TDS Deducted</th>
-                            <th className="px-3 py-2.5 min-w-[180px]">Payment Details</th>
-                            <th className="px-3 py-2.5 min-w-[130px]">Payment Date</th>
-                            <th className="px-3 py-2.5 min-w-[130px]">Created By</th>
+                            <th className="px-3 py-2.5 min-w-[160px]">Proforma No.</th>
+                            <th className="px-3 py-2.5 min-w-[160px]">Invoice No.</th>
+                            <th className="px-3 py-2.5 min-w-[160px]">Client / Company Name</th>
+                            <th className="px-3 py-2.5 min-w-[100px]">PYMT Required.</th>
+                            <th className="px-3 py-2.5 min-w-[110px]">PYMT Type</th>
+                            <th className="px-3 py-2.5 min-w-[130px]">Due Date</th>
+                            <th className="px-3 py-2.5 min-w-[130px]">Handled By</th>
                             <th className="px-3 py-2.5 min-w-[100px] text-center">Status</th>
                             <th className="px-3 py-2.5 min-w-[100px] text-center">Action</th>
                         </tr>
@@ -710,128 +742,47 @@ const PaymentList = () => {
                                     <tr key={group.key} className="border-b border-slate-200 bg-white hover:bg-slate-50/50 transition-colors">
                                         <td className="px-3 py-2.5 text-[11px] font-bold text-slate-900 align-top">{rowIdx}</td>
                                         <td className="px-3 py-2.5 align-top">
-                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.invoiceNo}</div>
-                                            <div className="mt-1 text-[9px] font-bold" style={{ color: '#5E0006' }}>Date: {formatDate(group.invoiceDate)}</div>
-                                            <div className="mt-0.5 text-[9px] font-bold" style={{ color: '#5E0006' }}>Invoice Total: {formatCurrency(group.invoiceAmount)}</div>
-                                            <div className="mt-1.5 inline-flex rounded bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-600">
-                                                {group.payments.length} Payment{group.payments.length === 1 ? '' : 's'}
-                                            </div>
+                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.proformaNo || '—'}</div>
+                                        </td>
+                                        <td className="px-3 py-2.5 align-top">
+                                            {group.invoiceNo ? (
+                                                <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.invoiceNo}</div>
+                                            ) : (
+                                                <div className="inline-flex rounded bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700 border border-amber-100">
+                                                    Not Yet Generated
+                                                </div>
+                                            )}
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
                                             <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.clientName}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-received`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[10px]" style={{ color: '#064232' }}>{formatCurrency(pmt.amount_text)}</div>
-                                                </div>
-                                            ))}
-                                            {group.payments.length > 1 && (
-                                                <div className="mt-1.5 text-[10px] text-slate-500">
-                                                    Total: <span style={{ color: '#064232' }}>{formatCurrency(group.receivedTotal)}</span>
-                                                </div>
-                                            )}
+                                            <div className="font-bold text-[11px]" style={{ color: '#064232' }}>{formatCurrency(group.pymtReq)}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-tds`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[10px]" style={{ color: '#5E0006' }}>{formatCurrency(pmt.tds_text)}</div>
-                                                </div>
-                                            ))}
-                                            {group.payments.length > 1 && (
-                                                <div className="mt-1.5 text-[10px] text-slate-500">
-                                                    Total: <span style={{ color: '#5E0006' }}>{formatCurrency(group.tdsTotal)}</span>
-                                                </div>
-                                            )}
+                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.paymentType}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={pmt._id} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    {getPaymentDetailLines(pmt).map((line, lineIndex) => (
-                                                        <div key={`${pmt._id}-${lineIndex}`} className={lineIndex === 0 ? 'font-bold text-[10px] mb-0.5' : 'text-[9px] font-bold'} style={lineIndex === 0 ? { color: '#15173D' } : { color: '#016B61' }}>
-                                                            {line}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            ))}
+                                            <div className="font-bold text-[11px]" style={{ color: '#111844' }}>{group.dueDate ? formatDate(group.dueDate) : '—'}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-date`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[10px]" style={{ color: '#111844' }}>{formatDateTime(pmt.payment_date).split(', ')[0]}</div>
-                                                    <div className="text-[9px] font-bold mt-0.5" style={{ color: '#5E0006' }}>{formatDateTime(pmt.payment_date).split(', ')[1] || ''}</div>
-                                                </div>
-                                            ))}
-                                        </td>
-                                        <td className="px-3 py-2.5 align-top">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-created`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                    <div className="font-bold text-[10px]" style={{ color: '#093C5D' }}>{pmt.added_by || 'Admin'}</div>
-                                                    <div className="text-[9px] font-bold mt-0.5" style={{ color: '#111844' }}>{formatDateTime(pmt.added).split(', ')[0]}</div>
-                                                    <div className="text-[9px] font-bold mt-0.5" style={{ color: '#5E0006' }}>{formatDateTime(pmt.added).split(', ')[1] || ''}</div>
-                                                </div>
-                                            ))}
+                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.handledBy || '—'}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top text-center">
-                                            {group.payments.map((pmt, paymentIndex) => {
-                                                const status = String(pmt.status || 'Completed'); // Mocking status logic since it isn't in original JSX clearly
-                                                const isCompleted = status.toLowerCase() === 'completed' || status === '1';
-                                                const isOverdue = status.toLowerCase() === 'overdue';
-                                                const isPartiallyPaid = status.toLowerCase() === 'partially paid';
-                                                return (
-                                                    <div key={`${pmt._id}-status`} className={paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}>
-                                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${isCompleted ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                                                            isOverdue ? 'bg-red-50 text-red-600 border border-red-200' :
-                                                                'bg-amber-50 text-amber-600 border border-amber-200'
-                                                            }`}>
-                                                            <div className={`w-1.5 h-1.5 rounded-full ${isCompleted ? 'bg-emerald-500' :
-                                                                isOverdue ? 'bg-red-500' :
-                                                                    'bg-orange-500'
-                                                                }`}></div>
-                                                            {isCompleted ? 'Completed' : isOverdue ? 'Overdue' : 'Partially Paid'}
-                                                        </div>
-                                                    </div>
-                                                )
-                                            })}
+                                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${group.status === 'Overdue' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${group.status === 'Overdue' ? 'bg-red-500' : 'bg-slate-500'}`}></div>
+                                                {group.status === 'Overdue'
+                                                    ? `Overdue · ${group.overdueDays || 1}d`
+                                                    : 'PYMT Required'}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top text-center">
-                                            {group.payments.map((pmt, paymentIndex) => (
-                                                <div key={`${pmt._id}-actions`} className={`flex items-center justify-center gap-1.5 ${paymentIndex > 0 ? 'mt-1.5 border-t border-slate-200 pt-1.5' : ''}`}>
-                                                    <button
-                                                        onClick={() => handleSendReceipt(pmt._id, 'email')}
-                                                        disabled={sendingReceipt[`${pmt._id}-email`]}
-                                                        title="Send Email Receipt"
-                                                        className="w-6 h-6 rounded bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 hover:bg-blue-100 transition-colors disabled:opacity-50"
-                                                    >
-                                                        {sendingReceipt[`${pmt._id}-email`] ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
-                                                        disabled={sendingReceipt[`${pmt._id}-whatsapp`]}
-                                                        title="Send WhatsApp Receipt"
-                                                        className="w-6 h-6 rounded bg-green-50 border border-green-100 flex items-center justify-center text-emerald-600 hover:bg-green-100 transition-colors disabled:opacity-50"
-                                                    >
-                                                        {sendingReceipt[`${pmt._id}-whatsapp`] ? <Loader2 size={12} className="animate-spin" /> : <MessageCircleMore size={12} />}
-                                                    </button>
-                                                    <div className="relative group">
-                                                        <button
-                                                            title="More Actions"
-                                                            className="w-6 h-6 rounded bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors"
-                                                        >
-                                                            <MoreVertical size={12} />
-                                                        </button>
-                                                        <div className="absolute right-0 top-full mt-1 w-40 bg-white border border-slate-200 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 flex flex-col py-1">
-                                                            <button
-                                                                onClick={() => openReceipt(pmt)}
-                                                                className="flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-colors w-full text-left"
-                                                            >
-                                                                <FileText size={14} />
-                                                                View Document
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            ))}
+                                            <button
+                                                onClick={() => navigate(`/dashboard/account/AddPayment/${group.companyId}`)}
+                                                className="px-2.5 py-1 rounded bg-[#124170] text-white text-[11px] font-bold hover:bg-[#0c2b4a] transition-colors"
+                                            >
+                                                Book Payment
+                                            </button>
                                         </td>
                                     </tr>
 
@@ -847,7 +798,7 @@ const PaymentList = () => {
                 totalPages > 1 && (
                     <div className="flex justify-between items-center mt-2 px-2">
                         <span className="text-sm text-gray-500 font-medium">
-                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} invoice entries
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, groupedPayments.length)} of {groupedPayments.length} document entries
                         </span>
                         <div className="flex gap-1 bg-white border border-gray-200 rounded-md shadow-sm p-1">
                             <button

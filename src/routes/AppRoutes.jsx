@@ -177,6 +177,7 @@ const HealthCampOverview = lazy(() => import("../pages/web_visitor_data/overview
 const UserList = lazy(() => import("../pages/users/UserList"));
 const AddUser = lazy(() => import("../pages/users/AddUser"));
 const AddBank = lazy(() => import("../pages/add_by_admin/AddBank"));
+const BankAccountDetail = lazy(() => import("../pages/add_by_admin/BankAccountDetail"));
 const AddCategory = lazy(() => import("../pages/add_by_admin/AddCategory"));
 const AddExhibitorCategory = lazy(() => import("../pages/add_by_admin/AddExhibitorCategory"));
 const AddCrmWhatsappMessage = lazy(() => import("../pages/add_by_admin/AddCrmWhatsappMessage"));
@@ -693,6 +694,14 @@ export default function AppRoutes() {
               path="dashboard/account/:id"
               element={<AccountOverview />}
             />
+            <Route
+              path="dashboard/account/:id/share-payment-details"
+              element={<BankAccountDetail />}
+            />
+            <Route
+              path="share-payment-details"
+              element={<BankAccountDetail />}
+            />
             <Route path="delegate-config" element={<DelegateConfig />} />
             {/* <Route
             path="ihweClientData2026/AddNewVisitor"
@@ -778,6 +787,7 @@ export default function AppRoutes() {
             <Route path="ihweClientData2026/adduser" element={<AddUser />} />
             <Route path="ihweClientData2026/userlist" element={<UserList />} />
             <Route path="ihweClientData2026/AddBank" element={<AddBank />} />
+            <Route path="ihweClientData2026/AddBank/:bankId" element={<BankAccountDetail />} />
             <Route
               path="ihweClientData2026/AddCategory"
               element={<AddCategory />}

@@ -235,9 +235,43 @@ export const PerformaInvoices = () => {
     const [remarks, setRemarks] = useState('');
     const [notes, setNotes] = useState('');
     const [discount, setDiscount] = useState(0);
+    const [paymentPlans, setPaymentPlans] = useState([]);
+    const [paymentPlanType, setPaymentPlanType] = useState('');
+    // Editing an existing PI is reached without a ?crmEventId= query param, so
+    // the event it belongs to has to come from the loaded estimate instead —
+    // this holds whichever source resolved it (URL first, estimate as fallback).
+    const [resolvedCrmEventId, setResolvedCrmEventId] = useState('');
 
     const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
     const [isEmailLoading, setIsEmailLoading] = useState(false);
+
+    useEffect(() => {
+        const urlCrmEventId = new URLSearchParams(location.search).get('crmEventId') || '';
+        if (urlCrmEventId) setResolvedCrmEventId(urlCrmEventId);
+    }, [location.search]);
+
+    // Payment plans are configured per-exhibition in Event Setup — resolve the
+    // CrmEvent this PI belongs to, then load its linked Event's payment plans.
+    useEffect(() => {
+        if (!resolvedCrmEventId) return;
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const crmEventRes = await api.get(`/api/crm-events/${resolvedCrmEventId}`);
+                const registrationEventId = crmEventRes.data?.registrationEventId;
+                if (!registrationEventId) return;
+
+                const eventRes = await api.get(`/api/events/${registrationEventId}`);
+                const plans = eventRes.data?.data?.paymentPlans || [];
+                if (!cancelled) setPaymentPlans(plans);
+            } catch (error) {
+                console.error('Error loading payment plans for this event:', error);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [resolvedCrmEventId]);
 
     // Handle Estimate Type changing to update GST Option
     useEffect(() => {
@@ -315,6 +349,15 @@ export const PerformaInvoices = () => {
                 if (estimateForPrefill) {
                     setCompanyData(companyInfo);
                     setExistingEstimateId(existingEstimate?._id || null);
+
+                    // Editing an existing PI: recover which event's payment plans apply,
+                    // and restore whichever plan was chosen when it was issued.
+                    if (existingEstimate?.crmEventId) {
+                        setResolvedCrmEventId(String(existingEstimate.crmEventId));
+                    }
+                    if (existingEstimate?.paymentPlanType) {
+                        setPaymentPlanType(existingEstimate.paymentPlanType);
+                    }
 
                     const formattedItems = (estimateForPrefill.items || []).map((item, index) => {
                         let desc = item.description || '';
@@ -628,6 +671,8 @@ export const PerformaInvoices = () => {
                 remarks: remarks
             })),
             finalAmount: grandTotal,
+            paymentPlanType,
+            paymentPlanLabel: paymentPlans.find(p => p.id === paymentPlanType)?.label || '',
             added_by: currentUserName,
             status: 'active'
         };
@@ -957,18 +1002,36 @@ export const PerformaInvoices = () => {
                         </div>
                     </div>
 
-                    {/* SECTION 3 – Remarks / Notes */}
+                    {/* SECTION 3 – Payment Plan / Remarks / Notes */}
                     <div className="bg-white rounded-lg border border-gray-200 p-5">
                         <SectionHead num="3" label="Remarks / Notes" />
-                        <textarea
-                            rows={3}
-                            maxLength={500}
-                            placeholder="Type your notes or any special instructions here..."
-                            value={notes}
-                            onChange={(e) => setNotes(e.target.value)}
-                            className="w-full border border-gray-300 rounded px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-y bg-white"
-                        />
-                        <p className="text-[10px] text-gray-400 mt-1">{notes.length} / 500 Characters</p>
+                        <div className="grid grid-cols-10 gap-4">
+                            <div className="col-span-3">
+                                <Label>Payment Plan</Label>
+                                <select
+                                    value={paymentPlanType}
+                                    onChange={(e) => setPaymentPlanType(e.target.value)}
+                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] cursor-pointer"
+                                >
+                                    <option value="">Select payment plan</option>
+                                    {paymentPlans.map((plan) => (
+                                        <option key={plan.id} value={plan.id}>{plan.label}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="col-span-7">
+                                <Label>Remarks / Notes</Label>
+                                <textarea
+                                    rows={3}
+                                    maxLength={500}
+                                    placeholder="Type your notes or any special instructions here..."
+                                    value={notes}
+                                    onChange={(e) => setNotes(e.target.value)}
+                                    className="w-full border border-gray-300 rounded px-3 py-2 text-xs text-gray-800 focus:outline-none focus:border-blue-500 resize-y bg-white"
+                                />
+                                <p className="text-[10px] text-gray-400 mt-1">{notes.length} / 500 Characters</p>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Bottom action bar */}

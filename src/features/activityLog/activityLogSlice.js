@@ -20,6 +20,7 @@ export const createActivityLogThunk = createAsyncThunk(
         module: payload.module || payload.section || "System",
         details: payload.details || payload.message || "System action performed",
         link: payload.link ? `${window.location.origin}${payload.link}` : `${window.location.origin}${defaultPath}`,
+        data: payload.data || {},
       };
 
       const res = await api.post(`/api/activity-logs/create`, finalPayload);
@@ -32,9 +33,9 @@ export const createActivityLogThunk = createAsyncThunk(
 
 export const fetchActivityLogs = createAsyncThunk(
   "activityLog/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (params = {}, { rejectWithValue }) => {
     try {
-      const res = await api.get(`/api/activity-logs`);
+      const res = await api.get(`/api/activity-logs`, { params });
       return res.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message);

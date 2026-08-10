@@ -34,3 +34,9 @@ export const getCurrentUserName = (fallback = "Admin") => {
 
 export const getCurrentUsername = () =>
   getStoredUserValue(["username", "user_name", "admin_name"]);
+
+export const getCurrentUserMobile = () =>
+  getStoredUserValue(["mobile", "phone", "mobileNo", "mobile_no"]);
+
+export const getCurrentUserDepartment = () =>
+  getStoredUserValue(["department", "dept"]);

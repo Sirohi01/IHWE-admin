@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import api from "../../../lib/api";
 import CompanyAccountSummary, { formatCurrency } from "./CompanyAccountSummary";
 import { getCurrentUserName, getCurrentUsername } from "../../../utils/currentUser";
+import CommunicationModal from "../../../components/CommunicationModal";
 import {
   MapPin, Mail, Phone,
   Eye,
@@ -12,6 +13,8 @@ import {
   FileMinus, FileWarning,
   Truck,
   ArrowLeft,
+  MessageCircleMore,
+  Landmark,
 } from "lucide-react";
 
 const AccountOverview = () => {
@@ -57,6 +60,26 @@ const AccountOverview = () => {
     }
   };
 
+  const [commModal, setCommModal] = useState({ isOpen: false, type: "email", docType: "proforma", docId: null });
+
+  const handleSendWhatsApp = (docId) => {
+    setCommModal({ isOpen: true, type: "whatsapp", docType: "proforma", docId });
+  };
+
+  const handleSendEmail = (docId) => {
+    setCommModal({ isOpen: true, type: "email", docType: "proforma", docId });
+  };
+
+  const handleShareBankDetails = (docNo, amount) => {
+    const params = new URLSearchParams();
+    if (docNo) params.set("doc", docNo);
+    if (amount) params.set("amount", amount);
+    if (data.companyInfo?.name) params.set("clientName", data.companyInfo.name);
+    params.set("share", "1");
+    if (eventId) params.set("eventId", eventId);
+    if (crmEventId) params.set("crmEventId", crmEventId);
+    navigate(`/dashboard/account/${id}/share-payment-details?${params.toString()}`);
+  };
 
   const getDocumentLink = (doc) => {
     if (doc.documentType === "Invoice") return `/payments/invoiceDetails/${doc.id}`;
@@ -275,6 +298,31 @@ const AccountOverview = () => {
                           >
                             <Eye size={13} />
                           </button>
+                          {doc.documentType === "Proforma Invoice" && (
+                            <>
+                              <button
+                                onClick={() => handleSendWhatsApp(doc.id)}
+                                className="text-emerald-600 hover:text-emerald-800"
+                                title="Send WhatsApp"
+                              >
+                                <MessageCircleMore size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleSendEmail(doc.id)}
+                                className="text-blue-600 hover:text-blue-800"
+                                title="Send Email"
+                              >
+                                <Mail size={13} />
+                              </button>
+                              <button
+                                onClick={() => handleShareBankDetails(doc.documentNo, doc.amount)}
+                                className="text-[#7e22ce] hover:text-purple-800"
+                                title="Bank Details"
+                              >
+                                <Landmark size={13} />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -402,6 +450,15 @@ const AccountOverview = () => {
           </div> */}
         </div>
       </div>
+
+      <CommunicationModal
+        isOpen={commModal.isOpen}
+        onClose={() => setCommModal({ ...commModal, isOpen: false, docId: null })}
+        type={commModal.type}
+        docType={commModal.docType}
+        docId={commModal.docId}
+        refreshData={fetchAccountData}
+      />
 
     </div>
   );
