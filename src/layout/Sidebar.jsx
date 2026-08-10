@@ -192,6 +192,7 @@ export default function Sidebar({
           { label: "All Leads", path: `/crm-event/${ev._id}/all-leads` },
           { label: "Referral Leads", path: `/crm-event/${ev._id}/referral-leads` },
           { label: "Payment Mail", path: `/crm-event/${ev._id}/payment-mail` },
+          { label: "Send Mail", path: `/crm-event/${ev._id}/send-mail` },
         ],
       }));
 

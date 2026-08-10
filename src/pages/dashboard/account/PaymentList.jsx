@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useNavigate, Link, useParams } from 'react-router-dom';
+import { useNavigate, Link, useParams, useSearchParams } from 'react-router-dom';
 import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2 } from 'lucide-react';
 import api, { SERVER_URL } from '../../../lib/api';
 import Swal from 'sweetalert2';
@@ -67,11 +67,14 @@ function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, la
 const PaymentList = () => {
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
+    const [searchParams] = useSearchParams();
+    const crmEventId = searchParams.get('crmEventId');
     const isAllList = id === 'all';
     const [loading, setLoading] = useState(true);
     const [payments, setPayments] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [accountName, setAccountName] = useState('Account');
+    const [activeEventId, setActiveEventId] = useState(crmEventId || null);
     const [sendingReceipt, setSendingReceipt] = useState({});
     const [linkedAccountIds, setLinkedAccountIds] = useState([]);
 
@@ -109,6 +112,11 @@ const PaymentList = () => {
                 const res = await api.get(`/api/account-overview/${id}`);
                 if (!cancelled && res.data?.success) {
                     setAccountName(res.data.data?.companyInfo?.name || '');
+                    if (!activeEventId && res.data.data?.companyInfo?.crm_event_id) {
+                        setActiveEventId(res.data.data.companyInfo.crm_event_id);
+                    } else if (!activeEventId && res.data.data?.companyInfo?.event_id) {
+                        setActiveEventId(res.data.data.companyInfo.event_id);
+                    }
                 }
             } catch (err) {
                 if (!cancelled) setAccountName('');
@@ -196,6 +204,8 @@ const PaymentList = () => {
             (pmt.added_by || '').toLowerCase().includes(q)
         );
     });
+
+    const derivedEventId = activeEventId || (filteredPayments.length > 0 ? filteredPayments.find(p => p.crmEventId)?.crmEventId : null) || '69edb20efdd846637abaaee0';
 
     const groupedPayments = Object.values(filteredPayments.reduce((acc, pmt) => {
         const invoiceKey = String(pmt.payment_group_id || pmt.invoice_id || pmt.invoice_no || 'no-invoice');
@@ -317,6 +327,14 @@ const PaymentList = () => {
                         }}
                         className="border border-gray-300 rounded-md px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
                     />
+                    {id !== 'all' && derivedEventId && (
+                        <button
+                            onClick={() => navigate(`/crm-event/${derivedEventId}/payment-mail?clientId=${id}`)}
+                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-md font-bold transition text-[13px]"
+                        >
+                            Reminder
+                        </button>
+                    )}
                     {id !== 'all' && (
                         <button
                             onClick={() => navigate(`/dashboard/account/AddPayment/${id}`)}

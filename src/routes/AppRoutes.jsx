@@ -332,6 +332,7 @@ const CreateImprestRequest = lazy(() => import("../pages/accounts/CreateImprestR
 const SalesTools = lazy(() => import("../pages/sales_tools/SalesTools"));
 // Payment Mail
 const PaymentMail = lazy(() => import("../pages/PaymentMail"));
+const SendMail = lazy(() => import("../pages/SendMail"));
 // Communication
 const Communication = lazy(() => import("../pages/communication/Communication"));
 
@@ -639,6 +640,7 @@ export default function AppRoutes() {
                 CrmEvent's assigned companies to show. */}
             <Route path="crm-event/:eventId/sales-tools" element={<SalesTools />} />
             <Route path="crm-event/:eventId/payment-mail" element={<PaymentMail />} />
+            <Route path="crm-event/:eventId/send-mail" element={<SendMail />} />
             <Route path="crm-event/:eventId/new-leads" element={<CrmEventScopedRoute><NewLeadList /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/add-client" element={<CrmEventScopedRoute><AddNewClients /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/client/:id" element={<CrmEventScopedRoute><ClientOverview1 /></CrmEventScopedRoute>} />
