@@ -250,6 +250,19 @@ export const PerformaInvoices = () => {
         if (urlCrmEventId) setResolvedCrmEventId(urlCrmEventId);
     }, [location.search]);
 
+    // Creating a new PI reached without a ?crmEventId= (e.g. not opened from a
+    // specific event's client list) still needs its event resolved so the Payment
+    // Plan dropdown can populate — mirror the same single-assignment fallback used
+    // at submit time (handleGenerateEstimate) here too, so the dropdown isn't left
+    // empty until the user actually submits.
+    useEffect(() => {
+        if (resolvedCrmEventId || existingEstimateId) return;
+        const assignments = companyData?.eventAssignments || [];
+        if (assignments.length === 1 && assignments[0].eventId) {
+            setResolvedCrmEventId(String(assignments[0].eventId));
+        }
+    }, [companyData, resolvedCrmEventId, existingEstimateId]);
+
     // Payment plans are configured per-exhibition in Event Setup — resolve the
     // CrmEvent this PI belongs to, then load its linked Event's payment plans.
     useEffect(() => {

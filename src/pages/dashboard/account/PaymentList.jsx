@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams, useSearchParams } from 'react-router-dom';
-import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2 } from 'lucide-react';
+import { ChevronRight, MessageCircleMore, Mail, Users, DollarSign, CreditCard, Loader2, Eye } from 'lucide-react';
 import api, { SERVER_URL } from '../../../lib/api';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
@@ -448,10 +448,10 @@ const PaymentList = () => {
                                                 <div key={`${pmt._id}-actions`} className={`flex items-center justify-center gap-1.5 ${paymentIndex > 0 ? 'mt-1 border-t border-slate-100 pt-1' : ''}`}>
                                                     <button
                                                         onClick={() => openReceipt(pmt)}
-                                                        title="Open Payment Receipt"
+                                                        title="View Payment Receipt"
                                                         className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-50 text-slate-700 transition-colors hover:bg-slate-100"
                                                     >
-                                                        <FileText size={14} />
+                                                        <Eye size={14} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleSendReceipt(pmt._id, 'whatsapp')}
