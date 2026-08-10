@@ -6,6 +6,7 @@ import ClientOverview from "../../components/ClientOverview";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { Search, MoreVertical, RefreshCw, Users, Clock, CalendarDays, CalendarCheck, CheckCircle } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
+import BulkUploadModal from "../../components/BulkUploadModal";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -57,6 +58,7 @@ const GeneralVisitorsList = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   const { generalVisitors, loading } = useSelector(
     (state) => state.generalVisitors,
@@ -216,6 +218,10 @@ const GeneralVisitorsList = () => {
     <div className="flex items-center gap-2">
       <button onClick={() => dispatch(fetchGeneralVisitors())} className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded transition-colors" title="Refresh">
         <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+      </button>
+      <button onClick={() => setShowUploadModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded text-[10px] font-bold border border-blue-100 transition-colors">
+        <Users size={12} />
+        Bulk Upload
       </button>
       <button onClick={handleBulkResend} disabled={selectedRows.length === 0} className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 rounded text-[10px] font-bold border border-emerald-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
         <FaWhatsapp size={12} />
@@ -411,6 +417,15 @@ const GeneralVisitorsList = () => {
           </div>
         </div>
       )}
+
+      <BulkUploadModal 
+        isOpen={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        uploadUrl="/api/general-visitors/upload"
+        templatePath="/templates/GeneralVisitorTemplate.xlsx"
+        title="Bulk Upload General Visitors"
+        onSuccess={() => dispatch(fetchGeneralVisitors())}
+      />
     </>
   );
 };
