@@ -19,7 +19,8 @@ import {
   Navigation,
   Clock,
   Save,
-  Pencil
+  Pencil,
+  X
 } from "lucide-react";
 import Swal from "sweetalert2";
 import {
@@ -36,6 +37,9 @@ import {
 import { fetchStatusOptions } from "../../../features/add_by_admin/statusOption/statusOptionSlice";
 import { fetchUsers, fetchAdmins } from "../../../features/auth/userSlice";
 // import { showSuccess } from "../../../utils/toastMessage";
+
+const EDIT_INPUT_CLS = "rounded-[2px] border border-slate-400 h-8 focus:border-[#23471d] focus:ring-[#23471d]/10 transition-all text-[12px] bg-white text-slate-900 font-medium outline-none px-3 w-full";
+const EDIT_LABEL_CLS = "text-[10px] font-bold text-slate-600 uppercase tracking-wide mb-1 block";
 
 /* ─── Shared cell styles ───────────────────────────────────────────────────── */
 const LC_CLS = "bg-[#fafafa] p-3 text-[11px] font-bold text-slate-600 uppercase tracking-tighter md:border-r border-slate-200 flex items-center min-w-[120px] order-none";
@@ -92,6 +96,47 @@ function Section({ title, children }) {
   );
 }
 
+/* ─── Edit-mode field helpers ───────────────────────────────────────────────── */
+function EditField({ label, value, onChange, type = "text" }) {
+  return (
+    <div>
+      <label className={EDIT_LABEL_CLS}>{label}</label>
+      <input
+        type={type}
+        value={value ?? ""}
+        onChange={(e) => onChange(e.target.value)}
+        className={EDIT_INPUT_CLS}
+      />
+    </div>
+  );
+}
+
+function EditYesNo({ label, value, onChange }) {
+  return (
+    <div>
+      <label className={EDIT_LABEL_CLS}>{label}</label>
+      <div className="flex gap-4 mt-1.5">
+        {["yes", "no"].map((val) => (
+          <label key={val} className="flex items-center gap-2 cursor-pointer text-[12px] font-medium text-gray-700 capitalize">
+            <input type="radio" checked={value === val} onChange={() => onChange(val)} className="w-3.5 h-3.5 text-[#23471d]" /> {val}
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const SERVICE_OPTIONS = [
+  { key: "generalHealth", label: "General Health" },
+  { key: "bloodSugar", label: "Blood Sugar" },
+  { key: "bloodPressure", label: "Blood Pressure" },
+  { key: "eyeCheckup", label: "Eye Checkup" },
+  { key: "dentalCheckup", label: "Dental Checkup" },
+  { key: "ayurvedaConsultation", label: "Ayurveda Consultation" },
+  { key: "nutritionConsultation", label: "Nutrition Consultation" },
+  { key: "other", label: "Other" },
+];
+
 const HealthCampOverview = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
@@ -116,8 +161,12 @@ const HealthCampOverview = () => {
   const [reminderDt, setReminderDt] = useState("");
   const [forwardTo, setForwardTo] = useState("");
   const [showForm, setShowForm] = useState(false);
-  const [popUp, setPopUp] = useState(false); 
+  const [popUp, setPopUp] = useState(false);
   const [Flip, setFlip] = useState(false);
+
+  const [editMode, setEditMode] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (healthCampVisitors.length === 0) {
@@ -228,6 +277,60 @@ const HealthCampOverview = () => {
     }
   };
 
+  const startEdit = (currentVisitor) => {
+    setEditData({
+      ...currentVisitor,
+      healthCheckupServices: { ...(currentVisitor.healthCheckupServices || {}) },
+    });
+    setEditMode(true);
+  };
+
+  const cancelEdit = () => {
+    setEditMode(false);
+    setEditData(null);
+  };
+
+  const setField = (field, value) => setEditData((prev) => ({ ...prev, [field]: value }));
+
+  const toggleService = (key, checked) => {
+    setEditData((prev) => ({
+      ...prev,
+      healthCheckupServices: { ...prev.healthCheckupServices, [key]: checked },
+    }));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editData) return;
+    setSaving(true);
+    try {
+      const skipKeys = new Set(["_id", "__v", "createdAt", "updatedAt", "qrCode", "created_by", "updated_by"]);
+      const payload = {};
+      Object.entries(editData).forEach(([key, value]) => {
+        if (skipKeys.has(key)) return;
+        payload[key] = value;
+      });
+
+      await dispatch(updateHealthCampVisitor({ id, data: payload })).unwrap();
+
+      Swal.fire({
+        title: "Saved",
+        text: "Visitor details updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#23471d",
+      });
+      cancelEdit();
+    } catch (err) {
+      Swal.fire({
+        title: "Error",
+        text: err?.message || "Failed to update visitor. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#23471d",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="w-full min-h-screen bg-gray-100 flex items-center justify-center">
@@ -279,15 +382,31 @@ const HealthCampOverview = () => {
           </p>
         </div>
         <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
-          <button onClick={() => navigate("/ihweClientData2026/FreeHealthCampVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-            <LayoutGrid size={12} /> List View
-          </button>
-          <button onClick={() => window.print()} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-            <Printer size={12} /> Print
-          </button>
-          <button onClick={() => navigate(-1)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
-            <ArrowLeft size={12} /> Back
-          </button>
+          {editMode ? (
+            <>
+              <button onClick={handleSaveEdit} disabled={saving} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#23471d] hover:bg-[#1a3516] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap disabled:opacity-50">
+                <Save size={12} /> {saving ? "Saving..." : "Save Changes"}
+              </button>
+              <button onClick={cancelEdit} disabled={saving} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <X size={12} /> Cancel
+              </button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => startEdit(visitor)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#d26019] hover:bg-[#a84c14] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <Pencil size={12} /> Edit
+              </button>
+              <button onClick={() => navigate("/ihweClientData2026/FreeHealthCampVisitorsList")} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-[#3598dc] hover:bg-[#286090] text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <LayoutGrid size={12} /> List View
+              </button>
+              <button onClick={() => window.print()} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <Printer size={12} /> Print
+              </button>
+              <button onClick={() => navigate(-1)} className="flex-1 sm:flex-none px-3 py-1.5 text-[10px] font-bold uppercase bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center gap-1.5 rounded-[2px] shadow-sm whitespace-nowrap">
+                <ArrowLeft size={12} /> Back
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -312,7 +431,89 @@ const HealthCampOverview = () => {
 
         {/* ── DETAILS AREA ── */}
         <div className="space-y-2">
-          
+          {editMode && editData ? (
+          <>
+          <Section title="Identity & Contact">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              <EditField label="First Name" value={editData.firstName} onChange={(v) => setField("firstName", v)} />
+              <EditField label="Last Name" value={editData.lastName} onChange={(v) => setField("lastName", v)} />
+              <EditField label="Email Id" value={editData.email} onChange={(v) => setField("email", v)} type="email" />
+              <EditField label="Contact No." value={editData.mobile} onChange={(v) => setField("mobile", v)} />
+              <EditField label="Alternate No." value={editData.alternateNo} onChange={(v) => setField("alternateNo", v)} />
+              <div>
+                <label className={EDIT_LABEL_CLS}>Gender</label>
+                <select value={editData.gender || ""} onChange={(e) => setField("gender", e.target.value)} className={EDIT_INPUT_CLS}>
+                  <option value="">Select Gender</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <EditField label="Date of Birth" value={editData.dateOfBirth} onChange={(v) => setField("dateOfBirth", v)} type="date" />
+              <div>
+                <label className={EDIT_LABEL_CLS}>Current Status</label>
+                <select value={editData.status || ""} onChange={(e) => setField("status", e.target.value)} className={EDIT_INPUT_CLS}>
+                  <option value="">-- Select Status --</option>
+                  {Array.isArray(statusOptions) && statusOptions.filter(opt => opt.status === "active").map(opt => (
+                    <option key={opt._id} value={opt.name}>{opt.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex items-center gap-2 pt-5">
+                <input type="checkbox" checked={!!editData.subscribe} onChange={(e) => setField("subscribe", e.target.checked)} className="w-4 h-4 text-[#23471d]" />
+                <label className="text-[12px] font-medium text-slate-700">Subscribed to Newsletter</label>
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Medical Profile">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              <EditYesNo label="Existing Medical Conditions?" value={editData.existingMedicalConditions} onChange={(v) => setField("existingMedicalConditions", v)} />
+              <EditYesNo label="Taking Medications?" value={editData.isTakingMedications} onChange={(v) => setField("isTakingMedications", v)} />
+              <EditYesNo label="Experiencing Symptoms?" value={editData.isExperiencingSymptoms} onChange={(v) => setField("isExperiencingSymptoms", v)} />
+              <EditField label="Medication Names" value={editData.medicationNames} onChange={(v) => setField("medicationNames", v)} />
+              <EditField label="Symptom Details" value={editData.symptomDetails} onChange={(v) => setField("symptomDetails", v)} />
+              <EditYesNo label="Has Allergies?" value={editData.hasAllergies} onChange={(v) => setField("hasAllergies", v)} />
+              <EditField label="Allergy Details" value={editData.allergyDetails} onChange={(v) => setField("allergyDetails", v)} />
+              <EditYesNo label="Consent to Medical Data?" value={editData.consentMedicalData} onChange={(v) => setField("consentMedicalData", v)} />
+              <div className="lg:col-span-3">
+                <EditField label="Specific Health Concerns" value={editData.specificHealthConcerns} onChange={(v) => setField("specificHealthConcerns", v)} />
+              </div>
+            </div>
+          </Section>
+
+          <Section title="Appointment Details">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+              <EditField label="Preferred Date" value={editData.preferredDate} onChange={(v) => setField("preferredDate", v)} type="date" />
+              <EditField label="Preferred Time Slot" value={editData.preferredTimeSlot} onChange={(v) => setField("preferredTimeSlot", v)} />
+              <EditYesNo label="Agree to Updates?" value={editData.agreeToUpdates} onChange={(v) => setField("agreeToUpdates", v)} />
+              <div className="lg:col-span-3">
+                <EditField label="Residence Address" value={editData.residenceAddress} onChange={(v) => setField("residenceAddress", v)} />
+              </div>
+              <EditField label="Country" value={editData.country} onChange={(v) => setField("country", v)} />
+              <EditField label="State" value={editData.state} onChange={(v) => setField("state", v)} />
+              <EditField label="City" value={editData.city} onChange={(v) => setField("city", v)} />
+              <div className="lg:col-span-3">
+                <label className={EDIT_LABEL_CLS}>Checkup Services</label>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-3 border border-slate-200 rounded-sm mt-1">
+                  {SERVICE_OPTIONS.map(({ key, label }) => (
+                    <label key={key} className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={!!editData.healthCheckupServices?.[key]}
+                        onChange={(e) => toggleService(key, e.target.checked)}
+                        className="w-3.5 h-3.5 text-[#23471d]"
+                      />
+                      <span className="text-[12px] font-medium text-slate-600">{label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </Section>
+          </>
+          ) : (
+          <>
           <Section title="Identity & Contact">
             <TR3 
               l1="Registration Id" v1={visitor.registrationId} 
@@ -370,7 +571,8 @@ const HealthCampOverview = () => {
               l3="System ID" v3={<span className="text-[10px] font-mono break-all">{visitor._id}</span>}
             />
           </Section>
-
+          </>
+          )}
         </div>
 
         {/* ── CRM FORM (Pop-Up) ── */}
