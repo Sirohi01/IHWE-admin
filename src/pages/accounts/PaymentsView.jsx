@@ -52,6 +52,11 @@ const toTitleCase = (value = '') => String(value)
     .toLowerCase()
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+const toSentenceCase = (value = '') => {
+    const normalized = String(value).trim().replace(/\s+/g, ' ').toLowerCase();
+    return normalized ? normalized.charAt(0).toUpperCase() + normalized.slice(1) : '';
+};
+
 function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
     const { ref, count } = useCountUp(rawValue);
     return (
@@ -132,26 +137,41 @@ const PaymentList = () => {
     };
 
     useEffect(() => {
-        const fetchEventsAndPayments = async () => {
+        const fetchEvents = async () => {
             try {
-                const [eventsRes, paymentsRes] = await Promise.all([
-                    api.get('/api/events').catch(() => ({ data: { data: [] } })),
-                    api.get('/api/accounts-receivable').catch(() => ({ data: { data: { rows: [] } } }))
-                ]);
+                const eventsRes = await api.get('/api/events').catch(() => ({ data: { data: [] } }));
                 const eventsData = (eventsRes.data?.data || eventsRes.data || [])
                     .filter((event) => event.showInPaymentsFilter && String(event.paymentFilterName || '').trim());
                 eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
                 setEvents(eventsData);
-                
-                setPayments(paymentsRes.data?.data?.rows || []);
             } catch (err) {
-                console.error("Failed to fetch data", err);
-            } finally {
-                setLoading(false);
+                console.error("Failed to fetch events", err);
             }
         };
-        fetchEventsAndPayments();
+        fetchEvents();
     }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        const fetchPayments = async () => {
+            try {
+                setLoading(true);
+                const params = {};
+                if (searchQuery.trim()) params.clientCompanySearch = searchQuery.trim();
+                const paymentsRes = await api.get('/api/accounts-receivable', { params });
+                if (!cancelled) setPayments(paymentsRes.data?.data?.rows || []);
+            } catch (err) {
+                console.error("Failed to fetch payments", err);
+                if (!cancelled) setPayments([]);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
+        fetchPayments();
+        return () => {
+            cancelled = true;
+        };
+    }, [searchQuery]);
 
     useEffect(() => {
         if (isAllList) {
@@ -208,11 +228,14 @@ const PaymentList = () => {
 
     const formatCurrency = (value) => {
         const amount = Number(value || 0);
-        return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        return `₹ ${amount.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     };
 
     const isPiNumber = (value) => /\/(PI|PFI)\//i.test(String(value || ''));
     const pickFirst = (...values) => values.find(value => value !== undefined && value !== null && String(value).trim() !== '');
+    const getClientCompanyName = (row = {}) => toSentenceCase(
+        pickFirst(row.client, row.client_name, row.companyName, row.company_name, row.name, '')
+    ) || 'N/A';
 
     const getPaymentDetailLines = (pmt) => {
         const lines = [];
@@ -401,15 +424,7 @@ const PaymentList = () => {
             }
         }
 
-        if (!searchQuery) return true;
-        const q = searchQuery.toLowerCase();
-        return (
-            (pmt.proformaNo || '').toLowerCase().includes(q) ||
-            (pmt.invoiceNo || pmt.invNo || '').toLowerCase().includes(q) ||
-            (pmt.client || '').toLowerCase().includes(q) ||
-            (pmt.handledBy || pmt.addedBy || '').toLowerCase().includes(q) ||
-            (pmt.status || '').toLowerCase().includes(q)
-        );
+        return true;
     });
 
     const uniqueBanks = [];
@@ -450,9 +465,10 @@ const PaymentList = () => {
             companyId: row.companyId,
             proformaNo: row.proformaNo || (row.docType === 'Proforma Invoice' ? row.invNo : ''),
             invoiceNo: row.invoiceNo || (row.docType === 'Invoice' ? row.invNo : ''),
-            clientName: row.client || 'N/A',
+            clientName: getClientCompanyName(row),
+            hasBookedStand: Boolean(row.hasBookedStand),
             pymtReq: row.outstanding || row.invValue || 0,
-            paymentType: getPaymentTypeLabel(row),
+            paymentType: toSentenceCase(getPaymentTypeLabel(row)),
             dueDate,
             handledBy: toTitleCase(row.handledBy || row.addedBy || '') || '—',
             status: overdueDays > 0 ? 'Overdue' : (row.status || 'Unpaid'),
@@ -530,17 +546,17 @@ const PaymentList = () => {
                     icon={<DollarSign className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
                     gradientTo="to-emerald-50" iconBg="bg-emerald-100"
                     rawValue={totalReceived}
-                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
                     label="Total Received"
-                    subLabel={`₹ ${thisMonthReceived.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} This Month`} subColor="#059669"
+                    subLabel={`₹ ${thisMonthReceived.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} This Month`} subColor="#059669"
                 />
                 <AnimatedStatCard
                     icon={<DollarSign className="w-5 h-5 text-orange-600" strokeWidth={2.5} />}
                     gradientTo="to-orange-50" iconBg="bg-orange-100"
                     rawValue={totalTds}
-                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
                     label="Total TDS Deducted"
-                    subLabel={`₹ ${thisMonthTds.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} This Month`} subColor="#d97706"
+                    subLabel={`₹ ${thisMonthTds.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} This Month`} subColor="#d97706"
                 />
                 <AnimatedStatCard
                     icon={<Users className="w-5 h-5 text-rose-600" strokeWidth={2.5} />}
@@ -556,7 +572,7 @@ const PaymentList = () => {
                     icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
                     gradientTo="to-indigo-50" iconBg="bg-indigo-100"
                     rawValue={netAmountReceived}
-                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
                     label="Net Amount Received"
                     subLabel="" subColor="#4f46e5"
                 />
@@ -564,7 +580,7 @@ const PaymentList = () => {
                     icon={<AlertTriangle className="w-5 h-5 text-amber-600" strokeWidth={2.5} />}
                     gradientTo="to-amber-50" iconBg="bg-amber-100"
                     rawValue={totalOverdue}
-                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
                     label="Overdue Amount"
                     subLabel="Invoice > 30 days old, still outstanding" subColor="#d97706"
                 />
@@ -572,7 +588,7 @@ const PaymentList = () => {
                     icon={<Clock className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
                     gradientTo="to-blue-50" iconBg="bg-blue-100"
                     rawValue={totalPending}
-                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    displayValue={(c) => `₹ ${c.toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
                     label="Pending Amount"
                     subLabel="Outstanding, not yet overdue" subColor="#2563eb"
                 />
@@ -598,16 +614,6 @@ const PaymentList = () => {
                     </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-3 items-center">
-                    <div className="relative w-full sm:w-auto">
-                        <input
-                            type="text"
-                            placeholder="Search by PI no., invoice no., UTR, txn id..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            className="w-full sm:w-[260px] border border-slate-200 rounded-lg pl-3 pr-9 py-2 text-xs font-medium bg-white shadow-sm focus:outline-none focus:border-[#124170] transition-colors placeholder:text-slate-400"
-                        />
-                        <Search className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
                     <button
                         onClick={handleOpenAddPayment}
                         className="flex items-center justify-center gap-1.5 bg-[#124170] hover:bg-[#0c2b4a] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors w-full sm:w-auto whitespace-nowrap"
@@ -690,6 +696,17 @@ const PaymentList = () => {
                         </select>
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
+
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Client / Company Name"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            className="bg-white border border-slate-200 text-slate-700 pl-3 pr-9 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 placeholder:text-slate-400"
+                        />
+                        <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                 </div>
                 <div className="shrink-0 pl-3 border-l border-slate-200 ml-3 flex gap-2">
                     <button
@@ -749,7 +766,7 @@ const PaymentList = () => {
                                                 <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.invoiceNo}</div>
                                             ) : (
                                                 <div className="inline-flex rounded bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700 border border-amber-100">
-                                                    Not Yet Generated
+                                                    Not yet generated
                                                 </div>
                                             )}
                                         </td>
@@ -773,15 +790,20 @@ const PaymentList = () => {
                                                 <div className={`w-1.5 h-1.5 rounded-full ${group.status === 'Overdue' ? 'bg-red-500' : 'bg-slate-500'}`}></div>
                                                 {group.status === 'Overdue'
                                                     ? `Overdue · ${group.overdueDays || 1}d`
-                                                    : 'PYMT Required'}
+                                                    : 'Pymt required'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top text-center">
                                             <button
-                                                onClick={() => navigate(`/dashboard/account/AddPayment/${group.companyId}`)}
-                                                className="px-2.5 py-1 rounded bg-[#124170] text-white text-[11px] font-bold hover:bg-[#0c2b4a] transition-colors"
+                                                onClick={() => {
+                                                    if (!group.hasBookedStand) return;
+                                                    navigate(`/dashboard/account/AddPayment/${group.companyId}`);
+                                                }}
+                                                disabled={!group.hasBookedStand}
+                                                title={!group.hasBookedStand ? 'Book a stand required' : 'Book payment'}
+                                                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${group.hasBookedStand ? 'bg-[#124170] text-white hover:bg-[#0c2b4a]' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
                                             >
-                                                Book Payment
+                                                Book payment
                                             </button>
                                         </td>
                                     </tr>
