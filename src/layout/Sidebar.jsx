@@ -191,8 +191,8 @@ export default function Sidebar({
           { label: "Converted Leads", path: `/crm-event/${ev._id}/converted-leads` },
           { label: "All Leads", path: `/crm-event/${ev._id}/all-leads` },
           { label: "Referral Leads", path: `/crm-event/${ev._id}/referral-leads` },
-          { label: "Payment Mail", path: `/crm-event/${ev._id}/payment-mail` },
-          { label: "Send Mail", path: `/crm-event/${ev._id}/send-mail` },
+          // { label: "Payment Mail", path: `/crm-event/${ev._id}/payment-mail` },
+          // { label: "Send Mail", path: `/crm-event/${ev._id}/send-mail` },
         ],
       }));
 
@@ -541,14 +541,14 @@ export default function Sidebar({
             <div className="w-48 h-8 bg-white/70 rounded-full blur-[25px] absolute translate-y-3" />
             {/* Extra Bottom Glow */}
             <div className="w-40 h-8 bg-white/60 rounded-full blur-[25px] absolute translate-y-5" />
-            
+
             {/* Highly Visible Sparkles */}
             <div className="absolute top-2 left-10 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,1)] animate-pulse" />
             <div className="absolute bottom-1 right-12 w-2.5 h-2.5 bg-white rounded-full shadow-[0_0_12px_4px_rgba(255,255,255,1)] animate-pulse" style={{ animationDuration: '2s' }} />
             <div className="absolute top-5 right-6 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_8px_2px_rgba(255,255,255,1)] animate-pulse" style={{ animationDelay: '500ms' }} />
             <div className="absolute bottom-4 left-6 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_3px_rgba(255,255,255,1)] animate-pulse" style={{ animationDelay: '800ms' }} />
           </div>
-          <img loading="lazy" decoding="async"             src={namogangelogo}
+          <img loading="lazy" decoding="async" src={namogangelogo}
             alt="IHWE 2026"
             className="relative h-[65px] w-full object-contain z-10 my-1"
             style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.8))" }}
