@@ -1,5 +1,9 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
+import api from '../lib/api';
 import QRCode from "react-qr-code";
+import html2canvas from "html2canvas";
+import toast from "react-hot-toast";
 import {
    Building2,
    MapPin,
@@ -30,23 +34,169 @@ import {
    Microscope,
    Store,
    Presentation,
-   Trophy
+   Trophy,
+   Loader2
 } from "lucide-react";
 import namogangelogo from "../assets/namogangelogo1.webp";
 import ihwelogo from "../assets/9th_certificate/9thlogo.png";
 import firstheader from "../assets/firstheade1.png";
 
 export default function PaymentMail() {
-   const amount = "81,820";
-   const totalAmount = "1,16,820";
-   const receivedAmount = "35,000";
+   const { eventId } = useParams();
+   const [searchParams] = useSearchParams();
+   const clientId = searchParams.get('clientId');
+
+   const [loading, setLoading] = useState(true);
+   const [clientData, setClientData] = useState(null);
+   const [proformaInvoice, setProformaInvoice] = useState(null);
+   const [paymentPlans, setPaymentPlans] = useState([]);
+   const [payments, setPayments] = useState([]);
+   const [totalReceived, setTotalReceived] = useState(0);
+
+   const [currentInstallment, setCurrentInstallment] = useState(null);
+   const [isSending, setIsSending] = useState(false);
+   const printRef = useRef(null);
+
+   useEffect(() => {
+      const fetchData = async () => {
+         if (!clientId || !eventId) return;
+         setLoading(true);
+         try {
+            const clientRes = await api.get(`/api/account-overview/${clientId}`);
+            setClientData(clientRes.data?.data || clientRes.data);
+
+            const crmEventRes = await api.get(`/api/crm-events/${eventId}`);
+            const regEventId = crmEventRes.data?.registrationEventId || crmEventRes.data?.data?.registrationEventId || crmEventRes.data?.data?.event?._id;
+            if (regEventId) {
+               const eventRes = await api.get(`/api/events/${regEventId}`);
+               setPaymentPlans(eventRes.data?.data?.paymentPlans || []);
+            }
+
+            const estRes = await api.get(`/api/estimates/grouped/${clientId}`);
+            const estimates = estRes.data?.data || [];
+            setProformaInvoice(estimates.length > 0 ? estimates[0] : null);
+
+            const pmtRes = await api.get('/api/payments');
+            const allPmts = pmtRes.data?.data || pmtRes.data || [];
+            const clientPmts = allPmts.filter(p => String(p.companyId) === String(clientId) || String(p.company_id) === String(clientId) || String(p.account_id) === String(clientId));
+            setPayments(clientPmts);
+
+            const received = clientPmts.reduce((sum, p) => sum + (Number(p.amount_text || p.f_amount || p.amount) || 0), 0);
+            setTotalReceived(received);
+         } catch (err) {
+            console.error("Error fetching reminder data", err);
+         } finally {
+            setLoading(false);
+         }
+      };
+      fetchData();
+   }, [clientId, eventId]);
+
+   useEffect(() => {
+      if (!proformaInvoice) return;
+
+      const totalAmountVal = Number(proformaInvoice.finalAmount || proformaInvoice.total_value || 0);
+      let remainingBalance = totalAmountVal - totalReceived;
+
+      const labels = ["FIRST", "SECOND", "THIRD", "FOURTH", "FIFTH"];
+      let index = payments.length;
+
+      let currInstal = null;
+      if (remainingBalance > 0) {
+         const milestones = paymentPlans.filter(p => Number(p.percentage) < 100);
+         let nextMilestoneAmount = 0;
+         let targetFound = false;
+         let accumulated = 0;
+
+         for (const m of milestones) {
+            const mAmt = (totalAmountVal * Number(m.percentage)) / 100;
+            accumulated += mAmt;
+            if (totalReceived < accumulated - 1 && !targetFound) {
+               targetFound = true;
+               nextMilestoneAmount = Math.min(accumulated - totalReceived, remainingBalance);
+            }
+         }
+
+         const nextAmount = (targetFound && nextMilestoneAmount > 0) ? nextMilestoneAmount : remainingBalance;
+         currInstal = {
+            label: labels[index] || "NEXT",
+            dueAmount: nextAmount,
+         };
+      }
+
+      setCurrentInstallment(currInstal);
+   }, [proformaInvoice, paymentPlans, totalReceived, payments]);
+
+   const formatCurrency = (val) => new Intl.NumberFormat('en-IN').format(Math.round(val || 0));
+
+   const totalAmount = proformaInvoice ? formatCurrency(proformaInvoice.finalAmount || proformaInvoice.total_value) : "0";
+   const amount = currentInstallment ? formatCurrency(currentInstallment.dueAmount) : "0";
+   const receivedAmount = formatCurrency(totalReceived);
+   
+   const companyName = clientData?.companyInfo?.name || clientData?.companyName || clientData?.exhibitorName || "Client Name";
+   const invoiceNo = proformaInvoice?.est_no || "N/A";
+   const dueDate = proformaInvoice?.dueDate ? new Date(proformaInvoice.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : "20th Aug 2026";
    const upiId = "ihwe.collect@kotak";
-   const companyName = "Rohit Kumar";
-   const invoiceNo = "PI/26-27/0123";
-   const dueDate = "20th Aug 2026";
+
+   const handleSendEmail = async () => {
+      if (!printRef.current) return;
+      
+      const toEmail = clientData?.contact1?.email || clientData?.email || clientData?.companyInfo?.email;
+      if (!toEmail) {
+         toast.error("Contact email not found for this client");
+         return;
+      }
+
+      setIsSending(true);
+      try {
+         const canvas = await html2canvas(printRef.current, { scale: 2, useCORS: true });
+         canvas.toBlob(async (blob) => {
+            const formData = new FormData();
+            formData.append("attachments", blob, "Payment_Reminder.png");
+            formData.append("to", toEmail);
+            formData.append("subject", `Payment Reminder - ${companyName}`);
+            formData.append("content", `Dear ${companyName},\n\nPlease find your payment reminder attached.\n\nWarm Regards,\nAccounts Team\nNamo Gange Wellness Pvt. Ltd.`);
+            formData.append("companyName", companyName);
+            formData.append("cmpny_id", clientId);
+            formData.append("eventId", eventId);
+
+            const res = await api.post("/api/crm-email/send", formData, {
+               headers: { "Content-Type": "multipart/form-data" }
+            });
+            
+            if (res.data?.success) {
+               toast.success("Reminder email sent successfully!");
+            } else {
+               toast.error(res.data?.message || "Failed to send email");
+            }
+            setIsSending(false);
+         }, "image/png");
+      } catch (err) {
+         console.error(err);
+         toast.error("Failed to generate or send email");
+         setIsSending(false);
+      }
+   };
+
+   if (loading) {
+       return <div className="flex justify-center items-center h-screen text-gray-500 font-medium"><Loader2 className="animate-spin mr-2" /> Loading Reminder Data...</div>;
+   }
 
    return (
-      <div className="w-full max-w-[794px] mx-auto bg-white font-sans text-gray-800 shadow-2xl relative my-2 print:my-0 print:shadow-none flex flex-col">         {/* --- HEADER SECTION --- */}
+      <div className="flex flex-col items-center min-h-screen bg-gray-50 p-4">
+         {/* Action Bar */}
+         <div className="w-full max-w-[794px] flex justify-end mb-4 print:hidden">
+             <button 
+                 onClick={handleSendEmail}
+                 disabled={isSending}
+                 className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md font-bold transition disabled:opacity-70 shadow-md"
+             >
+                 {isSending ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                 {isSending ? "Sending Email..." : "Send Reminder Email"}
+             </button>
+         </div>
+
+      <div ref={printRef} className="w-full max-w-[794px] mx-auto bg-white font-sans text-gray-800 shadow-2xl relative my-2 print:my-0 print:shadow-none flex flex-col">         {/* --- HEADER SECTION --- */}
 
          <div className="w-full">
             <img src={firstheader} alt="Header" className="w-full h-auto block" />
@@ -63,7 +213,7 @@ export default function PaymentMail() {
                      Thank you for confirming your participation in the <strong>9th International Health & Wellness Expo 2026 (IHWE – 2026), PRAGATI MAIDAN, NEW DELHI, INDIA</strong>.
                   </p>
                   <p className="text-[13px] text-[#2d3748] leading-[1.6] text-justify">
-                     This is a gentle <strong className="text-[#0f8b4d]">FIRST REMINDER</strong> that the balance amount against your booking is <strong>pending</strong>. We would be grateful if you could arrange the balance payment at your earliest convenience to help us keep your booking and account records up to date.
+                     This is a gentle <strong className="text-[#0f8b4d]">{currentInstallment?.label || "FIRST"} REMINDER</strong> that the balance amount against your booking is <strong>pending</strong>. We would be grateful if you could arrange the balance payment at your earliest convenience to help us keep your booking and account records up to date.
                   </p>
                </div>
 
@@ -73,7 +223,7 @@ export default function PaymentMail() {
                         <Bell size={32} className="text-white" fill="currentColor" />
                      </div>
                      <div className="flex flex-col">
-                        <h3 className="text-[#1b3664] text-[22px] font-black leading-[1.1] tracking-tight">FIRST</h3>
+                        <h3 className="text-[#1b3664] text-[22px] font-black leading-[1.1] tracking-tight">{currentInstallment?.label || "FIRST"}</h3>
                         <h3 className="text-[#1b3664] text-[22px] font-black leading-[1.1] tracking-tight">BALANCE PAYMENT</h3>
                         <h3 className="text-[#0f8b4d] text-[22px] font-black leading-[1.1] tracking-tight">REMINDER</h3>
                      </div>
@@ -434,6 +584,7 @@ export default function PaymentMail() {
             </div>
          </div>
 
+      </div>
       </div>
    );
 }
