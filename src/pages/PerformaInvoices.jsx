@@ -277,7 +277,14 @@ export const PerformaInvoices = () => {
 
                 const eventRes = await api.get(`/api/events/${registrationEventId}`);
                 const plans = eventRes.data?.data?.paymentPlans || [];
-                if (!cancelled) setPaymentPlans(plans);
+                if (cancelled) return;
+                setPaymentPlans(plans);
+                // Default to Full Payment unless a plan was already chosen (e.g. prefilled from an existing estimate)
+                setPaymentPlanType((prev) => {
+                    if (prev) return prev;
+                    const fullPlan = plans.find((plan) => Number(plan.percentage) === 100 || plan.id === 'full');
+                    return fullPlan?.id || 'full';
+                });
             } catch (error) {
                 console.error('Error loading payment plans for this event:', error);
             }
@@ -1021,16 +1028,26 @@ export const PerformaInvoices = () => {
                         <div className="grid grid-cols-10 gap-4">
                             <div className="col-span-3">
                                 <Label>Payment Plan</Label>
-                                <select
-                                    value={paymentPlanType}
-                                    onChange={(e) => setPaymentPlanType(e.target.value)}
-                                    className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] cursor-pointer"
-                                >
-                                    <option value="">Select payment plan</option>
-                                    {paymentPlans.map((plan) => (
-                                        <option key={plan.id} value={plan.id}>{plan.label}</option>
-                                    ))}
-                                </select>
+                                {(() => {
+                                    const fullPlan = paymentPlans.find((plan) => Number(plan.percentage) === 100 || plan.id === 'full');
+                                    // Installment steps (advance/running/final, etc.) are always applied together as
+                                    // one schedule — the first one (lowest %) stands in as the "Installment Payment" choice.
+                                    const firstInstallPlan = paymentPlans
+                                        .filter((plan) => Number(plan.percentage) < 100)
+                                        .sort((a, b) => Number(a.percentage) - Number(b.percentage))[0];
+                                    const fullId = fullPlan?.id || 'full';
+                                    const installmentId = firstInstallPlan?.id || 'installment';
+                                    return (
+                                        <select
+                                            value={paymentPlanType === installmentId ? installmentId : fullId}
+                                            onChange={(e) => setPaymentPlanType(e.target.value)}
+                                            className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] cursor-pointer"
+                                        >
+                                            <option value={fullId}>Full Payment</option>
+                                            <option value={installmentId}>Installment Payment</option>
+                                        </select>
+                                    );
+                                })()}
                             </div>
                             <div className="col-span-7">
                                 <Label>Remarks / Notes</Label>
