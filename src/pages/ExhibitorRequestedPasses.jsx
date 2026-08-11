@@ -189,6 +189,7 @@ export default function ExhibitorRequestedPasses() {
   const [printGapDraft, setPrintGapDraft] = useState("0.7");
   const [printRowGapCm, setPrintRowGapCm] = useState(1.3);
   const [printRowGapDraft, setPrintRowGapDraft] = useState("1.3");
+  const [printWithBack, setPrintWithBack] = useState(true);
 
   const load = async () => {
     setLoading(true);
@@ -460,7 +461,8 @@ export default function ExhibitorRequestedPasses() {
   const selectAllPrintItems = () => setSelectedPrintIds(printItems.map((item) => item.id));
   const clearPrintItems = () => setSelectedPrintIds([]);
 
-  const normalPrintPages = Math.ceil(normalPrintItems.length / PASSES_PER_SHEET);
+  const currentPassesPerSheet = printWithBack ? 4 : 8;
+  const normalPrintPages = Math.ceil(normalPrintItems.length / currentPassesPerSheet);
   const foodPrintPages = Math.ceil(foodPrintItems.length / FOOD_COUPONS_PER_SHEET);
   const printPages = normalPrintPages || 1;
 
@@ -825,6 +827,21 @@ export default function ExhibitorRequestedPasses() {
               ))}
             </div>
 
+            <label className="mb-4 flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <input
+                type="checkbox"
+                checked={printWithBack}
+                onChange={(e) => setPrintWithBack(e.target.checked)}
+                className="h-5 w-5 rounded border-slate-300 accent-[#079fd3] cursor-pointer"
+              />
+              <div>
+                <span className="block text-xs font-black text-slate-700">Print with Back Side</span>
+                <span className="block text-[10px] font-bold text-slate-500">
+                  {printWithBack ? "4 passes per sheet (Front & Back)" : "8 passes per sheet (Front only)"}
+                </span>
+              </div>
+            </label>
+
             <div className="grid grid-cols-1 gap-2">
               <button
                 type="button"
@@ -1161,7 +1178,7 @@ export default function ExhibitorRequestedPasses() {
 
       <div ref={printRef} className="mixed-pass-print-root">
         {Array.from({ length: normalPrintPages }).map((_, pageIndex) => {
-          const pageItems = normalPrintItems.slice(pageIndex * PASSES_PER_SHEET, pageIndex * PASSES_PER_SHEET + PASSES_PER_SHEET);
+          const pageItems = normalPrintItems.slice(pageIndex * currentPassesPerSheet, pageIndex * currentPassesPerSheet + currentPassesPerSheet);
           return (
             <div key={pageIndex} className="mixed-pass-print-sheet">
               {pageItems.map((item) => (
@@ -1173,9 +1190,11 @@ export default function ExhibitorRequestedPasses() {
                       scale={PRINT_SCALE}
                     />
                   </div>
-                  <div className="mixed-pass-print-card">
-                    <PassBack item={item} />
-                  </div>
+                  {printWithBack && (
+                    <div className="mixed-pass-print-card">
+                      <PassBack item={item} />
+                    </div>
+                  )}
                 </Fragment>
               ))}
             </div>
