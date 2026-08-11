@@ -102,6 +102,12 @@ const AccountOverview = () => {
   }
 
   const { companyInfo, financials, recentDocuments, paymentSchedule, activityLogs } = data;
+  const hasExhibitorRegistration = companyInfo?.hasExhibitorRegistration !== false;
+  const lockedActionProps = (label) => hasExhibitorRegistration ? {} : {
+    disabled: true,
+    title: `Book a Stand for this exhibition to unlock ${label}`,
+  };
+  const lockedActionClass = hasExhibitorRegistration ? "" : " opacity-50 grayscale cursor-not-allowed hover:bg-inherit";
   const currentUserName = getCurrentUserName("Admin");
   const currentUsername = getCurrentUsername();
   const getActivityUserName = (user) => {
@@ -169,7 +175,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(scopedPath(`/dashboard/account/${id}/delivery-challans`))} className="flex items-center gap-2 p-2 bg-[#f0fdfa] hover:bg-[#ccfbf1] border border-[#ccfbf1] rounded-lg transition-colors text-left group">
+        <button {...lockedActionProps("Delivery Challan")} onClick={() => navigate(scopedPath(`/dashboard/account/${id}/delivery-challans`))} className={`flex items-center gap-2 p-2 bg-[#f0fdfa] hover:bg-[#ccfbf1] border border-[#ccfbf1] rounded-lg transition-colors text-left group${lockedActionClass}`}>
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <Truck size={16} className="text-[#0f766e]" />
           </div>
@@ -180,7 +186,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(scopedPath(`/invoice-list/${id}`))} className="flex items-center gap-2 p-2 bg-[#f0fdf4] hover:bg-[#e6f7ec] border border-[#d6f0df] rounded-lg transition-colors text-left group">
+        <button {...lockedActionProps("Invoice")} onClick={() => navigate(scopedPath(`/invoice-list/${id}`))} className={`flex items-center gap-2 p-2 bg-[#f0fdf4] hover:bg-[#e6f7ec] border border-[#d6f0df] rounded-lg transition-colors text-left group${lockedActionClass}`}>
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FilePlus size={16} className="text-[#16a34a]" />
           </div>
@@ -191,7 +197,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(scopedPath(`/payment-list/${id}`))} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
+        <button {...lockedActionProps("Payments")} onClick={() => navigate(scopedPath(`/payment-list/${id}`))} className={`flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group${lockedActionClass}`}>
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <CreditCard size={16} className="text-[#ea580c]" />
           </div>
@@ -202,7 +208,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(scopedPath(`/dashboard/account/credit-notes/${id}`))} className="flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group">
+        <button {...lockedActionProps("Credit Note")} onClick={() => navigate(scopedPath(`/dashboard/account/credit-notes/${id}`))} className={`flex items-center gap-2 p-2 bg-[#faf5ff] hover:bg-[#f3e8ff] border border-[#ecd9fb] rounded-lg transition-colors text-left group${lockedActionClass}`}>
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileMinus size={16} className="text-[#7e22ce]" />
           </div>
@@ -213,7 +219,7 @@ const AccountOverview = () => {
           <ArrowRight size={14} className="text-[#1a2b4b] opacity-50 group-hover:opacity-100 transition-opacity shrink-0" />
         </button>
 
-        <button onClick={() => navigate(scopedPath(`/account-debit-notes/${id}`))} className="flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group">
+        <button {...lockedActionProps("Debit Note")} onClick={() => navigate(scopedPath(`/account-debit-notes/${id}`))} className={`flex items-center gap-2 p-2 bg-[#fff7ed] hover:bg-[#ffedd5] border border-[#fbe3c4] rounded-lg transition-colors text-left group${lockedActionClass}`}>
           <div className="w-7 h-7 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
             <FileWarning size={16} className="text-[#c2410c]" />
           </div>

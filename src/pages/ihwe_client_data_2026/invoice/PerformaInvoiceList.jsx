@@ -9,24 +9,30 @@ const PerformaInvoiceList = () => {
     const navigate = useNavigate();
     const { id = 'all' } = useParams();
     const [searchParams] = useSearchParams();
+    const eventId = searchParams.get('eventId') || '';
     const crmEventId = searchParams.get('crmEventId') || '';
     const isAllList = id === 'all';
     const [accountName, setAccountName] = useState('');
+    const [hasExhibitorRegistration, setHasExhibitorRegistration] = useState(false);
+    const eventQueryParams = new URLSearchParams();
+    if (eventId) eventQueryParams.set('eventId', eventId);
+    if (crmEventId) eventQueryParams.set('crmEventId', crmEventId);
+    const eventQuery = eventQueryParams.toString() ? `?${eventQueryParams.toString()}` : '';
 
     useEffect(() => {
         if (isAllList) {
-            setAccountName('');
             return;
         }
 
         let cancelled = false;
         const fetchAccountName = async () => {
             try {
-                const res = await api.get(`/api/account-overview/${id}`);
+                const res = await api.get(`/api/account-overview/${id}${eventQuery}`);
                 if (!cancelled && res.data?.success) {
                     setAccountName(res.data.data?.companyInfo?.name || '');
+                    setHasExhibitorRegistration(res.data.data?.companyInfo?.hasExhibitorRegistration !== false);
                 }
-            } catch (error) {
+            } catch {
                 if (!cancelled) setAccountName('');
             }
         };
@@ -35,12 +41,12 @@ const PerformaInvoiceList = () => {
         return () => {
             cancelled = true;
         };
-    }, [id, isAllList]);
+    }, [id, isAllList, eventQuery]);
 
     return (
         <div className="min-h-screen bg-gray-50 p-4">
             {/* Sub-Navigation for Account pages */}
-            {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Proforma Invoice" />}
+            {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Proforma Invoice" hasExhibitorRegistration={hasExhibitorRegistration} />}
 
             {/* ── Header ── */}
             <div className="flex items-center justify-between mb-3 px-1 mt-1">
@@ -57,7 +63,7 @@ const PerformaInvoiceList = () => {
                 <div className="flex items-center gap-2">
                     {!isAllList && (
                         <button
-                            onClick={() => navigate(`/performa-invoice/${id}${crmEventId ? `?crmEventId=${crmEventId}` : ''}`)}
+                            onClick={() => navigate(`/performa-invoice/${id}${eventQuery}`)}
                             className="flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-[13px] font-bold text-white transition-colors hover:bg-blue-700"
                         >
                             <FilePlus size={16} />
