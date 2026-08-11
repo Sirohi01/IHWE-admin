@@ -468,7 +468,7 @@ const PaymentList = () => {
             clientName: getClientCompanyName(row),
             hasBookedStand: Boolean(row.hasBookedStand),
             pymtReq: row.outstanding || row.invValue || 0,
-            paymentType: toSentenceCase(getPaymentTypeLabel(row)),
+            paymentType: row.pymtType || getPaymentTypeLabel(row),
             dueDate,
             handledBy: toTitleCase(row.handledBy || row.addedBy || '') || '—',
             status: overdueDays > 0 ? 'Overdue' : (row.status || 'Unpaid'),

@@ -1030,11 +1030,13 @@ export const PerformaInvoices = () => {
                                 <Label>Payment Plan</Label>
                                 {(() => {
                                     const fullPlan = paymentPlans.find((plan) => Number(plan.percentage) === 100 || plan.id === 'full');
-                                    // Installment steps (advance/running/final, etc.) are always applied together as
-                                    // one schedule — the first one (lowest %) stands in as the "Installment Payment" choice.
-                                    const firstInstallPlan = paymentPlans
-                                        .filter((plan) => Number(plan.percentage) < 100)
-                                        .sort((a, b) => Number(a.percentage) - Number(b.percentage))[0];
+                                    // Installment steps (advance/running/final) are always applied together as one
+                                    // schedule — "advance" is always phase 1 by id, so it stands in as the
+                                    // "Installment Payment" choice. NOTE: don't sort by percentage to find this —
+                                    // plans aren't necessarily in descending % order (e.g. advance/running 35% each,
+                                    // final 30%), so the lowest-% plan isn't reliably the first phase.
+                                    const firstInstallPlan = paymentPlans.find((plan) => plan.id === 'advance')
+                                        || paymentPlans.filter((plan) => Number(plan.percentage) < 100)[0];
                                     const fullId = fullPlan?.id || 'full';
                                     const installmentId = firstInstallPlan?.id || 'installment';
                                     return (
