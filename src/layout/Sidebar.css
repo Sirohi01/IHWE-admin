@@ -1,0 +1,130 @@
+#dh-sidebar {
+  background: #061d49 !important;
+  background-image: radial-gradient(circle at 22% 88%, rgba(21,220,173,0.36), transparent 26%),
+                    radial-gradient(circle at 78% 8%, rgba(37,112,255,0.22), transparent 24%),
+                    linear-gradient(180deg, #08204d 0%, #031b47 58%, #06306b 100%) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+#dh-sidebar .sb-header {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: transparent !important;
+}
+#dh-sidebar .sb-footer {
+  background: #04193d !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+#dh-sidebar .sb-heading {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.05em;
+}
+#dh-sidebar .sb-heading:hover {
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
+}
+#dh-sidebar .sb-icon {
+  color: #ffffff !important;
+  transition: color 0.2s ease;
+}
+#dh-sidebar .sb-label {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-family: inherit;
+  transition: color 0.2s ease;
+}
+#dh-sidebar .sb-chevron {
+  color: #ffffff !important;
+}
+#dh-sidebar .sb-item, #dh-sidebar .sb-dropdown-btn {
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+}
+#dh-sidebar .sb-item:hover, #dh-sidebar .sb-dropdown-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+#dh-sidebar .sb-item:hover .sb-label, #dh-sidebar .sb-dropdown-btn:hover .sb-label,
+#dh-sidebar .sb-item:hover .sb-icon, #dh-sidebar .sb-dropdown-btn:hover .sb-icon,
+#dh-sidebar .sb-item:hover .sb-chevron, #dh-sidebar .sb-dropdown-btn:hover .sb-chevron {
+  color: #ffffff !important;
+}
+#dh-sidebar .sb-item.active {
+  background: linear-gradient(to right, #095b55, #08775e) !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 0 1px rgba(90, 255, 203, 0.45), 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+  border-color: transparent !important;
+}
+#dh-sidebar .sb-item.active .sb-icon, #dh-sidebar .sb-item.active .sb-label {
+  color: #ffffff !important;
+}
+#dh-sidebar .sb-dropdown-btn.active-dropdown,
+#dh-sidebar .sb-heading.active-section {
+  background-color: rgba(9, 91, 85, 0.25) !important;
+  color: #06d6a0 !important;
+}
+#dh-sidebar .sb-dropdown-btn.active-dropdown .sb-icon,
+#dh-sidebar .sb-dropdown-btn.active-dropdown .sb-label,
+#dh-sidebar .sb-dropdown-btn.active-dropdown .sb-chevron,
+#dh-sidebar .sb-heading.active-section .sb-chevron {
+  color: #06d6a0 !important;
+}
+#dh-sidebar .sb-sub-item {
+  transition: all 0.2s ease;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+#dh-sidebar .sb-sub-item:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: #ffffff !important;
+}
+#dh-sidebar .sb-sub-item.active {
+  background: rgba(9, 91, 85, 0.25) !important;
+  color: #06d6a0 !important;
+  font-weight: bold !important;
+  border-left: 2px solid #06d6a0;
+}
+#dh-sidebar .sb-sub-border {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+#dh-sidebar .sb-toggle-btn {
+  background-color: #095b55 !important;
+}
+#dh-sidebar .sb-close-btn {
+  background-color: #d26019 !important;
+  color: white !important;
+  border-radius: 6px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 28px !important;
+  height: 28px !important;
+  padding: 4px !important;
+  transition: all 0.2s ease !important;
+}
+#dh-sidebar .sb-close-btn:hover {
+  background-color: #b35215 !important;
+  transform: scale(1.1);
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 3px;
+}
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: #08775e;
+  border-radius: 10px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+.rank-card {
+  background: #020c22 !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 8px !important;
+}
+.motivation-card {
+  background: #021a14 !important;
+  border: 1px solid rgba(6, 214, 160, 0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+}
