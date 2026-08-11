@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import QRCode from "react-qr-code";
-import html2canvas from "html2canvas";
+import { toPng } from "html-to-image";
+import jsPDF from "jspdf";
 import toast from "react-hot-toast";
 import {
    Building2,
@@ -143,34 +144,66 @@ export default function PaymentMail() {
       
       const toEmail = clientData?.contact1?.email || clientData?.email || clientData?.companyInfo?.email;
       if (!toEmail) {
-         toast.error("Contact email not found for this client");
+         toast.error("Contact email not found for this client in data");
          return;
       }
 
       setIsSending(true);
       try {
-         const canvas = await html2canvas(printRef.current, { scale: 2, useCORS: true });
-         canvas.toBlob(async (blob) => {
-            const formData = new FormData();
-            formData.append("attachments", blob, "Payment_Reminder.png");
-            formData.append("to", toEmail);
-            formData.append("subject", `Payment Reminder - ${companyName}`);
-            formData.append("content", `Dear ${companyName},\n\nPlease find your payment reminder attached.\n\nWarm Regards,\nAccounts Team\nNamo Gange Wellness Pvt. Ltd.`);
-            formData.append("companyName", companyName);
-            formData.append("cmpny_id", clientId);
-            formData.append("eventId", eventId);
-
-            const res = await api.post("/api/crm-email/send", formData, {
-               headers: { "Content-Type": "multipart/form-data" }
-            });
-            
-            if (res.data?.success) {
-               toast.success("Reminder email sent successfully!");
-            } else {
-               toast.error(res.data?.message || "Failed to send email");
+         const element = printRef.current;
+         const dataUrl = await toPng(element, { 
+            pixelRatio: 2,
+            width: 794,
+            height: element.scrollHeight,
+            style: {
+               width: '794px',
+               maxWidth: 'none',
+               margin: '0'
             }
-            setIsSending(false);
-         }, "image/png");
+         });
+         if (!dataUrl) throw new Error("Failed to generate image for PDF");
+
+         const pdf = new jsPDF('p', 'mm', 'a4');
+         const pdfWidth = pdf.internal.pageSize.getWidth();
+         const pdfHeight = (printRef.current.offsetHeight * pdfWidth) / printRef.current.offsetWidth;
+         pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+         const pdfBlob = pdf.output("blob");
+
+         const formData = new FormData();
+         formData.append("attachments", pdfBlob, "Payment_Reminder.pdf");
+         
+         const imageBlob = await (await fetch(dataUrl)).blob();
+         formData.append("attachments", imageBlob, "Payment_Reminder_Template.png");
+
+         formData.append("useCustomHtml", "true");
+         formData.append("customHtml", `
+            <div style="font-family: Arial, sans-serif; max-width: 794px; margin: 0 auto; background: #f9f9f9; padding: 20px;">
+               <div style="background: white; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                  <img src="cid:cid_Payment_Reminder_Template.png" style="width: 100%; height: auto; display: block;" alt="Payment Reminder" />
+               </div>
+               <p style="text-align: center; color: #666; font-size: 12px; margin-top: 20px;">
+                  A PDF copy of this reminder is attached for your records.
+               </p>
+            </div>
+         `);
+
+         formData.append("to", toEmail);
+         formData.append("subject", `Payment Reminder - ${companyName}`);
+         formData.append("content", `Dear ${companyName},\n\nPlease find your payment reminder attached.\n\nWarm Regards,\nAccounts Team\nNamo Gange Wellness Pvt. Ltd.`);
+         formData.append("companyName", companyName);
+         formData.append("cmpny_id", clientId);
+         formData.append("eventId", eventId);
+
+         const res = await api.post("/api/crm-email/send", formData, {
+            headers: { "Content-Type": "multipart/form-data" }
+         });
+         
+         if (res.data?.success) {
+            toast.success(`Reminder email sent successfully to: ${toEmail}`);
+         } else {
+            toast.error(res.data?.message || "Failed to send email");
+         }
+         setIsSending(false);
       } catch (err) {
          console.error(err);
          toast.error("Failed to generate or send email");
