@@ -16,7 +16,7 @@ const formatCurrency = (amount) => {
   }).format(amount || 0);
 };
 
-const PAYMENT_MODE_OPTIONS = ["NEFT", "RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
+const PAYMENT_MODE_OPTIONS = ["NEFT", "IMPS", "RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
 const PAYMENT_TYPE_OPTIONS = ["Advance Payment", "Final Payment", "Full Payment", "Running Payment"];
 const getAutomaticNarration = (paymentType) => paymentType.replace(/\s+Payment$/i, "");
 
@@ -63,6 +63,8 @@ const AddPayment = () => {
   const [referenceNo, setReferenceNo] = useState("");
   const [amountReceived, setAmountReceived] = useState("");
   const [bankName, setBankName] = useState("");
+  const [receivedBy, setReceivedBy] = useState(getCurrentUserName() || "");
+  const [receivedDate, setReceivedDate] = useState(nowLocalDate());
   const [bankAccounts, setBankAccounts] = useState([]);
 
   const [deductTds, setDeductTds] = useState("No");
@@ -201,6 +203,10 @@ const AddPayment = () => {
       toast.error("Please select a payment type.");
       return;
     }
+    if (paymentMode === "Cash" && (!receivedBy.trim() || !receivedDate)) {
+      toast.error("Please enter received by and received date for cash payment.");
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -214,8 +220,10 @@ const AddPayment = () => {
       formData.append("pymnt_type", paymentType);
       formData.append("status_short", paymentType);
       formData.append("payment_mode", paymentMode);
-      formData.append("utr_no", referenceNo);
-      formData.append("bankId", bankName);
+      formData.append("utr_no", paymentMode === "Cash" ? "" : referenceNo);
+      formData.append("bankId", paymentMode === "Cash" ? "" : bankName);
+      formData.append("received_by", paymentMode === "Cash" ? receivedBy.trim() : "");
+      formData.append("received_date", paymentMode === "Cash" ? receivedDate : "");
       formData.append("ex_no", docType === "Invoice" ? selectedDoc.invoice_no : selectedDoc.est_no);
       formData.append("added_by", getCurrentUserName());
       // An empty custom narration tells the receipt generator to build the complete
@@ -415,12 +423,15 @@ const AddPayment = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Transaction / UTR No.</label>
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+                  {paymentMode === "Cash" ? "Received By *" : "Transaction / UTR No."}
+                </label>
                 <input
                   type="text"
-                  value={referenceNo}
-                  onChange={(e) => setReferenceNo(e.target.value)}
-                  placeholder="Enter UTR, cheque no. or reference no."
+                  value={paymentMode === "Cash" ? receivedBy : referenceNo}
+                  onChange={(e) => paymentMode === "Cash" ? setReceivedBy(e.target.value) : setReferenceNo(e.target.value)}
+                  placeholder={paymentMode === "Cash" ? "Enter receiver name" : "Enter UTR, cheque no. or reference no."}
+                  required={paymentMode === "Cash"}
                   className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
                 />
               </div>
@@ -440,20 +451,32 @@ const AddPayment = () => {
               </div>
 
               <div>
-                <label className="block text-[11px] text-slate-600 font-semibold mb-1">Bank Account</label>
-                <select
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
-                >
-                  <option value="">Select bank account</option>
-                  {bankAccounts.map((b) => (
-                    <option key={b._id} value={b.accountDisplayName || b.bankname}>
-                      {b.accountDisplayName || b.bankname}
-                      {b.accountno ? ` — A/C ${b.accountno}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <label className="block text-[11px] text-slate-600 font-semibold mb-1">
+                  {paymentMode === "Cash" ? "Received Date *" : "Bank Account"}
+                </label>
+                {paymentMode === "Cash" ? (
+                  <input
+                    type="date"
+                    value={receivedDate}
+                    onChange={(e) => setReceivedDate(e.target.value)}
+                    required
+                    className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
+                  />
+                ) : (
+                  <select
+                    value={bankName}
+                    onChange={(e) => setBankName(e.target.value)}
+                    className="w-full border border-slate-200 rounded text-[13px] px-3 py-1.5 text-slate-800 focus:outline-none focus:border-blue-400 bg-white"
+                  >
+                    <option value="">Select bank account</option>
+                    {bankAccounts.map((b) => (
+                      <option key={b._id} value={b.accountDisplayName || b.bankname}>
+                        {b.accountDisplayName || b.bankname}
+                        {b.accountno ? ` — A/C ${b.accountno}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
           </div>

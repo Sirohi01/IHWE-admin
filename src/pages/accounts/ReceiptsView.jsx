@@ -195,6 +195,12 @@ const ReceiptsView = () => {
     };
 
     const getBankLine = (pmt) => {
+        if (String(pmt.payment_mode || '').toLowerCase() === 'cash') {
+            return {
+                bank: pmt.received_by ? `Received By: ${pmt.received_by}` : 'Cash',
+                ref: pmt.received_date ? `Received Date: ${formatDate(pmt.received_date)}` : '',
+            };
+        }
         const bank = pmt.bank_name || pmt.neft_bank || pmt.cheque_bank || pmt.card_bank || pmt.bankId || pmt.wallet_name || pmt.payment_mode || 'N/A';
         let ref = '';
         if (pmt.payment_ref) ref = pmt.utr_no ? `UTR: ${pmt.payment_ref}` : `Ref: ${pmt.payment_ref}`;
