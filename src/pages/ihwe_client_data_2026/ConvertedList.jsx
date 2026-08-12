@@ -471,7 +471,7 @@ const ConvertedList = () => {
                 <Link to={row.exhibitorRegistrationId
                   ? `/client-overview/${row.exhibitorRegistrationId}?source=exhibitor&eventId=${currentEventId}`
                   : `/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`
-                }>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                } state={{ fromPageLabel: 'Converted Leads' }}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>
@@ -715,8 +715,8 @@ const ConvertedList = () => {
 
   return (
     <BaseLeadPage
-      title="Converted Leads"
-      subtitle="Leads that have been successfully converted into clients"
+      title="Exhibitor List"
+      subtitle="Exhibitors that have successfully registered and confirmed stall bookings"
       badgeCount={<span className="text-emerald-700">{totalLeads}</span>}
       headerActions={
         <div className="flex flex-wrap items-center gap-1.5">
@@ -729,11 +729,11 @@ const ConvertedList = () => {
           <Link to="/ihweClientData2026/warmClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Follow-Ups
           </Link>
-          <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Hot Leads
-          </Link>
           <Link to="/ihweClientData2026/proposalSentList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Proposal Sent
+          </Link>
+          <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
+            Hot Leads
           </Link>
           <Link to="/ihweClientData2026/coldClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
             Lost Leads
@@ -742,7 +742,7 @@ const ConvertedList = () => {
             All Leads
           </Link>
           <Link to="/ihweClientData2026/convertedList" className="px-2.5 py-1.5 bg-emerald-600 text-white rounded-md text-[10px] font-bold shadow-sm" style={{ fontFamily: 'Inter, sans-serif' }}>
-            Converted
+            Exhibitor List
           </Link>
         </div>
       }

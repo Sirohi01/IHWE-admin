@@ -324,7 +324,7 @@ const ReferralLeadsDashboard = ({ title, description, expo }) => {
                                             <td className="py-2 px-4 text-xs font-bold text-gray-400">{i + 1}</td>
                                             <td className="py-2 px-4">
                                                 <div className="font-bold text-green-700 text-[13px] hover:text-green-800 hover:underline">
-                                                    <Link to={`/client-overview/${ref.clientId || ref.cmpny_id || ref._id}?expo=${expo}`}>{ref.companyName}</Link>
+                                                    <Link to={`/client-overview/${ref.clientId || ref.cmpny_id || ref._id}?expo=${expo}`} state={{ fromPageLabel: 'Referral Leads' }}>{ref.companyName}</Link>
                                                 </div>
                                                 <div className="text-gray-500 text-[11px] mt-0.5">{ref.contactPerson}</div>
                                             </td>

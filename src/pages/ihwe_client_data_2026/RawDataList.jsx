@@ -46,6 +46,7 @@ const RawDataList = () => {
       render: (value, row) => (
         <Link
           to={`/client-overview/${row.id}`}
+          state={{ fromPageLabel: 'All Leads' }}
           className="text-blue-500 hover:underline"
         >
           {value}

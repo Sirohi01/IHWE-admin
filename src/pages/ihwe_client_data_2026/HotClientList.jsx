@@ -385,7 +385,7 @@ const HotClientList = () => {
                 <Link to={row.exhibitorRegistrationId
                   ? `/client-overview/${row.exhibitorRegistrationId}?source=exhibitor&eventId=${currentEventId}`
                   : `/crm-event/${currentEventId}/client/${row.clientId || row.companyId || row._id}`
-                }>{toTitleCase(row.companyName)}</Link>
+                } state={{ fromPageLabel: 'Hot Leads' }}>{toTitleCase(row.companyName)}</Link>
               </div>
             </td>
             <td className="px-2 py-2">

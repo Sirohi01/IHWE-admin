@@ -5,6 +5,7 @@ import WhatsAppModal from "./WhatsAppModal";
 import EmailModal from "./EmailModal";
 import CallLogModal from "./CallLogModal";
 import FullHistoryModal from "./FullHistoryModal";
+import SingleDetailModal from "./SingleDetailModal";
 
 const TYPE_CONFIG = {
   whatsapp:    { icon: FaWhatsapp, color: "text-green-600",  bg: "bg-green-50",  label: "WhatsApp" },
@@ -35,6 +36,7 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
   const [showEmail, setShowEmail] = useState(false);
   const [showCall, setShowCall] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
   // Allow parent (action cards) to trigger modals
   React.useEffect(() => { if (onWhatsApp) setShowWhatsApp(true); }, [onWhatsApp]);
@@ -103,20 +105,20 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
               }
 
               return (
-                <div key={idx} className="flex gap-2 group">
+                <div key={idx} onClick={() => setSelectedItem(item)} className="flex gap-2 group cursor-pointer hover:opacity-90 transition-all">
                   <div className={`w-7 h-7 rounded-lg ${cfg.bg} flex items-center justify-center flex-shrink-0 mt-0.5 border border-white group-hover:border-slate-200 transition-colors`}>
                     <Icon size={12} className={cfg.color} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className={`rounded-lg px-2.5 py-2 ${cfg.bg} border border-transparent group-hover:border-slate-200 transition-colors`}>
+                    <div className={`rounded-lg px-2.5 py-2 ${cfg.bg} border border-transparent group-hover:border-slate-200 transition-colors shadow-none hover:shadow-sm`}>
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <span className={`text-[10px] font-bold uppercase ${cfg.color} flex-shrink-0 tracking-wider`}>{label}</span>
-                        <span className="text-[9px] font-bold text-slate-400 flex-shrink-0">{formatDateTime(item.createdAt)}</span>
+                        <span className={`text-[9.5px] font-bold uppercase ${cfg.color} flex-shrink-0 tracking-wider`}>{label}</span>
+                        <span className="text-[8.5px] font-bold flex-shrink-0" style={{ color: '#133458' }}>{formatDateTime(item.createdAt)}</span>
                       </div>
                       {(item.status_short || item.email_subject || text) && (
-                        <p className="text-[10px] font-bold text-[#15173D] truncate mt-0.5 leading-relaxed">
+                        <p className="text-[9px] font-bold text-[#15173D] truncate mt-0.5 leading-relaxed">
                           {item.status_short && (
-                            <span className="inline-block px-1.5 py-[1px] rounded bg-orange-100 text-orange-600 text-[9px] font-bold uppercase tracking-wider mr-1.5 align-middle">
+                            <span className="inline-block px-1.5 py-[1px] rounded bg-orange-100 text-orange-600 text-[8px] font-bold uppercase tracking-wider mr-1.5 align-middle">
                               {item.status_short}
                             </span>
                           )}
@@ -128,7 +130,18 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
                               : part
                           )}</span>}
                         </p>
-                      )}                    </div>
+                      )}
+                      {item.reminder_dt && (
+                        <p className="text-[9px] font-bold text-red-600 mt-0.5">
+                          Reminder: {formatDateTime(item.reminder_dt)}
+                        </p>
+                      )}
+                      {item.updated_by && (
+                        <p className="text-[9px] font-bold text-blue-600 mt-0.5">
+                          By: {item.updated_by}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -175,8 +188,15 @@ const CommunicationPanel = ({ company, reviews, onSendEntry, onWhatsApp, onEmail
       {showHistory && (
         <FullHistoryModal
           reviews={reviews || []}
-          companyName={company?.companyName}
+          companyName={company?.companyName || company?.exhibitorName}
           onClose={() => setShowHistory(false)}
+        />
+      )}
+      {selectedItem && (
+        <SingleDetailModal
+          item={selectedItem}
+          companyName={company?.companyName || company?.exhibitorName}
+          onClose={() => setSelectedItem(null)}
         />
       )}
     </>

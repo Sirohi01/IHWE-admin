@@ -86,7 +86,7 @@ export default function FollowupsTable({ followupsList, loading }) {
                 followupsList.map((item, i) => (
                   <tr
                     key={i}
-                    onClick={() => navigate(`/client-overview/${item.id}`)}
+                    onClick={() => navigate(`/client-overview/${item.id}`, { state: { fromPageLabel: 'Follow-Ups' } })}
                     className="border-b border-slate-200 hover:bg-slate-50 transition cursor-pointer"
                   >
                     {/* Client Name */}
@@ -142,7 +142,7 @@ export default function FollowupsTable({ followupsList, loading }) {
                         </a>
                         {/* Calendar / Reminder */}
                         <button
-                          onClick={() => navigate(`/client-overview/${item.id}`)}
+                          onClick={() => navigate(`/client-overview/${item.id}`, { state: { fromPageLabel: 'Follow-Ups' } })}
                           className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-100 text-blue-500 flex items-center justify-center hover:bg-blue-100 transition"
                           title="View"
                         >

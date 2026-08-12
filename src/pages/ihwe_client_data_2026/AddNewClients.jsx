@@ -183,11 +183,41 @@ const AddNewClients = () => {
     }, [formData.state, statesArray, citiesArray]);
 
 
+    const [businessTypes, setBusinessTypes] = useState([
+        "Pvt. Ltd. Company",
+        "Pub. Ltd. Company",
+        "Partnership Company",
+        "Limited Liability Partnership (LLP)",
+        "One Person Company",
+        "Sole Proprietorship",
+        "Section 8 Company",
+        "Others"
+    ]);
+
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchEvents();
+        fetchBusinessTypes();
     }, []);
+
+    const fetchBusinessTypes = async () => {
+        try {
+            const res = await api.get("/api/lead-type-of-business?activeOnly=true");
+            const data = res.data?.data || res.data || [];
+            if (Array.isArray(data) && data.length > 0) {
+                const names = data
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .map(b => b.name)
+                    .filter(Boolean);
+                if (names.length > 0) {
+                    setBusinessTypes(names);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching dynamic business types:", err);
+        }
+    };
 
     const fetchEvents = async () => {
         setIsLoading(true);
@@ -602,14 +632,9 @@ const AddNewClients = () => {
                                 <label className={labelClasses}>Type of Business <span className="text-red-500">*</span></label>
                                 <select required value={formData.category} onChange={(e) => handleChange("category", e.target.value)} className={inputClasses}>
                                     <option value="" className="text-red-500 font-medium">Select Here</option>
-                                    <option>Pvt. Ltd. Company</option>
-                                    <option>Pub. Ltd. Company</option>
-                                    <option>Partnership Company</option>
-                                    <option>Limited Liability Partnership (LLP)</option>
-                                    <option>One Person Company</option>
-                                    <option>Sole Proprietorship</option>
-                                    <option>Section 8 Company</option>
-                                    <option>Others</option>
+                                    {businessTypes.map((typeOpt, idx) => (
+                                        <option key={idx} value={typeOpt}>{typeOpt}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

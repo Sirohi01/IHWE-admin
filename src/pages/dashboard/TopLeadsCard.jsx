@@ -47,7 +47,7 @@ export default function TopLeadsCard({ userLeads }) {
             return (
               <div
                 key={i}
-                onClick={() => navigate(`/client-overview/${lead._id}`)}
+                onClick={() => navigate(`/client-overview/${lead._id}`, { state: { fromPageLabel: 'Hot Leads' } })}
                 className="flex items-center gap-3 py-0.5 border-b border-slate-50 hover:bg-slate-50/60 transition cursor-pointer"
               >
                 {/* Avatar */}

@@ -535,7 +535,7 @@ const ConfirmClientList = () => {
                 <Link to={row.exhibitorRegistrationId
                   ? `/client-overview/${row.exhibitorRegistrationId}?source=exhibitor&eventId=${routeCrmEventId || currentEventId}`
                   : `/crm-event/${routeCrmEventId || currentEventId}/client/${row.clientId || row.companyId || row._id}`
-                }>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
+                } state={{ fromPageLabel: 'Bookings' }}>{toTitleCase(row.exhibitorName || row.companyName)}</Link>
               </div>
               <div className="text-[9px] font-bold" style={{ color: '#5E0006' }}>{toTitleCase(row.natureOfBusiness || row.industrySector || row.typeOfBusiness) || "-"}</div>
             </td>

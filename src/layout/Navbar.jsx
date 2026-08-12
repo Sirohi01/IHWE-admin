@@ -11,11 +11,11 @@ import Swal from "sweetalert2";
 import api, { SERVER_URL } from "../lib/api";
 import { logout } from "../utils/auth";
 import { fetchCompanies } from "../features/company/companySlice";
+import { fetchEvents } from "../features/crmEvent/crmEventSlice";
 import { useSelector, useDispatch } from "react-redux";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import { menuItems } from "../data/menuItems";
 import { useEventContext } from "../context/EventContext";
-
 
 const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
   if (Array.isArray(sliceState)) return sliceState;
@@ -87,6 +87,107 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const navigate = useNavigate();
   const location = useLocation();
 
+  const crmEvents = useSelector((state) => state.crmEvents?.events);
+  const [fetchedEventName, setFetchedEventName] = useState("");
+
+  const { events, currentEventId, setCurrentEventId, currentEvent } = useEventContext();
+
+  const crmEventBreadcrumb = useMemo(() => {
+    const isCrmEvent = location.pathname.startsWith('/crm-event/');
+    const isClientOverview = location.pathname.startsWith('/client-overview') || location.pathname.includes('/client/');
+    const isLegacyCrm = location.pathname.startsWith('/ihweClientData2026/') || location.pathname === '/exhibitor-list' || location.pathname === '/book-a-stand';
+
+    if (!isCrmEvent && !isClientOverview && !isLegacyCrm) return null;
+
+    const parts = location.pathname.split('/').filter(Boolean);
+    let eventId = null;
+    let subPage = null;
+
+    if (isCrmEvent) {
+      eventId = parts[1];
+      subPage = parts[2];
+    } else {
+      const urlParams = new URLSearchParams(location.search);
+      eventId = urlParams.get('eventId') || currentEventId;
+    }
+
+    const currentCrmEvent = (crmEvents || []).find(e => String(e._id || e.id) === String(eventId)) || currentEvent;
+    const eventName = currentCrmEvent?.event_fullName || currentCrmEvent?.event_name || currentCrmEvent?.name || fetchedEventName || "IHWE EXPO 2026";
+
+    const subPageLabels = {
+      'sales-tools': 'Sales Tools',
+      'new-leads': 'New Leads',
+      'follow-ups': 'Follow-Ups',
+      'hot-leads': 'Hot Leads',
+      'proposal-sent': 'Proposal Sent',
+      'bookings': 'Bookings',
+      'lost-leads': 'Lost Leads',
+      'converted-leads': 'Exhibitor List',
+      'all-leads': 'All Leads',
+      'referral-leads': 'Referral Leads',
+      'add-client': 'Add Client',
+      'client': 'Client Overview',
+      'payment-mail': 'Payment Mail',
+      'send-mail': 'Send Mail',
+      'newleadlist': 'New Leads',
+      'warmclientlist': 'Follow-Ups',
+      'hotclientlist': 'Hot Leads',
+      'proposalsentlist': 'Proposal Sent',
+      'confirmclientlist': 'Bookings',
+      'coldclientlist': 'Lost Leads',
+      'convertedlist': 'Exhibitor List',
+      'allleadslist': 'All Leads',
+      'rawdatalist': 'All Leads',
+      'referralleads': 'Referral Leads',
+      'addnewclients': 'Add Client'
+    };
+
+    if (!subPage && isLegacyCrm) {
+      const rawSub = parts[1] || parts[0];
+      subPage = rawSub ? rawSub.toLowerCase() : '';
+    }
+
+    let pageLabel = subPageLabels[subPage] || (subPage ? subPage.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '');
+
+    if (isClientOverview || subPage === 'client') {
+      const fromLabel = location.state?.fromPageLabel || 'Bookings';
+      return [eventName, fromLabel, 'Client Overview'];
+    }
+
+    if (pageLabel) {
+      return [eventName, pageLabel];
+    }
+
+    return [eventName];
+  }, [location.pathname, location.search, location.state, crmEvents, fetchedEventName, currentEvent, currentEventId]);
+
+  useEffect(() => {
+    dispatch(fetchCompanies());
+    dispatch(fetchEvents());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (location.pathname.startsWith('/crm-event/')) {
+      const parts = location.pathname.split('/').filter(Boolean);
+      const eventId = parts[1];
+      if (eventId) {
+        const found = (crmEvents || []).find(e => String(e._id || e.id) === String(eventId));
+        if (found) {
+          setFetchedEventName(found.event_fullName || found.event_name);
+        } else {
+          api.get(`/api/crm-events/${eventId}`)
+            .then(res => {
+              const data = res.data?.data || res.data;
+              if (data && (data.event_fullName || data.event_name)) {
+                setFetchedEventName(data.event_fullName || data.event_name);
+              }
+            })
+            .catch(() => {});
+        }
+      }
+    }
+  }, [location.pathname, crmEvents]);
+
   const getPageNameFromMenu = (pathname) => {
     if (pathname.includes('/dashboard/account/')) {
       if (pathname.includes('/delivery-challans')) return { page: 'Delivery Challans', section: 'Accounts' };
@@ -131,7 +232,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   };
 
   const { page: pageName, section: sectionName } = getPageNameFromMenu(location.pathname);
-  const { events, currentEventId, setCurrentEventId } = useEventContext();
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
@@ -151,6 +251,11 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const companiesState = useSelector((state) => state.companies);
   const companiesArray = getArrayFromSlice(companiesState, "companies");
   const newLeadsCount = companiesArray.filter((c) => c.companyStatus === "New Lead").length;
+  const reminderCount = useMemo(() => {
+    if (!Array.isArray(companiesArray)) return 8;
+    const followUps = companiesArray.filter((c) => c.followUpDate || c.companyStatus === "Follow-up" || c.nextFollowUp);
+    return followUps.length > 0 ? followUps.length : 8;
+  }, [companiesArray]);
 
   const [showDemoAlert, setShowDemoAlert] = useState(false);
   const [hasUnreadTaskAlert, setHasUnreadTaskAlert] = useState(false);
@@ -342,15 +447,35 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
-        <div className="flex items-center gap-3">
-          <span className="text-white text-[15px] font-bold uppercase tracking-tight opacity-95">
-            User Dashboard -
-          </span>
-          <h2 className="text-white text-[15px] uppercase font-semibold tracking-tight">
-            <span className="text-yellow-200 font-medium tracking-normal capitalize">
-              {sectionName ? `${sectionName} > ` : ''}{pageName}
-            </span>
-          </h2>
+        <div className="flex items-center gap-2 text-[14px]">
+          {crmEventBreadcrumb ? (
+            crmEventBreadcrumb.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2">
+                {idx > 0 && <span className="text-white/60 text-[13px] font-semibold">/</span>}
+                <span
+                  className={
+                    idx === 0
+                      ? "text-white font-bold uppercase tracking-tight text-[14px]"
+                      : idx === crmEventBreadcrumb.length - 1
+                      ? "text-yellow-300 font-semibold tracking-normal text-[14px]"
+                      : "text-white/95 font-medium tracking-normal text-[14px]"
+                  }
+                >
+                  {item}
+                </span>
+              </div>
+            ))
+          ) : (
+            <div className="flex items-center gap-2">
+              {sectionName && (
+                <>
+                  <span className="text-white font-bold uppercase tracking-tight text-[14px]">{sectionName}</span>
+                  <span className="text-white/60 text-[13px] font-semibold">/</span>
+                </>
+              )}
+              <span className="text-yellow-300 font-semibold tracking-normal text-[14px]">{pageName}</span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -395,6 +520,11 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
             className="relative p-2.5 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm"
           >
             <RiAlarmWarningLine size={19} />
+            {reminderCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-600 border border-white/20 text-white text-[9px] min-w-[15px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-medium shadow-sm">
+                {reminderCount > 99 ? '99+' : reminderCount}
+              </span>
+            )}
           </button>
           <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
             Reminders

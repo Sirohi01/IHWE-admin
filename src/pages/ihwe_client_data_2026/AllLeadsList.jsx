@@ -236,7 +236,7 @@ const AllLeadsList = () => {
             <tr key={row._id || i} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white">
               <td className="px-2 py-2 text-center"><input type="checkbox" className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm" /></td>
               <td className="px-2 py-2">
-                <Link to={`/crm-event/${currentEventId}/client/${row._id}`}>
+                <Link to={`/crm-event/${currentEventId}/client/${row._id}`} state={{ fromPageLabel: 'All Leads' }}>
                   <div className="font-bold text-[11px] hover:text-blue-600 hover:underline cursor-pointer" style={{ color: "#093C5D" }}>{toTitleCase(row.companyName)}</div>
                 </Link>
                 <div className="text-[9px] font-bold mt-0.5" style={{ color: "#5E0006" }}>
@@ -375,8 +375,8 @@ const AllLeadsList = () => {
           <Link to="/book-a-stand" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Book a Stand</Link>
           <Link to="/ihweClientData2026/newLeadList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>New Leads</Link>
           <Link to="/ihweClientData2026/warmClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Follow-Ups</Link>
-          <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Hot Leads</Link>
           <Link to="/ihweClientData2026/proposalSentList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Proposal Sent</Link>
+          <Link to="/ihweClientData2026/hotClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Hot Leads</Link>
           <Link to="/ihweClientData2026/coldClientList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Lost Leads</Link>
           <Link to="/ihweClientData2026/allLeadsList" className="px-2.5 py-1.5 bg-blue-600 text-white rounded-md text-[10px] font-bold shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>All Leads</Link>
           <Link to="/ihweClientData2026/convertedList" className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm" style={{ fontFamily: "Inter, sans-serif" }}>Converted</Link>

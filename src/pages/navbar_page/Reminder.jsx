@@ -1,850 +1,978 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
-function SvgIcon({
-  size = 24,
-  strokeWidth = 2,
-  className = "",
-  color,
-  children,
-  viewBox = "0 0 24 24",
-  ...props
-}) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox={viewBox}
-      fill="none"
-      stroke={color || "currentColor"}
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-      focusable="false"
-      {...props}
-    >
-      {children}
-    </svg>
-  );
-}
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import api from "../../lib/api";
+import {
+  Search,
+  RefreshCw,
+  Download,
+  FileText,
+  Smartphone,
+  Mail,
+  Building2,
+  Eye,
+  User,
+  ArrowLeft,
+  Calendar,
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  Plus,
+  Edit,
+  Trash2,
+  Phone,
+  MessageCircle,
+  Users,
+  PlusCircle,
+  X,
+  Activity
+} from "lucide-react";
+import { FaWhatsapp, FaEnvelope } from "react-icons/fa";
+import { PieChart as RePieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import BaseLeadPage from "../../layout/BaseLeadPage";
+import Swal from "sweetalert2";
 
-function ArrowRight(props) {
-  return (
-    <SvgIcon data-icon-name="ArrowRight" {...props}>
-      <path d="M5 12h14" />
-      <path d="m12 5 7 7-7 7" />
-    </SvgIcon>
-  );
-}
+const toTitleCase = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+};
 
-function Bell(props) {
-  return (
-    <SvgIcon data-icon-name="Bell" {...props}>
-      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-    </SvgIcon>
-  );
-}
-
-function CalendarDays(props) {
-  return (
-    <SvgIcon data-icon-name="CalendarDays" {...props}>
-      <rect x="3" y="4" width="18" height="18" rx="2" />
-      <path d="M16 2v4" />
-      <path d="M8 2v4" />
-      <path d="M3 10h18" />
-      <path d="M8 14h.01" />
-      <path d="M12 14h.01" />
-      <path d="M16 14h.01" />
-      <path d="M8 18h.01" />
-      <path d="M12 18h.01" />
-    </SvgIcon>
-  );
-}
-
-function ChevronDown(props) {
-  return (
-    <SvgIcon data-icon-name="ChevronDown" {...props}>
-      <path d="m6 9 6 6 6-6" />
-    </SvgIcon>
-  );
-}
-
-function Download(props) {
-  return (
-    <SvgIcon data-icon-name="Download" {...props}>
-      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-      <path d="m7 10 5 5 5-5" />
-      <path d="M12 15V3" />
-    </SvgIcon>
-  );
-}
-
-function Eye(props) {
-  return (
-    <SvgIcon data-icon-name="Eye" {...props}>
-      <path d="M2.1 12s3.6-6 9.9-6 9.9 6 9.9 6-3.6 6-9.9 6-9.9-6-9.9-6Z" />
-      <circle cx="12" cy="12" r="2.5" />
-    </SvgIcon>
-  );
-}
-
-function FileText(props) {
-  return (
-    <SvgIcon data-icon-name="FileText" {...props}>
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
-      <path d="M14 2v6h6" />
-      <path d="M8 13h8" />
-      <path d="M8 17h8" />
-      <path d="M8 9h2" />
-    </SvgIcon>
-  );
-}
-
-function Headphones(props) {
-  return (
-    <SvgIcon data-icon-name="Headphones" {...props}>
-      <path d="M4 14a8 8 0 0 1 16 0" />
-      <path d="M18 19h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3v5a2 2 0 0 1-2 2Z" />
-      <path d="M6 19h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H4v5a2 2 0 0 0 2 2Z" />
-    </SvgIcon>
-  );
-}
-
-function Mail(props) {
-  return (
-    <SvgIcon data-icon-name="Mail" {...props}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3 7 9 6 9-6" />
-    </SvgIcon>
-  );
-}
-
-function MessageCircle(props) {
-  return (
-    <SvgIcon data-icon-name="MessageCircle" {...props}>
-      <path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4Z" />
-    </SvgIcon>
-  );
-}
-
-function MoreVertical(props) {
-  return (
-    <SvgIcon data-icon-name="MoreVertical" {...props}>
-      <circle cx="12" cy="5" r="1" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="12" r="1" fill="currentColor" stroke="none" />
-      <circle cx="12" cy="19" r="1" fill="currentColor" stroke="none" />
-    </SvgIcon>
-  );
-}
-
-function Percent(props) {
-  return (
-    <SvgIcon data-icon-name="Percent" {...props}>
-      <path d="m19 5-14 14" />
-      <circle cx="6.5" cy="6.5" r="2.5" />
-      <circle cx="17.5" cy="17.5" r="2.5" />
-    </SvgIcon>
-  );
-}
-
-function Phone(props) {
-  return (
-    <SvgIcon data-icon-name="Phone" {...props}>
-      <path d="M22 16.9v3a2 2 0 0 1-2.18 2 19.8 19.8 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.8a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.28-1.28a2 2 0 0 1 2.11-.45c.9.33 1.84.56 2.8.69A2 2 0 0 1 22 16.9Z" />
-    </SvgIcon>
-  );
-}
-
-function Search(props) {
-  return (
-    <SvgIcon data-icon-name="Search" {...props}>
-      <circle cx="11" cy="11" r="8" />
-      <path d="m21 21-4.35-4.35" />
-    </SvgIcon>
-  );
-}
-
-function Send(props) {
-  return (
-    <SvgIcon data-icon-name="Send" {...props}>
-      <path d="m22 2-7 20-4-9-9-4Z" />
-      <path d="M22 2 11 13" />
-    </SvgIcon>
-  );
-}
-
-function Ticket(props) {
-  return (
-    <SvgIcon data-icon-name="Ticket" {...props}>
-      <path d="M2 9a3 3 0 0 0 0 6v3a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-3a3 3 0 0 0 0-6V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
-      <path d="M13 5v2" />
-      <path d="M13 17v2" />
-      <path d="M13 11v2" />
-    </SvgIcon>
-  );
-}
-
-function Wallet(props) {
-  return (
-    <SvgIcon data-icon-name="Wallet" {...props}>
-      <path d="M20 7V5a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h15v10a2 2 0 0 1-2 2H5a3 3 0 0 1-3-3V6" />
-      <path d="M16 13h4" />
-      <circle cx="16" cy="13" r=".5" fill="currentColor" stroke="none" />
-    </SvgIcon>
-  );
-}
-
-
-const DESIGN_WIDTH = 1790;
-const DESIGN_HEIGHT = 1398;
-
-const paymentRows = [
+const INITIAL_FOLLOWUPS = [
   {
-    invoiceNo: "NGW/INV/26-27/034",
-    stall: "9 Sqm Stall (Stall No. 139)",
-    tag: "Advance",
-    tagTone: "green",
-    invoiceDate: "02 Jul 2026",
-    invoiceAmount: "₹ 1,18,944",
-    paidAmount: "₹ 1,18,944",
-    paymentDate: "02 Jul 2026",
-    mode: "NEFT",
-    utr: "HDFC260704672981",
-    status: "PAID",
-    statusTone: "green",
-    iconTone: "green",
+    id: 1,
+    leadId: "LEAD1250",
+    leadName: "Rahul Verma",
+    initials: "RA",
+    company: "Wellness India Pvt Ltd",
+    industry: "Nutrition, Organic & Health Foods",
+    city: "New Delhi",
+    mobile: "9876543210",
+    email: "rahul@wellnessindia.com",
+    type: "Call Follow-Up",
+    date: "18 Apr 2026",
+    time: "11:00 AM",
+    assignedTo: "Vansh Chaudhary",
+    assignedRole: "Sales Executive",
+    status: "Pending",
+    priority: "High"
   },
   {
-    invoiceNo: "NGW/INV/26-27/041",
-    stall: "18 Sqm Stall (Stall No. 91)",
-    tag: "Part Payment",
-    tagTone: "blue",
-    invoiceDate: "01 Jul 2026",
-    invoiceAmount: "₹ 2,27,183",
-    paidAmount: "₹ 2,17,183",
-    paymentDate: "01 Jul 2026",
-    mode: "NEFT",
-    utr: "HDFC010706392716",
-    status: "PARTIALLY PAID",
-    statusTone: "orange",
-    iconTone: "blue",
-    outstanding: "₹ 10,000",
-    dueDate: "15 Jul 2026",
+    id: 2,
+    leadId: "LEAD1248",
+    leadName: "Priya Sharma",
+    initials: "PS",
+    company: "FitLife Solutions",
+    industry: "Fitness & Wellness",
+    city: "Mumbai",
+    mobile: "9123456789",
+    email: "priya@fitlife.com",
+    type: "Whatsapp Follow-Up",
+    date: "18 Apr 2026",
+    time: "02:30 PM",
+    assignedTo: "Vansh Chaudhary",
+    assignedRole: "Sales Executive",
+    status: "Pending",
+    priority: "Medium"
   },
   {
-    invoiceNo: "NGW/INV/26-27/021",
-    stall: "12 Sqm Stall (Stall No. 56)",
-    tag: "Final Payment",
-    tagTone: "blue",
-    invoiceDate: "10 Jun 2026",
-    invoiceAmount: "₹ 1,55,760",
-    paidAmount: "₹ 1,55,760",
-    paymentDate: "10 Jun 2026",
-    mode: "RTGS",
-    utr: "ICICN620106785432",
-    status: "PAID",
-    statusTone: "green",
-    iconTone: "violet",
+    id: 3,
+    leadId: "LEAD1245",
+    leadName: "Amit Kumar",
+    initials: "AK",
+    company: "HealthGenix",
+    industry: "Pharmaceuticals",
+    city: "Bangalore",
+    mobile: "9988777665",
+    email: "amit@healthgenix.com",
+    type: "Meeting Follow-Up",
+    date: "19 Apr 2026",
+    time: "10:30 AM",
+    assignedTo: "Ritika Nair",
+    assignedRole: "Sales Manager",
+    status: "Pending",
+    priority: "High"
   },
   {
-    invoiceNo: "NGW/INV/26-27/010",
-    stall: "9 Sqm Stall (Stall No. 112)",
-    tag: "Final Payment",
-    tagTone: "green",
-    invoiceDate: "28 May 2026",
-    invoiceAmount: "₹ 1,18,944",
-    paidAmount: "₹ 1,18,944",
-    paymentDate: "28 May 2026",
-    mode: "NEFT",
-    utr: "SBIN525018934112",
-    status: "PAID",
-    statusTone: "green",
-    iconTone: "green",
+    id: 4,
+    leadId: "LEAD1243",
+    leadName: "Sneha Gupta",
+    initials: "SG",
+    company: "CareWellness",
+    industry: "Ayurveda & Herbal",
+    city: "Pune",
+    mobile: "9765432109",
+    email: "sneha@carewellness.com",
+    type: "Email Follow-Up",
+    date: "19 Apr 2026",
+    time: "03:00 PM",
+    assignedTo: "Vansh Chaudhary",
+    assignedRole: "Sales Executive",
+    status: "Completed",
+    priority: "Low"
   },
   {
-    invoiceNo: "NGW/INV/26-27/005",
-    stall: "9 Sqm Stall (Stall No. 45)",
-    tag: "Advance",
-    tagTone: "green",
-    invoiceDate: "12 May 2026",
-    invoiceAmount: "₹ 1,18,944",
-    paidAmount: "₹ 70,000",
-    paymentDate: "12 May 2026",
-    mode: "NEFT",
-    utr: "HDFC120512445667",
-    status: "PARTIALLY PAID",
-    statusTone: "orange",
-    iconTone: "orange",
+    id: 5,
+    leadId: "LEAD1241",
+    leadName: "Vikram Singh",
+    initials: "VK",
+    company: "TechHealth Solutions",
+    industry: "Medical Devices",
+    city: "Hyderabad",
+    mobile: "9000011122",
+    email: "vikram@techhealth.com",
+    type: "Call Follow-Up",
+    date: "20 Apr 2026",
+    time: "11:30 AM",
+    assignedTo: "Neha Mehta",
+    assignedRole: "Sales Executive",
+    status: "Overdue",
+    priority: "High"
   },
+  {
+    id: 6,
+    leadId: "LEAD1239",
+    leadName: "Meera Das",
+    initials: "MD",
+    company: "Wellness World",
+    industry: "Organic Cosmetics",
+    city: "Kolkata",
+    mobile: "9333344556",
+    email: "meera@wellnessworld.com",
+    type: "Whatsapp Follow-Up",
+    date: "20 Apr 2026",
+    time: "04:00 PM",
+    assignedTo: "Ritika Nair",
+    assignedRole: "Sales Manager",
+    status: "Pending",
+    priority: "Medium"
+  },
+  {
+    id: 7,
+    leadId: "LEAD1237",
+    leadName: "Rohit Jaiswal",
+    initials: "RJ",
+    company: "Healthy Living Co.",
+    industry: "Health Supplements",
+    city: "Chennai",
+    mobile: "9889966778",
+    email: "rohit@healthyliving.com",
+    type: "Meeting Follow-Up",
+    date: "21 Apr 2026",
+    time: "12:00 PM",
+    assignedTo: "Vansh Chaudhary",
+    assignedRole: "Sales Executive",
+    status: "Pending",
+    priority: "High"
+  },
+  {
+    id: 8,
+    leadId: "LEAD1235",
+    leadName: "Neha Pillai",
+    initials: "NP",
+    company: "LifeCare Wellness",
+    industry: "Personal Care",
+    city: "Kochi",
+    mobile: "9494911223",
+    email: "neha@lifecare.com",
+    type: "Email Follow-Up",
+    date: "21 Apr 2026",
+    time: "02:30 PM",
+    assignedTo: "Neha Mehta",
+    assignedRole: "Sales Executive",
+    status: "Pending",
+    priority: "Low"
+  }
 ];
 
-const summaryRows = [
-  { label: "Invoice Value", value: "₹ 14,50,000", tone: "dark" },
-  { label: "Total Paid", value: "₹ 12,45,000", tone: "green" },
-  { label: "TDS Deducted", value: "₹ 35,000", tone: "blue" },
-  { label: "Credit Notes", value: "₹ 15,000", tone: "violet" },
-];
+export default function Reminder() {
+  const navigate = useNavigate();
+  const { eventId } = useParams();
+  const [followUps, setFollowUps] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterAssigned, setFilterAssigned] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [assignedToOptions, setAssignedToOptions] = useState([]);
 
-
-const fileToneClasses = {
-  green: "bg-[#e7f7ee] text-[#07904a]",
-  blue: "bg-[#e9f1ff] text-[#3979ef]",
-  violet: "bg-[#f0e9ff] text-[#8351e7]",
-  orange: "bg-[#fff0dd] text-[#ff7d13]",
-};
-
-const tagToneClasses = {
-  green: "bg-[#dff4e6] text-[#187b42]",
-  blue: "bg-[#e4efff] text-[#2562b6]",
-};
-
-const statusToneClasses = {
-  green: "bg-[#e5f5eb] text-[#1a8649]",
-  orange: "bg-[#fff0e2] text-[#ff6d13]",
-};
-
-const valueToneClasses = {
-  dark: "text-[#101a35]",
-  green: "text-[#087d3e]",
-  blue: "text-[#2262d9]",
-  orange: "text-[#ff6d15]",
-  violet: "text-[#7734de]",
-};
-
-function useFitScale(containerRef) {
-  const [layout, setLayout] = useState({
-    scale: 1,
-    canvasWidth: DESIGN_WIDTH,
+  const [newFollowUp, setNewFollowUp] = useState({
+    leadName: "",
+    company: "",
+    industry: "General",
+    city: "",
+    mobile: "",
+    email: "",
+    type: "Call Follow-Up",
+    date: "",
+    time: "11:00 AM",
+    assignedTo: "",
+    priority: "Medium"
   });
 
+  // Get logged-in user from localStorage
+  const getAuthParams = () => {
+    try {
+      const raw = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo") ||
+                  localStorage.getItem("user") || sessionStorage.getItem("user") || "";
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        return {
+          username: parsed.username || parsed.user_name || "",
+          role: parsed.role || parsed.roleName || ""
+        };
+      }
+    } catch (e) {}
+    return { username: "", role: "" };
+  };
+
+  // Fetch real follow-up reminders from backend
+  const fetchFollowUps = async () => {
+    setIsLoading(true);
+    try {
+      const { username, role } = getAuthParams();
+      const params = new URLSearchParams();
+      if (eventId) params.append("eventId", eventId);
+      if (username) params.append("username", username);
+      if (role) params.append("role", role);
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+
+      const res = await api.get(`/api/crm-follow-ups?${params.toString()}`);
+      const data = res.data?.data || res.data || [];
+      setFollowUps(Array.isArray(data) ? data : []);
+
+      // Extract unique assignedTo values for filter dropdown
+      const assigned = [...new Set(data.map(d => d.assignedTo).filter(Boolean))].sort();
+      setAssignedToOptions(assigned);
+    } catch (err) {
+      console.error("Error fetching follow-ups:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return undefined;
+    fetchFollowUps();
+  }, [eventId]);
 
-    let frameId = 0;
+  // Re-fetch when date range filter changes
+  useEffect(() => {
+    if (startDate || endDate) {
+      fetchFollowUps();
+    }
+  }, [startDate, endDate]);
 
-    const updateScale = () => {
-      cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => {
-        const widthScale = container.clientWidth / DESIGN_WIDTH;
-        const heightScale = container.clientHeight / DESIGN_HEIGHT;
-        const nextScale = Math.min(widthScale, heightScale);
-        const safeScale =
-          Number.isFinite(nextScale) && nextScale > 0 ? nextScale : 1;
+  // Filter Logic (client-side for status/type/assigned/search)
+  const filteredList = useMemo(() => {
+    return followUps.filter((item) => {
+      const search = searchTerm.toLowerCase();
+      const cName = (item.company || "").toLowerCase();
+      const lName = (item.leadName || "").toLowerCase();
+      const mobile = (item.mobile || "").toLowerCase();
+      const email = (item.email || "").toLowerCase();
 
-        setLayout({
-          scale: safeScale,
-          canvasWidth: Math.max(
-            DESIGN_WIDTH,
-            container.clientWidth / safeScale
-          ),
-        });
-      });
-    };
+      if (search && !cName.includes(search) && !lName.includes(search) && !mobile.includes(search) && !email.includes(search)) {
+        return false;
+      }
+      if (filterStatus && item.status !== filterStatus) return false;
+      if (filterType && item.type !== filterType && item.nextAction !== filterType) return false;
+      if (filterAssigned && item.assignedTo !== filterAssigned) return false;
+      return true;
+    });
+  }, [followUps, searchTerm, filterStatus, filterType, filterAssigned]);
 
-    updateScale();
+  // Pagination
+  const totalItems = filteredList.length;
+  const totalPages = Math.ceil(totalItems / limit) || 1;
+  const paginatedData = filteredList.slice((page - 1) * limit, page * limit);
 
-    const resizeObserver = new ResizeObserver(updateScale);
-    resizeObserver.observe(container);
-    window.addEventListener("resize", updateScale);
+  // Stats
+  const totalCount = followUps.length;
+  const pendingCount = followUps.filter(f => f.status === "Pending").length;
+  const completedCount = followUps.filter(f => f.status === "Completed").length;
+  const overdueCount = followUps.filter(f => f.status === "Overdue").length;
+  const callCount = followUps.filter(f => (f.type || "").includes("Call")).length;
+  const whatsappCount = followUps.filter(f => (f.type || "").includes("Whatsapp")).length;
 
-    return () => {
-      cancelAnimationFrame(frameId);
-      resizeObserver.disconnect();
-      window.removeEventListener("resize", updateScale);
-    };
-  }, [containerRef]);
+  const statCardsData = [
+    {
+      title: "TOTAL FOLLOW-UPS",
+      value: totalCount,
+      desc: "All Scheduled Reminders",
+      icon: Calendar,
+      iconBg: "bg-blue-100",
+      bg: "bg-gradient-to-br from-white from-50% to-blue-50",
+      text: "text-blue-600"
+    },
+    {
+      title: "PENDING FOLLOW-UPS",
+      value: pendingCount,
+      desc: "Awaiting Action",
+      icon: Clock,
+      iconBg: "bg-amber-100",
+      bg: "bg-gradient-to-br from-white from-50% to-amber-50",
+      text: "text-amber-600"
+    },
+    {
+      title: "COMPLETED TODAY",
+      value: completedCount,
+      desc: "Successfully Closed",
+      icon: CheckCircle2,
+      iconBg: "bg-green-100",
+      bg: "bg-gradient-to-br from-white from-50% to-green-50",
+      text: "text-green-600"
+    },
+    {
+      title: "OVERDUE REMINDERS",
+      value: overdueCount,
+      desc: "Requires Attention",
+      icon: AlertCircle,
+      iconBg: "bg-red-100",
+      bg: "bg-gradient-to-br from-white from-50% to-red-50",
+      text: "text-red-600"
+    },
+    {
+      title: "CALL FOLLOW-UPS",
+      value: callCount,
+      desc: "Phone Outreach",
+      icon: Phone,
+      iconBg: "bg-purple-100",
+      bg: "bg-gradient-to-br from-white from-50% to-purple-50",
+      text: "text-purple-600"
+    },
+    {
+      title: "WHATSAPP REMINDERS",
+      value: whatsappCount,
+      desc: "Chat Communications",
+      icon: FaWhatsapp,
+      iconBg: "bg-emerald-100",
+      bg: "bg-gradient-to-br from-white from-50% to-emerald-50",
+      text: "text-emerald-600"
+    }
+  ];
 
-  return layout;
-}
-
-function ManagerAvatar() {
-  return (
-    <svg
-      className="h-[80px] w-[80px] shrink-0 rounded-full"
-      viewBox="0 0 88 88"
-      role="img"
-      aria-label="Vansh Chaudhary"
-    >
-      <defs>
-        <linearGradient id="avatarBg" x1="0" x2="1" y1="0" y2="1">
-          <stop offset="0" stopColor="#f1f4f7" />
-          <stop offset="1" stopColor="#d9dee5" />
-        </linearGradient>
-      </defs>
-      <circle cx="44" cy="44" r="44" fill="url(#avatarBg)" />
-      <path d="M19 88c1-20 11-31 25-31s24 11 25 31H19Z" fill="#191b1f" />
-      <ellipse cx="44" cy="38" rx="17" ry="21" fill="#e7aa82" />
-      <path
-        d="M27 34c0-16 8-25 20-25 10 0 18 8 18 21-5-5-10-7-16-8-7-1-14 2-22 12Z"
-        fill="#17191d"
-      />
-      <path
-        d="M31 44c2 12 8 18 13 18s12-6 14-18c-4 4-9 6-14 6s-9-2-13-6Z"
-        fill="#202126"
-      />
-      <ellipse cx="37.5" cy="37" rx="1.7" ry="1.5" fill="#232323" />
-      <ellipse cx="50.5" cy="37" rx="1.7" ry="1.5" fill="#232323" />
-      <path d="M39 45c3 2 7 2 10 0" fill="none" stroke="#8f4d3f" strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M28 31c3-5 8-8 14-9M60 30c-3-5-8-8-14-9" fill="none" stroke="#17191d" strokeWidth="3" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function ActionButton({ children, label }) {
-  return (
-    <button
-      className="grid h-[31px] w-[31px] place-items-center rounded-[7px] border-0 bg-transparent p-0 text-[#14213d] transition-colors hover:bg-[#f2f5f8]"
-      type="button"
-      aria-label={label}
-      title={label}
-    >
-      {children}
-    </button>
-  );
-}
-
-function PaymentRow({ row }) {
-  return (
+  const statCards = (
     <>
-      <tr>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] leading-[1.25] text-[#18233e]">
-          <div className="flex items-center gap-[16px]">
-            <span className={`grid h-[54px] w-[54px] shrink-0 place-items-center rounded-full ${fileToneClasses[row.iconTone]}`}>
-              <FileText size={25} strokeWidth={2.1} />
-            </span>
-            <div className="flex min-w-0 flex-col items-start">
-              <strong className="whitespace-nowrap text-[15px] font-extrabold leading-[1.1] text-[#111c38]">{row.invoiceNo}</strong>
-              <span className="mt-[7px] whitespace-nowrap text-[13px] font-semibold leading-none text-[#58657e]">{row.stall}</span>
-              <em className={`mt-[7px] rounded-[4px] px-[8px] py-[4px] text-[12px] font-bold not-italic leading-none ${tagToneClasses[row.tagTone]}`}>
-                {row.tag}
-              </em>
+      {statCardsData.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={index}
+            className={`group cursor-pointer relative ${item.bg} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}
+          >
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 ${item.iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                  <Icon className={`w-5 h-5 ${item.text}`} strokeWidth={2.5} />
+                </div>
+                <div className="flex flex-col">
+                  <p className="text-xl font-extrabold text-slate-900 leading-none mb-1">
+                    {item.value < 10 && item.value > 0 ? `0${item.value}` : item.value}
+                  </p>
+                  <p className="text-[9px] font-extrabold text-slate-700 leading-tight">
+                    {item.title}
+                  </p>
+                </div>
+              </div>
+              <div className={`text-[10px] font-bold mt-2 ${item.text} text-center`}>
+                {item.desc}
+              </div>
             </div>
           </div>
-        </td>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] font-semibold leading-[1.25] text-[#5d6981]">{row.invoiceDate}</td>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] font-extrabold leading-[1.25] text-[#17213c]">{row.invoiceAmount}</td>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] font-extrabold leading-[1.25] text-[#128147]">{row.paidAmount}</td>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] font-semibold leading-[1.25] text-[#5d6981]">{row.paymentDate}</td>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] leading-[1.25] text-[#18233e]">
-          <strong className="block text-[14px] font-bold leading-none text-[#39465f]">{row.mode}</strong>
-          <span className="mt-[7px] block whitespace-nowrap text-[12px] font-semibold leading-none text-[#4a5872]">UTR: {row.utr}</span>
-        </td>
-        <td className="h-[102px] border-b border-r border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] leading-[1.25] text-[#18233e]">
-          <span className={`inline-flex min-h-[32px] items-center justify-center whitespace-nowrap rounded-[10px] px-[14px] text-[12px] font-extrabold leading-none ${statusToneClasses[row.statusTone]}`}>
-            {row.status}
-          </span>
-        </td>
-        <td className="h-[102px] border-b border-[#e4e7eb] px-[12px] py-[8px] align-middle text-[14px] leading-[1.25] text-[#18233e]">
-          <div className="flex items-center justify-center gap-[4px]">
-            <ActionButton label="Download receipt">
-              <Download size={20} strokeWidth={2} />
-            </ActionButton>
-            <ActionButton label="View invoice">
-              <Eye size={20} strokeWidth={2} />
-            </ActionButton>
-            <ActionButton label="Open WhatsApp">
-              <MessageCircle className="text-[#069247]" size={20} strokeWidth={2} />
-            </ActionButton>
-            <ActionButton label="More actions">
-              <MoreVertical size={20} strokeWidth={2} />
-            </ActionButton>
-          </div>
-        </td>
-      </tr>
+        );
+      })}
+    </>
+  );
 
-      {row.outstanding ? (
+  const handleReset = () => {
+    setSearchTerm("");
+    setFilterStatus("");
+    setFilterType("");
+    setFilterAssigned("");
+    setStartDate("");
+    setEndDate("");
+    setPage(1);
+    fetchFollowUps();
+  };
+
+  const handleAddSubmit = (e) => {
+    e.preventDefault();
+    if (!newFollowUp.leadName || !newFollowUp.company) {
+      Swal.fire("Warning", "Please enter Lead Name and Company Name.", "warning");
+      return;
+    }
+
+    const initials = newFollowUp.leadName
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
+
+    const created = {
+      id: Date.now(),
+      leadId: `LEAD${Math.floor(1000 + Math.random() * 9000)}`,
+      leadName: newFollowUp.leadName,
+      initials: initials || "EX",
+      company: newFollowUp.company,
+      industry: newFollowUp.industry || "General",
+      city: newFollowUp.city || "New Delhi",
+      mobile: newFollowUp.mobile || "9876543210",
+      email: newFollowUp.email || "client@company.com",
+      type: newFollowUp.type,
+      date: newFollowUp.date || "22 Apr 2026",
+      time: newFollowUp.time || "10:00 AM",
+      assignedTo: newFollowUp.assignedTo,
+      assignedRole: "Sales Executive",
+      status: "Pending",
+      priority: newFollowUp.priority
+    };
+
+    setFollowUps([created, ...followUps]);
+    setIsModalOpen(false);
+    Swal.fire({
+      title: "Success!",
+      text: "New follow-up reminder added successfully.",
+      icon: "success",
+      confirmButtonColor: "#0A2947"
+    });
+  };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Are you sure?",
+      text: "Do you want to delete this follow-up reminder?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#EF4444",
+      cancelButtonColor: "#3B82F6",
+      confirmButtonText: "Yes, delete"
+    }).then((result) => {
+      if (result.isConfirmed) {
+        setFollowUps(followUps.filter((item) => item.id !== id));
+        Swal.fire("Deleted!", "Follow-up has been removed.", "success");
+      }
+    });
+  };
+
+  const headerActions = (
+    <button
+      onClick={() => setIsModalOpen(true)}
+      className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap"
+      style={{ backgroundColor: '#0A2947', fontFamily: 'Inter, sans-serif' }}
+    >
+      <Plus size={12} /> Add Follow-Up
+    </button>
+  );
+
+  const filterBar = (
+    <>
+      <div className="relative min-w-[200px]">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+        <input
+          type="text"
+          placeholder="Search history..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
+          className="w-full pl-7 pr-3 py-1.5 border rounded text-[10px] focus:outline-none bg-white border-slate-200 text-slate-700 placeholder-slate-400"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        />
+      </div>
+
+      <select 
+        value={filterStatus} 
+        onChange={e => { setFilterStatus(e.target.value); setPage(1); }} 
+        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[100px]"
+      >
+        <option value="">All Status</option>
+        <option value="Pending">Pending</option>
+        <option value="Completed">Completed</option>
+        <option value="Overdue">Overdue</option>
+      </select>
+
+      <select 
+        value={filterType} 
+        onChange={e => { setFilterType(e.target.value); setPage(1); }} 
+        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[120px]"
+      >
+        <option value="">Next Action</option>
+        <option value="Call Follow-Up">Call Follow-Up</option>
+        <option value="Whatsapp Follow-Up">Whatsapp Follow-Up</option>
+        <option value="Meeting Follow-Up">Meeting Follow-Up</option>
+        <option value="Email Follow-Up">Email Follow-Up</option>
+      </select>
+
+      <select 
+        value={filterAssigned} 
+        onChange={e => { setFilterAssigned(e.target.value); setPage(1); }} 
+        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[110px]"
+      >
+        <option value="">Assigned To</option>
+        {assignedToOptions.map((name, i) => (
+          <option key={i} value={name}>{name}</option>
+        ))}
+      </select>
+
+      <div className="flex items-center gap-1.5 py-1 px-2 border rounded text-[10px] font-medium bg-white border-slate-200">
+        <input 
+          type="date" 
+          value={startDate} 
+          onChange={(e) => { setStartDate(e.target.value); setPage(1); }} 
+          className="bg-transparent text-[10px] py-0.5 outline-none w-[85px] cursor-pointer text-slate-700" 
+        />
+        <span className="text-slate-400">-</span>
+        <input 
+          type="date" 
+          value={endDate} 
+          onChange={(e) => { setEndDate(e.target.value); setPage(1); }} 
+          className="bg-transparent text-[10px] py-0.5 outline-none w-[85px] cursor-pointer text-slate-700" 
+        />
+      </div>
+    </>
+  );
+
+  const tableHeadersComponent = (
+    <>
+      <th className="px-3 py-2 font-medium text-left">Company Name</th>
+      <th className="px-3 py-2 font-medium text-left">Contact Details</th>
+      <th className="px-3 py-2 font-medium text-center">Next Action</th>
+      <th className="px-3 py-2 font-medium text-left">Forward To</th>
+      <th className="px-3 py-2 font-medium text-center">Lead Status</th>
+      <th className="px-3 py-2 font-medium text-left">Remark</th>
+      <th className="px-3 py-2 font-medium text-center">Status</th>
+      <th className="px-3 py-2 font-medium text-left">Date & Time</th>
+      <th className="px-3 py-2 w-16 text-center">Action</th>
+    </>
+  );
+
+  const tableBodyContent = (
+    <>
+      {isLoading ? (
         <tr>
-          <td colSpan={8} className="h-[83px] border-b border-[#e4e7eb] pb-[13px] pl-[271px] pr-[13px] pt-0 align-middle">
-            <div className="grid h-[70px] grid-cols-[1.05fr_1fr_182px_203px] items-center gap-[20px] rounded-[9px] border border-[#f3d9c0] bg-gradient-to-r from-[#fffaf3] to-[#fffcf8] px-[20px]">
-              <div className="flex h-[48px] flex-col justify-center">
-                <span className="text-[13px] font-semibold leading-none text-[#606b80]">Outstanding Amount</span>
-                <strong className="mt-[8px] text-[15px] font-extrabold leading-none text-[#17213b]">{row.outstanding}</strong>
-              </div>
-              <div className="flex h-[48px] flex-col justify-center border-l border-[#ecdac8] pl-[15px]">
-                <span className="text-[13px] font-semibold leading-none text-[#606b80]">Due Date</span>
-                <strong className="mt-[8px] text-[15px] font-extrabold leading-none text-[#17213b]">{row.dueDate}</strong>
-              </div>
-              <button
-                className="flex h-[47px] items-center justify-center gap-[10px] rounded-[6px] border-[1.5px] border-[#ff9a5b] bg-white text-[14px] font-extrabold leading-none text-[#ff6d15]"
-                type="button"
-              >
-                <span className="text-[21px] font-bold leading-none">₹</span>
-                Collect Balance
-              </button>
-              <button
-                className="flex h-[47px] items-center justify-center gap-[10px] rounded-[6px] border-[1.5px] border-[#5dbb83] bg-white text-[14px] font-extrabold leading-none text-[#128043]"
-                type="button"
-              >
-                <Send size={20} strokeWidth={2} />
-                Send Reminder
-              </button>
+          <td colSpan="9" className="text-center py-10 text-slate-400 text-[11px]">
+            <div className="flex items-center justify-center gap-2">
+              <RefreshCw size={14} className="animate-spin" />
+              Loading follow-up reminders...
             </div>
           </td>
         </tr>
-      ) : null}
+      ) : paginatedData.length === 0 ? (
+        <tr>
+          <td colSpan="9" className="text-center py-10 text-slate-500 text-[11px]">
+            {followUps.length === 0 ? "No follow-up reminders found. Follow-up dates are set in the Lead Status Update panel." : "No records match the current filters."}
+          </td>
+        </tr>
+      ) : (
+        paginatedData.map((row, index) => (
+          <tr key={row.id || index} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td className="px-2 py-2 text-center">
+              <input type="checkbox" className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm" />
+            </td>
+
+            {/* Company Name & Industry */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex flex-col items-start gap-0.5">
+                <span className="font-bold text-[11px] hover:text-emerald-600 transition-colors cursor-pointer" style={{ color: '#093C5D' }}>
+                  {toTitleCase(row.company)}
+                </span>
+                <span className="text-[9px] font-bold" style={{ color: '#5E0006' }}>
+                  {toTitleCase(row.industry)}
+                </span>
+              </div>
+            </td>
+
+            {/* Contact Details */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex flex-col gap-0.5">
+                <div className="flex items-center gap-1 font-bold text-[10px]" style={{ color: '#15173D' }}>
+                  <User size={10} className="text-emerald-600" />
+                  {toTitleCase(row.leadName)}
+                </div>
+                <div className="flex items-center gap-1 text-[9px] text-blue-600 font-semibold hover:underline cursor-pointer">
+                  <Smartphone size={10} className="text-blue-500" />
+                  {row.mobile}
+                </div>
+              </div>
+            </td>
+
+            {/* Next Action */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wider border border-emerald-200">
+                <Phone size={10} /> {row.nextAction || row.type || "Send Proposal"}
+              </span>
+            </td>
+
+            {/* Forward To */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-bold text-[10px] text-red-600">{row.assignedTo || "—"}</span>
+              </div>
+            </td>
+
+            {/* Lead Status */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                {row.currentStatus || "New Lead"}
+              </span>
+            </td>
+
+            {/* Remark */}
+            <td className="px-3 py-2 max-w-[180px]">
+              <p
+                onClick={() => { setSelectedLead(row); setIsViewModalOpen(true); }}
+                className="text-[10px] text-slate-700 font-medium truncate cursor-pointer hover:text-blue-600 transition-colors"
+                title="Click to view full remark & follow-up details"
+              >
+                {row.lastRemark || <span className="text-slate-300 italic">No remark</span>}
+              </p>
+            </td>
+
+            {/* Status */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span
+                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                  row.status === "Completed"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    : row.status === "Overdue"
+                    ? "bg-red-50 text-red-700 border border-red-200"
+                    : "bg-amber-50 text-amber-700 border border-amber-200"
+                }`}
+              >
+                {row.status}
+              </span>
+            </td>
+
+            {/* Date & Time */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-bold text-[10px] text-slate-800">{row.date}</span>
+                <span className="text-[9px] font-semibold text-slate-400">{row.time}</span>
+              </div>
+            </td>
+
+            {/* Actions */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <div className="flex items-center justify-center gap-1.5 text-slate-400">
+                <button
+                  title="View Details & Full Remark"
+                  onClick={() => { setSelectedLead(row); setIsViewModalOpen(true); }}
+                  className="p-1 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors text-slate-600"
+                >
+                  <Eye size={13} />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))
+      )}
     </>
   );
-}
 
-const Reminder = () => {
-  const viewportRef = useRef(null);
-  const { scale, canvasWidth } = useFitScale(viewportRef);
-
-  const canvasStyle = useMemo(
-    () => ({
-      width: `${canvasWidth}px`,
-      transform: `scale(${scale})`,
-    }),
-    [canvasWidth, scale]
-  );
-
-  const stageStyle = useMemo(
-    () => ({
-      width: "100%",
-      height: "100%",
-    }),
-    []
-  );
-
-  return (
-    <div
-      ref={viewportRef}
-      className="relative flex h-[calc(100dvh-74px)] min-h-0 w-full items-start justify-start overflow-hidden bg-[#eef2f6] text-[#101a35]"
-      style={{
-        fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-      }}
-    >
-      <div className="shrink-0" style={stageStyle}>
-        <div
-          className="h-[1398px] origin-top-left overflow-hidden border border-[#d9dde4] bg-[#fbfcfd] shadow-[0_8px_30px_rgba(27,38,62,0.08)]"
-          style={canvasStyle}
+  const paginationComponent = (
+    <div className="w-full flex items-center justify-between">
+      <span>Showing 1 to {paginatedData.length} of {totalItems} entries</span>
+      <div className="flex items-center gap-1">
+        <button
+          disabled={page === 1}
+          onClick={() => setPage(p => Math.max(1, p - 1))}
+          className="px-2 py-1 border rounded text-[10px] font-bold hover:bg-slate-50 disabled:opacity-40"
         >
-          <header className="flex h-[122px] items-center justify-between border-b border-[#dfe4ea] bg-white pl-[55px] pr-[54px]">
-            <div>
-              <h1 className="m-0 text-[34px] font-extrabold leading-[1.08] tracking-[-0.6px] text-[#06112e]">Payment Center</h1>
-              <p className="mb-0 mt-[8px] text-[18px] font-medium leading-[1.2] text-[#66728b]">Track your payments &amp; download receipts</p>
-            </div>
-
-            <div className="flex h-full items-center gap-[30px]">
-              <button className="relative grid h-[38px] w-[34px] place-items-center border-0 bg-transparent p-0 text-[#111b39]" type="button" aria-label="Notifications">
-                <Bell size={29} strokeWidth={2} />
-                <span className="absolute right-[-9px] top-[-1px] grid h-[22px] w-[22px] place-items-center rounded-full border-2 border-white bg-[#f20c0c] text-[12px] font-extrabold leading-none text-white">2</span>
-              </button>
-
-              <button className="grid h-[38px] w-[34px] place-items-center border-0 bg-transparent p-0 text-[#111b39]" type="button" aria-label="Support">
-                <Headphones size={30} strokeWidth={2} />
-              </button>
-
-              <span className="ml-[1px] h-[50px] w-px bg-[#dfe3e9]" />
-
-              <div className="flex items-center gap-[14px]">
-                <div className="grid h-[52px] w-[52px] place-items-center rounded-full bg-[#087f43] text-[19px] font-extrabold leading-none text-white">VP</div>
-                <div>
-                  <strong className="block text-[17px] font-extrabold uppercase leading-[1.1] text-[#111a34]">Velruma Pvt. Ltd.</strong>
-                  <span className="mt-[8px] block text-[16px] font-medium leading-none text-[#5e6980]">Exhibitor</span>
-                </div>
-                <ChevronDown size={22} strokeWidth={2} color="#2d3852" />
-              </div>
-            </div>
-          </header>
-
-          <main className="grid h-[1276px] grid-cols-[minmax(0,1fr)_356px] gap-[27px] bg-[radial-gradient(circle_at_30%_0%,rgba(246,249,252,0.85),transparent_45%)] bg-[#fbfcfd] px-[27px] pb-[26px] pt-[25px]">
-            <section className="grid min-w-0 grid-rows-[146px_260px_1fr] gap-[23px]">
-              <div className="grid grid-cols-4 gap-[20px]">
-                <article className="flex h-[146px] items-center gap-[21px] rounded-[14px] border border-[#e4e8ee] bg-white px-[25px] py-[23px] shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                  <div
-                    className="grid h-[67px] w-[67px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#0aa451] to-[#006d35] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]"
-                    data-icon-wrapper="Wallet"
-                    title="Wallet icon"
-                  >
-                    <Wallet size={34} strokeWidth={2.1} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <span className="block whitespace-nowrap text-[17px] font-semibold leading-[1.2] text-[#62708b]">
-                      Total Paid
-                    </span>
-                    <strong className="mt-[9px] block whitespace-nowrap text-[27px] font-extrabold leading-none tracking-[0.15px] text-[#0d1734]">
-                      ₹ 12,45,000
-                    </strong>
-                    <small className="mt-[11px] block text-[16px] font-semibold leading-none text-[#536079]">
-                      (8 Payments)
-                    </small>
-                  </div>
-                </article>
-
-                <article className="flex h-[146px] items-center gap-[21px] rounded-[14px] border border-[#e4e8ee] bg-white px-[25px] py-[23px] shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                  <div
-                    className="grid h-[67px] w-[67px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#ff8a25] to-[#ff6410] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]"
-                    data-icon-wrapper="RupeeFile"
-                    title="Rupee file icon"
-                  >
-                    <span
-                      className="relative grid h-[38px] w-[38px] place-items-center"
-                      data-icon-name="RupeeFile"
-                      aria-label="Rupee file icon"
-                    >
-                      <FileText size={34} strokeWidth={1.9} />
-                      <b className="absolute left-[11px] top-[10px] text-[14px] font-extrabold leading-none">
-                        ₹
-                      </b>
-                    </span>
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <span className="block whitespace-nowrap text-[17px] font-semibold leading-[1.2] text-[#62708b]">
-                      Total Outstanding
-                    </span>
-                    <strong className="mt-[9px] block whitespace-nowrap text-[27px] font-extrabold leading-none tracking-[0.15px] text-[#0d1734]">
-                      ₹ 2,05,000
-                    </strong>
-                    <small className="mt-[11px] block text-[16px] font-semibold leading-none text-[#536079]">
-                      (2 Invoices)
-                    </small>
-                  </div>
-                </article>
-
-                <article className="flex h-[146px] items-center gap-[21px] rounded-[14px] border border-[#e4e8ee] bg-white px-[25px] py-[23px] shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                  <div
-                    className="grid h-[67px] w-[67px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#9858e8] to-[#6f31d0] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]"
-                    data-icon-wrapper="Percent"
-                    title="Percent icon"
-                  >
-                    <Percent size={37} strokeWidth={2.15} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <span className="block whitespace-nowrap text-[17px] font-semibold leading-[1.2] text-[#62708b]">
-                      Collection Progress
-                    </span>
-                    <strong className="mt-[9px] block whitespace-nowrap text-[27px] font-extrabold leading-none tracking-[0.15px] text-[#0d1734]">
-                      85%
-                    </strong>
-                    <div className="mt-[18px] h-[9px] w-[175px] max-w-full overflow-hidden rounded-full bg-[#dfe3e8]">
-                      <span className="block h-full w-[81%] rounded-full bg-[#037a3a]" />
-                    </div>
-                  </div>
-                </article>
-
-                <article className="flex h-[146px] items-center gap-[21px] rounded-[14px] border border-[#e4e8ee] bg-white px-[25px] py-[23px] shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                  <div
-                    className="grid h-[67px] w-[67px] shrink-0 place-items-center rounded-full bg-gradient-to-br from-[#4d84f1] to-[#2862dd] text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.18)]"
-                    data-icon-wrapper="CalendarDays"
-                    title="Calendar icon"
-                  >
-                    <CalendarDays size={34} strokeWidth={2.1} />
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <span className="block whitespace-nowrap text-[17px] font-semibold leading-[1.2] text-[#62708b]">
-                      Last Payment
-                    </span>
-                    <strong className="mt-[9px] block whitespace-nowrap text-[27px] font-extrabold leading-none tracking-[0.15px] text-[#0d1734]">
-                      ₹ 1,18,944
-                    </strong>
-                    <small className="mt-[11px] block text-[16px] font-semibold leading-none text-[#536079]">
-                      02 Jul 2026
-                    </small>
-                  </div>
-                </article>
-              </div>
-
-              <section className="rounded-[14px] border border-[#e4e8ee] bg-white px-[25px] pb-[18px] pt-[22px] shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                <h2 className="m-0 text-[18px] font-extrabold uppercase leading-none text-[#087a3b]">Your Payment Overview</h2>
-
-                <div className="mt-[19px] h-[183px] rounded-[12px] border-[1.5px] border-[#b9dec9] bg-gradient-to-r from-[rgba(244,251,247,0.95)] to-[rgba(248,251,250,0.84)] px-[29px] pb-[18px] pt-[26px]">
-                  <div className="grid h-[80px] grid-cols-4">
-                    <div className="text-center">
-                      <span className="block text-[16px] font-semibold leading-[1.1] text-[#4e5a70]">Invoice Value</span>
-                      <strong className="mt-[12px] block whitespace-nowrap text-[25px] font-extrabold leading-none text-[#101a35]">₹ 14,50,000</strong>
-                    </div>
-                    <div className="border-l border-[#d1ddd7] text-center">
-                      <span className="block text-[16px] font-semibold leading-[1.1] text-[#4e5a70]">Total Paid</span>
-                      <strong className="mt-[12px] block whitespace-nowrap text-[25px] font-extrabold leading-none text-[#087d3e]">₹ 12,45,000</strong>
-                    </div>
-                    <div className="border-l border-[#d1ddd7] text-center">
-                      <span className="block text-[16px] font-semibold leading-[1.1] text-[#4e5a70]">TDS Deducted</span>
-                      <strong className="mt-[12px] block whitespace-nowrap text-[25px] font-extrabold leading-none text-[#2262d9]">₹ 35,000</strong>
-                    </div>
-                    <div className="border-l border-[#d1ddd7] text-center">
-                      <span className="block text-[16px] font-semibold leading-[1.1] text-[#4e5a70]">Balance Outstanding</span>
-                      <strong className="mt-[12px] block whitespace-nowrap text-[25px] font-extrabold leading-none text-[#ff6d15]">₹ 2,05,000</strong>
-                    </div>
-                  </div>
-
-                  <div className="mt-[12px] h-[12px] overflow-hidden rounded-full bg-[#dfe3e7]">
-                    <div className="h-full w-[77%] rounded-full bg-gradient-to-r from-[#0c9148] to-[#04783a]" />
-                  </div>
-
-                  <div className="mt-[16px] flex items-center justify-between text-[15px] font-bold leading-none text-[#455168]">
-                    <span>0%</span>
-                    <span>85% Paid</span>
-                    <span>100%</span>
-                  </div>
-                </div>
-              </section>
-
-              <section className="min-h-0 overflow-hidden rounded-[14px] border border-[#e4e8ee] bg-white shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                <div className="flex h-[65px] items-center justify-between border-b border-[#edf0f3] px-[25px]">
-                  <h2 className="m-0 text-[18px] font-extrabold uppercase leading-none text-[#087a3b]">Payment History</h2>
-
-                  <div className="flex items-center gap-[17px]">
-                    <button className="flex h-[41px] w-[164px] items-center justify-between rounded-[8px] border border-[#dce2e8] bg-white px-[15px] text-[14px] font-semibold leading-none text-[#5c6880] shadow-[0_1px_4px_rgba(25,35,55,0.03)]" type="button">
-                      <span>All Invoices</span>
-                      <ChevronDown size={18} strokeWidth={2} />
-                    </button>
-
-                    <label className="flex h-[41px] w-[300px] items-center gap-[10px] rounded-[8px] border border-[#dce2e8] bg-white pl-[16px] pr-[13px] text-[14px] font-semibold leading-none text-[#5c6880] shadow-[0_1px_4px_rgba(25,35,55,0.03)]">
-                      <input
-                        className="min-w-0 flex-1 border-0 bg-transparent [font:inherit] text-[#59657e] outline-none placeholder:text-[#7c879b] placeholder:opacity-100"
-                        type="text"
-                        placeholder="Search invoice / receipt..."
-                      />
-                      <Search size={21} strokeWidth={2} />
-                    </label>
-                  </div>
-                </div>
-
-                <div className="h-[calc(100%-65px)] overflow-hidden px-[12px]">
-                  <table className="w-full table-fixed border-collapse">
-                    <colgroup>
-                      <col className="w-[270px]" />
-                      <col className="w-[132px]" />
-                      <col className="w-[142px]" />
-                      <col className="w-[141px]" />
-                      <col className="w-[141px]" />
-                      <col className="w-[200px]" />
-                      <col className="w-[148px]" />
-                      <col className="w-[132px]" />
-                    </colgroup>
-                    <thead>
-                      <tr>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white pl-[74px] pr-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Invoice No.</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Invoice Date</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Invoice Amount</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Paid Amount</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Payment Date</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Payment Mode</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Status</th>
-                        <th className="h-[52px] border-b border-[#dfe4e9] bg-white px-[12px] text-left text-[14px] font-extrabold leading-none text-[#2d3851]">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paymentRows.map((row) => (
-                        <PaymentRow row={row} key={row.invoiceNo} />
-                      ))}
-                    </tbody>
-                  </table>
-
-                  <button className="mx-auto flex h-[44px] items-center justify-center gap-[14px] border-0 bg-transparent text-[16px] font-bold leading-none text-[#0c7b3d]" type="button">
-                    View All Payments
-                    <ArrowRight size={22} strokeWidth={2} />
-                  </button>
-                </div>
-              </section>
-            </section>
-
-            <aside className="grid min-w-0 grid-rows-[431px_372px_1fr] gap-[22px]">
-              <section className="rounded-[14px] border border-[#e4e8ee] bg-white shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                <h2 className="m-0 flex h-[64px] items-center bg-gradient-to-r from-[#eff9f3] to-[#edf8f1] px-[28px] text-[18px] font-extrabold uppercase leading-none text-[#08763a]">Payment Summary</h2>
-                <div className="px-[27px] pt-[4px]">
-                  {summaryRows.map((row) => (
-                    <div className="flex h-[57px] items-center justify-between border-b border-[#e5e8ec]" key={row.label}>
-                      <span className="text-[16px] font-semibold leading-none text-[#5d6982]">{row.label}</span>
-                      <strong className={`text-[16px] font-extrabold leading-none ${valueToneClasses[row.tone]}`}>{row.value}</strong>
-                    </div>
-                  ))}
-
-                  <div className="mt-[12px] border-t border-dashed border-[#cfd6df] pt-[17px]">
-                    <span className="block text-[16px] font-extrabold leading-none text-[#ff5925]">Balance Outstanding</span>
-                    <strong className="mt-[17px] block text-right text-[28px] font-extrabold leading-none text-[#f42d18]">₹ 2,05,000</strong>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-[14px] border border-[#e4e8ee] bg-white shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                <h2 className="m-0 flex h-[64px] items-center bg-gradient-to-r from-[#eff9f3] to-[#edf8f1] px-[28px] text-[18px] font-extrabold uppercase leading-none text-[#08763a]">Your Relationship Manager</h2>
-                <div className="px-[26px] pb-[24px] pt-[21px]">
-                  <div className="flex items-center gap-[17px]">
-                    <ManagerAvatar />
-                    <div>
-                      <strong className="block text-[17px] font-extrabold leading-[1.1] text-[#141f3b]">Vansh Chaudhary</strong>
-                      <span className="mt-[9px] block text-[14px] font-semibold leading-none text-[#59667e]">Finance Executive</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-[23px] grid gap-[21px]">
-                    <div className="flex items-center gap-[16px] text-[15px] font-semibold leading-none text-[#59657b]">
-                      <Phone size={21} strokeWidth={2} />
-                      <span>09568259784</span>
-                    </div>
-                    <div className="flex items-center gap-[16px] text-[15px] font-semibold leading-none text-[#59657b]">
-                      <Mail size={21} strokeWidth={2} />
-                      <span>vansh.chaudhary@ihwe.in</span>
-                    </div>
-                  </div>
-
-                  <div className="mt-[27px] grid grid-cols-2 gap-[18px]">
-                    <button className="flex h-[51px] items-center justify-center gap-[10px] rounded-[6px] border-[1.5px] border-[#58b77d] bg-white text-[15px] font-extrabold leading-none text-[#107c3d]" type="button">
-                      <MessageCircle size={22} strokeWidth={2} />
-                      WhatsApp
-                    </button>
-                    <button className="flex h-[51px] items-center justify-center gap-[10px] rounded-[6px] border-[1.5px] border-[#6f9af3] bg-white text-[15px] font-extrabold leading-none text-[#2769ed]" type="button">
-                      <Phone size={22} strokeWidth={2} />
-                      Call
-                    </button>
-                  </div>
-                </div>
-              </section>
-
-              <section className="rounded-[14px] border border-[#e4e8ee] bg-white shadow-[0_3px_11px_rgba(36,47,69,0.055)]">
-                <h2 className="m-0 flex h-[62px] items-center border-b border-[#e4e7eb] bg-gradient-to-r from-[#f6f8fc] to-[#f3f5f9] px-[28px] text-[18px] font-extrabold uppercase leading-none text-[#16203b]">Need Help?</h2>
-                <div className="px-[24px] pt-[20px]">
-                  <div className="mb-[20px] flex items-center gap-[17px]">
-                    <span className="grid h-[48px] w-[48px] shrink-0 place-items-center rounded-full bg-[#ebf2ff] text-[#3a75ef]">
-                      <MessageCircle size={25} strokeWidth={2} />
-                    </span>
-                    <div>
-                      <strong className="block text-[15px] font-extrabold leading-none text-[#26324d]">Live Chat Support</strong>
-                      <span className="mt-[9px] block text-[14px] font-medium leading-none text-[#5f6b83]">Chat with our team</span>
-                    </div>
-                  </div>
-
-                  <div className="mb-[20px] flex items-center gap-[17px]">
-                    <span className="grid h-[48px] w-[48px] shrink-0 place-items-center rounded-full bg-[#ebf2ff] text-[#3a75ef]">
-                      <Ticket size={25} strokeWidth={2} />
-                    </span>
-                    <div>
-                      <strong className="block text-[15px] font-extrabold leading-none text-[#26324d]">Raise a Ticket</strong>
-                      <span className="mt-[9px] block text-[14px] font-medium leading-none text-[#5f6b83]">Get assistance</span>
-                    </div>
-                  </div>
-
-                  <div className="mb-[20px] flex items-center gap-[17px]">
-                    <span className="grid h-[48px] w-[48px] shrink-0 place-items-center rounded-full bg-[#ebf2ff] text-[#3a75ef]">
-                      <Mail size={25} strokeWidth={2} />
-                    </span>
-                    <div>
-                      <strong className="block text-[15px] font-extrabold leading-none text-[#26324d]">Accounts Support</strong>
-                      <span className="mt-[9px] block text-[14px] font-medium leading-none text-[#5f6b83]">accounts@ihwe.in</span>
-                    </div>
-                  </div>
-
-                  <div className="mx-[-24px] mt-[8px] flex h-[57px] items-center border-t border-[#e5e8ed] px-[24px] text-[13px] font-medium leading-none text-[#556177]">
-                    <strong className="mr-[7px] font-extrabold text-[#27324a]">Support Hours:</strong>
-                    09:00 AM - 07:00 PM (IST)
-                  </div>
-                </div>
-              </section>
-            </aside>
-          </main>
-        </div>
+          Previous
+        </button>
+        {[...Array(totalPages)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setPage(i + 1)}
+            className={`w-5 h-5 rounded text-[10px] font-bold ${page === i + 1 ? 'bg-[#0A2947] text-white' : 'hover:bg-slate-100 text-slate-700'}`}
+          >
+            {i + 1}
+          </button>
+        ))}
+        <button
+          disabled={page === totalPages}
+          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+          className="px-2 py-1 border rounded text-[10px] font-bold hover:bg-slate-50 disabled:opacity-40"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
-};
 
-export default Reminder;
+  return (
+    <>
+      <BaseLeadPage
+        title="Follow-Ups (Reminders)"
+        subtitle="History of all follow-up reminders, scheduled meetings, and outreach activities"
+        badgeCount={totalCount}
+        cardsInRow={6}
+        headerActions={headerActions}
+        statCards={statCards}
+        filterBar={filterBar}
+        onReset={handleReset}
+        tableHeaders={tableHeadersComponent}
+        tableBody={tableBodyContent}
+        pagination={paginationComponent}
+      />
+
+      {/* Modal for Add Follow-Up */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-xs p-4 animate-fadeIn">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg overflow-hidden border border-slate-200">
+            <div className="px-5 py-3 border-b border-slate-200 flex items-center justify-between" style={{ backgroundColor: '#0A2947' }}>
+              <h3 className="text-xs font-bold text-white flex items-center gap-2">
+                <PlusCircle size={14} className="text-emerald-400" />
+                <span>Schedule New Follow-Up</span>
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-300 hover:text-white p-1 rounded-md"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubmit} className="p-4 space-y-3 text-[11px] font-medium text-slate-700">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Lead Name *</label>
+                  <input
+                    required
+                    type="text"
+                    value={newFollowUp.leadName}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, leadName: e.target.value })}
+                    placeholder="e.g. Rahul Verma"
+                    className="w-full h-7 px-2.5 border border-slate-300 rounded outline-none focus:border-slate-600 text-[10px]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Company *</label>
+                  <input
+                    required
+                    type="text"
+                    value={newFollowUp.company}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, company: e.target.value })}
+                    placeholder="e.g. Wellness India"
+                    className="w-full h-7 px-2.5 border border-slate-300 rounded outline-none focus:border-slate-600 text-[10px]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Mobile</label>
+                  <input
+                    type="text"
+                    value={newFollowUp.mobile}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, mobile: e.target.value })}
+                    placeholder="9876543210"
+                    className="w-full h-7 px-2.5 border border-slate-300 rounded outline-none focus:border-slate-600 text-[10px]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Email</label>
+                  <input
+                    type="email"
+                    value={newFollowUp.email}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, email: e.target.value })}
+                    placeholder="rahul@wellness.com"
+                    className="w-full h-7 px-2.5 border border-slate-300 rounded outline-none focus:border-slate-600 text-[10px]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Follow-Up Type</label>
+                  <select
+                    value={newFollowUp.type}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, type: e.target.value })}
+                    className="w-full h-7 px-2 border border-slate-300 rounded outline-none focus:border-slate-600 bg-white text-[10px]"
+                  >
+                    <option>Call Follow-Up</option>
+                    <option>Whatsapp Follow-Up</option>
+                    <option>Meeting Follow-Up</option>
+                    <option>Email Follow-Up</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Priority</label>
+                  <select
+                    value={newFollowUp.priority}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, priority: e.target.value })}
+                    className="w-full h-7 px-2 border border-slate-300 rounded outline-none focus:border-slate-600 bg-white text-[10px]"
+                  >
+                    <option>High</option>
+                    <option>Medium</option>
+                    <option>Low</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold mb-1">Date</label>
+                  <input
+                    type="date"
+                    value={newFollowUp.date}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, date: e.target.value })}
+                    className="w-full h-7 px-2.5 border border-slate-300 rounded outline-none focus:border-slate-600 text-[10px]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold mb-1">Time</label>
+                  <input
+                    type="text"
+                    value={newFollowUp.time}
+                    onChange={(e) => setNewFollowUp({ ...newFollowUp, time: e.target.value })}
+                    placeholder="11:00 AM"
+                    className="w-full h-7 px-2.5 border border-slate-300 rounded outline-none focus:border-slate-600 text-[10px]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded font-bold text-[10px]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-3 py-1 text-white rounded font-bold text-[10px]"
+                  style={{ backgroundColor: '#0A2947' }}
+                >
+                  Save Follow-Up
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* View Follow-Up & Remark Modal */}
+      {isViewModalOpen && selectedLead && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[10000] flex items-center justify-center p-4">
+          <div
+            className="bg-white w-full max-w-lg rounded-xl overflow-hidden animate-fadeIn text-[#15173D]"
+            style={{
+              fontFamily: 'Inter, sans-serif',
+              boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px',
+            }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-3.5 bg-slate-100 border-b border-slate-200">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0 border border-slate-200">
+                  <Activity size={16} className="text-orange-500" />
+                </div>
+                <div>
+                  <h3 className="text-[12px] font-bold uppercase tracking-wider text-orange-600">Status Update</h3>
+                  <p className="text-[10px] font-bold" style={{ color: '#133458' }}>{selectedLead.date} {selectedLead.time}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Content Body */}
+            <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
+              {/* Client */}
+              <div
+                className="bg-white p-2.5 rounded-lg"
+                style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}
+              >
+                <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider block">Client</span>
+                <span className="text-[11px] font-bold text-[#093C5D]">{toTitleCase(selectedLead.company)}</span>
+              </div>
+
+              {/* Status */}
+              <div
+                className="bg-white p-2.5 rounded-lg flex items-center justify-between"
+                style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}
+              >
+                <span className="text-[10px] font-bold text-slate-600">Status:</span>
+                <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-extrabold uppercase">
+                  {selectedLead.currentStatus || "New Lead"}
+                </span>
+              </div>
+
+              {/* Next Action */}
+              {selectedLead.nextAction && (
+                <div
+                  className="bg-white p-2.5 rounded-lg flex items-center justify-between"
+                  style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}
+                >
+                  <span className="text-[10px] font-bold text-slate-600">Next Action:</span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[10px] font-extrabold">
+                    {selectedLead.nextAction}
+                  </span>
+                </div>
+              )}
+
+              {/* Details / Message */}
+              <div
+                className="bg-white p-3 rounded-lg"
+                style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}
+              >
+                <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider mb-1">Details / Message</span>
+                <p className="text-[11px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedLead.lastRemark || "No remark added."}
+                </p>
+              </div>
+
+              {/* ⏰ Reminder */}
+              <div
+                className="bg-red-50/50 p-2.5 rounded-lg border border-red-100"
+                style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}
+              >
+                <span className="text-[11px] font-bold text-red-600 block">
+                  ⏰ Reminder: {selectedLead.date} {selectedLead.time}
+                </span>
+              </div>
+
+              {/* By */}
+              {selectedLead.assignedTo && (
+                <div className="text-[11px] font-bold text-red-600 text-right pt-1.5 border-t border-slate-100">
+                  By / Forward To: {selectedLead.assignedTo}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="p-2.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+              <button
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  navigate(`/client-overview/${selectedLead.companyId || selectedLead.id}`);
+                }}
+                className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 text-[11px] font-bold rounded-lg transition-colors border border-blue-200"
+              >
+                View Full Client Profile
+              </button>
+              <button
+                onClick={() => setIsViewModalOpen(false)}
+                className="px-4 py-1.5 bg-[#15173D] text-white text-[11px] font-bold rounded-lg hover:bg-[#0A2643] transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

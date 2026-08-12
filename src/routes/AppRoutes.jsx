@@ -146,6 +146,8 @@ const PaymentList = lazy(() => import("../pages/dashboard/account/PaymentList"))
 import ProtectedRoute from "./ProtectedRoute";
 const AddNewClients = lazy(() => import("../pages/ihwe_client_data_2026/AddNewClients"));
 const DelegateConfig = lazy(() => import("../pages/admin_management/DelegateConfig"));
+const TypeOfBusinessMaster = lazy(() => import("../pages/admin_management/TypeOfBusinessMaster"));
+const LeadTypeOfBusiness = lazy(() => import("../pages/admin_management/LeadTypeOfBusiness"));
 const ColdClientList = lazy(() => import("../pages/ihwe_client_data_2026/ColdClientList"));
 const ConfirmClientList = lazy(() => import("../pages/ihwe_client_data_2026/ConfirmClientList"));
 const NewLeadList = lazy(() => import("../pages/ihwe_client_data_2026/NewLeadList"));
@@ -911,6 +913,9 @@ export default function AppRoutes() {
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
             <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
             <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />
+            <Route path="/business-type" element={<TypeOfBusinessMaster />} />
+            <Route path="/type-of-business-master" element={<TypeOfBusinessMaster />} />
+            <Route path="/lead-type-of-business" element={<LeadTypeOfBusiness />} />
 
             <Route path="*" element={<NotFound />} />
             <Route path="/international-buyer-list" element={<InternationalBuyerList />} />

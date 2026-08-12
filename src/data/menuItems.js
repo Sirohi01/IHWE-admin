@@ -102,8 +102,8 @@ export const menuItems = [
     label: "Stall Management",
     icon: Package,
     children: [
-      { label: "Stall Inventory", path: "/stalls" },
       { label: "Stall Pricing", path: "/stall-rates" },
+      { label: "Stall Inventory", path: "/stalls" },
       { label: "Manage Accessories", path: "/stall-accessories" },
       { label: "Accessory Orders", path: "/accessory-orders" },
     ],
@@ -522,6 +522,14 @@ export const menuItems = [
       { label: "AI Document Verification", path: "/ai-verification-settings" },
       { label: "Add Unit", path: "/add-unit" },
       { label: "Marketing Materials", path: "/admin/marketing-management" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Add Dropdown",
+    icon: List,
+    children: [
+      { label: "Lead: Type of Business", path: "/lead-type-of-business" },
     ],
   },
   {

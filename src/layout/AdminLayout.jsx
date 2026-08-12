@@ -3,13 +3,17 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import GlobalReminderPopup from "../components/GlobalReminderPopup";
 
 export default function AdminLayout({ onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-100">
+    <div className="min-h-screen flex flex-col bg-slate-100 relative">
+      {/* GLOBAL REMINDER POPUP ALERT */}
+      <GlobalReminderPopup />
+
       {/* NAVBAR (fixed height = 64px / 4rem) */}
       <Navbar
         sidebarOpen={sidebarOpen}

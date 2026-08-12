@@ -368,7 +368,7 @@ const ProposalSentList = () => {
                 <div className="flex flex-col items-start gap-1">
                   <div className="flex items-center gap-1.5">
                     {row.cmpny_id?._id ? (
-                      <Link to={eventId ? `/crm-event/${eventId}/client/${row.cmpny_id._id}` : `/client-overview/${row.cmpny_id._id}`} className="font-bold text-[11px] hover:text-emerald-600 hover:underline transition-colors" style={{ color: '#093C5D' }}>
+                      <Link to={eventId ? `/crm-event/${eventId}/client/${row.cmpny_id._id}` : `/client-overview/${row.cmpny_id._id}`} state={{ fromPageLabel: 'Proposal Sent' }} className="font-bold text-[11px] hover:text-emerald-600 hover:underline transition-colors" style={{ color: '#093C5D' }}>
                         {toTitleCase(compName)}
                       </Link>
                     ) : (
@@ -470,7 +470,7 @@ const ProposalSentList = () => {
               </td>
               <td className="px-3 py-2 text-center">
                 {row.cmpny_id?._id && (
-                  <button onClick={() => navigate(eventId ? `/crm-event/${eventId}/client/${row.cmpny_id._id}` : `/client-overview/${row.cmpny_id._id}`)} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors shadow-sm">
+                  <button onClick={() => navigate(eventId ? `/crm-event/${eventId}/client/${row.cmpny_id._id}` : `/client-overview/${row.cmpny_id._id}`, { state: { fromPageLabel: 'Proposal Sent' } })} className="p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors shadow-sm">
                     <Eye size={12} />
                   </button>
                 )}
