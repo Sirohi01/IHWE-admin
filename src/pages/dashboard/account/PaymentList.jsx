@@ -158,6 +158,11 @@ const PaymentList = () => {
     const getPaymentDetailLines = (pmt) => {
         const lines = [];
         if (pmt.payment_mode) lines.push(pmt.payment_mode);
+        if (String(pmt.payment_mode || '').toLowerCase() === 'cash') {
+            if (pmt.received_by) lines.push(`Received By: ${pmt.received_by}`);
+            if (pmt.received_date) lines.push(`Received Date: ${formatDate(pmt.received_date)}`);
+            return lines.length ? lines : ['N/A'];
+        }
         if (pmt.bankId) lines.push(`Bank: ${pmt.bankId}`);
         if (pmt.utr_no) lines.push(`UTR: ${pmt.utr_no}`);
         if (pmt.cash_receipt_no) lines.push(`Cash Receipt: ${pmt.cash_receipt_no}`);
