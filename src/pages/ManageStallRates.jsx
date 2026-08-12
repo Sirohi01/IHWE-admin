@@ -6,11 +6,15 @@ import PageHeader from '../components/PageHeader';
 import { useDispatch } from 'react-redux';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
 
+const PL_SCHEME_OPTIONS = ['One Side Open', 'Two Side Open', 'Three Side Open', 'Four Side Open'];
+
 const EMPTY_RATE = {
     eventId: '',
     currency: 'INR',
     stallType: 'Shell Space',
-    ratePerSqm: 11700
+    ratePerSqm: 11700,
+    plSchemeCharges: [{ plScheme: 'One Side Open', plcCharges: 0 }],
+    hsnCode: ''
 };
 
 const ManageStallRates = () => {
@@ -57,6 +61,27 @@ const ManageStallRates = () => {
         } catch (error) {
             console.error('Error fetching events:', error);
         }
+    };
+
+    const addPlSchemeRow = () => {
+        setRateForm({
+            ...rateForm,
+            plSchemeCharges: [...rateForm.plSchemeCharges, { plScheme: 'One Side Open', plcCharges: 0 }]
+        });
+    };
+
+    const removePlSchemeRow = (index) => {
+        setRateForm({
+            ...rateForm,
+            plSchemeCharges: rateForm.plSchemeCharges.filter((_, i) => i !== index)
+        });
+    };
+
+    const updatePlSchemeRow = (index, field, value) => {
+        setRateForm({
+            ...rateForm,
+            plSchemeCharges: rateForm.plSchemeCharges.map((row, i) => i === index ? { ...row, [field]: value } : row)
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -188,12 +213,45 @@ const ManageStallRates = () => {
                                 </div>
                             </div>
 
-                            <div className="mb-3">
-                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Rate Per Sq m *</label>
-                                <div className="relative">
-                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                    <input type="number" required value={rateForm.ratePerSqm} onChange={(e) => setRateForm({ ...rateForm, ratePerSqm: e.target.value })} className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Rate Per Sq m *</label>
+                                    <div className="relative">
+                                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        <input type="number" required value={rateForm.ratePerSqm} onChange={(e) => setRateForm({ ...rateForm, ratePerSqm: e.target.value })} className="w-full pl-10 pr-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                    </div>
                                 </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">HSN Code</label>
+                                    <input type="text" value={rateForm.hsnCode} onChange={(e) => setRateForm({ ...rateForm, hsnCode: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                </div>
+                            </div>
+
+                            <div className="mb-3 space-y-3">
+                                {rateForm.plSchemeCharges.map((row, index) => (
+                                    <div key={index} className="grid grid-cols-2 gap-3 items-end">
+                                        <div>
+                                            <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">PL Scheme *</label>
+                                            <select value={row.plScheme} onChange={(e) => updatePlSchemeRow(index, 'plScheme', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
+                                                {PL_SCHEME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-end gap-2">
+                                            <div className="flex-1">
+                                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">PLC Charges</label>
+                                                <input type="number" value={row.plcCharges} onChange={(e) => updatePlSchemeRow(index, 'plcCharges', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                            </div>
+                                            {rateForm.plSchemeCharges.length > 1 && (
+                                                <button type="button" onClick={() => removePlSchemeRow(index)} className="text-red-600 hover:bg-red-50 p-2 transition-all rounded-[2px] border border-red-200 bg-red-50/30" title="Remove">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                <button type="button" onClick={addPlSchemeRow} className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#23471d] hover:underline">
+                                    <Plus size={14} /> Add More
+                                </button>
                             </div>
 
                             <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
@@ -224,14 +282,15 @@ const ManageStallRates = () => {
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">No.</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Event / Type</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Pricing Rate</th>
+                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">PL Scheme / PLC</th>
                                         <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {isLoading ? (
-                                        <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading rates...</td></tr>
+                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading rates...</td></tr>
                                     ) : rates.length === 0 ? (
-                                        <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No rates found</td></tr>
+                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No rates found</td></tr>
                                     ) : rates.map((rate, index) => (
                                         <tr key={rate._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
                                             <td className="py-4 px-4 text-black font-medium text-center text-xs">{index + 1}</td>
@@ -242,6 +301,11 @@ const ManageStallRates = () => {
                                                 <p className="text-[10px] text-black font-medium uppercase tracking-widest opacity-60">
                                                     STALL TYPE: <span className="text-black font-bold">{rate.stallType}</span>
                                                 </p>
+                                                {rate.hsnCode && (
+                                                    <p className="text-[10px] text-black font-medium uppercase tracking-widest opacity-60">
+                                                        HSN: <span className="text-black font-bold">{rate.hsnCode}</span>
+                                                    </p>
+                                                )}
                                             </td>
                                             <td className="py-4 px-4 text-center">
                                                 <div className="flex flex-col gap-0.5">
@@ -253,10 +317,24 @@ const ManageStallRates = () => {
                                                     </span>
                                                 </div>
                                             </td>
+                                            <td className="py-4 px-4 text-center">
+                                                <div className="flex flex-col gap-1">
+                                                    {(rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }]).map((row, i) => (
+                                                        <div key={i} className="flex flex-col">
+                                                            <span className="text-black font-semibold text-xs uppercase tracking-tight">
+                                                                {row.plScheme}
+                                                            </span>
+                                                            <span className="text-[10px] font-medium text-black uppercase tracking-tight opacity-40">
+                                                                {rate.currency} {Number(row.plcCharges || 0).toLocaleString()} PLC
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </td>
                                             <td className="py-4 px-4">
                                                 <div className="flex items-center justify-center gap-3">
                                                     <button
-                                                        onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm }); }}
+                                                        onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm, plSchemeCharges: rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }], hsnCode: rate.hsnCode || '' }); }}
                                                         className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-200 bg-blue-50/30"
                                                         title="Edit"
                                                     >

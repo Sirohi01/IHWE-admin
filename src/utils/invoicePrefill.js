@@ -101,7 +101,11 @@ export const estimateItemsToInvoiceItems = (estimateItems = []) => {
     const area = item.area || "";
     const normalizedSize = String(size).trim();
     const sizeAsNumber = Number(normalizedSize);
-    const multiplier = Number(area) > 0 ? Number(area) : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1);
+    const unit = String(item.unit || "").trim().toLowerCase().replace(/\.$/, "");
+    const isSizeBasedUnit = ["sqm", "sqft"].includes(unit);
+    const multiplier = isSizeBasedUnit
+      ? (Number(area) > 0 ? Number(area) : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1))
+      : 1;
     const amount = roundAmount(Number(item.amount) || rate * qty * multiplier);
     const discountPct = Number(item.discountPct ?? item.disc ?? 0);
     const taxableValue = roundAmount(Number(item.taxableValue) || amount - (amount * discountPct) / 100);

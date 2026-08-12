@@ -54,12 +54,15 @@ const getItemKey = (item = {}) => [
     Number(item.rate || 0).toFixed(2),
 ].join('|');
 const isCancelledDoc = (doc) => String(doc?.status || '').trim().toLowerCase() === 'cancelled';
+const SIZE_BASED_UNITS = ['Sqm', 'Sqft'];
 const recalculateItemForQty = (item, qty) => {
     const nextQty = Number(qty) || 0;
     const rate = Number(item.rate) || 0;
     const area = Number(item.area) || 0;
     const sizeAsNumber = Number(item.size);
-    const multiplier = area > 0 ? area : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1);
+    const multiplier = SIZE_BASED_UNITS.includes(item.unit)
+        ? (area > 0 ? area : (Number.isFinite(sizeAsNumber) && sizeAsNumber > 0 ? sizeAsNumber : 1))
+        : 1;
     const amount = rate * nextQty * multiplier;
     const discountPct = Number(item.discountPct) || 0;
     const taxableValue = amount - (amount * discountPct) / 100;
@@ -531,7 +534,9 @@ const CreateInvoice = () => {
                 const area = Number(field === 'area' ? val : updated.area) || 0;
                 const discountPct = Number(field === 'discountPct' ? val : updated.discountPct) || 0;
 
-                const multiplier = area > 0 ? area : (!isNaN(Number(updated.size)) && Number(updated.size) > 0 ? Number(updated.size) : 1);
+                const multiplier = SIZE_BASED_UNITS.includes(updated.unit)
+                    ? (area > 0 ? area : (!isNaN(Number(updated.size)) && Number(updated.size) > 0 ? Number(updated.size) : 1))
+                    : 1;
                 const amount = rate * qty * multiplier;
                 updated.amount = amount;
                 const discountAmount = amount * (discountPct / 100);
