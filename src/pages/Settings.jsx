@@ -59,7 +59,7 @@ const Settings = () => {
 
     // --- Financial & NGW Receipt State ---
     const [companyName, setCompanyName] = useState("Namo Gange Wellness Pvt. Ltd.");
-    const [companyAddress, setCompanyAddress] = useState("12/29, Site-II, Loni Road, Industrial Area, Mohan Nagar, Ghaziabad, India");
+    const [companyAddress, setCompanyAddress] = useState("12/52, Site-II, Loni Road, Industrial Area, Mohan Nagar, Ghaziabad - 201007, Uttar Pradesh, India");
     const [companyGst, setCompanyGst] = useState("");
     const [companyCin, setCompanyCin] = useState("");
     const [receiptContactPhone, setReceiptContactPhone] = useState("+91 96549 00525");
