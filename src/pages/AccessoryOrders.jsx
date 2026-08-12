@@ -486,7 +486,7 @@ export default function AccessoryOrders() {
     return (
         <>
             <BaseLeadPage
-                title="Accessory Orders"
+                title="Products Order"
                 subtitle="Track all accessory & extras purchases by exhibitors"
                 badgeCount={<span className="text-emerald-700">{totalOrders}</span>}
                 statCards={statCards}

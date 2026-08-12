@@ -1,530 +1,822 @@
-import { useState, useEffect } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Package, Gift, ShoppingCart, Image as ImageIcon, Ruler, RotateCw } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  X,
+  Save,
+  Package,
+  Gift,
+  ShoppingCart,
+  Image as ImageIcon,
+  Ruler,
+  RotateCw,
+  Search,
+  CheckCircle2,
+  Calendar,
+  Clock,
+  AlertCircle,
+  Download,
+  RefreshCw,
+  Layers
+} from 'lucide-react';
 import api, { SERVER_URL } from '../lib/api';
 import Swal from 'sweetalert2';
+import BaseLeadPage from '../layout/BaseLeadPage';
 
 const EMPTY = {
-    name: '', type: 'complimentary', itemType: 'Product', description: '',
-    length: '', width: '', height: '', dimensionUnit: 'ft',
-    price: '', gstPercent: 18, unit: '',
-    hsnCode: '', sacCode: '',
-    category: 'Furniture', includedQty: 1, availableQty: 0,
-    isActive: true, sortOrder: 0,
-    allocationMode: 'fixed', ratioQty: 1, ratioArea: 9, roundingMode: 'floor',
+  name: '', type: 'complimentary', itemType: 'Product', description: '',
+  length: '', width: '', height: '', dimensionUnit: 'ft',
+  price: '', gstPercent: 18, unit: '',
+  hsnCode: '', sacCode: '',
+  category: 'Furniture', includedQty: 1, availableQty: 0,
+  isActive: true, sortOrder: 0,
+  allocationMode: 'fixed', ratioQty: 1, ratioArea: 9, roundingMode: 'floor',
 };
 
-const iCls = "w-full h-9 px-3 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d]";
-const lCls = "text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 block";
+const iCls = "w-full h-9 px-3 border border-slate-300 rounded-lg text-xs font-medium outline-none focus:border-[#0A2947]";
+const lCls = "text-[11px] font-semibold text-black uppercase tracking-wider mb-1 block";
 
 const PREVIEW_STALL_SIZES = [9, 12, 15, 18, 20, 24, 27, 28, 32, 36];
 const ROUND_FN = { floor: Math.floor, round: Math.round, ceil: Math.ceil };
 const computeEntitlementPreview = (form, stallArea) => {
-    const ratioArea = Number(form.ratioArea);
-    if (!stallArea || !ratioArea) return 0;
-    const roundFn = ROUND_FN[form.roundingMode] || Math.floor;
-    return roundFn(stallArea / ratioArea) * (Number(form.ratioQty) || 0);
+  const ratioArea = Number(form.ratioArea);
+  if (!stallArea || !ratioArea) return 0;
+  const roundFn = ROUND_FN[form.roundingMode] || Math.floor;
+  return roundFn(stallArea / ratioArea) * (Number(form.ratioQty) || 0);
 };
 
 export default function ManageAccessories() {
-    const [items, setItems] = useState([]);
-    const [units, setUnits] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [form, setForm] = useState(EMPTY);
-    const [editId, setEditId] = useState(null);
-    const [saving, setSaving] = useState(false);
-    const [tab, setTab] = useState('all');
-    const [selectedFile, setSelectedFile] = useState(null);
-    const [previewUrl, setPreviewUrl] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const ITEMS_PER_PAGE = 10;
+  const [items, setItems] = useState([]);
+  const [units, setUnits] = useState([]);
+  const [categories, setCategories] = useState([
+    "Furniture",
+    "Electrical",
+    "Display & Branding",
+    "Audio Visual",
+    "Stall Fixtures",
+    "Services",
+    "Others"
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState(EMPTY);
+  const [editId, setEditId] = useState(null);
+  const [saving, setSaving] = useState(false);
 
-    const load = async () => {
-        setLoading(true);
-        try {
-            const [accRes, unitRes] = await Promise.all([
-                api.get('/api/stall-accessories/accessories'),
-                api.get('/api/units')
-            ]);
-            setItems(accRes.data.data || []);
-            setUnits((unitRes.data.data || unitRes.data).filter(u => u.status === 'Active') || []);
-        } catch (err) { console.error('Load error:', err); }
-        setLoading(false);
-    };
+  // Filters & Search
+  const [searchTerm, setSearchTerm] = useState('');
+  const [tab, setTab] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterStatus, setFilterStatus] = useState('');
 
-    useEffect(() => { load(); }, []);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
-    const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
+  const load = async () => {
+    setLoading(true);
+    try {
+      const [accRes, unitRes, catRes] = await Promise.all([
+        api.get('/api/stall-accessories/accessories'),
+        api.get('/api/units'),
+        api.get('/api/accessory-categories?activeOnly=true')
+      ]);
+      setItems(accRes.data.data || []);
+      setUnits((unitRes.data.data || unitRes.data).filter(u => u.status === 'Active') || []);
+      const catData = catRes.data?.data || catRes.data || [];
+      if (Array.isArray(catData) && catData.length > 0) {
+        const names = catData.sort((a, b) => (a.order || 0) - (b.order || 0)).map(c => c.name).filter(Boolean);
+        if (names.length > 0) setCategories(names);
+      }
+    } catch (err) {
+      console.error('Load error:', err);
+    }
+    setLoading(false);
+  };
 
-    const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-        }
-    };
+  useEffect(() => { load(); }, []);
 
-    const openAdd = () => {
-        setForm(EMPTY);
-        setEditId(null);
-        setSelectedFile(null);
-        setPreviewUrl('');
-        setShowForm(true);
-    };
+  const [searchParams] = useSearchParams();
+  const urlCategory = searchParams.get('category') || '';
 
-    const openEdit = (item) => {
-        setForm({ ...EMPTY, ...item });
-        setEditId(item._id);
-        setSelectedFile(null);
-        setPreviewUrl(item.imageUrl ? (item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`) : '');
-        setShowForm(true);
-    };
+  useEffect(() => {
+    setFilterCategory(urlCategory);
+  }, [urlCategory]);
 
-    const handleSave = async () => {
-        if (!form.name.trim()) return Swal.fire('Error', 'Name is required', 'error');
-        setSaving(true);
-        try {
-            const fd = new FormData();
-            Object.entries(form).forEach(([k, v]) => {
-                if (v !== null && v !== undefined) fd.append(k, v);
-            });
-            if (selectedFile) fd.append('image', selectedFile);
+  const inp = (k, v) => setForm(p => ({ ...p, [k]: v }));
 
-            if (editId) {
-                await api.put(`/api/stall-accessories/accessories/${editId}`, fd, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-            } else {
-                await api.post('/api/stall-accessories/accessories', fd, {
-                    headers: { 'Content-Type': 'multipart/form-data' }
-                });
-            }
-            Swal.fire({ icon: 'success', title: editId ? 'Updated' : 'Added', timer: 1200, showConfirmButton: false });
-            setShowForm(false);
-            load();
-        } catch (err) {
-            Swal.fire('Error', err.response?.data?.message || 'Failed', 'error');
-        }
-        setSaving(false);
-    };
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+    }
+  };
 
-    const handleDelete = async (id) => {
-        const r = await Swal.fire({ title: 'Delete?', text: 'This cannot be undone.', icon: 'warning', showCancelButton: true, confirmButtonColor: '#dc2626' });
-        if (!r.isConfirmed) return;
-        await api.delete(`/api/stall-accessories/accessories/${id}`);
-        load();
-    };
+  const openAdd = () => {
+    setForm({
+      ...EMPTY,
+      category: filterCategory || (categories.length > 0 ? categories[0] : 'Furniture')
+    });
+    setEditId(null);
+    setSelectedFile(null);
+    setPreviewUrl('');
+    setShowForm(true);
+  };
 
-    const filtered = tab === 'all' ? items : items.filter(i => i.type === tab);
-    const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE);
-    const paginatedItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const openEdit = (item) => {
+    setForm({ ...EMPTY, ...item });
+    setEditId(item._id);
+    setSelectedFile(null);
+    setPreviewUrl(item.imageUrl ? (item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`) : '');
+    setShowForm(true);
+  };
 
-    return (
-        <div className="p-6 min-h-screen bg-gray-50 font-inter">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-5">
-                <div>
-                    <h1 className="text-base font-black text-[#23471d] uppercase tracking-tight">Stall Accessories & Extras</h1>
-                    <p className="text-[11px] text-gray-400 mt-0.5">Manage complimentary items and purchasable extras for exhibitors</p>
+  const handleSave = async () => {
+    if (!form.name.trim()) return Swal.fire('Error', 'Name is required', 'error');
+    setSaving(true);
+    try {
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => {
+        if (v !== null && v !== undefined) fd.append(k, v);
+      });
+      if (selectedFile) fd.append('image', selectedFile);
+
+      if (editId) {
+        await api.put(`/api/stall-accessories/accessories/${editId}`, fd, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      } else {
+        await api.post('/api/stall-accessories/accessories', fd, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+      }
+      Swal.fire({ icon: 'success', title: editId ? 'Updated' : 'Added', timer: 1200, showConfirmButton: false });
+      setShowForm(false);
+      load();
+    } catch (err) {
+      Swal.fire('Error', err.response?.data?.message || 'Failed', 'error');
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    const r = await Swal.fire({
+      title: 'Are you sure?',
+      text: 'Do you want to delete this accessory item?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#EF4444',
+      confirmButtonText: 'Yes, delete it!'
+    });
+    if (!r.isConfirmed) return;
+    await api.delete(`/api/stall-accessories/accessories/${id}`);
+    Swal.fire('Deleted!', 'Item has been removed.', 'success');
+    load();
+  };
+
+  const handleReset = () => {
+    setSearchTerm('');
+    setTab('all');
+    setFilterCategory('');
+    setFilterStatus('');
+    setCurrentPage(1);
+  };
+
+  // Filter Logic
+  const filtered = items.filter(i => {
+    const matchesSearch = !searchTerm || (i.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (i.hsnCode || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesTab = tab === 'all' || i.type === tab;
+    const matchesCategory = !filterCategory || i.category === filterCategory;
+    const matchesStatus = !filterStatus || (filterStatus === 'active' ? i.isActive : !i.isActive);
+    return matchesSearch && matchesTab && matchesCategory && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE) || 1;
+  const paginatedItems = filtered.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  // Stat Cards Data (Filtered by active category if selected)
+  const scopedItems = filterCategory
+    ? items.filter(i => (i.category || '').trim().toLowerCase() === filterCategory.trim().toLowerCase())
+    : items;
+  const totalCount = scopedItems.length;
+  const complimentaryCount = scopedItems.filter(i => i.type === 'complimentary').length;
+  const purchasableCount = scopedItems.filter(i => i.type === 'purchasable').length;
+  const totalStock = scopedItems.reduce((acc, i) => acc + (Number(i.availableQty) || 0), 0);
+
+  const statCardsData = [
+    {
+      title: "TOTAL ACCESSORIES",
+      value: totalCount,
+      desc: "All Registered Items",
+      icon: Package,
+      iconBg: "bg-blue-100",
+      bg: "bg-gradient-to-br from-white from-50% to-blue-50",
+      text: "text-blue-600"
+    },
+    {
+      title: "COMPLIMENTARY",
+      value: complimentaryCount,
+      desc: "Free Entitlements",
+      icon: Gift,
+      iconBg: "bg-emerald-100",
+      bg: "bg-gradient-to-br from-white from-50% to-emerald-50",
+      text: "text-emerald-600"
+    },
+    {
+      title: "PURCHASABLE",
+      value: purchasableCount,
+      desc: "Paid Add-ons",
+      icon: ShoppingCart,
+      iconBg: "bg-amber-100",
+      bg: "bg-gradient-to-br from-white from-50% to-amber-50",
+      text: "text-amber-600"
+    },
+    {
+      title: "AVAILABLE STOCK",
+      value: totalStock,
+      desc: "Inventory Units",
+      icon: CheckCircle2,
+      iconBg: "bg-purple-100",
+      bg: "bg-gradient-to-br from-white from-50% to-purple-50",
+      text: "text-purple-600"
+    }
+  ];
+
+  const statCards = (
+    <>
+      {statCardsData.map((item, index) => {
+        const Icon = item.icon;
+        return (
+          <div
+            key={index}
+            className={`group cursor-pointer relative ${item.bg} p-4 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}
+          >
+            <div className="relative z-10">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-10 h-10 ${item.iconBg} rounded-full flex items-center justify-center shrink-0`}>
+                  <Icon className={`w-5 h-5 ${item.text}`} strokeWidth={2.5} />
                 </div>
-                <div className="flex items-center gap-3">
-                    <button onClick={load} className="flex items-center gap-2 px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-[10px] font-black uppercase hover:border-[#23471d] hover:text-[#23471d] transition-all rounded-[2px] shadow-sm group">
-                        <RotateCw size={12} className={loading ? "animate-spin" : "group-hover:rotate-180 transition-transform duration-500"} /> Refresh
-                    </button>
-                    <button onClick={openAdd} className="flex items-center gap-2 px-4 py-2 bg-[#23471d] text-white text-[11px] font-black uppercase tracking-wider hover:bg-[#1a3516] shadow-sm transition-all">
-                        <Plus size={13} /> Add Item
-                    </button>
+                <div className="flex flex-col">
+                  <p className="text-xl font-extrabold text-slate-900 leading-none mb-1">
+                    {item.value < 10 && item.value > 0 ? `0${item.value}` : item.value}
+                  </p>
+                  <p className="text-[9px] font-extrabold text-slate-700 leading-tight">
+                    {item.title}
+                  </p>
                 </div>
+              </div>
+              <div className={`text-[10px] font-bold mt-2 ${item.text} text-center`}>
+                {item.desc}
+              </div>
             </div>
+          </div>
+        );
+      })}
+    </>
+  );
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-                {[
-                    { label: 'Total Items', value: items.length, icon: Package, color: 'text-slate-700' },
-                    { label: 'Complimentary', value: items.filter(i => i.type === 'complimentary').length, icon: Gift, color: 'text-emerald-600' },
-                    { label: 'Purchasable', value: items.filter(i => i.type === 'purchasable').length, icon: ShoppingCart, color: 'text-[#d26019]' },
-                ].map((s, i) => (
-                    <div key={i} className="bg-white border border-gray-200 px-4 py-3 shadow-sm hover:shadow-md transition-shadow">
-                        <div className="flex items-center gap-2 mb-1">
-                            <s.icon size={14} className={s.color} />
-                            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">{s.label}</p>
-                        </div>
-                        <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
-                    </div>
-                ))}
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={load}
+        className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 transition-all shadow-sm whitespace-nowrap"
+        style={{ fontFamily: 'Inter, sans-serif' }}
+      >
+        <RefreshCw size={12} className={loading ? "animate-spin" : ""} /> Refresh
+      </button>
+      <button
+        onClick={openAdd}
+        className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap"
+        style={{ backgroundColor: '#0A2947', fontFamily: 'Inter, sans-serif' }}
+      >
+        <Plus size={12} /> Add Item
+      </button>
+    </div>
+  );
+
+  const filterBar = (
+    <>
+      <div className="relative min-w-[200px]">
+        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={12} />
+        <input
+          type="text"
+          placeholder="Search accessories..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+          className="w-full pl-7 pr-3 py-1.5 border rounded text-[10px] focus:outline-none bg-white border-slate-200 text-slate-700 placeholder-slate-400"
+          style={{ fontFamily: 'Inter, sans-serif' }}
+        />
+      </div>
+
+      <select
+        value={tab}
+        onChange={(e) => { setTab(e.target.value); setCurrentPage(1); }}
+        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[120px]"
+      >
+        <option value="all">All Types</option>
+        <option value="complimentary">Complimentary</option>
+        <option value="purchasable">Purchasable</option>
+      </select>
+
+      <select
+        value={filterCategory}
+        onChange={(e) => { setFilterCategory(e.target.value); setCurrentPage(1); }}
+        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[130px]"
+      >
+        <option value="">All Categories</option>
+        {categories.map((cat, idx) => (
+          <option key={idx} value={cat}>{cat}</option>
+        ))}
+      </select>
+
+      <select
+        value={filterStatus}
+        onChange={(e) => { setFilterStatus(e.target.value); setCurrentPage(1); }}
+        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[100px]"
+      >
+        <option value="">All Status</option>
+        <option value="active">Active</option>
+        <option value="inactive">Hidden</option>
+      </select>
+    </>
+  );
+
+  const tableHeadersComponent = (
+    <>
+      <th className="px-3 py-2 font-medium text-left">Item Details</th>
+      <th className="px-3 py-2 font-medium text-center">Fulfillment</th>
+      <th className="px-3 py-2 font-medium text-left">Category</th>
+      <th className="px-3 py-2 font-medium text-left">Code (HSN/SAC)</th>
+      <th className="px-3 py-2 font-medium text-left">Dimensions</th>
+      <th className="px-3 py-2 font-medium text-left">Rate / GST</th>
+      <th className="px-3 py-2 font-medium text-center">Unit</th>
+      <th className="px-3 py-2 font-medium text-center">Stock</th>
+      <th className="px-3 py-2 font-medium text-center">Status</th>
+      <th className="px-3 py-2 w-20 text-center">Actions</th>
+    </>
+  );
+
+  const tableBodyContent = (
+    <>
+      {loading ? (
+        <tr>
+          <td colSpan="10" className="text-center py-10 text-slate-400 text-[11px]">
+            <div className="flex items-center justify-center gap-2">
+              <RefreshCw size={14} className="animate-spin text-slate-500" />
+              Loading stall accessories...
             </div>
-
-            {/* Tabs */}
-            <div className="flex gap-1 mb-4 bg-white border border-gray-200 p-1 w-fit shadow-sm">
-                {[['all', 'All'], ['complimentary', 'Complimentary'], ['purchasable', 'Purchasable']].map(([v, l]) => (
-                    <button key={v} onClick={() => { setTab(v); setCurrentPage(1); }}
-                        className={`px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all ${tab === v ? 'bg-[#23471d] text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100'}`}>
-                        {l}
-                    </button>
-                ))}
+          </td>
+        </tr>
+      ) : paginatedItems.length === 0 ? (
+        <tr>
+          <td colSpan="10" className="text-center py-12 text-slate-500">
+            <div className="flex flex-col items-center justify-center gap-2 py-4">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
+                <Package size={22} />
+              </div>
+              <span className="font-semibold text-slate-700 text-sm">No Accessories Found</span>
+              <span className="text-[11px] text-slate-400">
+                {filterCategory ? `No accessories available in "${filterCategory}" category.` : 'No accessories found matching your search or filters.'}
+              </span>
             </div>
+          </td>
+        </tr>
+      ) : (
+        paginatedItems.map((item, index) => (
+          <tr key={item._id || index} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <td className="px-2 py-2 text-center">
+              <input type="checkbox" className="w-3 h-3 accent-blue-500 cursor-pointer rounded-sm" />
+            </td>
 
-            {/* Table */}
-            <div className="bg-white border border-gray-200 shadow-sm overflow-hidden">
-                {loading ? (
-                    <div className="flex items-center justify-center py-16">
-                        <div className="w-8 h-8 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin" />
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="py-16 text-center">
-                        <Package className="w-10 h-10 text-slate-200 mx-auto mb-3" />
-                        <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">No items found</p>
-                    </div>
+            {/* Item Details */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-md border border-slate-200 bg-slate-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
+                  {item.imageUrl
+                    ? <img loading="lazy" decoding="async" src={item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`} alt="" className="w-full h-full object-cover" />
+                    : <Package size={14} className="text-slate-400" />}
+                </div>
+                <div className="flex flex-col items-start gap-0.5">
+                  <span className="font-bold text-[11px] hover:text-emerald-600 transition-colors cursor-pointer" style={{ color: '#093C5D' }}>
+                    {item.name}
+                  </span>
+                  <span className="text-[9px] font-bold text-slate-400">
+                    {item.itemType || 'Product'}
+                  </span>
+                </div>
+              </div>
+            </td>
+
+            {/* Fulfillment Type */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                item.type === 'complimentary'
+                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                  : 'bg-amber-50 text-amber-700 border border-amber-200'
+              }`}>
+                {item.type === 'complimentary' ? 'Free' : 'Paid'}
+              </span>
+            </td>
+
+            {/* Category */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <span className="text-[10px] font-bold" style={{ color: '#5E0006' }}>
+                {item.category || 'General'}
+              </span>
+            </td>
+
+            {/* Code */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex flex-col gap-0.5">
+                <span className="font-bold text-[10px]" style={{ color: '#15173D' }}>
+                  {item.itemType === 'Service' ? (item.sacCode || '—') : (item.hsnCode || '—')}
+                </span>
+                <span className="text-[9px] text-slate-400 font-bold uppercase">
+                  {item.itemType === 'Service' ? 'SAC' : 'HSN'}
+                </span>
+              </div>
+            </td>
+
+            {/* Dimensions */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600">
+                <Ruler size={10} className="text-slate-400" />
+                {[item.length, item.width, item.height].filter(Boolean).join('×') || '—'}
+                {item.dimensionUnit && item.length && <span className="text-[9px] text-slate-400 lowercase">{item.dimensionUnit}</span>}
+              </div>
+            </td>
+
+            {/* Rate / GST */}
+            <td className="px-3 py-2 whitespace-nowrap">
+              {item.type === 'complimentary' ? (
+                item.allocationMode === 'perArea' ? (
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-emerald-700">Per Area</span>
+                    <span className="text-[9px] text-slate-500 font-medium">{item.ratioQty} per {item.ratioArea} sqm</span>
+                  </div>
                 ) : (
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="bg-[#23471d]">
-                                    {['Item', 'Type', 'Category', 'Code (HSN/SAC)', 'Dimensions', 'Rate/GST', 'Units', 'Stock', 'Status', 'Actions'].map(h => (
-                                        <th key={h} className="py-2.5 px-4 text-[10px] font-black text-white uppercase text-left whitespace-nowrap">{h}</th>
-                                    ))}
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-100">
-                                {paginatedItems.map((item, i) => (
-                                    <tr key={item._id} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50/40'}>
-                                        <td className="py-2.5 px-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded border border-gray-100 bg-gray-50 flex-shrink-0 flex items-center justify-center overflow-hidden">
-                                                    {item.imageUrl
-                                                        ? <img loading="lazy" decoding="async" src={item.imageUrl.startsWith('http') ? item.imageUrl : `${SERVER_URL}${item.imageUrl}`} alt="" className="w-full h-full object-cover" />
-                                                        : <Package size={16} className="text-gray-300" />}
-                                                </div>
-                                                <div className="min-w-0">
-                                                    <p className="text-xs font-black text-gray-800 uppercase truncate">{item.name}</p>
-                                                    <p className="text-[10px] text-gray-400 font-medium truncate">{item.itemType || 'Product'}</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full border ${item.type === 'complimentary' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
-                                                {item.type === 'complimentary' ? 'Free' : 'Paid'}
-                                            </span>
-                                        </td>
-                                        <td className="py-2.5 px-4 text-[11px] font-bold text-gray-600 uppercase tracking-tight">{item.category || 'General'}</td>
-                                        <td className="py-2.5 px-4">
-                                            <p className="text-[10px] font-black text-slate-700">{item.itemType === 'Service' ? (item.sacCode || '—') : (item.hsnCode || '—')}</p>
-                                            <p className="text-[9px] text-gray-400 font-black tracking-widest uppercase">{item.itemType === 'Service' ? 'SAC' : 'HSN'}</p>
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                            <div className="flex items-center gap-1 text-[11px] font-bold text-gray-600">
-                                                <Ruler size={11} className="text-gray-400" />
-                                                {[item.length, item.width, item.height].filter(Boolean).join('×') || '—'}
-                                                {item.dimensionUnit && item.length && <span className="text-[9px] text-gray-400 lowercase ml-0.5">{item.dimensionUnit}</span>}
-                                            </div>
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                            {item.type === 'complimentary' ? (
-                                                item.allocationMode === 'perArea' ? (
-                                                    <>
-                                                        <p className="text-[10px] font-black text-emerald-600 uppercase">Per Area</p>
-                                                        <p className="text-[9px] text-gray-400 font-bold">{item.ratioQty} per {item.ratioArea} sqm</p>
-                                                    </>
-                                                ) : (
-                                                    <span className="text-[10px] font-black text-emerald-600 uppercase">Included ({item.includedQty})</span>
-                                                )
-                                            ) : (
-                                                <>
-                                                    <p className="text-xs font-black text-[#23471d]">₹{Number(item.price || 0).toLocaleString('en-IN')}</p>
-                                                    <p className="text-[10px] text-gray-400 font-bold">GST {item.gstPercent}%</p>
-                                                </>
-                                            )}
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                            <p className="text-[11px] font-black text-gray-700 uppercase">{item.unit || 'piece'}</p>
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                            <p className="text-xs font-black text-slate-800">{item.availableQty || 0}</p>
-                                            <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest">Available</p>
-                                        </td>
-                                        <td className="py-2.5 px-4">
-                                            <span className={`px-2 py-0.5 text-[10px] font-black uppercase rounded-full ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                                                {item.isActive ? 'Active' : 'Hidden'}
-                                            </span>
-                                        </td>
-                                        <td className="py-2.5 px-4 whitespace-nowrap">
-                                            <div className="flex gap-2">
-                                                <button onClick={() => openEdit(item)} className="p-2 bg-slate-100 hover:bg-[#23471d] hover:text-white text-slate-600 rounded-[2px] shadow-sm transition-all">
-                                                    <Pencil size={12} />
-                                                </button>
-                                                <button onClick={() => handleDelete(item._id)} className="p-2 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-600 rounded-[2px] shadow-sm transition-all">
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        
-                        {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between bg-white">
-                                <p className="text-[11px] font-bold text-gray-500">
-                                    Showing <span className="text-gray-900">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="text-gray-900">{Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)}</span> of <span className="text-gray-900">{filtered.length}</span> results
-                                </p>
-                                <div className="flex items-center gap-1">
-                                    <button 
-                                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                        disabled={currentPage === 1}
-                                        className="px-2 py-1 text-[11px] font-bold border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
-                                    >Prev</button>
-                                    <span className="text-[11px] font-bold px-2 text-gray-600">Page {currentPage} of {totalPages}</span>
-                                    <button 
-                                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                        disabled={currentPage === totalPages}
-                                        className="px-2 py-1 text-[11px] font-bold border border-gray-200 rounded disabled:opacity-50 hover:bg-gray-50 transition-colors"
-                                    >Next</button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                )}
+                  <span className="text-[10px] font-bold text-emerald-700">Included ({item.includedQty})</span>
+                )
+              ) : (
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-[#15173D]">₹{Number(item.price || 0).toLocaleString('en-IN')}</span>
+                  <span className="text-[9px] text-slate-400 font-semibold">GST {item.gstPercent}%</span>
+                </div>
+              )}
+            </td>
+
+            {/* Unit */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span className="text-[10px] font-bold text-slate-700">{item.unit || 'piece'}</span>
+            </td>
+
+            {/* Stock */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span className="text-[10px] font-bold text-slate-900">{item.availableQty || 0}</span>
+            </td>
+
+            {/* Status */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                item.isActive
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}>
+                {item.isActive ? 'Active' : 'Hidden'}
+              </span>
+            </td>
+
+            {/* Actions */}
+            <td className="px-3 py-2 text-center whitespace-nowrap">
+              <div className="flex items-center justify-center gap-1.5">
+                <button
+                  onClick={() => openEdit(item)}
+                  className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-blue-600 transition-colors"
+                  title="Edit"
+                >
+                  <Pencil size={12} />
+                </button>
+                <button
+                  onClick={() => handleDelete(item._id)}
+                  className="p-1 rounded bg-slate-100 hover:bg-slate-200 text-red-600 transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
+            </td>
+          </tr>
+        ))
+      )}
+    </>
+  );
+
+  const paginationComponent = (
+    <div className="flex items-center justify-between w-full text-[10px] font-medium text-slate-600 px-2 py-1">
+      <span>
+        Showing {filtered.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1} to{" "}
+        {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} of {filtered.length} entries
+      </span>
+      {totalPages > 1 && (
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="px-2 py-1 border rounded text-[10px] font-bold hover:bg-slate-50 disabled:opacity-40"
+          >
+            Previous
+          </button>
+          {[...Array(totalPages)].map((_, idx) => (
+            <button
+              key={idx + 1}
+              onClick={() => setCurrentPage(idx + 1)}
+              className={`px-2 py-1 rounded text-[10px] font-bold ${
+                currentPage === idx + 1
+                  ? "bg-[#0A2947] text-white"
+                  : "border text-slate-600 hover:bg-slate-50"
+              }`}
+            >
+              {idx + 1}
+            </button>
+          ))}
+          <button
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="px-2 py-1 border rounded text-[10px] font-bold hover:bg-slate-50 disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      <BaseLeadPage
+        title={urlCategory ? `Stall Accessories (${urlCategory})` : "Stall Accessories & Extras"}
+        subtitle={urlCategory ? `Manage complimentary items and purchasable extras pre-filtered for ${urlCategory}` : "Manage complimentary items and purchasable extras for exhibitors"}
+        badgeCount={filtered.length}
+        cardsInRow={4}
+        headerActions={headerActions}
+        statCards={statCards}
+        filterBar={filterBar}
+        onReset={handleReset}
+        tableHeaders={tableHeadersComponent}
+        tableBody={tableBodyContent}
+        pagination={paginationComponent}
+      />
+
+      {/* Form Modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 backdrop-blur-xs">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl rounded-2xl">
+            <div className="flex items-center justify-between px-6 py-4 bg-[#0A2947] sticky top-0 z-10 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-white/10 rounded-lg">
+                  <Plus className="text-white" size={18} />
+                </div>
+                <h3 className="text-[13px] font-semibold text-white uppercase tracking-widest">{editId ? 'Modify Accessory' : 'Create New Accessory'}</h3>
+              </div>
+              <button onClick={() => setShowForm(false)} className="text-white/70 hover:text-white transition-colors p-1"><X size={20} /></button>
             </div>
 
-            {/* Form Modal */}
-            {showForm && (
-                <div className="fixed inset-0 bg-black/60 z-[110] flex items-center justify-center p-4 backdrop-blur-sm">
-                    <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto shadow-2xl rounded-sm">
-                        <div className="flex items-center justify-between px-6 py-4 bg-[#23471d] sticky top-0 z-10">
-                            <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white/10 rounded">
-                                    <Plus className="text-white" size={18} />
-                                </div>
-                                <h3 className="text-[13px] font-black text-white uppercase tracking-widest">{editId ? 'Modify Accessory' : 'Create New Accessory'}</h3>
-                            </div>
-                            <button onClick={() => setShowForm(false)} className="text-white/70 hover:text-white transition-colors p-1"><X size={20} /></button>
-                        </div>
-
-                        <div className="p-8 space-y-8">
-                            {/* Section 1: Identity & Fulfillment */}
-                            <div className="space-y-4">
-                                <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Basic Information</p>
-                                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                                    {/* Image Selection */}
-                                    <div className="md:col-span-1">
-                                        <label className={lCls}>Item Image</label>
-                                        <div className="relative aspect-square w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center group overflow-hidden rounded-sm hover:border-[#23471d]/30 transition-colors">
-                                            {previewUrl ? (
-                                                <>
-                                                    <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                                                        <button type="button" onClick={() => document.getElementById('accImg').click()} className="p-2 bg-white rounded-full text-[#23471d] shadow-lg">
-                                                            <ImageIcon size={18} />
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <button type="button" onClick={() => document.getElementById('accImg').click()} className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#23471d] transition-colors">
-                                                    <ImageIcon size={28} strokeWidth={1.5} />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest">Upload</span>
-                                                </button>
-                                            )}
-                                            <input type="file" id="accImg" hidden accept="image/*" onChange={handleFileChange} />
-                                        </div>
-                                    </div>
-
-                                    {/* Main Details */}
-                                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div className="md:col-span-2">
-                                            <label className={lCls}>Item Name *</label>
-                                            <input value={form.name} onChange={e => inp('name', e.target.value)} className={iCls} placeholder="e.g. Premium Leather Sofa" />
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>Fulfillment Type</label>
-                                            <select value={form.type} onChange={e => inp('type', e.target.value)} className={iCls}>
-                                                <option value="complimentary">Complimentary (Included)</option>
-                                                <option value="purchasable">Purchasable (Paid Add-on)</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>Item Category</label>
-                                            <select value={form.category} onChange={e => inp('category', e.target.value)} className={iCls}>
-                                                <option value="Furniture">Furniture</option>
-                                                <option value="Electrical">Electrical</option>
-                                                <option value="Branding">Branding</option>
-                                                <option value="Technology">Technology</option>
-                                                <option value="Utilities">Utilities</option>
-                                                <option value="Hospitality">Hospitality</option>
-                                                <option value="Manpower">Manpower</option>
-                                                <option value="Others">Others</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>Billing Type</label>
-                                            <select value={form.itemType} onChange={e => inp('itemType', e.target.value)} className={iCls}>
-                                                <option value="Product">Product</option>
-                                                <option value="Service">Service</option>
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>{form.itemType === 'Service' ? 'SAC Code' : 'HSN Code'}</label>
-                                            {form.itemType === 'Service'
-                                                ? <input value={form.sacCode} onChange={e => inp('sacCode', e.target.value)} className={iCls} placeholder="SAC Code" />
-                                                : <input value={form.hsnCode} onChange={e => inp('hsnCode', e.target.value)} className={iCls} placeholder="HSN Code" />
-                                            }
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Section 2: Logistics & Stock */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                                <div className="space-y-4">
-                                    <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Logistics & Dimensions</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="col-span-2">
-                                            <label className={lCls}>Dimension Unit</label>
-                                            <select value={form.dimensionUnit} onChange={e => inp('dimensionUnit', e.target.value)} className={iCls}>
-                                                <option value="">No Dimensions</option>
-                                                {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>Length {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
-                                            <input value={form.length} onChange={e => inp('length', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>Width {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
-                                            <input value={form.width} onChange={e => inp('width', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
-                                        </div>
-                                        <div className="col-span-2">
-                                            <label className={lCls}>Height {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
-                                            <input value={form.height} onChange={e => inp('height', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Pricing & Inventory</p>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="col-span-2">
-                                            <label className={lCls}>Quantity Unit *</label>
-                                            <select value={form.unit} onChange={e => inp('unit', e.target.value)} className={iCls}>
-                                                <option value="">Select Unit</option>
-                                                {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
-                                            </select>
-                                        </div>
-                                        {form.type === 'purchasable' && (
-                                            <>
-                                                <div>
-                                                    <label className={lCls}>Base Rate (₹)</label>
-                                                    <input type="number" value={form.price} onChange={e => inp('price', e.target.value)} className={`${iCls} font-black text-emerald-700`} placeholder="0" />
-                                                </div>
-                                                <div>
-                                                    <label className={lCls}>GST Slab %</label>
-                                                    <select value={form.gstPercent} onChange={e => inp('gstPercent', Number(e.target.value))} className={iCls}>
-                                                        {[0, 5, 12, 18, 28].map(v => <option key={v} value={v}>{v}%</option>)}
-                                                    </select>
-                                                </div>
-                                            </>
-                                        )}
-                                        {form.type === 'complimentary' ? (
-                                            <div className="col-span-2">
-                                                <label className={lCls}>Allocation Mode</label>
-                                                <select value={form.allocationMode} onChange={e => inp('allocationMode', e.target.value)} className={iCls}>
-                                                    <option value="fixed">Fixed Qty (same for every exhibitor)</option>
-                                                    <option value="perArea">Per Stall Area (auto-scales by stall size)</option>
-                                                </select>
-                                            </div>
-                                        ) : (
-                                            <div>
-                                                <label className={lCls}>Min Order Qty</label>
-                                                <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
-                                            </div>
-                                        )}
-
-                                        {form.type === 'complimentary' && form.allocationMode === 'fixed' && (
-                                            <div>
-                                                <label className={lCls}>Included Qty</label>
-                                                <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
-                                            </div>
-                                        )}
-
-                                        {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
-                                            <>
-                                                <div>
-                                                    <label className={lCls}>Give Qty</label>
-                                                    <input type="number" value={form.ratioQty} onChange={e => inp('ratioQty', e.target.value)} className={iCls} min={0} step="0.5" />
-                                                </div>
-                                                <div>
-                                                    <label className={lCls}>Per Stall Area (sqm)</label>
-                                                    <input type="number" value={form.ratioArea} onChange={e => inp('ratioArea', e.target.value)} className={iCls} min={0.1} step="0.5" />
-                                                </div>
-                                                <div className="col-span-2">
-                                                    <label className={lCls}>Rounding Rule</label>
-                                                    <select value={form.roundingMode} onChange={e => inp('roundingMode', e.target.value)} className={iCls}>
-                                                        <option value="floor">Floor (round down — never over-allocate)</option>
-                                                        <option value="round">Nearest (round off)</option>
-                                                        <option value="ceil">Ceil (round up)</option>
-                                                    </select>
-                                                </div>
-                                            </>
-                                        )}
-
-                                        <div>
-                                            <label className={lCls}>Available Stock</label>
-                                            <input type="number" value={form.availableQty} onChange={e => inp('availableQty', e.target.value)} className={iCls} placeholder="0" />
-                                        </div>
-                                    </div>
-
-                                    {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
-                                        <div className="bg-emerald-50 border border-emerald-200 rounded-[2px] p-3">
-                                            <p className="text-[9px] font-black text-emerald-700 uppercase tracking-widest mb-2">Live Preview — Qty exhibitor gets by stall size</p>
-                                            <div className="flex flex-wrap gap-3">
-                                                {PREVIEW_STALL_SIZES.map(size => (
-                                                    <div key={size} className="flex items-center gap-1.5 bg-white border border-emerald-100 rounded-[2px] px-2.5 py-1">
-                                                        <span className="text-[10px] font-bold text-slate-500">{size} sqm →</span>
-                                                        <span className="text-xs font-black text-emerald-700">{computeEntitlementPreview(form, size)} {form.unit || 'unit'}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Section 3: Extra Info */}
-                            <div className="space-y-4">
-                                <p className="text-[11px] font-black text-[#23471d] uppercase tracking-widest border-l-4 border-[#23471d] pl-3">Additional Settings</p>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="md:col-span-2">
-                                        <label className={lCls}>Short Description</label>
-                                        <textarea value={form.description} onChange={e => inp('description', e.target.value)}
-                                            className="w-full px-4 py-2 border border-slate-300 rounded-[2px] text-xs font-medium outline-none focus:border-[#23471d] resize-none h-20"
-                                            placeholder="Specify materials, colors, or service scope..." />
-                                    </div>
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className={lCls}>Sort Order</label>
-                                            <input type="number" value={form.sortOrder} onChange={e => inp('sortOrder', e.target.value)} className={iCls} placeholder="0" />
-                                        </div>
-                                        <div>
-                                            <label className={lCls}>Status</label>
-                                            <select value={form.isActive ? 'true' : 'false'} onChange={e => inp('isActive', e.target.value === 'true')} className={iCls}>
-                                                <option value="true">Active</option>
-                                                <option value="false">Inactive</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
-                                <button type="button" onClick={() => setShowForm(false)} className="px-6 py-2 border border-slate-300 text-slate-500 text-[11px] font-black uppercase tracking-widest hover:bg-slate-50">Cancel</button>
-                                <button type="button" onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-8 py-2 bg-[#23471d] text-white text-[11px] font-black uppercase tracking-widest disabled:opacity-60 shadow-lg hover:shadow-xl transition-all">
-                                    <Save size={14} /> {saving ? 'Saving...' : 'Save Item'}
-                                </button>
-                            </div>
-                        </div>
+            <div className="p-8 space-y-8 text-slate-800" style={{ fontFamily: 'Inter, sans-serif' }}>
+              {/* Section 1: Identity & Fulfillment */}
+              <div className="space-y-4">
+                <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Basic Information</p>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {/* Image Selection */}
+                  <div className="md:col-span-1">
+                    <label className={lCls}>Item Image</label>
+                    <div className="relative aspect-square w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center group overflow-hidden rounded-xl hover:border-[#0A2947]/30 transition-colors">
+                      {previewUrl ? (
+                        <>
+                          <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                            <button type="button" onClick={() => document.getElementById('accImg').click()} className="p-2 bg-white rounded-full text-[#0A2947] shadow-lg">
+                              <ImageIcon size={18} />
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <button type="button" onClick={() => document.getElementById('accImg').click()} className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#0A2947] transition-colors">
+                          <ImageIcon size={28} strokeWidth={1.5} />
+                          <span className="text-[9px] font-bold uppercase tracking-widest">Upload</span>
+                        </button>
+                      )}
+                      <input type="file" id="accImg" hidden accept="image/*" onChange={handleFileChange} />
                     </div>
+                  </div>
+
+                  {/* Main Details */}
+                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="md:col-span-2">
+                      <label className={lCls}>Item Name *</label>
+                      <input value={form.name} onChange={e => inp('name', e.target.value)} className={iCls} placeholder="e.g. Premium Leather Sofa" />
+                    </div>
+                    <div>
+                      <label className={lCls}>Fulfillment Type</label>
+                      <select value={form.type} onChange={e => inp('type', e.target.value)} className={iCls}>
+                        <option value="complimentary">Complimentary (Included)</option>
+                        <option value="purchasable">Purchasable (Paid Add-on)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={lCls}>Item Category</label>
+                      <select value={form.category} onChange={e => inp('category', e.target.value)} className={iCls}>
+                        {categories.map((cat, idx) => (
+                          <option key={idx} value={cat}>{cat}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className={lCls}>Billing Type</label>
+                      <select value={form.itemType} onChange={e => inp('itemType', e.target.value)} className={iCls}>
+                        <option value="Product">Product</option>
+                        <option value="Service">Service</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className={lCls}>{form.itemType === 'Service' ? 'SAC Code' : 'HSN Code'}</label>
+                      {form.itemType === 'Service'
+                        ? <input value={form.sacCode} onChange={e => inp('sacCode', e.target.value)} className={iCls} placeholder="SAC Code" />
+                        : <input value={form.hsnCode} onChange={e => inp('hsnCode', e.target.value)} className={iCls} placeholder="HSN Code" />
+                      }
+                    </div>
+                  </div>
                 </div>
-            )}
+              </div>
+
+              {/* Section 2: Logistics & Stock */}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                  <div className="space-y-4">
+                    <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Logistics & Dimensions</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <label className={lCls}>Dimension Unit</label>
+                        <select value={form.dimensionUnit} onChange={e => inp('dimensionUnit', e.target.value)} className={iCls}>
+                          <option value="">No Dimensions</option>
+                          {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label className={lCls}>Length {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
+                        <input value={form.length} onChange={e => inp('length', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                      </div>
+                      <div>
+                        <label className={lCls}>Width {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
+                        <input value={form.width} onChange={e => inp('width', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                      </div>
+                      <div className="col-span-2">
+                        <label className={lCls}>Height {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
+                        <input value={form.height} onChange={e => inp('height', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Pricing & Inventory</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="col-span-2">
+                        <label className={lCls}>Quantity Unit *</label>
+                        <select value={form.unit} onChange={e => inp('unit', e.target.value)} className={iCls}>
+                          <option value="">Select Unit</option>
+                          {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
+                        </select>
+                      </div>
+                      {form.type === 'purchasable' && (
+                        <>
+                          <div>
+                            <label className={lCls}>Base Rate (₹)</label>
+                            <input type="number" value={form.price} onChange={e => inp('price', e.target.value)} className={`${iCls} font-bold text-emerald-700`} placeholder="0" />
+                          </div>
+                          <div>
+                            <label className={lCls}>GST Slab %</label>
+                            <select value={form.gstPercent} onChange={e => inp('gstPercent', Number(e.target.value))} className={iCls}>
+                              {[0, 5, 12, 18, 28].map(v => <option key={v} value={v}>{v}%</option>)}
+                            </select>
+                          </div>
+                        </>
+                      )}
+                      {form.type === 'complimentary' ? (
+                        <div className="col-span-2">
+                          <label className={lCls}>Allocation Mode</label>
+                          <select value={form.allocationMode} onChange={e => inp('allocationMode', e.target.value)} className={iCls}>
+                            <option value="fixed">Fixed Qty (same for every exhibitor)</option>
+                            <option value="perArea">Per Stall Area (auto-scales by stall size)</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <div>
+                          <label className={lCls}>Min Order Qty</label>
+                          <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                        </div>
+                      )}
+
+                      {form.type === 'complimentary' && form.allocationMode === 'fixed' && (
+                        <div>
+                          <label className={lCls}>Included Qty</label>
+                          <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                        </div>
+                      )}
+
+                      {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
+                        <>
+                          <div>
+                            <label className={lCls}>Give Qty</label>
+                            <input type="number" value={form.ratioQty} onChange={e => inp('ratioQty', e.target.value)} className={iCls} min={0} step="0.5" />
+                          </div>
+                          <div>
+                            <label className={lCls}>Per Stall Area (sqm)</label>
+                            <input type="number" value={form.ratioArea} onChange={e => inp('ratioArea', e.target.value)} className={iCls} min={0.1} step="0.5" />
+                          </div>
+                          <div>
+                            <label className={lCls}>Rounding Rule</label>
+                            <select value={form.roundingMode} onChange={e => inp('roundingMode', e.target.value)} className={iCls}>
+                              <option value="floor">Floor (round down)</option>
+                              <option value="round">Nearest (round off)</option>
+                              <option value="ceil">Ceil (round up)</option>
+                            </select>
+                          </div>
+                        </>
+                      )}
+
+                      <div className={form.type === 'complimentary' && form.allocationMode === 'perArea' ? '' : 'col-span-2'}>
+                        <label className={lCls}>Available Stock</label>
+                        <input type="number" value={form.availableQty} onChange={e => inp('availableQty', e.target.value)} className={iCls} placeholder="0" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {form.type === 'complimentary' && form.allocationMode === 'perArea' && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                    <p className="text-[10px] font-extrabold text-emerald-800 uppercase tracking-widest mb-3">Live Preview — Qty exhibitor gets by stall size</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                      {PREVIEW_STALL_SIZES.map(size => (
+                        <div key={size} className="flex items-center justify-between bg-white border border-emerald-200/60 rounded-lg px-3 py-2 shadow-2xs">
+                          <span className="text-[11px] font-semibold text-slate-600">{size} sqm →</span>
+                          <span className="text-xs font-bold text-emerald-700">{computeEntitlementPreview(form, size)} {form.unit || 'unit'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Section 3: Extra Info */}
+              <div className="space-y-4">
+                <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Additional Settings</p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2">
+                    <label className={lCls}>Short Description</label>
+                    <textarea value={form.description} onChange={e => inp('description', e.target.value)}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg text-xs font-medium outline-none focus:border-[#0A2947] resize-none h-20"
+                      placeholder="Specify materials, colors, or service scope..." />
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className={lCls}>Sort Order</label>
+                      <input type="number" value={form.sortOrder} onChange={e => inp('sortOrder', e.target.value)} className={iCls} placeholder="0" />
+                    </div>
+                    <div>
+                      <label className={lCls}>Status</label>
+                      <select value={form.isActive ? 'true' : 'false'} onChange={e => inp('isActive', e.target.value === 'true')} className={iCls}>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowForm(false)}
+                  className="px-6 py-2 bg-red-50 text-red-600 border border-red-200 text-[11px] font-semibold uppercase tracking-wider rounded-lg hover:bg-red-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="flex items-center gap-2 px-8 py-2 bg-emerald-600 text-white text-[11px] font-semibold uppercase tracking-wider rounded-lg disabled:opacity-60 shadow-md hover:bg-emerald-700 transition-all"
+                >
+                  <Save size={14} /> {saving ? 'Saving...' : 'Save Item'}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-    );
+      )}
+    </>
+  );
 }

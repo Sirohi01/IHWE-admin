@@ -104,8 +104,22 @@ export const menuItems = [
     children: [
       { label: "Stall Pricing", path: "/stall-rates" },
       { label: "Stall Inventory", path: "/stalls" },
-      { label: "Manage Accessories", path: "/stall-accessories" },
-      { label: "Accessory Orders", path: "/accessory-orders" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Add-On Products",
+    icon: ShoppingCart,
+    children: [
+      { label: "All Add-On Products", path: "/stall-accessories" },
+      { label: "Furniture", path: "/stall-accessories?category=Furniture" },
+      { label: "Electrical", path: "/stall-accessories?category=Electrical" },
+      { label: "Display & Branding", path: "/stall-accessories?category=Display%20%26%20Branding" },
+      { label: "Audio Visual", path: "/stall-accessories?category=Audio%20Visual" },
+      { label: "Stall Fixtures", path: "/stall-accessories?category=Stall%20Fixtures" },
+      { label: "Services", path: "/stall-accessories?category=Services" },
+      { label: "Others", path: "/stall-accessories?category=Others" },
+      { label: "Products Order", path: "/accessory-orders" },
     ],
   },
   {
@@ -531,6 +545,7 @@ export const menuItems = [
     children: [
       { label: "Lead: Type of Business", path: "/lead-type-of-business" },
       { label: "Lead: Industry / Sector", path: "/lead-industry" },
+      { label: "Accessory: Item Category", path: "/accessory-category" },
     ],
   },
   {

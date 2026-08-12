@@ -112,7 +112,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     }
 
     const currentCrmEvent = (crmEvents || []).find(e => String(e._id || e.id) === String(eventId)) || currentEvent;
-    const eventName = currentCrmEvent?.event_fullName || currentCrmEvent?.event_name || currentCrmEvent?.name || fetchedEventName || "IHWE EXPO 2026";
+    const eventName = "IHWE EXPO 2026";
 
     const subPageLabels = {
       'sales-tools': 'Sales Tools',

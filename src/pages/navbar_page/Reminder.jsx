@@ -462,15 +462,7 @@ export default function Reminder() {
     });
   };
 
-  const headerActions = (
-    <button
-      onClick={() => setIsModalOpen(true)}
-      className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg text-[10px] font-bold text-white transition-all duration-200 hover:opacity-90 shadow-sm whitespace-nowrap"
-      style={{ backgroundColor: '#0A2947', fontFamily: 'Inter, sans-serif' }}
-    >
-      <Plus size={12} /> Add Follow-Up
-    </button>
-  );
+  const headerActions = null;
 
   const filterBar = (
     <>

@@ -149,6 +149,7 @@ const DelegateConfig = lazy(() => import("../pages/admin_management/DelegateConf
 const TypeOfBusinessMaster = lazy(() => import("../pages/admin_management/TypeOfBusinessMaster"));
 const LeadTypeOfBusiness = lazy(() => import("../pages/admin_management/LeadTypeOfBusiness"));
 const LeadIndustry = lazy(() => import("../pages/admin_management/LeadIndustry"));
+const AccessoryCategory = lazy(() => import("../pages/admin_management/AccessoryCategory"));
 const ColdClientList = lazy(() => import("../pages/ihwe_client_data_2026/ColdClientList"));
 const ConfirmClientList = lazy(() => import("../pages/ihwe_client_data_2026/ConfirmClientList"));
 const NewLeadList = lazy(() => import("../pages/ihwe_client_data_2026/NewLeadList"));
@@ -918,6 +919,7 @@ export default function AppRoutes() {
             <Route path="/type-of-business-master" element={<TypeOfBusinessMaster />} />
             <Route path="/lead-type-of-business" element={<LeadTypeOfBusiness />} />
             <Route path="/lead-industry" element={<LeadIndustry />} />
+            <Route path="/accessory-category" element={<AccessoryCategory />} />
 
             <Route path="*" element={<NotFound />} />
             <Route path="/international-buyer-list" element={<InternationalBuyerList />} />

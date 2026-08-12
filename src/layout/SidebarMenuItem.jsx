@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -33,7 +33,21 @@ export default function SidebarMenuItem({
   if (item.type === "dropdown") {
     const Icon = item.icon;
     const isOpen = openDropdown === item.label;
-    const hasActiveChild = item.children?.some(child => location.pathname === child.path);
+
+    const currentFullPath = (location?.pathname || '') + (location?.search || '');
+
+    const checkChildActive = (child) => {
+      if (!child || !child.path) return false;
+      if (child.path.includes('?')) {
+        return currentFullPath === child.path;
+      }
+      return location.pathname === child.path && !location.search;
+    };
+
+    const hasActiveChild = item.children?.some(child => {
+      if (child.children) return child.children.some(c => checkChildActive(c));
+      return checkChildActive(child);
+    });
 
     return (
       <div className="w-full">
@@ -112,41 +126,46 @@ export default function SidebarMenuItem({
                             transition={{ duration: 0.2 }}
                             className="ml-3 mt-1 space-y-1 border-l border-white/10 pl-2 overflow-hidden"
                           >
-                            {sub.children.map((child, cIdx) => (
-                              <NavLink
-                                key={child.path || cIdx}
-                                to={child.path}
-                                onClick={() => setMobileMenuOpen(false)}
-                                className={({ isActive }) =>
-                                  `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${
-                                    isActive
-                                      ? "active bg-white/10"
-                                      : "text-white/70 hover:bg-white/5 hover:text-white"
-                                  }`
-                                }
-                              >
-                                {child.label}
-                              </NavLink>
-                            ))}
+                            {sub.children.map((child, cIdx) => {
+                              const isChildActive = checkChildActive(child);
+                              return (
+                                <Link
+                                  key={child.path || cIdx}
+                                  to={child.path}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                  className={
+                                    `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${
+                                      isChildActive
+                                        ? "active bg-white/10"
+                                        : "text-white/70 hover:bg-white/5 hover:text-white"
+                                    }`
+                                  }
+                                >
+                                  {child.label}
+                                </Link>
+                              );
+                            })}
                           </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
                   );
                 }
+
+                const isSubItemActive = checkChildActive(sub);
                 return (
-                  <NavLink
+                  <Link
                     key={sub.path || idx}
                     to={sub.path}
                     onClick={() => setMobileMenuOpen(false)}
-                    className={({ isActive }) =>
+                    className={
                       `sb-sub-item block px-3 py-1.5 rounded-md sb-label transition-colors ${
-                        isActive ? "active" : ""
+                        isSubItemActive ? "active" : ""
                       }`
                     }
                   >
                     {sub.label}
-                  </NavLink>
+                  </Link>
                 );
               })}
             </motion.div>

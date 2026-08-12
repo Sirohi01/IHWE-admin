@@ -145,18 +145,22 @@ const AccountOverview = () => {
 
       {/* Breadcrumb */}
       <div className="flex items-center justify-between gap-2 mb-1">
-        <div className="flex items-center gap-2 text-sm text-[#194090] font-normal min-w-0">
-          <span>Exhibitors</span>
-          <ChevronRight size={14} className="text-gray-400 shrink-0" />
-          <span className="text-slate-800 truncate">{companyInfo?.name}</span>
-          <ChevronRight size={14} className="text-gray-400 shrink-0" />
-          <span className="text-slate-500 font-normal">Accounts</span>
-          <ChevronRight size={14} className="text-gray-400 shrink-0" />
-          <span className="text-slate-500 font-normal">Overview</span>
+        <div className="flex items-center gap-1.5 text-xs font-bold tracking-wide min-w-0" style={{ color: '#0A2947' }}>
+          <span>IHWE EXPO 2026</span>
+          <ChevronRight size={13} className="text-slate-400 shrink-0" />
+          <span>BOOKINGS</span>
+          <ChevronRight size={13} className="text-slate-400 shrink-0" />
+          <span className="text-emerald-700 uppercase font-extrabold">CLIENT OVERVIEW</span>
+          {companyInfo?.name && (
+            <>
+              <ChevronRight size={13} className="text-slate-400 shrink-0" />
+              <span className="text-slate-800 font-bold truncate">{companyInfo.name}</span>
+            </>
+          )}
         </div>
-        <button onClick={() => navigate(scopedPath(`/client-overview/${id}`))} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-[#f8f9fc] border border-gray-200 rounded-md transition-colors text-[#1a2b4b] text-[11px] font-normal shadow-sm shrink-0">
+        <button onClick={() => navigate(-1)} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-[#f8f9fc] border border-gray-200 rounded-md transition-colors text-[#1a2b4b] text-[11px] font-semibold shadow-sm shrink-0">
           <ArrowLeft size={13} className="text-[#194090]" />
-          <span>Client Overview</span>
+          <span>Back</span>
         </button>
       </div>
 

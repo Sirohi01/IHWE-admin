@@ -1,59 +1,83 @@
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { Bell, Clock, Phone, User, Smartphone, X, ExternalLink, ChevronUp } from "lucide-react";
+import { Bell, Clock, Phone, User, Smartphone, X, ExternalLink, ChevronUp, CheckCircle2 } from "lucide-react";
 import api from "../lib/api";
+
+const MONTH_NAMES = {
+  jan: 0, january: 0,
+  feb: 1, february: 1,
+  mar: 2, march: 2,
+  apr: 3, april: 3,
+  may: 4,
+  jun: 5, june: 5,
+  jul: 6, july: 6,
+  aug: 7, august: 7,
+  sep: 8, sept: 8, september: 8,
+  oct: 9, october: 9,
+  nov: 10, november: 10,
+  dec: 11, december: 11
+};
 
 const getReminderDateTime = (item) => {
   if (!item) return null;
 
-  const parseAny = (dateStr, timeStr = "") => {
-    if (!dateStr) return null;
-    if (dateStr instanceof Date) return isNaN(dateStr.getTime()) ? null : dateStr;
+  const parseString = (dStr, tStr = "") => {
+    if (!dStr) return null;
+    let combined = (String(dStr).trim() + " " + String(tStr || "").trim()).trim();
 
-    let fullStr = String(dateStr).trim();
-    if (timeStr) fullStr += " " + String(timeStr).trim();
-
-    // Direct Date parse
-    let d = new Date(fullStr);
+    // Try standard JS Date parse
+    let d = new Date(combined);
     if (!isNaN(d.getTime())) return d;
 
-    // Try hyphens to slashes
-    let altStr = fullStr.replace(/-/g, "/");
-    d = new Date(altStr);
-    if (!isNaN(d.getTime())) return d;
-
-    // Manual regex parse for DD/MM/YYYY or DD-MM-YYYY with HH:mm:ss am/pm
+    // Try regex for DD-MM-YYYY, DD/MM/YYYY or DD Month YYYY
     try {
-      const dMatch = fullStr.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
-      const tMatch = fullStr.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?/i);
+      const match = combined.match(/(\d{1,2})[\s\/\-](([a-zA-Z]+)|\d{1,2})[\s\/\-](\d{4})/);
+      const timeMatch = combined.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(am|pm)?/i);
 
-      if (dMatch) {
-        const day = parseInt(dMatch[1], 10);
-        const month = parseInt(dMatch[2], 10) - 1; // 0-indexed month
-        const year = parseInt(dMatch[3], 10);
+      if (match) {
+        const day = parseInt(match[1], 10);
+        let month;
+        if (match[3]) {
+          month = MONTH_NAMES[match[3].toLowerCase()];
+        } else {
+          month = parseInt(match[2], 10) - 1;
+        }
+        const year = parseInt(match[4], 10);
 
-        let hours = 0;
-        let minutes = 0;
-        let seconds = 0;
-
-        if (tMatch) {
-          hours = parseInt(tMatch[1], 10);
-          minutes = parseInt(tMatch[2], 10);
-          if (tMatch[3]) seconds = parseInt(tMatch[3], 10);
-          const ampm = tMatch[4] ? tMatch[4].toLowerCase() : null;
+        let hours = 0, minutes = 0, seconds = 0;
+        if (timeMatch) {
+          hours = parseInt(timeMatch[1], 10);
+          minutes = parseInt(timeMatch[2], 10);
+          if (timeMatch[3]) seconds = parseInt(timeMatch[3], 10);
+          const ampm = timeMatch[4] ? timeMatch[4].toLowerCase() : null;
           if (ampm === "pm" && hours < 12) hours += 12;
           if (ampm === "am" && hours === 12) hours = 0;
         }
 
-        const parsed = new Date(year, month, day, hours, minutes, seconds);
-        if (!isNaN(parsed.getTime())) return parsed;
+        if (month !== undefined && !isNaN(month)) {
+          const parsed = new Date(year, month, day, hours, minutes, seconds);
+          if (!isNaN(parsed.getTime())) return parsed;
+        }
       }
     } catch (e) {}
 
     return null;
   };
 
-  return parseAny(item.date, item.time) || parseAny(item.followUpDate);
+  // 1. Prioritize combined date + time string if available (e.g. "12 Aug 2026" + "07:10 PM")
+  if (item.date && item.time) {
+    const parsedDateTime = parseString(item.date, item.time);
+    if (parsedDateTime) return parsedDateTime;
+  }
+
+  // 2. Fallback to raw followUpDate ISO string if valid Date object
+  if (item.followUpDate) {
+    const rawF = new Date(item.followUpDate);
+    if (!isNaN(rawF.getTime())) return rawF;
+  }
+
+  return parseString(item.date, item.time) || parseString(item.followUpDate);
 };
 
 export default function GlobalReminderPopup() {
@@ -72,15 +96,30 @@ export default function GlobalReminderPopup() {
     }
   });
 
+  // Completed map stored in localStorage: { [reminderId]: true }
+  const [completedMap, setCompletedMap] = useState(() => {
+    try {
+      const saved = localStorage.getItem("completed_reminders_map");
+      return saved ? JSON.parse(saved) : {};
+    } catch (e) {
+      return {};
+    }
+  });
+
   const playNotificationSound = () => {
     try {
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const audioCtx = new AudioCtx();
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
       osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3); // A5
-      gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
       osc.connect(gain);
       gain.connect(audioCtx.destination);
@@ -96,29 +135,41 @@ export default function GlobalReminderPopup() {
 
       const now = new Date().getTime();
       const tenMinutesMs = 10 * 60 * 1000;
-      const twentyFourHoursMs = 24 * 60 * 60 * 1000;
 
       const upcoming = list.filter((item) => {
-        // Skip completed reminders
+        const id = item.id || item._id;
+
+        // Skip items marked completed in backend DB
         if (item.status === "Completed") return false;
         
         const rDate = getReminderDateTime(item);
         if (!rDate) return false;
         const itemTime = rDate.getTime();
 
-        const id = item.id || item._id;
+        // Check completed map stored in localStorage
+        const completedEntry = completedMap[id];
+        if (completedEntry) {
+          // If completedEntry is a timestamp, only skip if the item's follow-up time is <= completed time
+          if (typeof completedEntry === "number" && itemTime <= completedEntry) {
+            return false;
+          }
+          // If legacy boolean true, only skip if status in DB is also Completed
+          if (completedEntry === true && (item.status !== "Pending" && item.status !== "Overdue")) {
+            return false;
+          }
+        }
 
-        // Check if currently snoozed
+        // Check if currently snoozed (auto-clear if follow-up time is updated)
         const snoozedUntil = snoozedMap[id];
-        if (snoozedUntil && now < snoozedUntil) {
+        if (snoozedUntil && now < snoozedUntil && itemTime <= snoozedUntil) {
           return false; // Snooze duration not expired yet
         }
 
         const diff = itemTime - now;
 
         // TRIGGER CONDITION:
-        // Remaining time <= 10 mins (e.g. 10m, 8m, 5m, 2m, 0m) AND overdue by up to 24 hrs
-        const isDueSoonOrOverdue = diff <= tenMinutesMs && diff >= -twentyFourHoursMs;
+        // Remaining time <= 10 mins (e.g. 10m, 5m, 0m, or any pending overdue)
+        const isDueSoonOrOverdue = diff <= tenMinutesMs;
 
         return isDueSoonOrOverdue;
       });
@@ -146,7 +197,18 @@ export default function GlobalReminderPopup() {
     checkReminders();
     const interval = setInterval(checkReminders, 3000); // Check every 3 seconds for immediate response
     return () => clearInterval(interval);
-  }, [snoozedMap]);
+  }, [snoozedMap, completedMap]);
+
+  // Re-play alert chime sound every 1 minute (60s) while popup remains active & unhandled
+  useEffect(() => {
+    if (!currentReminder) return;
+
+    const soundInterval = setInterval(() => {
+      playNotificationSound();
+    }, 60000);
+
+    return () => clearInterval(soundInterval);
+  }, [currentReminder]);
 
   const applyCustomSnooze = (minutes) => {
     if (!currentReminder) return;
@@ -161,6 +223,36 @@ export default function GlobalReminderPopup() {
 
     setShowSnoozeMenu(false);
     
+    // Switch to next reminder or close
+    const remaining = dueReminders.filter((r) => (r.id || r._id) !== id);
+    if (remaining.length > 0) {
+      setCurrentReminder(remaining[0]);
+      playNotificationSound();
+    } else {
+      setCurrentReminder(null);
+    }
+  };
+
+  const handleMarkCompleted = async () => {
+    if (!currentReminder) return;
+    const id = currentReminder.id || currentReminder._id;
+
+    try {
+      await api.put(`/api/crm-follow-ups/${id}/complete`);
+    } catch (err) {
+      console.warn("Complete API notice:", err);
+    }
+
+    const rDate = getReminderDateTime(currentReminder);
+    const rTimestamp = rDate ? rDate.getTime() : new Date().getTime();
+    const newCompleted = { ...completedMap, [id]: rTimestamp };
+    setCompletedMap(newCompleted);
+    try {
+      localStorage.setItem("completed_reminders_map", JSON.stringify(newCompleted));
+    } catch (e) {}
+
+    setShowSnoozeMenu(false);
+
     // Switch to next reminder or close
     const remaining = dueReminders.filter((r) => (r.id || r._id) !== id);
     if (remaining.length > 0) {
@@ -202,8 +294,8 @@ export default function GlobalReminderPopup() {
     { label: "1 Hour", mins: 60 },
   ];
 
-  return (
-    <div className="fixed bottom-5 right-5 z-[99999] max-w-md w-full p-1 animate-bounce-short">
+  return createPortal(
+    <div className="fixed bottom-5 right-5 z-[999999] max-w-md w-full p-1 animate-bounce-short">
       <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500/80 overflow-hidden transform transition-all text-[#15173D]">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 px-4 py-3 text-white flex items-center justify-between shadow-sm">
@@ -317,17 +409,26 @@ export default function GlobalReminderPopup() {
         )}
 
         {/* Footer Actions */}
-        <div className="px-4 py-3 bg-white border-t border-slate-200 flex items-center justify-between gap-2 relative">
+        <div className="px-4 py-3 bg-white border-t border-slate-200 flex items-center justify-between gap-1.5 relative">
           <button
             onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
-            className={`px-3 py-1.5 text-[10.5px] font-bold rounded-lg transition-colors border flex items-center gap-1 ${
+            className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg transition-colors border flex items-center gap-1 ${
               showSnoozeMenu
                 ? "bg-amber-100 text-amber-800 border-amber-300"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
             }`}
           >
             <span>Snooze</span>
-            <ChevronUp size={12} className={`transition-transform ${showSnoozeMenu ? "rotate-180" : ""}`} />
+            <ChevronUp size={11} className={`transition-transform ${showSnoozeMenu ? "rotate-180" : ""}`} />
+          </button>
+
+          <button
+            onClick={handleMarkCompleted}
+            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-lg transition-all duration-200 shadow-sm flex items-center gap-1 shrink-0 cursor-pointer"
+            title="Mark follow-up as done & turn off alert popup for this client"
+          >
+            <CheckCircle2 size={12} />
+            <span>Mark Done</span>
           </button>
 
           <button
@@ -335,14 +436,15 @@ export default function GlobalReminderPopup() {
               applyCustomSnooze(1);
               navigate(`/client-overview/${currentReminder.companyId || currentReminder.id}`);
             }}
-            className="flex-1 py-1.5 px-3 text-white text-[10.5px] font-extrabold rounded-lg transition-all duration-200 hover:opacity-90 shadow-md flex items-center justify-center gap-1.5"
+            className="flex-1 py-1.5 px-2 text-white text-[10px] font-extrabold rounded-lg transition-all duration-200 hover:opacity-90 shadow-md flex items-center justify-center gap-1 truncate"
             style={{ backgroundColor: '#0A2947' }}
           >
-            <span>View Follow-Up Lead</span>
-            <ExternalLink size={12} />
+            <span className="truncate">View Lead</span>
+            <ExternalLink size={11} className="shrink-0" />
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
