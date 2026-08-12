@@ -194,12 +194,42 @@ const AddNewClients = () => {
         "Others"
     ]);
 
+    const [industries, setIndustries] = useState([
+        "Medical & Healthcare",
+        "AYUSH & Traditional Medicine",
+        "Wellness, Fitness & Lifestyle",
+        "Nutrition, Organic & Health Foods",
+        "Beauty, Personal Care & Aesthetic Wellness",
+        "Mental Health, Yoga & Spiritual Wellness",
+        "Medical Technology, Diagnostics & Devices",
+        "Institutions, Government Bodies & Startups"
+    ]);
+
     const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         fetchEvents();
         fetchBusinessTypes();
+        fetchIndustries();
     }, []);
+
+    const fetchIndustries = async () => {
+        try {
+            const res = await api.get("/api/lead-industry?activeOnly=true");
+            const data = res.data?.data || res.data || [];
+            if (Array.isArray(data) && data.length > 0) {
+                const names = data
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .map(b => b.name)
+                    .filter(Boolean);
+                if (names.length > 0) {
+                    setIndustries(names);
+                }
+            }
+        } catch (err) {
+            console.error("Error fetching dynamic industries:", err);
+        }
+    };
 
     const fetchBusinessTypes = async () => {
         try {
@@ -641,14 +671,9 @@ const AddNewClients = () => {
                                 <label className={labelClasses}>Industry / Sector <span className="text-red-500">*</span></label>
                                 <select required value={formData.businessNature} onChange={(e) => handleChange("businessNature", e.target.value)} className={inputClasses}>
                                     <option value="" className="text-red-500 font-medium">Select Here</option>
-                                    <option>Medical &amp; Healthcare</option>
-                                    <option>AYUSH &amp; Traditional Medicine</option>
-                                    <option>Wellness, Fitness &amp; Lifestyle</option>
-                                    <option>Nutrition, Organic &amp; Health Foods</option>
-                                    <option>Beauty, Personal Care &amp; Aesthetic Wellness</option>
-                                    <option>Mental Health, Yoga &amp; Spiritual Wellness</option>
-                                    <option>Medical Technology, Diagnostics &amp; Devices</option>
-                                    <option>Institutions, Government Bodies &amp; Startups</option>
+                                    {industries.map((indOpt, idx) => (
+                                        <option key={idx} value={indOpt}>{indOpt}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>

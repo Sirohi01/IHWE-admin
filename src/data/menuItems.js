@@ -530,6 +530,7 @@ export const menuItems = [
     icon: List,
     children: [
       { label: "Lead: Type of Business", path: "/lead-type-of-business" },
+      { label: "Lead: Industry / Sector", path: "/lead-industry" },
     ],
   },
   {

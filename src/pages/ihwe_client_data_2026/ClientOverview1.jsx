@@ -133,12 +133,31 @@ const ClientOverview1 = () => {
     "Others"
   ]);
 
+  const [industryOptions, setIndustryOptions] = useState([
+    "Medical & Healthcare",
+    "AYUSH & Traditional Medicine",
+    "Wellness, Fitness & Lifestyle",
+    "Nutrition, Organic & Health Foods",
+    "Beauty, Personal Care & Aesthetic Wellness",
+    "Mental Health, Yoga & Spiritual Wellness",
+    "Medical Technology, Diagnostics & Devices",
+    "Institutions, Government Bodies & Startups"
+  ]);
+
   React.useEffect(() => {
     api.get("/api/lead-type-of-business?activeOnly=true").then(res => {
       const data = res.data?.data || res.data || [];
       if (Array.isArray(data) && data.length > 0) {
         const names = data.sort((a, b) => (a.order || 0) - (b.order || 0)).map(b => b.name).filter(Boolean);
         if (names.length > 0) setBusinessTypesOptions(names);
+      }
+    }).catch(e => console.error(e));
+
+    api.get("/api/lead-industry?activeOnly=true").then(res => {
+      const data = res.data?.data || res.data || [];
+      if (Array.isArray(data) && data.length > 0) {
+        const names = data.sort((a, b) => (a.order || 0) - (b.order || 0)).map(b => b.name).filter(Boolean);
+        if (names.length > 0) setIndustryOptions(names);
       }
     }).catch(e => console.error(e));
   }, []);
@@ -1599,14 +1618,9 @@ const ClientOverview1 = () => {
                     <label className="block text-xs font-bold text-black mb-1">Industry / Sector</label>
                     <select id="businessNature" value={editProfileData.businessNature} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black">
                       <option value="">Select Here</option>
-                      <option>Medical &amp; Healthcare</option>
-                      <option>AYUSH &amp; Traditional Medicine</option>
-                      <option>Wellness, Fitness &amp; Lifestyle</option>
-                      <option>Nutrition, Organic &amp; Health Foods</option>
-                      <option>Beauty, Personal Care &amp; Aesthetic Wellness</option>
-                      <option>Mental Health, Yoga &amp; Spiritual Wellness</option>
-                      <option>Medical Technology, Diagnostics &amp; Devices</option>
-                      <option>Institutions, Government Bodies &amp; Startups</option>
+                      {industryOptions.map((opt, idx) => (
+                        <option key={idx} value={opt}>{opt}</option>
+                      ))}
                     </select>
                   </div>
                   <div>
