@@ -15,6 +15,7 @@
     "@tailwindcss/vite": "^4.1.18",
     "axios": "^1.13.2",
     "cropperjs": "^1.6.2",
+    "emoji-picker-react": "^4.19.1",
     "exceljs": "^4.4.0",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.25.0",
