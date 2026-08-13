@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
-import { Plus, Trash2, Edit, CreditCard, Filter, PlusCircle, Layout } from 'lucide-react';
+import { Plus, Trash2, Edit, CreditCard, Filter, PlusCircle, Layout, X } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { useDispatch } from 'react-redux';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
+
+const PL_SCHEME_OPTIONS = ['One Side Open', 'Two Side Open', 'Three Side Open', 'Four Side Open'];
 
 const EMPTY_RATE = {
     eventId: '',
     currency: 'INR',
     stallType: 'Shell Space',
-    ratePerSqm: 11700
+    ratePerSqm: 11700,
+    plSchemeCharges: [{ plScheme: 'One Side Open', plcCharges: 0 }],
+    hsnCode: ''
 };
 
 const ManageStallRates = () => {
@@ -19,6 +23,7 @@ const ManageStallRates = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [rateForm, setRateForm] = useState({ ...EMPTY_RATE });
     const [isEditing, setIsEditing] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const dispatch = useDispatch();
 
     const getUserInfo = () => {
@@ -33,6 +38,8 @@ const ManageStallRates = () => {
         fetchRates();
         fetchEvents();
     }, []);
+
+
 
     const fetchRates = async () => {
         setIsLoading(true);
@@ -57,6 +64,27 @@ const ManageStallRates = () => {
         } catch (error) {
             console.error('Error fetching events:', error);
         }
+    };
+
+    const addPlSchemeRow = () => {
+        setRateForm({
+            ...rateForm,
+            plSchemeCharges: [...rateForm.plSchemeCharges, { plScheme: 'One Side Open', plcCharges: 0 }]
+        });
+    };
+
+    const removePlSchemeRow = (index) => {
+        setRateForm({
+            ...rateForm,
+            plSchemeCharges: rateForm.plSchemeCharges.filter((_, i) => i !== index)
+        });
+    };
+
+    const updatePlSchemeRow = (index, field, value) => {
+        setRateForm({
+            ...rateForm,
+            plSchemeCharges: rateForm.plSchemeCharges.map((row, i) => i === index ? { ...row, [field]: value } : row)
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -102,6 +130,7 @@ const ManageStallRates = () => {
                 });
                 setRateForm({ ...EMPTY_RATE });
                 setIsEditing(null);
+                setIsModalOpen(false);
                 fetchRates();
             }
         } catch (error) {
@@ -152,15 +181,131 @@ const ManageStallRates = () => {
 
     return (
         <div className="p-6 bg-white min-h-screen font-inter uppercase ">
-            <PageHeader title="STALL PRICING MASTER" description="Set pricing per event, currency, and stall type" />
+            <div className="flex justify-between items-center mb-6">
+                <PageHeader title="STALL PRICING MASTER" description="Set pricing per event, currency, and stall type" />
+                <button 
+                    onClick={() => {
+                        setIsEditing(null);
+                        setRateForm({ ...EMPTY_RATE });
+                        setIsModalOpen(true);
+                    }}
+                    className="px-6 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-xs font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-sm flex items-center gap-2"
+                >
+                    <PlusCircle size={16} /> Add New Rate
+                </button>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-                {/* FORM COLUMN */}
-                <div className="lg:col-span-1">
-                    <div className="bg-white shadow-md border-2 border-gray-200 rounded-[2px] overflow-hidden">
-                        <div className={`px-6 py-4 flex items-center gap-3 text-white ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
-                            {isEditing ? <Edit size={18} /> : <PlusCircle size={18} />}
-                            <h2 className="text-sm font-bold uppercase tracking-tight">{isEditing ? 'Edit Rate Detail' : 'Add New Rate'}</h2>
+            {/* FULL WIDTH TABLE */}
+            <div className="bg-white border-2 border-gray-200 shadow-sm">
+                <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
+                    <h2 className="text-white font-bold flex items-center gap-2 uppercase tracking-tight">
+                        <PlusCircle className="w-4 h-4" /> Pricing Registry
+                    </h2>
+                    <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
+                        {rates.length} RATE ENTRIES
+                    </span>
+                </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm font-inter">
+                        <thead>
+                            <tr className="border-b-2 border-gray-200 bg-gray-50/50">
+                                <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">No.</th>
+                                <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Event / Type</th>
+                                <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Pricing Rate</th>
+                                <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">PL Scheme / PLC</th>
+                                <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {isLoading ? (
+                                <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading rates...</td></tr>
+                            ) : rates.length === 0 ? (
+                                <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No rates found</td></tr>
+                            ) : rates.map((rate, index) => (
+                                <tr key={rate._id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0">
+                                    <td className="py-3 px-4 text-[#15173D] font-black text-center text-xs">{index + 1}</td>
+                                    <td className="py-3 px-4 min-w-[200px]">
+                                        <div className="font-bold text-[12px] cursor-pointer hover:text-emerald-600 hover:underline mb-1.5" style={{ color: '#093C5D', fontFamily: 'Inter, sans-serif' }}>
+                                            {rate.eventId?.name || 'N/A'}
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5 items-center">
+                                            <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
+                                                {rate.stallType}
+                                            </span>
+                                            {rate.hsnCode && (
+                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-50 text-slate-500 border border-slate-200">
+                                                    HSN: {rate.hsnCode}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4 text-center">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <span className="text-[#15173D] font-black text-sm tracking-tight">
+                                                {rate.currency} {rate.ratePerSqm?.toLocaleString()}
+                                            </span>
+                                            <span className="text-[9px] font-bold text-slate-500 mt-0.5">
+                                                PER SQ. METRE
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <div className="flex flex-wrap items-center justify-center gap-1.5">
+                                            {(rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }]).map((row, i) => (
+                                                <div key={i} className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded p-1.5 min-w-[90px] hover:bg-slate-100 transition-colors">
+                                                    <span className="text-[9px] font-bold text-slate-700 uppercase tracking-tight">{row.plScheme}</span>
+                                                    <span className="text-[10px] font-black text-[#111844] mt-0.5">{rate.currency} {Number(row.plcCharges || 0).toLocaleString()} <span className="text-[8px] text-slate-500 font-medium">PLC</span></span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </td>
+                                    <td className="py-3 px-4">
+                                        <div className="flex items-center justify-center gap-1.5">
+                                            <button
+                                                onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm, plSchemeCharges: rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }], hsnCode: rate.hsnCode || '' }); setIsModalOpen(true); }}
+                                                className="text-blue-500 hover:bg-blue-100 p-1.5 transition-all rounded-md"
+                                                title="Edit"
+                                            >
+                                                <Edit size={14} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(rate._id)}
+                                                className="text-red-500 hover:bg-red-100 p-1.5 transition-all rounded-md"
+                                                title="Delete"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+                <div className="bg-white px-5 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50/30">
+                    <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Financial Pricing Master</div>
+                    <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                        Total: <span className="text-red-600">{rates.length}</span> Active Rate Entries
+                    </div>
+                </div>
+            </div>
+
+            {/* MODAL */}
+            {isModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <style>{`
+                        body, html { overflow: hidden !important; }
+                        #root, main, .overflow-y-auto { overflow: hidden !important; }
+                    `}</style>
+                    <div className="bg-white rounded-lg shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className={`px-6 py-4 flex items-center justify-between text-white ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
+                            <div className="flex items-center gap-3">
+                                {isEditing ? <Edit size={18} /> : <PlusCircle size={18} />}
+                                <h2 className="text-sm font-bold uppercase tracking-tight">{isEditing ? 'Edit Rate Detail' : 'Add New Rate'}</h2>
+                            </div>
+                            <button onClick={() => { setIsModalOpen(false); setIsEditing(null); setRateForm({ ...EMPTY_RATE }); }} className="text-white hover:text-gray-200">
+                                <X size={20} />
+                            </button>
                         </div>
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div className="mb-3">
@@ -188,16 +333,49 @@ const ManageStallRates = () => {
                                 </div>
                             </div>
 
-                            <div className="mb-3">
-                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Rate Per Sq m *</label>
-                                <div className="relative">
-                                    <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                                    <input type="number" required value={rateForm.ratePerSqm} onChange={(e) => setRateForm({ ...rateForm, ratePerSqm: e.target.value })} className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Rate Per Sq m *</label>
+                                    <div className="relative">
+                                        <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                                        <input type="number" required value={rateForm.ratePerSqm} onChange={(e) => setRateForm({ ...rateForm, ratePerSqm: e.target.value })} className="w-full pl-10 pr-3 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">HSN Code</label>
+                                    <input type="text" value={rateForm.hsnCode} onChange={(e) => setRateForm({ ...rateForm, hsnCode: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
                                 </div>
                             </div>
 
+                            <div className="mb-3 space-y-3">
+                                {rateForm.plSchemeCharges.map((row, index) => (
+                                    <div key={index} className="grid grid-cols-2 gap-3 items-end">
+                                        <div>
+                                            <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">PL Scheme *</label>
+                                            <select value={row.plScheme} onChange={(e) => updatePlSchemeRow(index, 'plScheme', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white">
+                                                {PL_SCHEME_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="flex items-end gap-2">
+                                            <div className="flex-1">
+                                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">PLC Charges</label>
+                                                <input type="number" value={row.plcCharges} onChange={(e) => updatePlSchemeRow(index, 'plcCharges', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                            </div>
+                                            {rateForm.plSchemeCharges.length > 1 && (
+                                                <button type="button" onClick={() => removePlSchemeRow(index)} className="text-red-600 hover:bg-red-50 p-2 transition-all rounded-[2px] border border-red-200 bg-red-50/30" title="Remove">
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                                <button type="button" onClick={addPlSchemeRow} className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#23471d] hover:underline">
+                                    <Plus size={14} /> Add More
+                                </button>
+                            </div>
+
                             <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">
-                                {isEditing && <button type="button" onClick={() => { setIsEditing(null); setRateForm({ ...EMPTY_RATE }); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>}
+                                <button type="button" onClick={() => { setIsModalOpen(false); setIsEditing(null); setRateForm({ ...EMPTY_RATE }); }} className="px-6 py-2 bg-red-50 border border-red-200 text-red-600 text-[11px] font-bold uppercase tracking-widest hover:bg-red-100 transition-all rounded-[2px]">Cancel</button>
                                 <button type="submit" disabled={isLoading} className="px-8 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-[2px] shadow-sm">
                                     {isLoading ? 'Saving...' : (isEditing ? 'Update Rate' : 'Save Rate Detail')}
                                 </button>
@@ -205,86 +383,7 @@ const ManageStallRates = () => {
                         </form>
                     </div>
                 </div>
-
-                {/* TABLE COLUMN */}
-                <div className="lg:col-span-2">
-                    <div className="bg-white border-2 border-gray-200 shadow-sm">
-                        <div className="bg-[#23471d] px-5 py-3 flex items-center justify-between">
-                            <h2 className="text-white font-bold flex items-center gap-2 uppercase tracking-tight">
-                                <PlusCircle className="w-4 h-4" /> Pricing Registry
-                            </h2>
-                            <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
-                                {rates.length} RATE ENTRIES
-                            </span>
-                        </div>
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm font-inter">
-                                <thead>
-                                    <tr className="border-b-2 border-gray-200 bg-gray-50/50">
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">No.</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Event / Type</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Pricing Rate</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {isLoading ? (
-                                        <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading rates...</td></tr>
-                                    ) : rates.length === 0 ? (
-                                        <tr><td colSpan={4} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No rates found</td></tr>
-                                    ) : rates.map((rate, index) => (
-                                        <tr key={rate._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                                            <td className="py-4 px-4 text-black font-medium text-center text-xs">{index + 1}</td>
-                                            <td className="py-4 px-4 min-w-[200px]">
-                                                <p className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1.5 cursor-pointer hover:underline">
-                                                    {rate.eventId?.name || 'N/A'}
-                                                </p>
-                                                <p className="text-[10px] text-black font-medium uppercase tracking-widest opacity-60">
-                                                    STALL TYPE: <span className="text-black font-bold">{rate.stallType}</span>
-                                                </p>
-                                            </td>
-                                            <td className="py-4 px-4 text-center">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-black font-semibold text-xs uppercase tracking-tight">
-                                                        {rate.currency} {rate.ratePerSqm?.toLocaleString()}
-                                                    </span>
-                                                    <span className="text-[10px] font-medium text-black uppercase tracking-tight opacity-40">
-                                                        PER SQUARE METRE
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                <div className="flex items-center justify-center gap-3">
-                                                    <button
-                                                        onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm }); }}
-                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-200 bg-blue-50/30"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(rate._id)}
-                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-200 bg-red-50/30"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="bg-white px-5 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50/30">
-                            <div className="text-[10px] text-gray-400 font-black uppercase tracking-[0.2em]">Financial Pricing Master</div>
-                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                                Total: <span className="text-red-600">{rates.length}</span> Active Rate Entries
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+            )}
         </div>
     );
 };

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api from '../lib/api';
@@ -90,6 +90,7 @@ const buildImpactPreviewHtml = (preview) => {
 
 const newItem = () => ({
     id: Date.now(),
+    category: 'Stall',
     description: '',
     subDesc: '',
     hsn: '',
@@ -106,6 +107,8 @@ const newItem = () => ({
 const GST_OPTIONS = ['0% GST', '5% CGST+SGST', '12% CGST+SGST', '18% CGST+SGST', '28% CGST+SGST', '18% IGST', '12% IGST', '5% IGST'];
 const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
+const SIZE_BASED_UNITS = ['Sqm', 'Sqft'];
+const ITEM_CATEGORIES = ['Stall', 'Addon Product'];
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
 const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat';
@@ -228,8 +231,26 @@ export const PerformaInvoices = () => {
     });
 
     const [items, setItems] = useState([
-        { id: 1, description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, area: '3x3', size: 9, unit: 'Sqm', rate: 11200, amount: 100800, disc: 0, taxable: 100800 }
+        { id: 1, category: 'Stall', description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, area: '3x3', size: 9, unit: 'Sqm', rate: 11200, amount: 100800, disc: 0, taxable: 100800 }
     ]);
+    // 'default' auto-fills the item table from the linked Estimate/PI; 'custom' lets
+    // the user build it from scratch. prefillItemsRef remembers what was fetched so
+    // switching back to Default doesn't require re-fetching the estimate.
+    const [itemsMode, setItemsMode] = useState('default');
+    const prefillItemsRef = useRef(null);
+    const isFirstItemsModeRender = useRef(true);
+
+    useEffect(() => {
+        if (isFirstItemsModeRender.current) {
+            isFirstItemsModeRender.current = false;
+            return;
+        }
+        if (itemsMode === 'custom') {
+            setItems([newItem()]);
+        } else {
+            setItems(prefillItemsRef.current?.length ? prefillItemsRef.current : [newItem()]);
+        }
+    }, [itemsMode]);
 
     const [gstOption, setGstOption] = useState('18% IGST');
     const [remarks, setRemarks] = useState('');
@@ -391,13 +412,16 @@ export const PerformaInvoices = () => {
                         const rate = Number(item.rate || 0);
                         const qty = Number(item.qty || 1);
                         const size = Number(item.size || 0);
-                        const amount = roundAmount(Number(item.amount) || (qty * rate * size));
+                        const unit = item.unit || 'Sqm';
+                        const multiplier = SIZE_BASED_UNITS.includes(unit) ? (size > 0 ? size : 1) : 1;
+                        const amount = roundAmount(Number(item.amount) || (qty * rate * multiplier));
                         const disc = Number(item.disc || 0);
                         const taxable = roundAmount(amount - (amount * disc) / 100);
 
                         return {
                             ...item,
                             id: item._id || index + 1,
+                            category: item.category || 'Stall',
                             description: desc,
                             subDesc: subDesc,
                             hsn: item.hsn || '',
@@ -412,7 +436,8 @@ export const PerformaInvoices = () => {
                         };
                     });
 
-                    setItems(formattedItems);
+                    prefillItemsRef.current = formattedItems;
+                    if (itemsMode === 'default') setItems(formattedItems);
 
                     // Editing/viewing an already-issued PI (existingEstimate) must stay faithful to what
                     // was actually issued, so its own saved GST/address/location win. A brand-new PI that's
@@ -544,7 +569,9 @@ export const PerformaInvoices = () => {
                 const qty = Number(field === 'qty' ? val : updated.qty) || 0;
                 const size = Number(field === 'size' ? val : updated.size) || 0;
                 const disc = Number(field === 'disc' ? val : updated.disc) || 0;
-                updated.amount = roundAmount(qty * rate * size);
+                const unit = field === 'unit' ? val : updated.unit;
+                const multiplier = SIZE_BASED_UNITS.includes(unit) ? (size > 0 ? size : 1) : 1;
+                updated.amount = roundAmount(qty * rate * multiplier);
                 updated.taxable = roundAmount(updated.amount - (updated.amount * disc) / 100);
                 return updated;
             })
@@ -916,14 +943,40 @@ export const PerformaInvoices = () => {
 
                     {/* SECTION 2 – Item & Pricing */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
-                        <SectionHead num="2" label="Item & Pricing Details" />
+                        <div className="flex items-center justify-between mb-4">
+                            <SectionHead num="2" label="Item & Pricing Details" />
+                            <div className="flex items-center gap-4">
+                                <label className="flex items-center gap-1.5 text-[12px] font-medium text-[#1a2b4b] cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="itemsMode"
+                                        value="default"
+                                        checked={itemsMode === 'default'}
+                                        onChange={() => setItemsMode('default')}
+                                        className="accent-[#3b82f6]"
+                                    />
+                                    Default
+                                </label>
+                                <label className="flex items-center gap-1.5 text-[12px] font-medium text-[#1a2b4b] cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        name="itemsMode"
+                                        value="custom"
+                                        checked={itemsMode === 'custom'}
+                                        onChange={() => setItemsMode('custom')}
+                                        className="accent-[#3b82f6]"
+                                    />
+                                    Custom
+                                </label>
+                            </div>
+                        </div>
 
                         {/* Table */}
                         <div className="overflow-x-auto">
                             <table className="w-full text-[10px] border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                        {['#', 'Item Description *', 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', ''].map((h, i) => (
+                                        {['#', 'Item Category *', 'Item Description *', 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', ''].map((h, i) => (
                                             <th key={i} className="text-left px-1 py-2 font-medium text-[#1a2b4b] whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
@@ -932,6 +985,11 @@ export const PerformaInvoices = () => {
                                     {items.map((item, idx) => (
                                         <tr key={item.id} className=" hover:bg-gray-50/50 border-b border-gray-50 last:border-0">
                                             <td className="px-1 py-1.5 font-medium text-slate-400 text-center">{idx + 1}</td>
+                                            <td className="px-1 py-1.5 w-24">
+                                                <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.category || 'Stall'} onChange={(e) => updateItem(item.id, 'category', e.target.value)}>
+                                                    {ITEM_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                                                </select>
+                                            </td>
                                             <td className="px-1 py-1.5 min-w-[120px]">
                                                 <div className='border border-gray-200 rounded-md overflow-hidden focus-within:border-[#3b82f6] focus-within:ring-1 focus-within:ring-[#3b82f6]/20 transition-all shadow-sm'>
                                                     <input
