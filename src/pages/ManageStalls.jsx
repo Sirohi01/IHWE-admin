@@ -128,11 +128,15 @@ const ManageStalls = () => {
     // Keep PL Scheme / PLC Charges in sync with the rates master: fall back to the first
     // available scheme if the current selection isn't offered for this event, and always
     // mirror the PLC Charges configured for whichever scheme ends up selected.
+    // incrementPercentage has no field of its own in this form (it's what invoices
+    // actually use to compute PLC — see PerformaInvoices.jsx), so it's kept mirrored
+    // to whatever plcCharges resolves to rather than left at 0 with nothing to set it.
     useEffect(() => {
         const activeScheme = plSchemeOptions.includes(stallForm.plScheme) ? stallForm.plScheme : plSchemeOptions[0];
         const preferredRate = matchingEventRates.find(rate => rate.currency === 'INR') || matchingEventRates[0];
         const match = preferredRate?.plSchemeCharges?.find(row => row.plScheme === activeScheme);
-        setStallForm(prev => ({ ...prev, plScheme: activeScheme, plcCharges: match?.plcCharges || 0 }));
+        const plcCharges = match?.plcCharges || 0;
+        setStallForm(prev => ({ ...prev, plScheme: activeScheme, plcCharges, incrementPercentage: plcCharges }));
     }, [stallForm.plScheme, stallForm.stallType, eventRates]);
 
     const getRatesForStall = (stall) => allRates.filter(rate =>
@@ -505,8 +509,9 @@ const ManageStalls = () => {
                                         ) : (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                                                 {matchingEventRates.map(rate => {
-                                                    const plc = getPlcCharge(rate, stallForm.plScheme);
+                                                    const plcPct = getPlcCharge(rate, stallForm.plScheme);
                                                     const base = Number(stallForm.area || 0) * Number(rate.ratePerSqm || 0);
+                                                    const plcAmount = Math.round(base * Number(plcPct || 0) / 100);
                                                     return (
                                                         <div key={rate._id} className="bg-white border border-slate-200 p-2">
                                                             <div className="flex justify-between text-[10px] font-black">
@@ -515,8 +520,8 @@ const ManageStalls = () => {
                                                             </div>
                                                             <div className="mt-1 space-y-0.5 text-[9px] font-bold text-slate-600 normal-case">
                                                                 <div className="flex justify-between"><span>Base ({stallForm.area || 0} sqm)</span><span>{formatMoney(rate.currency, base)}</span></div>
-                                                                <div className="flex justify-between"><span>PLC ({stallForm.plScheme})</span><span>{formatMoney(rate.currency, plc)}</span></div>
-                                                                <div className="flex justify-between pt-1 border-t text-[#23471d] uppercase"><span>Estimated</span><span>{formatMoney(rate.currency, base + plc)}</span></div>
+                                                                <div className="flex justify-between"><span>PLC ({stallForm.plScheme})</span><span>{Number(plcPct || 0)}%</span></div>
+                                                                <div className="flex justify-between pt-1 border-t text-[#23471d] uppercase"><span>Estimated</span><span>{formatMoney(rate.currency, base + plcAmount)}</span></div>
                                                             </div>
                                                         </div>
                                                     );
@@ -681,7 +686,7 @@ const ManageStalls = () => {
                                                     PL: {stall.plScheme}
                                                     {stall.plcCharges > 0 && (
                                                         <span className="ml-1 text-[#23471d]">
-                                                            (PLC: {Number(stall.plcCharges).toLocaleString()})
+                                                            (PLC: {Number(stall.plcCharges).toLocaleString()}%)
                                                         </span>
                                                     )}
                                                 </span>
@@ -694,13 +699,14 @@ const ManageStalls = () => {
                                                 return (
                                                     <div className="flex flex-wrap gap-4">
                                                         {mappedRates.map(rate => {
-                                                            const plc = getPlcCharge(rate, stall.plScheme);
+                                                            const plcPct = getPlcCharge(rate, stall.plScheme);
                                                             const base = Number(stall.area || 0) * Number(rate.ratePerSqm || 0);
+                                                            const plcAmount = Math.round(base * Number(plcPct || 0) / 100);
                                                             return (
                                                                 <div key={rate._id} className="flex flex-col gap-0 text-[9px] font-bold border-r border-slate-100 pr-4 last:border-0 last:pr-0">
                                                                     <span className="text-[#093C5D] font-black">{rate.currency} {formatMoney(rate.currency, rate.ratePerSqm)}/SQM</span>
-                                                                    <span className="text-slate-500 leading-none">PLC: {formatMoney(rate.currency, plc)}</span>
-                                                                    <span className="text-[#23471d] leading-none mt-0.5">TOTAL: {formatMoney(rate.currency, base + plc)}</span>
+                                                                    <span className="text-slate-500 leading-none">PLC: {Number(plcPct || 0)}%</span>
+                                                                    <span className="text-[#23471d] leading-none mt-0.5">TOTAL: {formatMoney(rate.currency, base + plcAmount)}</span>
                                                                 </div>
                                                             );
                                                         })}

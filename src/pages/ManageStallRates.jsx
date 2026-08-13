@@ -8,13 +8,20 @@ import { createActivityLogThunk } from '../features/activityLog/activityLogSlice
 
 const PL_SCHEME_OPTIONS = ['One Side Open', 'Two Side Open', 'Three Side Open', 'Four Side Open'];
 
+const DEFAULT_TDS_LINE = 'TDS under Section 194C shall be deducted on the basic value only (excluding GST). Applicable rate: 2% for Companies/Firms/other entities and 1% for Individual/HUF.';
+
 const EMPTY_RATE = {
     eventId: '',
     currency: 'INR',
     stallType: 'Shell Space',
     ratePerSqm: 11700,
     plSchemeCharges: [{ plScheme: 'One Side Open', plcCharges: 0 }],
-    hsnCode: ''
+    hsnCode: '',
+    sacCode: '',
+    // Free-text TDS Deduction notes shown on invoices — empty means no TDS
+    // note is shown for that payment plan on this rate card.
+    tdsFullPaymentLines: [],
+    tdsInstalmentPaymentLines: []
 };
 
 const ManageStallRates = () => {
@@ -85,6 +92,20 @@ const ManageStallRates = () => {
             ...rateForm,
             plSchemeCharges: rateForm.plSchemeCharges.map((row, i) => i === index ? { ...row, [field]: value } : row)
         });
+    };
+
+    // TDS Deduction lines — shared helpers for the Full Payment / Installment
+    // Payment lists, keyed by field name (tdsFullPaymentLines / tdsInstalmentPaymentLines).
+    const addTdsLine = (field) => {
+        setRateForm({ ...rateForm, [field]: [...rateForm[field], DEFAULT_TDS_LINE] });
+    };
+
+    const removeTdsLine = (field, index) => {
+        setRateForm({ ...rateForm, [field]: rateForm[field].filter((_, i) => i !== index) });
+    };
+
+    const updateTdsLine = (field, index, value) => {
+        setRateForm({ ...rateForm, [field]: rateForm[field].map((line, i) => i === index ? value : line) });
     };
 
     const handleSubmit = async (e) => {
@@ -237,6 +258,11 @@ const ManageStallRates = () => {
                                                     HSN: {rate.hsnCode}
                                                 </span>
                                             )}
+                                            {rate.sacCode && (
+                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-50 text-slate-500 border border-slate-200">
+                                                    SAC: {rate.sacCode}
+                                                </span>
+                                            )}
                                         </div>
                                     </td>
                                     <td className="py-3 px-4 text-center">
@@ -254,7 +280,7 @@ const ManageStallRates = () => {
                                             {(rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }]).map((row, i) => (
                                                 <div key={i} className="flex flex-col items-center justify-center bg-slate-50 border border-slate-200 rounded p-1.5 min-w-[90px] hover:bg-slate-100 transition-colors">
                                                     <span className="text-[9px] font-bold text-slate-700 uppercase tracking-tight">{row.plScheme}</span>
-                                                    <span className="text-[10px] font-black text-[#111844] mt-0.5">{rate.currency} {Number(row.plcCharges || 0).toLocaleString()} <span className="text-[8px] text-slate-500 font-medium">PLC</span></span>
+                                                    <span className="text-[10px] font-black text-[#111844] mt-0.5">{Number(row.plcCharges || 0)}% <span className="text-[8px] text-slate-500 font-medium">PLC</span></span>
                                                 </div>
                                             ))}
                                         </div>
@@ -262,7 +288,7 @@ const ManageStallRates = () => {
                                     <td className="py-3 px-4">
                                         <div className="flex items-center justify-center gap-1.5">
                                             <button
-                                                onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm, plSchemeCharges: rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }], hsnCode: rate.hsnCode || '' }); setIsModalOpen(true); }}
+                                                onClick={() => { setIsEditing(rate._id); setRateForm({ eventId: rate.eventId?._id || '', currency: rate.currency, stallType: rate.stallType, ratePerSqm: rate.ratePerSqm, plSchemeCharges: rate.plSchemeCharges?.length ? rate.plSchemeCharges : [{ plScheme: 'One Side Open', plcCharges: 0 }], hsnCode: rate.hsnCode || '', sacCode: rate.sacCode || '', tdsFullPaymentLines: rate.tdsFullPaymentLines || [], tdsInstalmentPaymentLines: rate.tdsInstalmentPaymentLines || [] }); setIsModalOpen(true); }}
                                                 className="text-blue-500 hover:bg-blue-100 p-1.5 transition-all rounded-md"
                                                 title="Edit"
                                             >
@@ -333,7 +359,7 @@ const ManageStallRates = () => {
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3 mb-3">
+                            <div className="grid grid-cols-3 gap-3 mb-3">
                                 <div>
                                     <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Rate Per Sq m *</label>
                                     <div className="relative">
@@ -343,7 +369,11 @@ const ManageStallRates = () => {
                                 </div>
                                 <div>
                                     <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">HSN Code</label>
-                                    <input type="text" value={rateForm.hsnCode} onChange={(e) => setRateForm({ ...rateForm, hsnCode: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                    <input type="text" value={rateForm.hsnCode} onChange={(e) => setRateForm({ ...rateForm, hsnCode: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="Goods" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">SAC Code</label>
+                                    <input type="text" value={rateForm.sacCode} onChange={(e) => setRateForm({ ...rateForm, sacCode: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" placeholder="998596" />
                                 </div>
                             </div>
 
@@ -358,8 +388,11 @@ const ManageStallRates = () => {
                                         </div>
                                         <div className="flex items-end gap-2">
                                             <div className="flex-1">
-                                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">PLC Charges</label>
-                                                <input type="number" value={row.plcCharges} onChange={(e) => updatePlSchemeRow(index, 'plcCharges', e.target.value)} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                                <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">PLC Charges (%)</label>
+                                                <div className="relative">
+                                                    <input type="number" min="0" max="100" value={row.plcCharges} onChange={(e) => updatePlSchemeRow(index, 'plcCharges', e.target.value)} className="w-full px-4 py-2 pr-7 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">%</span>
+                                                </div>
                                             </div>
                                             {rateForm.plSchemeCharges.length > 1 && (
                                                 <button type="button" onClick={() => removePlSchemeRow(index)} className="text-red-600 hover:bg-red-50 p-2 transition-all rounded-[2px] border border-red-200 bg-red-50/30" title="Remove">
@@ -372,6 +405,36 @@ const ManageStallRates = () => {
                                 <button type="button" onClick={addPlSchemeRow} className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#23471d] hover:underline">
                                     <Plus size={14} /> Add More
                                 </button>
+                            </div>
+
+                            {/* TDS Deduction — free-text lines shown on invoices, no lines = no TDS note for that plan */}
+                            <div className="pt-3 border-t border-slate-100 mb-3 space-y-4">
+                                {[
+                                    { field: 'tdsFullPaymentLines', label: 'TDS Deduction — Full Payment' },
+                                    { field: 'tdsInstalmentPaymentLines', label: 'TDS Deduction — Installment Payment' },
+                                ].map(({ field, label }) => (
+                                    <div key={field}>
+                                        <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">{label}</label>
+                                        <div className="space-y-2">
+                                            {rateForm[field].map((line, index) => (
+                                                <div key={index} className="flex items-start gap-2">
+                                                    <textarea
+                                                        rows={2}
+                                                        value={line}
+                                                        onChange={(e) => updateTdsLine(field, index, e.target.value)}
+                                                        className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-medium rounded-[2px] resize-y"
+                                                    />
+                                                    <button type="button" onClick={() => removeTdsLine(field, index)} className="text-red-600 hover:bg-red-50 p-2 transition-all rounded-[2px] border border-red-200 bg-red-50/30 shrink-0" title="Remove">
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                        <button type="button" onClick={() => addTdsLine(field)} className="mt-1.5 flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-widest text-[#23471d] hover:underline">
+                                            <Plus size={14} /> Add Line
+                                        </button>
+                                    </div>
+                                ))}
                             </div>
 
                             <div className="pt-2 border-t border-slate-100 flex justify-end gap-2">

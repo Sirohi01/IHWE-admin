@@ -44,7 +44,9 @@ const unitOptions = [
   "inch",
 ];
 
+// Internal values stay "Stall" / "Addon Product" — only the displayed label changes.
 const ITEM_CATEGORIES = ["Stall", "Addon Product"];
+const ITEM_CATEGORY_LABELS = { Stall: "Exhibition Stall", "Addon Product": "Add-on Product" };
 const STALL_TYPES = ["Raw Space", "Shell Space"];
 
 const EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
@@ -888,7 +890,7 @@ const CreateEstimate1 = () => {
                     required
                   >
                     {ITEM_CATEGORIES.map((c) => (
-                      <option key={c} value={c}>{c}</option>
+                      <option key={c} value={c}>{ITEM_CATEGORY_LABELS[c] || c}</option>
                     ))}
                   </select>
                 </div>

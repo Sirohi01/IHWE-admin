@@ -13,7 +13,9 @@ import { showError, showSuccess } from "../../../utils/toastMessage";
 import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X } from "lucide-react";
 import api from "../../../lib/api";
 
+// Internal values stay "Stall" / "Addon Product" — only the displayed label changes.
 const ITEM_CATEGORIES = ["Stall", "Addon Product"];
+const ITEM_CATEGORY_LABELS = { Stall: "Exhibition Stall", "Addon Product": "Add-on Product" };
 const STALL_TYPES = ["Raw Space", "Shell Space"];
 
 const EditEstimate = () => {
@@ -666,7 +668,7 @@ const EditEstimate = () => {
                         className="w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
                       >
                         {ITEM_CATEGORIES.map((c) => (
-                          <option key={c} value={c}>{c}</option>
+                          <option key={c} value={c}>{ITEM_CATEGORY_LABELS[c] || c}</option>
                         ))}
                       </select>
                     </div>

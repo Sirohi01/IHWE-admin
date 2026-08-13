@@ -11,6 +11,7 @@ const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 1100
 const PROFORMA_EVENT_STATE = 'Delhi';
 const PROFORMA_PLACE_OF_SUPPLY_WITH_CODE = 'Delhi (07)';
 const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';
+const ITEM_CATEGORY_LABELS = { Stall: 'Exhibition Stall', 'Addon Product': 'Add-on Product' };
 
 function toWords(n) {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine',
@@ -284,6 +285,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     const [estimateTerms, setEstimateTerms] = useState(null);
     const [relatedInvoiceStatus, setRelatedInvoiceStatus] = useState({ hasCancelled: false, hasActive: false });
     const [relatedInvoicePoNo, setRelatedInvoicePoNo] = useState('');
+    const [stallInventoryMap, setStallInventoryMap] = useState({});
 
     const { companies, loading: companiesLoading } = useSelector((state) => state.companies);
 
@@ -418,6 +420,38 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         fetchEstimateData();
     }, [id]);
 
+    // Older PIs saved before PL Scheme / Stall Type were persisted per item
+    // have nothing saved on the item itself — fall back to a live Stall
+    // Inventory lookup (by stall number, scoped to this PI's event) only
+    // when actually needed.
+    useEffect(() => {
+        let alive = true;
+
+        const items = matchedEstimate?.items || [];
+        const needsLookup = items.some((item) => item?.category !== 'Addon Product' && (!item?.plScheme || !item?.stallType));
+        if (!needsLookup) return undefined;
+
+        (async () => {
+            try {
+                const res = await api.get('/api/stalls');
+                const stalls = res.data?.data || res.data || [];
+                const map = {};
+                (Array.isArray(stalls) ? stalls : []).forEach((s) => {
+                    if (!s?.stallNumber || (!s?.plScheme && !s?.stallType)) return;
+                    const info = { plScheme: s.plScheme || '', stallType: s.stallType || '' };
+                    if (!(s.stallNumber in map)) map[s.stallNumber] = info;
+                    const eventId = s.eventId?._id || s.eventId;
+                    if (eventId) map[`${eventId}|${s.stallNumber}`] = info;
+                });
+                if (alive) setStallInventoryMap(map);
+            } catch {
+                if (alive) setStallInventoryMap({});
+            }
+        })();
+
+        return () => { alive = false; };
+    }, [matchedEstimate]);
+
     useEffect(() => {
         let alive = true;
 
@@ -491,7 +525,63 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         });
     }, [matchedEstimate, cancelled, onMetaChange]);
 
-    const activeItems = useMemo(() => matchedEstimate?.items || [], [matchedEstimate?.items]);
+    // PLC Charges are saved on the Estimate as a single invoice-level charge
+    // (belonging to the invoice's one "primary" stall, same as the creation
+    // form), not as its own saved item row — so it's synthesized here as a
+    // second line item directly below that stall, with its own Rate/GST/Disc/
+    // Amount, which also makes it flow naturally into the totals below.
+    const activeItems = useMemo(() => {
+        const base = matchedEstimate?.items || [];
+        const plcCharges = parseNum(matchedEstimate?.plcCharges);
+        if (!plcCharges) return base;
+
+        const primaryStallIndex = base.findIndex((item) => item?.category !== 'Addon Product');
+        if (primaryStallIndex === -1) return base;
+
+        const primaryStallItem = base[primaryStallIndex];
+        const plcGstPct = parseNum(matchedEstimate?.plcGstPct) || 18;
+        const plcPct = matchedEstimate?.plcPct;
+        const plScheme = primaryStallItem?.plScheme
+            || stallInventoryMap[`${matchedEstimate?.eventId}|${primaryStallItem?.description}`]?.plScheme
+            || stallInventoryMap[primaryStallItem?.description]?.plScheme
+            || '';
+        const plcDescriptionLines = [
+            `Preferred Location Charges (PLC)${plcPct ? ` @ ${plcPct}%` : ''}`,
+            plScheme ? `${plScheme} Stall: ${plcPct || 0}% of the Basic Stall Price` : '',
+        ].filter(Boolean);
+        // Rate column mirrors the stall's own per-sqm Rate scaled by the PLC
+        // %, so Rate × Size still resolves to the same total plcCharges below.
+        const plcRate = (Number(primaryStallItem?.rate) || 0) * (Number(plcPct) || 0) / 100;
+        const plcItem = {
+            category: 'PLC Charges',
+            description: plcDescriptionLines.join('\n'),
+            hsn: primaryStallItem?.hsn || '',
+            qty: 1,
+            size: primaryStallItem?.size || '',
+            area: primaryStallItem?.area || '',
+            unit: 'Nos',
+            rate: plcRate,
+            amount: plcCharges,
+            disc: 0,
+            taxable: plcCharges,
+            gstPct: plcGstPct,
+            tax: parseNum(matchedEstimate?.plcGstAmount),
+            finalAmount: parseNum(matchedEstimate?.plcFinalAmount) || plcCharges,
+        };
+
+        const out = [...base];
+        out.splice(primaryStallIndex + 1, 0, plcItem);
+        return out;
+    }, [
+        matchedEstimate?.items,
+        matchedEstimate?.eventId,
+        matchedEstimate?.plcCharges,
+        matchedEstimate?.plcGstPct,
+        matchedEstimate?.plcGstAmount,
+        matchedEstimate?.plcFinalAmount,
+        matchedEstimate?.plcPct,
+        stallInventoryMap,
+    ]);
 
 
     const totalTaxable = useMemo(
@@ -621,18 +711,22 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         clientCountry,
     ]);
 
+    // The "Client Name & Address" box mirrors the PI creation form's own
+    // "Company / Billing Details" card exactly — that saved snapshot wins
+    // over the live Company profile, which can drift after the PI was issued.
     const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
     const rawClientContactPerson =
+        matchedEstimate?.company_contact_person ||
         titledContactPerson ||
         company?.contactPerson ||
         company?.contact_person ||
         matchedEstimate?.contact_person ||
-        matchedEstimate?.company_contact_person ||
         matchedEstimate?.consignee_person ||
         '—';
     const clientContactPerson = normalizeContactName(rawClientContactPerson, titledContactPerson);
 
     const clientContactNo =
+        matchedEstimate?.company_contact_mobile ||
         c1.mobile ||
         matchedEstimate?.contact_no ||
         matchedEstimate?.company_contact_no ||
@@ -670,13 +764,31 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         matchedEstimate?.place_of_supply_address ||
         PROFORMA_PLACE_OF_SUPPLY
     ]).replace(/,\s*Bharat$/i, '');
-    const shipmentAddress = joinAddressParts([eventPlaceOfSupply, PROFORMA_EVENT_STATE, 'India']);
+    const shipmentAddress = joinAddressParts([
+        eventPlaceOfSupply,
+        matchedEstimate?.consignee_city,
+        matchedEstimate?.consignee_pincode,
+        matchedEstimate?.consignee_state || PROFORMA_EVENT_STATE,
+        matchedEstimate?.consignee_country || 'India',
+    ]);
 
-    const eventGstNo = forceDelhiGstin(
-        matchedEstimate?.event_gst_no ||
-        matchedEstimate?.consignee_gst_no ||
-        PROFORMA_EVENT_GST_NO
-    );
+    // The consignee (Shipment Details) box on the printed PI mirrors the
+    // "Consignee Details" card from the PI creation form exactly — Contact
+    // Person/Mobile/Email are whoever created the PI, not the client's own
+    // contact, and GSTIN shows exactly what was entered (no state-code coercion).
+    const consigneeContactPerson = getFirstCleanValue(matchedEstimate?.consignee_person) || '—';
+    const consigneeContactNo = getFirstCleanValue(matchedEstimate?.consignee_phone) || '—';
+    const consigneeEmail = getFirstCleanValue(matchedEstimate?.consignee_email) || '—';
+    const eventGstNo = getFirstCleanValue(matchedEstimate?.event_gst_no, matchedEstimate?.consignee_gst_no)
+        || forceDelhiGstin(PROFORMA_EVENT_GST_NO);
+
+    // "Payment & Term Conditions" mirrors the PI's own Charges & Payment Plan
+    // section — only estimates saved through that flow (paymentPlanType set)
+    // carry this data; older ones fall back to the generic terms config below.
+    const hasSavedPaymentPlan = Boolean(matchedEstimate?.paymentPlanType);
+    const paymentPlanInstalments = matchedEstimate?.instalments || [];
+    const tdsApplicableOnEstimate = matchedEstimate?.tdsApplicable !== false;
+    const tdsLines = matchedEstimate?.tdsLines || [];
 
     const stateValue = PROFORMA_EVENT_STATE;
     const placeOfSupply = PROFORMA_PLACE_OF_SUPPLY_WITH_CODE;
@@ -785,15 +897,20 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactPerson}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{consigneeContactPerson}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0' }}>{clientContactNo}</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{consigneeContactNo}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Email</td>
+                                        <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0' }}>{consigneeEmail}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN / UIN</td>
                                         <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0' }}>{eventGstNo}</td>
                                     </tr>
@@ -1147,7 +1264,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         {[
                                             { label: 'S.No.', width: '3%' },
                                             { label: 'Item Description', width: '41%' },
-                                            { label: 'HSN Code', width: '8%' },
+                                            { label: 'HSN/SAC Code', width: '8%' },
                                             { label: 'Qty.', width: '4%' },
                                             { label: 'Size', width: '8%' },
                                             { label: 'Area', width: '8%' },
@@ -1177,20 +1294,42 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                 </thead>
 
                                 <tbody>
-                                    {activeItems.map((item, index) => {
+                                    {(() => { let serial = 0; return activeItems.map((item, index) => {
                                         const itemTaxable = getItemTaxable(item);
                                         const discountPercent = getItemDiscountPercent(item);
+                                        // Older PIs saved before Item Category was persisted have no
+                                        // item.category at all — this system is overwhelmingly stall
+                                        // bookings, so anything not explicitly an Addon Product (or the
+                                        // synthesized PLC Charges row) is treated as a stall.
+                                        const isPlcItem = item?.category === 'PLC Charges';
+                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product';
+                                        // PLC Charges is a surcharge on the stall above it, not its own
+                                        // billable line — it doesn't get its own S.No.
+                                        if (!isPlcItem) serial += 1;
+                                        const stallInfo = stallInventoryMap[`${matchedEstimate?.eventId}|${item?.description}`]
+                                            || stallInventoryMap[item?.description]
+                                            || {};
+                                        const resolvedPlScheme = item?.plScheme || stallInfo.plScheme || '';
+                                        const resolvedStallType = item?.stallType || stallInfo.stallType || '';
 
                                         return (
                                             <tr key={item?._id || index}>
-                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{index + 1}</td>
+                                                <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{isPlcItem ? '' : serial}</td>
 
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
-                                                    <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
-                                                        {item?.title || item?.item_name || PROFORMA_EVENT_NAME.toUpperCase()}
-                                                    </div>
+                                                    {!isPlcItem && (
+                                                        <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
+                                                            {isStallItem
+                                                                ? 'Exhibition Stall Charges'
+                                                                : (ITEM_CATEGORY_LABELS[item?.category] || item?.category || 'Add-on Product')}
+                                                        </div>
+                                                    )}
                                                     <div style={{ fontSize: 10, fontWeight: 500, color: '#555', whiteSpace: 'pre-wrap' }}>
-                                                        {item?.description}
+                                                        {isPlcItem
+                                                            ? <><span style={{ fontWeight: 700 }}>Note:</span> {item?.description}</>
+                                                            : isStallItem
+                                                                ? `Stall No. ${item?.description}${resolvedPlScheme ? ` | ${resolvedPlScheme}` : ''}${resolvedStallType ? ` | ${resolvedStallType}` : ''}`
+                                                                : item?.description}
                                                         {item?.remarks ? `\n${item.remarks}` : ''}
                                                     </div>
                                                 </td>
@@ -1228,7 +1367,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 </td>
                                             </tr>
                                         );
-                                    })}
+                                    }); })()}
 
                                     {Array.from({ length: Math.max(0, 7 - activeItems.length) }).map((_, i) => (
                                         <tr className="invoice-empty-row" key={`empty-${i}`} style={{ height: 24 }}>
@@ -1286,7 +1425,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                             <table className="invoice-tax-table" style={{ width: '100%', borderCollapse: 'collapse', marginBottom: 8 }}>
                                 <thead>
                                     <tr style={{ background: '#0d1f3c', color: '#fff', textTransform: 'uppercase' }}>
-                                        {['S.No.', 'HSN/SAC No.', 'Item Value', 'Qty.', 'CGST(%)', 'Amount', 'SGST(%)', 'Amount', 'IGST(%)', 'Amount', 'Total Tax'].map((label, index) => (
+                                        {['S.No.', 'HSN Code', 'SAC Code', 'Item Value', 'Qty.', 'CGST(%)', 'Amount', 'SGST(%)', 'Amount', 'IGST(%)', 'Amount', 'Total Tax'].map((label, index) => (
                                             <th key={`${label}-${index}`} style={{ border: '1px solid #0d1f3c', padding: '3px 2px', fontSize: 10, background: '#0d1f3c', color: '#fff', fontWeight: 'bold' }}>
                                                 {label}
                                             </th>
@@ -1301,11 +1440,17 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         const gstAmt = getItemGstAmount(item);
                                         const halfGstAmt = gstAmt / 2;
                                         const itemTaxable = getItemTaxable(item);
+                                        // Stall bookings (and the PLC surcharge on them) are a service — SAC;
+                                        // an Addon Product is treated as goods — HSN. Only one code is ever
+                                        // saved per item, so it's shown under whichever column applies.
+                                        const itemCode = item?.hsn || item?.hsnCode || item?.hsn_code || '—';
+                                        const isServiceItem = item?.category !== 'Addon Product';
 
                                         return (
                                             <tr key={item?._id || index}>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{index + 1}</td>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.hsn || item?.hsnCode || item?.hsn_code || '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isServiceItem ? itemCode : '—'}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{isServiceItem ? itemCode : '—'}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{fmtNum(itemTaxable)}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{item?.qty ?? item?.quantity ?? '—'}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 6px', textAlign: 'center' }}>{!isIgst ? `${halfGst}%` : '-'}</td>
@@ -1320,19 +1465,19 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                     })}
 
                                     <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
-                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>GST Amount in Words (INR)</td>
-                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(totalGstAmount))}</td>
+                                        <td colSpan={4} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'left', background: 'rgb(241, 245, 249)' }}>GST Amount in Words (INR)</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'left', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(totalGstAmount))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, whiteSpace: 'nowrap', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Total GST Amt</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{fmtNum(totalGstAmount)}</td>
                                     </tr>
 
                                     <tr style={{ height: 8 }}>
-                                        {Array(11).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
+                                        {Array(12).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
                                     </tr>
 
                                     <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
-                                        <td colSpan={3} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words (INR)</td>
-                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
+                                        <td colSpan={4} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'left', background: 'rgb(241, 245, 249)' }}>Amount in Words (INR)</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'left', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                                     </tr>
@@ -1361,9 +1506,30 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 </div>
                                             </td>
                                             <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11, background: '#fff' }}>
-                                                <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
+                                                <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment &amp; Term Conditions:</div>
                                                 <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                    {estimateTerms?.paymentConditions?.length ? (
+                                                    {hasSavedPaymentPlan ? (
+                                                        paymentPlanInstalments.length > 0 ? (
+                                                            <>
+                                                                {paymentPlanInstalments.map((inst, i) => (
+                                                                    <div key={i}>
+                                                                        {i + 1}. {inst.label} – {inst.percentage}%: ₹{fmtNum(inst.amount)}
+                                                                        {inst.remarks ? ` — ${inst.remarks}` : ''}
+                                                                    </div>
+                                                                ))}
+                                                                {tdsApplicableOnEstimate && tdsLines.map((line, i) => (
+                                                                    <div key={`tds-${i}`}>{paymentPlanInstalments.length + i + 1}. {line}</div>
+                                                                ))}
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                <div>1. Advance Payment – 100%: Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.</div>
+                                                                {tdsApplicableOnEstimate && tdsLines.map((line, i) => (
+                                                                    <div key={i}>{i + 2}. {line}</div>
+                                                                ))}
+                                                            </>
+                                                        )
+                                                    ) : estimateTerms?.paymentConditions?.length ? (
                                                         estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
                                                     ) : (
                                                         <div>1. 100% Advance Payment.</div>
