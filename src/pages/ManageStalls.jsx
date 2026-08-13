@@ -562,8 +562,8 @@ const ManageStalls = () => {
                                                     </span>
                                                     {stall.bookedBy.companyEmail && (
                                                         <>
-                                                            <span className="text-[10px] text-slate-300">-</span>
-                                                            <span className="text-[9px] text-slate-500 lowercase truncate max-w-[200px]" title={stall.bookedBy.companyEmail}>
+                                                            <span className="text-[10px] text-slate-600">-</span>
+                                                            <span className="text-[9px] text-slate-900 lowercase truncate max-w-[200px]" title={stall.bookedBy.companyEmail}>
                                                                 ✉️ {stall.bookedBy.companyEmail}
                                                             </span>
                                                         </>
