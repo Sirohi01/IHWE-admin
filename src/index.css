@@ -197,3 +197,41 @@ html.modal-open body {
   overflow: hidden !important;
   height: 100% !important;
 }
+
+/* ================= COOL MODAL POPUP ANIMATION ================= */
+@keyframes coolModalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.86) translateY(28px) rotateX(-5deg);
+    filter: blur(4px);
+  }
+  65% {
+    opacity: 1;
+    transform: scale(1.012) translateY(-2px) rotateX(1deg);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0) rotateX(0deg);
+    filter: blur(0px);
+  }
+}
+
+@keyframes backdropFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.animate-cool-modal {
+  animation: coolModalPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity, filter;
+  perspective: 1000px;
+}
+
+.animate-backdrop-fade {
+  animation: backdropFade 0.25s ease-out forwards;
+}

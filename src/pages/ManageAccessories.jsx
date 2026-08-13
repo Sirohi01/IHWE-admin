@@ -595,8 +595,8 @@ export default function ManageAccessories() {
 
       {/* Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-slate-950/60 z-[110] flex items-center justify-center p-4 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl shadow-indigo-950/20 rounded-none border border-slate-100" style={{ fontFamily: "'Inter', sans-serif" }}>
+        <div className="fixed inset-0 bg-slate-950/65 z-[110] flex items-center justify-center p-4 backdrop-blur-xs animate-backdrop-fade">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl shadow-indigo-950/30 rounded-none border border-slate-100 animate-cool-modal" style={{ fontFamily: "'Inter', sans-serif" }}>
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-4 bg-[#0F294A] sticky top-0 z-10 rounded-none border-b border-blue-900/30">
               <div className="flex items-center gap-3.5">
