@@ -34,6 +34,7 @@ const ManageStalls = () => {
     const [filterEventId, setFilterEventId] = useState('all');
     const [eventRates, setEventRates] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedStalls, setSelectedStalls] = useState([]);
     const dispatch = useDispatch();
 
     const getUserInfo = () => {
@@ -242,6 +243,11 @@ const ManageStalls = () => {
             s.eventId?.name?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesEvent = filterEventId === 'all' || String(s.eventId?._id || s.eventId || '') === filterEventId;
         return matchesSearch && matchesEvent;
+    }).sort((a, b) => {
+        const weight = { 'available': 1, 'hold': 2, 'booked': 3 };
+        const wA = weight[a.status?.toLowerCase()] || 4;
+        const wB = weight[b.status?.toLowerCase()] || 4;
+        return wA - wB;
     });
 
     // Pagination Logic
@@ -249,6 +255,49 @@ const ManageStalls = () => {
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredStalls.slice(indexOfFirstItem, indexOfLastItem);
     const totalPages = Math.ceil(filteredStalls.length / itemsPerPage);
+
+    const handleSelectAll = (e) => {
+        if (e.target.checked) {
+            const allIds = currentItems.map(s => s._id);
+            setSelectedStalls([...new Set([...selectedStalls, ...allIds])]);
+        } else {
+            const currentIds = currentItems.map(s => s._id);
+            setSelectedStalls(selectedStalls.filter(id => !currentIds.includes(id)));
+        }
+    };
+
+    const handleSelectStall = (id) => {
+        if (selectedStalls.includes(id)) {
+            setSelectedStalls(selectedStalls.filter(item => item !== id));
+        } else {
+            setSelectedStalls([...selectedStalls, id]);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        const result = await Swal.fire({
+            title: `Delete ${selectedStalls.length} Stalls?`,
+            text: "This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            confirmButtonText: 'Yes, delete all!'
+        });
+        if (!result.isConfirmed) return;
+        setIsLoading(true);
+        try {
+            const response = await api.post('/api/stalls/bulk', { ids: selectedStalls });
+            if (response.data.success) {
+                Swal.fire('Deleted!', response.data.message, 'success');
+                setSelectedStalls([]);
+                fetchStalls();
+            }
+        } catch (error) {
+            Swal.fire('Error', 'Failed to bulk delete stalls', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     useEffect(() => {
         setCurrentPage(1);
@@ -266,7 +315,11 @@ const ManageStalls = () => {
 
             {/* Add New Stall Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <style>{`
+                        body, html { overflow: hidden !important; }
+                        #root, main, .overflow-y-auto { overflow: hidden !important; }
+                    `}</style>
                     <div className="bg-white border-2 border-gray-200 shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
                         {/* Form Header */}
                         <div className={`px-6 py-4 flex items-center justify-between gap-3 text-white sticky top-0 ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
@@ -417,162 +470,213 @@ const ManageStalls = () => {
                         <h2 className="text-white font-bold flex items-center gap-2 uppercase tracking-tight">
                             <Layout className="w-4 h-4" /> Active Inventory
                         </h2>
-                            <div className="flex items-center gap-3">
-                                <div className="flex items-center gap-2">
-                                    <Filter className="w-3.5 h-3.5 text-white/70" />
-                                    <label className="text-[10px] font-bold text-white/70 uppercase tracking-widest whitespace-nowrap">Event Filter:</label>
-                                    <select
-                                        value={filterEventId}
-                                        onChange={(e) => setFilterEventId(e.target.value)}
-                                        className="px-3 py-1.5 border-2 border-white/20 focus:border-white outline-none text-[10px] font-bold rounded-[2px] appearance-none bg-white/10 text-white uppercase min-w-[160px]"
-                                    >
-                                        <option value="all" className="text-black">All Events</option>
-                                        {events.map(e => <option key={e._id} value={e._id} className="text-black">{e.name}</option>)}
-                                    </select>
-                                </div>
-                                <div className="relative">
-                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" size={12} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search stall..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="pl-8 pr-4 py-1.5 bg-white/10 border border-white/20 text-white placeholder:text-white/50 outline-none text-[10px] font-bold focus:bg-white/20 transition-all uppercase tracking-widest"
-                                    />
-                                </div>
-                                <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
-                                    {filteredStalls.length} STALLS
-                                </span>
-                                <button
-                                    onClick={openAddModal}
-                                    className="flex items-center gap-1.5 bg-white text-[#23471d] text-[10px] font-black px-3 py-1.5 uppercase tracking-wider shadow-sm hover:bg-gray-100 transition-colors rounded-[2px]"
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
+                                <Filter className="w-3.5 h-3.5 text-white/70" />
+                                <label className="text-[10px] font-bold text-white/70 uppercase tracking-widest whitespace-nowrap">Event Filter:</label>
+                                <select
+                                    value={filterEventId}
+                                    onChange={(e) => setFilterEventId(e.target.value)}
+                                    className="px-3 py-1.5 border-2 border-white/20 focus:border-white outline-none text-[10px] font-bold rounded-[2px] appearance-none bg-white/10 text-white uppercase min-w-[160px]"
                                 >
-                                    <Plus size={14} /> Add New Stall
-                                </button>
+                                    <option value="all" className="text-black">All Events</option>
+                                    {events.map(e => <option key={e._id} value={e._id} className="text-black">{e.name}</option>)}
+                                </select>
                             </div>
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-white/60" size={12} />
+                                <input
+                                    type="text"
+                                    placeholder="Search stall..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="pl-8 pr-4 py-1.5 bg-white/10 border border-white/20 text-white placeholder:text-white/50 outline-none text-[10px] font-bold focus:bg-white/20 transition-all uppercase tracking-widest"
+                                />
+                            </div>
+                            <span className="bg-[#d26019] text-white text-[10px] font-black px-3 py-1 uppercase tracking-wider shadow-sm">
+                                {filteredStalls.length} STALLS
+                            </span>
+                            {selectedStalls.length > 0 && (
+                                <button
+                                    onClick={handleBulkDelete}
+                                    className="flex items-center gap-1.5 bg-red-600 text-white text-[10px] font-black px-3 py-1.5 uppercase tracking-wider shadow-sm hover:bg-red-700 transition-colors rounded-[2px]"
+                                >
+                                    <Trash2 size={14} /> Delete Selected ({selectedStalls.length})
+                                </button>
+                            )}
+                            <button
+                                onClick={openAddModal}
+                                className="flex items-center gap-1.5 bg-white text-[#23471d] text-[10px] font-black px-3 py-1.5 uppercase tracking-wider shadow-sm hover:bg-gray-100 transition-colors rounded-[2px]"
+                            >
+                                <Plus size={14} /> Add New Stall
+                            </button>
                         </div>
+                    </div>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-sm font-inter">
-                                <thead>
-                                    <tr className="border-b-2 border-gray-200 bg-gray-50/50">
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center w-16 tracking-tight">No.</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Stall Detail</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Specifications</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Status</th>
-                                        <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-gray-100">
-                                    {isLoading ? (
-                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
-                                    ) : currentItems.length === 0 ? (
-                                        <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
-                                    ) : currentItems.map((stall, index) => (
-                                        <tr key={stall._id} className="hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-0">
-                                            <td className="py-4 px-4 text-black font-medium text-center text-xs">{indexOfFirstItem + index + 1}</td>
-                                            <td className="py-4 px-4 min-w-[180px]">
-                                                <p className="font-semibold text-red-600 text-sm uppercase tracking-tight leading-none mb-1.5">
-                                                    {stall.stallNumber}
-                                                </p>
-                                                <p className="text-[10px] text-black font-medium uppercase tracking-widest opacity-60">
-                                                    {stall.eventId?.name || 'No Event Assigned'}
-                                                </p>
-                                            </td>
-                                            <td className="py-4 px-4 min-w-[200px]">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-black font-semibold text-xs uppercase tracking-tight">
-                                                        {stall.length}M X {stall.width}M | <span className="text-red-500 font-bold">{stall.area} SQM</span>
-                                                    </span>
-                                                    <span className="text-[10px] font-medium text-black uppercase tracking-tight opacity-40">
-                                                        PL: {stall.plScheme} | PLC: {Number(stall.plcCharges || 0).toLocaleString()}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td className="py-4 px-4 text-center">
-                                                <span className={`inline-block px-3 py-1 rounded-[2px] text-[9px] font-bold uppercase tracking-widest shadow-sm ${stall.status === 'available' ? 'bg-green-500 text-white' :
-                                                        stall.status === 'booked' ? 'bg-red-500 text-white' :
-                                                            'bg-amber-500 text-white'
-                                                    }`}>
-                                                    {stall.status}
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-sm font-inter">
+                            <thead>
+                                <tr className="border-b-2 border-gray-200 bg-gray-50/50">
+                                    <th className="py-4 px-4 w-12 text-center">
+                                        <input
+                                            type="checkbox"
+                                            className="w-3.5 h-3.5 accent-[#23471d] cursor-pointer"
+                                            checked={currentItems.length > 0 && currentItems.every(s => selectedStalls.includes(s._id))}
+                                            onChange={handleSelectAll}
+                                        />
+                                    </th>
+                                    <th className="py-4 px-2 text-[11px] font-medium text-black uppercase text-center w-12 tracking-tight">No.</th>
+                                    <th className="py-4 px-2 text-[11px] font-medium text-black uppercase text-left tracking-tight">Stall Detail</th>
+                                    <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Specifications</th>
+                                    <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Status</th>
+                                    <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100">
+                                {isLoading ? (
+                                    <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
+                                ) : currentItems.length === 0 ? (
+                                    <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
+                                ) : currentItems.map((stall, index) => (
+                                    <tr key={stall._id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0">
+                                        <td className="py-3 px-4 text-center align-top">
+                                            <input
+                                                type="checkbox"
+                                                className="w-3.5 h-3.5 accent-[#23471d] cursor-pointer mt-0.5"
+                                                checked={selectedStalls.includes(stall._id)}
+                                                onChange={() => handleSelectStall(stall._id)}
+                                            />
+                                        </td>
+                                        <td className="py-3 px-2 text-[#15173D] font-black text-center text-xs align-top">{indexOfFirstItem + index + 1}</td>
+                                        <td className="py-3 px-2 min-w-[180px] align-top">
+                                            <div className="flex items-center gap-1 mb-1">
+                                                <span className="font-black text-[13px] text-[#093C5D]">{stall.stallNumber}</span>
+                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
+                                                    {stall.eventId?.name || 'N/A'}
                                                 </span>
-                                            </td>
-                                            <td className="py-4 px-4">
-                                                <div className="flex items-center justify-center gap-3">
-                                                    <button
-                                                        onClick={() => startEdit(stall)}
-                                                        className="text-blue-600 hover:bg-blue-50 p-1.5 transition-all rounded-[2px] border border-blue-100 bg-blue-50/30"
-                                                        title="Edit"
-                                                    >
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleDelete(stall._id)}
-                                                        className="text-red-600 hover:bg-red-50 p-1.5 transition-all rounded-[2px] border border-red-100 bg-red-50/30"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
+                                            </div>
+                                            {stall.bookedBy && (
+                                                <div className="flex items-center gap-1 mt-1 bg-slate-50 p-1.5 rounded border border-slate-100 flex-wrap">
+                                                    <span className="text-[10px] font-bold text-[#15173D] uppercase truncate max-w-[200px]" title={stall.bookedBy.exhibitorName}>
+                                                        👤 {stall.bookedBy.exhibitorName}
+                                                    </span>
+                                                    {stall.bookedBy.companyEmail && (
+                                                        <>
+                                                            <span className="text-[10px] text-slate-300">-</span>
+                                                            <span className="text-[9px] text-slate-500 lowercase truncate max-w-[200px]" title={stall.bookedBy.companyEmail}>
+                                                                ✉️ {stall.bookedBy.companyEmail}
+                                                            </span>
+                                                        </>
+                                                    )}
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                            )}
+                                        </td>
+                                        <td className="py-3 px-4 min-w-[240px] align-top">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <span className="text-[#15173D] font-black text-[11px] uppercase tracking-tight">
+                                                    {stall.length}m × {stall.width}m
+                                                </span>
+                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
+                                                    {stall.area} SQM
+                                                </span>
+                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
+                                                    PL: {stall.plScheme}
+                                                </span>
+                                                {stall.plcCharges > 0 && (
+                                                    <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
+                                                        PLC: {Number(stall.plcCharges).toLocaleString()}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td className="py-3 px-4 text-center align-top">
+                                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${stall.status === 'available' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
+                                                stall.status === 'booked' ? 'bg-red-50 text-red-700 border-red-100' :
+                                                    'bg-orange-50 text-orange-700 border-orange-100'
+                                                }`}>
+                                                <span className={`w-1 h-1 rounded-full ${stall.status === 'available' ? 'bg-emerald-500' :
+                                                    stall.status === 'booked' ? 'bg-red-500' :
+                                                        'bg-orange-500'
+                                                    }`}></span>
+                                                {stall.status}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 align-top">
+                                            <div className="flex items-center justify-center gap-1.5">
+                                                <button
+                                                    onClick={() => startEdit(stall)}
+                                                    className="text-blue-500 hover:bg-blue-100 p-1.5 transition-all rounded-md"
+                                                    title="Edit"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(stall._id)}
+                                                    className="text-red-500 hover:bg-red-100 p-1.5 transition-all rounded-md"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {/* Pagination Section */}
+                    <div className="bg-white px-5 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50/30 gap-4">
+                        <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+                            PAGE <span className="text-[#23471d]">{currentPage}</span> OF <span className="text-[#23471d]">{totalPages || 1}</span>
+                            <span className="mx-2 text-gray-300">|</span>
+                            SHOWING <span className="text-red-600">{currentItems.length}</span> OF <span className="text-red-600">{filteredStalls.length}</span> RECORDS
                         </div>
 
-                        {/* Pagination Section */}
-                        <div className="bg-white px-5 py-4 border-t border-gray-200 flex flex-col sm:flex-row justify-between items-center bg-gray-50/30 gap-4">
-                            <div className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
-                                PAGE <span className="text-[#23471d]">{currentPage}</span> OF <span className="text-[#23471d]">{totalPages || 1}</span>
-                                <span className="mx-2 text-gray-300">|</span>
-                                SHOWING <span className="text-red-600">{currentItems.length}</span> OF <span className="text-red-600">{filteredStalls.length}</span> RECORDS
-                            </div>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1.5 border border-gray-200 bg-white text-[10px] font-black uppercase hover:bg-gray-100 disabled:opacity-50 transition-all rounded-[2px]"
+                            >
+                                PREV
+                            </button>
 
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-3 py-1.5 border border-gray-200 bg-white text-[10px] font-black uppercase hover:bg-gray-100 disabled:opacity-50 transition-all rounded-[2px]"
-                                >
-                                    PREV
-                                </button>
+                            {[...Array(totalPages)].map((_, i) => {
+                                const pageNum = i + 1;
+                                // Show first, last, and pages around current
+                                if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
+                                    return (
+                                        <button
+                                            key={pageNum}
+                                            onClick={() => setCurrentPage(pageNum)}
+                                            className={`px-3 py-1.5 border text-[10px] font-black transition-all rounded-[2px] ${currentPage === pageNum
+                                                ? 'bg-[#23471d] border-[#23471d] text-white shadow-md scale-110'
+                                                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
+                                                }`}
+                                        >
+                                            {pageNum}
+                                        </button>
+                                    );
+                                }
+                                if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
+                                    return <span key={pageNum} className="px-1 text-gray-400 font-bold">...</span>;
+                                }
+                                return null;
+                            })}
 
-                                {[...Array(totalPages)].map((_, i) => {
-                                    const pageNum = i + 1;
-                                    // Show first, last, and pages around current
-                                    if (pageNum === 1 || pageNum === totalPages || (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)) {
-                                        return (
-                                            <button
-                                                key={pageNum}
-                                                onClick={() => setCurrentPage(pageNum)}
-                                                className={`px-3 py-1.5 border text-[10px] font-black transition-all rounded-[2px] ${currentPage === pageNum
-                                                        ? 'bg-[#23471d] border-[#23471d] text-white shadow-md scale-110'
-                                                        : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100'
-                                                    }`}
-                                            >
-                                                {pageNum}
-                                            </button>
-                                        );
-                                    }
-                                    if (pageNum === currentPage - 2 || pageNum === currentPage + 2) {
-                                        return <span key={pageNum} className="px-1 text-gray-400 font-bold">...</span>;
-                                    }
-                                    return null;
-                                })}
-
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages || totalPages === 0}
-                                    className="px-3 py-1.5 border border-gray-200 bg-white text-[10px] font-black uppercase hover:bg-gray-100 disabled:opacity-50 transition-all rounded-[2px]"
-                                >
-                                    NEXT
-                                </button>
-                            </div>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                                className="px-3 py-1.5 border border-gray-200 bg-white text-[10px] font-black uppercase hover:bg-gray-100 disabled:opacity-50 transition-all rounded-[2px]"
+                            >
+                                NEXT
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
+        </div>
     );
 };
 
