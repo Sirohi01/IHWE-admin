@@ -6,7 +6,7 @@ import {
     Ruler, Hash, CheckCircle2, XCircle,
     Info, Search, Download, Filter, Box, AlertCircle, Map, Tag
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import PageHeader from '../components/PageHeader';
 import { useDispatch } from 'react-redux';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
@@ -59,7 +59,7 @@ const ManageStalls = () => {
         try {
             const response = await api.get('/api/stalls');
             if (response.data.success) setStalls(response.data.data);
-        } catch (error) {
+        } catch {
             Swal.fire('Error', 'Failed to fetch stalls', 'error');
         } finally {
             setIsLoading(false);
@@ -103,7 +103,7 @@ const ManageStalls = () => {
             try {
                 const response = await api.get(`/api/stall-rates/event/${stallForm.eventId}`);
                 if (!cancelled && response.data.success) setEventRates(response.data.data || []);
-            } catch (error) {
+            } catch {
                 if (!cancelled) setEventRates([]);
             }
         })();
@@ -223,8 +223,33 @@ const ManageStalls = () => {
                 Swal.fire('Deleted!', 'Stall has been deleted.', 'success');
                 fetchStalls();
             }
-        } catch (error) {
+        } catch {
             Swal.fire('Error', 'Failed to delete stall', 'error');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const handleMakeAvailable = async (stall) => {
+        const result = await Swal.fire({
+            title: 'Make Stall Available?',
+            text: `Stall ${stall.stallNumber} will return to available inventory.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#23471d',
+            confirmButtonText: 'Yes, make available'
+        });
+        if (!result.isConfirmed) return;
+
+        setIsLoading(true);
+        try {
+            const response = await api.patch(`/api/stalls/${stall._id}/make-available`);
+            if (response.data.success) {
+                Swal.fire({ icon: 'success', title: 'Stall Available!', timer: 1500, showConfirmButton: false });
+                fetchStalls();
+            }
+        } catch (error) {
+            Swal.fire('Cannot Update', error.response?.data?.message || 'Failed to make stall available', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -321,7 +346,7 @@ const ManageStalls = () => {
                 setSelectedStalls([]);
                 fetchStalls();
             }
-        } catch (error) {
+        } catch {
             Swal.fire('Error', 'Failed to bulk delete stalls', 'error');
         } finally {
             setIsLoading(false);
@@ -332,7 +357,7 @@ const ManageStalls = () => {
         setCurrentPage(1);
     }, [searchTerm, filterEventId]);
 
-    const inputCls = "w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white uppercase";
+    const inputCls = "w-full px-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] appearance-none bg-white uppercase";
     const labelCls = "block text-[11px] font-medium text-black mb-1 uppercase tracking-tight";
 
     return (
@@ -349,11 +374,11 @@ const ManageStalls = () => {
                         body, html { overflow: hidden !important; }
                         #root, main, .overflow-y-auto { overflow: hidden !important; }
                     `}</style>
-                    <div className="bg-white border-2 border-gray-200 shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border-2 border-gray-200 shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                         {/* Form Header */}
-                        <div className={`px-6 py-4 flex items-center justify-between gap-3 text-white sticky top-0 ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
+                        <div className={`px-5 py-3 flex items-center justify-between gap-3 text-white sticky top-0 ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white/10 text-white">
+                                <div className="p-1.5 bg-white/10 text-white">
                                     {isEditing ? <Edit size={20} /> : <Plus size={20} />}
                                 </div>
                                 <div>
@@ -368,10 +393,10 @@ const ManageStalls = () => {
                             </button>
                         </div>
 
-                        <div className="p-6 space-y-4">
+                        <div className="p-4">
                             <form onSubmit={handleStallSubmit}>
                                 {/* Event */}
-                                <div className="mb-4">
+                                <div className="mb-2.5">
                                     <label className={labelCls}>Linked Exhibition Event *</label>
                                     <select
                                         required
@@ -385,7 +410,7 @@ const ManageStalls = () => {
                                 </div>
 
                                 {/* Stall Number */}
-                                <div className="mb-4">
+                                <div className="mb-2.5">
                                     <label className={labelCls}>Stall Number *</label>
                                     <div className="relative">
                                         <Hash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -394,27 +419,21 @@ const ManageStalls = () => {
                                             required
                                             value={stallForm.stallNumber}
                                             onChange={(e) => setStallForm({ ...stallForm, stallNumber: e.target.value })}
-                                            className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] uppercase"
+                                            className="w-full pl-9 pr-3 py-1.5 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px] uppercase"
                                             placeholder="e.g. A-101"
                                         />
                                     </div>
                                 </div>
 
-                                <div className="mb-4">
-                                    <label className={labelCls}>Stall Type *</label>
-                                    <select
-                                        required
-                                        value={stallForm.stallType}
-                                        onChange={(e) => setStallForm({ ...stallForm, stallType: e.target.value })}
-                                        className={inputCls}
-                                    >
-                                        <option value="Shell Space">Shell Space (Built-up)</option>
-                                        <option value="Raw Space">Raw Space (Plot)</option>
-                                    </select>
-                                </div>
-
                                 {/* PL Scheme / PLC Charges — sourced from the Stall Rates master */}
-                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-2.5">
+                                    <div>
+                                        <label className={labelCls}>Stall Type *</label>
+                                        <select required value={stallForm.stallType} onChange={(e) => setStallForm({ ...stallForm, stallType: e.target.value })} className={inputCls}>
+                                            <option value="Shell Space">Shell Space (Built-up)</option>
+                                            <option value="Raw Space">Raw Space (Plot)</option>
+                                        </select>
+                                    </div>
                                     <div>
                                         <label className={labelCls}>PL Scheme *</label>
                                         <select
@@ -425,16 +444,17 @@ const ManageStalls = () => {
                                             {plSchemeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                         </select>
                                     </div>
-                                    <div className="flex items-end">
-                                        <div className="w-full px-3 py-2 border-2 border-gray-200 bg-gray-50 text-[10px] font-bold text-[#23471d] rounded-[2px]">
-                                            PLC IS CURRENCY-SPECIFIC
+                                    <div>
+                                        <label className={labelCls}>PLC Charges</label>
+                                        <div className="w-full px-3 py-1.5 border-2 border-gray-200 bg-gray-50 text-[10px] font-bold text-[#23471d] rounded-[2px]">
+                                            CURRENCY-SPECIFIC
                                         </div>
                                     </div>
                                 </div>
-                                <p className="text-[9px] text-black font-medium -mt-2 mb-4 opacity-50 italic capitalize">* PL Scheme and INR/USD PLC charges are pulled from the matching Event + Stall Type rate</p>
+                                <p className="text-[9px] text-black font-medium -mt-1 mb-2.5 opacity-50 italic capitalize">* PL Scheme and INR/USD PLC charges are pulled from the matching Event + Stall Type rate</p>
 
                                 {/* Length / Width */}
-                                <div className="grid grid-cols-2 gap-4 mb-4">
+                                <div className="grid grid-cols-2 gap-3 mb-2.5">
                                     <div>
                                         <label className={labelCls}>Length (M) *</label>
                                         <input
@@ -460,7 +480,7 @@ const ManageStalls = () => {
                                 </div>
 
                                 {/* Auto Area */}
-                                <div className="mb-4">
+                                <div className="mb-2.5">
                                     <label className={labelCls}>Total Calculated Area (Sq M)</label>
                                     <div className="relative">
                                         <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-[#23471d]" size={16} />
@@ -468,15 +488,15 @@ const ManageStalls = () => {
                                             type="number"
                                             readOnly
                                             value={stallForm.area}
-                                            className="w-full pl-10 pr-4 py-2 border-2 border-gray-200 bg-gray-50 outline-none text-xs font-bold text-[#23471d] rounded-[2px]"
+                                            className="w-full pl-9 pr-3 py-1.5 border-2 border-gray-200 bg-gray-50 outline-none text-xs font-bold text-[#23471d] rounded-[2px]"
                                         />
                                         <p className="text-[9px] text-black font-medium mt-1 opacity-50 italic capitalize">* Calculated automatically from Length x Width</p>
                                     </div>
                                 </div>
 
                                 {stallForm.eventId && (
-                                    <div className="mb-4 border-2 border-slate-200 bg-slate-50 p-3">
-                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                    <div className="mb-2.5 border-2 border-slate-200 bg-slate-50 p-2.5">
+                                        <div className="flex items-center justify-between gap-2 mb-1.5">
                                             <p className="text-[10px] font-black text-[#23471d] tracking-wider">LIVE PRICING PREVIEW</p>
                                             <span className="text-[9px] font-bold text-slate-500">{stallForm.stallType}</span>
                                         </div>
@@ -488,7 +508,7 @@ const ManageStalls = () => {
                                                     const plc = getPlcCharge(rate, stallForm.plScheme);
                                                     const base = Number(stallForm.area || 0) * Number(rate.ratePerSqm || 0);
                                                     return (
-                                                        <div key={rate._id} className="bg-white border border-slate-200 p-2.5">
+                                                        <div key={rate._id} className="bg-white border border-slate-200 p-2">
                                                             <div className="flex justify-between text-[10px] font-black">
                                                                 <span>{rate.currency}</span>
                                                                 <span>{formatMoney(rate.currency, rate.ratePerSqm)}/SQM</span>
@@ -512,7 +532,7 @@ const ManageStalls = () => {
                                     <button
                                         type="submit"
                                         disabled={isLoading}
-                                        className="flex-1 py-3 bg-[#23471d] text-white text-[11px] font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 uppercase rounded-[2px]"
+                                        className="flex-1 py-2 bg-[#23471d] text-white text-[10px] font-bold hover:bg-[#1a3615] transition-all flex items-center justify-center gap-1.5 shadow-sm disabled:opacity-50 uppercase rounded-[2px]"
                                     >
                                         {isLoading
                                             ? <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
@@ -522,7 +542,7 @@ const ManageStalls = () => {
                                     <button
                                         type="button"
                                         onClick={closeModal}
-                                        className="px-5 py-3 border-2 border-gray-200 text-black font-medium hover:bg-gray-50 transition-colors text-[11px] uppercase rounded-[2px]"
+                                        className="px-5 py-2 border-2 border-gray-200 text-black font-medium hover:bg-gray-50 transition-colors text-[10px] uppercase rounded-[2px]"
                                     >
                                         Cancel
                                     </button>
@@ -607,7 +627,7 @@ const ManageStalls = () => {
                                     <tr><td colSpan={6} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
                                 ) : currentItems.length === 0 ? (
                                     <tr><td colSpan={6} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
-                                ) : currentItems.map((stall, index) => (
+                                ) : currentItems.map((stall) => (
                                     <tr className={`hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0 divide-x divide-slate-100 ${selectedStalls.includes(stall._id) ? 'bg-[#23471d]/5' : ''}`} key={stall._id}>
                                         <td className="py-1.5 px-4 text-center align-top">
                                             <input
@@ -709,6 +729,15 @@ const ManageStalls = () => {
                                                 >
                                                     <Edit size={14} />
                                                 </button>
+                                                {['booked', 'reserved', 'hold'].includes(stall.status) && !stall.bookedBy && (
+                                                    <button
+                                                        onClick={() => handleMakeAvailable(stall)}
+                                                        className="text-emerald-600 hover:bg-emerald-100 p-1.5 transition-all rounded-md"
+                                                        title="Make Available"
+                                                    >
+                                                        <CheckCircle2 size={14} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleDelete(stall._id)}
                                                     className="text-red-500 hover:bg-red-100 p-1 transition-all rounded-md"
