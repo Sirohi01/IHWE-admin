@@ -112,6 +112,7 @@ export const menuItems = [
     icon: ShoppingCart,
     children: [
       { label: "All Add-On Products", path: "/stall-accessories" },
+      { label: "Complimentary Products", path: "/stall-accessories?type=complimentary" },
       { label: "Furniture", path: "/stall-accessories?category=Furniture" },
       { label: "Electrical", path: "/stall-accessories?category=Electrical" },
       { label: "Display & Branding", path: "/stall-accessories?category=Display%20%26%20Branding" },

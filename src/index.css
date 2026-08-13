@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Aladin&family=Inter:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Aladin&family=Inter:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=Roboto:wght@300;400;500;700;900&display=swap");
 
 @import "tailwindcss";
 
@@ -24,6 +24,13 @@
     color: #334155;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    font-family: "Inter", sans-serif !important;
   }
 
   h1 {
@@ -123,20 +130,25 @@
 }
 
 /* Thin Scrollbar (elegant & modern) */
-.thin-scrollbar::-webkit-scrollbar {
+.thin-scrollbar::-webkit-scrollbar,
+.custom-scrollbar::-webkit-scrollbar {
   width: 4px;
+  height: 4px;
 }
 
-.thin-scrollbar::-webkit-scrollbar-track {
+.thin-scrollbar::-webkit-scrollbar-track,
+.custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.thin-scrollbar::-webkit-scrollbar-thumb {
+.thin-scrollbar::-webkit-scrollbar-thumb,
+.custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #cbd5e1; /* slate-300 */
   border-radius: 10px;
 }
 
-.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+.thin-scrollbar::-webkit-scrollbar-thumb:hover,
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #94a3b8; /* slate-400 */
 }
 
