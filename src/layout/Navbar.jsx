@@ -260,6 +260,15 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const [showDemoAlert, setShowDemoAlert] = useState(false);
   const [hasUnreadTaskAlert, setHasUnreadTaskAlert] = useState(false);
   const [latestDocument, setLatestDocument] = useState(null);
+  const [hasActiveReminderAlert, setHasActiveReminderAlert] = useState(false);
+
+  useEffect(() => {
+    const handleAlertState = (e) => {
+      setHasActiveReminderAlert(e.detail?.active || false);
+    };
+    window.addEventListener("crm-reminder-alert-active", handleAlertState);
+    return () => window.removeEventListener("crm-reminder-alert-active", handleAlertState);
+  }, []);
 
   // Stop blinking when user visits task-alerts
   useEffect(() => {
@@ -516,18 +525,27 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
         {/* Reminders */}
         <div className="relative hidden sm:block group">
           <button
-            onClick={() => navigate('/reminder')}
-            className="relative p-2.5 rounded-full border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all duration-300 shadow-sm"
+            onClick={() => { navigate('/reminder'); setHasActiveReminderAlert(false); }}
+            className={`relative p-2.5 rounded-full border transition-all duration-300 shadow-sm cursor-pointer ${
+              hasActiveReminderAlert
+                ? 'border-red-500/80 bg-red-500/20 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] ring-2 ring-red-400'
+                : 'border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 hover:border-white/20'
+            }`}
           >
-            <RiAlarmWarningLine size={19} />
+            <RiAlarmWarningLine size={19} className={hasActiveReminderAlert ? "animate-bounce text-red-300" : ""} />
             {reminderCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-600 border border-white/20 text-white text-[9px] min-w-[15px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-medium shadow-sm">
-                {reminderCount > 99 ? '99+' : reminderCount}
-              </span>
+              <>
+                {hasActiveReminderAlert && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 rounded-full h-3.5 w-3.5 animate-ping opacity-75"></span>
+                )}
+                <span className="absolute -top-1 -right-1 bg-red-600 border border-white/20 text-white text-[9px] min-w-[15px] h-3.5 px-0.5 rounded-full flex items-center justify-center font-black shadow-sm">
+                  {reminderCount > 99 ? '99+' : reminderCount}
+                </span>
+              </>
             )}
           </button>
           <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[9px] font-bold px-2 py-1 rounded-md whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none z-50 shadow-md">
-            Reminders
+            Reminders ({reminderCount})
           </span>
         </div>
 

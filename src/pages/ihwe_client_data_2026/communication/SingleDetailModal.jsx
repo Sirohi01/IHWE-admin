@@ -44,7 +44,7 @@ const SingleDetailModal = ({ item, companyName, onClose }) => {
       <div
         className="bg-white w-full max-w-lg rounded-xl overflow-hidden animate-fadeIn text-[#15173D]"
         style={{
-          fontFamily: 'Inter, sans-serif',
+          fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
           ...boxStyle,
         }}
       >
@@ -55,11 +55,11 @@ const SingleDetailModal = ({ item, companyName, onClose }) => {
               <Icon size={16} className={cfg.color} />
             </div>
             <div>
-              <h3 className={`text-[12px] font-bold uppercase tracking-wider ${cfg.color}`}>{label}</h3>
-              <p className="text-[10px] font-bold" style={{ color: '#133458' }}>{formatDateTime(item.createdAt)}</p>
+              <h3 className={`text-[12px] font-semibold uppercase tracking-wider ${cfg.color}`}>{label}</h3>
+              <p className="text-[10px] font-semibold" style={{ color: '#133458' }}>{formatDateTime(item.createdAt)}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors">
+          <button onClick={onClose} className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors cursor-pointer">
             <X size={18} />
           </button>
         </div>
@@ -67,32 +67,32 @@ const SingleDetailModal = ({ item, companyName, onClose }) => {
         {/* Content Body */}
         <div className="p-4 space-y-3 max-h-[70vh] overflow-y-auto">
           {companyName && (
-            <div className="bg-white p-2.5 rounded-lg" style={boxStyle}>
-              <span className="text-[9px] font-semibold text-slate-400 uppercase tracking-wider block">Client</span>
-              <span className="text-[11px] font-bold text-[#093C5D]">{companyName}</span>
+            <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs" style={boxStyle}>
+              <span className="text-[9px] font-semibold text-gray-500 uppercase tracking-wider block">Client</span>
+              <span className="text-[11px] font-semibold text-[#0A2947]">{companyName}</span>
             </div>
           )}
 
           {item.status_short && (
-            <div className="bg-white p-2.5 rounded-lg flex items-center justify-between" style={boxStyle}>
-              <span className="text-[10px] font-bold text-slate-600">Status:</span>
-              <span className="px-2 py-0.5 rounded bg-orange-100 text-orange-700 text-[10px] font-extrabold uppercase">
+            <div className="bg-white p-2.5 rounded-lg flex items-center justify-between border border-slate-200 shadow-2xs" style={boxStyle}>
+              <span className="text-[10px] font-semibold text-slate-700">Status:</span>
+              <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-semibold uppercase">
                 {item.status_short}
               </span>
             </div>
           )}
 
           {item.email_subject && (
-            <div className="bg-white p-2.5 rounded-lg" style={boxStyle}>
-              <span className="text-[9px] font-bold text-blue-700 block uppercase tracking-wider mb-0.5">Subject</span>
-              <p className="text-[11px] font-bold text-slate-800">{item.email_subject}</p>
+            <div className="bg-white p-2.5 rounded-lg border border-slate-200 shadow-2xs" style={boxStyle}>
+              <span className="text-[9px] font-semibold text-blue-700 block uppercase tracking-wider mb-0.5">Subject</span>
+              <p className="text-[11px] font-semibold text-[#0A2947]">{item.email_subject}</p>
             </div>
           )}
 
           {text && (
-            <div className="bg-white p-3 rounded-lg" style={boxStyle}>
-              <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider mb-1">Details / Message</span>
-              <p className="text-[11px] font-medium text-slate-700 leading-relaxed whitespace-pre-wrap">
+            <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-2xs" style={boxStyle}>
+              <span className="text-[9px] font-semibold text-gray-500 block uppercase tracking-wider mb-1">Details / Message</span>
+              <p className="text-[11px] font-semibold text-[#0A2947] leading-relaxed whitespace-pre-wrap">
                 {text.split(/(' to ')/g).map((part, i) =>
                   part === "' to '"
                     ? <span key={i}>' <span className="font-extrabold text-blue-600 mx-0.5">TO</span> '</span>
@@ -103,22 +103,22 @@ const SingleDetailModal = ({ item, companyName, onClose }) => {
           )}
 
           {item.call_duration && (
-            <div className="bg-white p-2.5 rounded-lg flex items-center justify-between" style={boxStyle}>
-              <span className="text-[10px] font-bold text-slate-600">Call Duration:</span>
-              <span className="text-[11px] font-bold text-teal-700">{item.call_duration}</span>
+            <div className="bg-white p-2.5 rounded-lg flex items-center justify-between border border-slate-200 shadow-2xs" style={boxStyle}>
+              <span className="text-[10px] font-semibold text-slate-700">Call Duration:</span>
+              <span className="text-[11px] font-semibold text-teal-700">{item.call_duration}</span>
             </div>
           )}
 
           {item.reminder_dt && (
-            <div className="bg-red-50/50 p-2.5 rounded-lg border border-red-100" style={boxStyle}>
-              <span className="text-[11px] font-bold text-red-600 block">
+            <div className="bg-red-50/80 p-2.5 rounded-lg border border-red-200" style={boxStyle}>
+              <span className="text-[11px] font-semibold text-red-700 block">
                 ⏰ Reminder: {formatDateTime(item.reminder_dt)}
               </span>
             </div>
           )}
 
           {item.updated_by && (
-            <div className="text-[11px] font-bold text-blue-600 text-right pt-1.5 border-t border-slate-100">
+            <div className="text-[11px] font-semibold text-blue-700 text-right pt-1.5 border-t border-slate-100">
               By: {item.updated_by}
             </div>
           )}
@@ -128,7 +128,7 @@ const SingleDetailModal = ({ item, companyName, onClose }) => {
         <div className="p-2.5 bg-slate-50 border-t border-slate-200 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-1.5 bg-[#15173D] text-white text-[11px] font-bold rounded-lg hover:bg-[#0A2643] transition-colors"
+            className="px-4 py-1.5 bg-[#0A2947] text-white text-[11px] font-semibold rounded-lg hover:bg-[#061B30] transition-colors cursor-pointer shadow-sm"
           >
             Close
           </button>

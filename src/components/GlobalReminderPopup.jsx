@@ -185,8 +185,10 @@ export default function GlobalReminderPopup() {
           setCurrentReminder(first);
           playNotificationSound();
         }
+        window.dispatchEvent(new CustomEvent('crm-reminder-alert-active', { detail: { active: true, count: upcoming.length } }));
       } else {
         setCurrentReminder(null);
+        window.dispatchEvent(new CustomEvent('crm-reminder-alert-active', { detail: { active: false, count: 0 } }));
       }
     } catch (error) {
       console.error("Error checking global reminders:", error);
@@ -295,7 +297,7 @@ export default function GlobalReminderPopup() {
   ];
 
   return createPortal(
-    <div className="fixed bottom-5 right-5 z-[999999] max-w-md w-full p-1 animate-bounce-short">
+    <div className="fixed bottom-5 right-5 z-[999999] max-w-md w-full p-1 animate-bounce-short" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
       <div className="bg-white rounded-2xl shadow-2xl border-2 border-red-500/80 overflow-hidden transform transition-all text-[#15173D]">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 via-red-500 to-rose-600 px-4 py-3 text-white flex items-center justify-between shadow-sm">
@@ -307,10 +309,10 @@ export default function GlobalReminderPopup() {
               </div>
             </div>
             <div>
-              <h4 className="text-xs font-black uppercase tracking-wider leading-none flex items-center gap-1.5">
+              <h4 className="text-[13px] font-semibold text-white leading-none flex items-center gap-1.5">
                 <span>Follow-Up Reminder Alert</span>
               </h4>
-              <p className="text-[10px] font-semibold text-yellow-300 mt-1 flex items-center gap-1">
+              <p className="text-[11px] font-semibold text-yellow-300 mt-1 flex items-center gap-1">
                 <Clock size={11} className="text-yellow-300" />
                 <span>{getTimeLabel()}</span>
               </p>
@@ -318,7 +320,7 @@ export default function GlobalReminderPopup() {
           </div>
           <button
             onClick={() => handleDismiss(currentReminder.id || currentReminder._id)}
-            className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors"
+            className="p-1 rounded-lg bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer"
             title="Re-alert in 1 minute"
           >
             <X size={16} />
@@ -326,15 +328,15 @@ export default function GlobalReminderPopup() {
         </div>
 
         {/* Content Body */}
-        <div className="p-4 space-y-3 bg-slate-50/60 text-[11px]" style={{ fontFamily: 'Inter, sans-serif' }}>
+        <div className="p-4 space-y-3 bg-slate-50/60">
           {/* Company Name */}
           <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
-            <span className="text-[9px] font-medium text-black uppercase tracking-wider block">Company Name</span>
-            <div className="text-xs font-semibold mt-0.5 truncate" style={{ color: '#133458' }}>
+            <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Company Name</span>
+            <div className="text-[13px] font-semibold text-black mt-0.5 truncate">
               {currentReminder.company}
             </div>
             {currentReminder.industry && (
-              <span className="inline-block text-[9px] font-bold text-rose-700 bg-rose-50 px-2 py-0.5 rounded mt-1 border border-rose-100">
+              <span className="inline-block text-[11px] font-semibold text-[#4B1426] bg-[#4B1426]/5 px-2 py-0.5 rounded mt-1 border border-[#4B1426]/10">
                 {currentReminder.industry}
               </span>
             )}
@@ -344,25 +346,25 @@ export default function GlobalReminderPopup() {
           <div className="grid grid-cols-2 gap-2 text-slate-700">
             {/* Contact */}
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-              <span className="text-[9px] font-semibold text-black uppercase tracking-wider block">Contact</span>
-              <div className="font-bold text-slate-800 flex items-center gap-1.5 truncate">
-                <User size={11} className="text-emerald-600 shrink-0" />
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Contact</span>
+              <div className="text-[12px] font-semibold text-[#0A2947] flex items-center gap-1.5 truncate">
+                <User size={12} className="text-emerald-600 shrink-0" />
                 <span className="truncate">{currentReminder.leadName || "N/A"}</span>
               </div>
-              <div className="font-semibold text-blue-600 flex items-center gap-1.5 text-[10px]">
-                <Smartphone size={11} className="text-blue-500 shrink-0" />
+              <div className="text-[11px] font-semibold text-blue-600 flex items-center gap-1.5">
+                <Smartphone size={12} className="text-blue-500 shrink-0" />
                 <span>{currentReminder.mobile || "N/A"}</span>
               </div>
             </div>
 
             {/* Next Action & Forward To */}
             <div className="bg-white p-2.5 rounded-xl border border-slate-200 shadow-2xs space-y-1">
-              <span className="text-[9px] font-semibold text-black uppercase tracking-wider block">Next Action</span>
-              <div className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded text-[10px] font-extrabold border border-emerald-200">
-                <Phone size={10} /> {currentReminder.nextAction || currentReminder.type || "Call"}
+              <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider block">Next Action</span>
+              <div className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded text-[11px] font-semibold border border-emerald-200">
+                <Phone size={11} /> {currentReminder.nextAction || currentReminder.type || "Call"}
               </div>
               {currentReminder.assignedTo && (
-                <div className="text-[9.5px] font-bold text-red-600 pt-0.5">
+                <div className="text-[11px] font-semibold text-red-600 pt-0.5">
                   Forward To: {currentReminder.assignedTo}
                 </div>
               )}
@@ -372,8 +374,8 @@ export default function GlobalReminderPopup() {
           {/* Remark / Notes */}
           {currentReminder.lastRemark && (
             <div className="bg-amber-50/80 p-2.5 rounded-xl border border-amber-200/80 space-y-1">
-              <span className="text-[9px] font-extrabold text-amber-800 uppercase tracking-wider block">Follow-Up Note</span>
-              <p className="text-[10.5px] font-semibold text-slate-800 leading-snug line-clamp-2">
+              <span className="text-[11px] font-semibold text-amber-900 uppercase tracking-wider block">Follow-Up Note</span>
+              <p className="text-[12px] font-semibold text-[#0A2947] leading-snug line-clamp-2">
                 {currentReminder.lastRemark}
               </p>
             </div>
@@ -384,12 +386,12 @@ export default function GlobalReminderPopup() {
         {showSnoozeMenu && (
           <div className="p-3 bg-slate-100 border-t border-slate-200 animate-fadeIn space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider">
+              <span className="text-[11px] font-semibold text-slate-700 uppercase tracking-wider">
                 Snooze Alert Until:
               </span>
               <button
                 onClick={() => setShowSnoozeMenu(false)}
-                className="text-slate-400 hover:text-slate-600 p-0.5"
+                className="text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
               >
                 <X size={14} />
               </button>
@@ -399,7 +401,7 @@ export default function GlobalReminderPopup() {
                 <button
                   key={opt.mins}
                   onClick={() => applyCustomSnooze(opt.mins)}
-                  className="py-1.5 px-2 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-bold text-[10px] rounded-lg border border-slate-200 hover:border-emerald-300 transition-colors shadow-2xs text-center"
+                  className="py-1.5 px-2 bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-700 font-semibold text-[11px] rounded-lg border border-slate-200 hover:border-emerald-300 transition-colors shadow-2xs text-center cursor-pointer"
                 >
                   + {opt.label}
                 </button>
@@ -412,22 +414,22 @@ export default function GlobalReminderPopup() {
         <div className="px-4 py-3 bg-white border-t border-slate-200 flex items-center justify-between gap-1.5 relative">
           <button
             onClick={() => setShowSnoozeMenu(!showSnoozeMenu)}
-            className={`px-2.5 py-1.5 text-[10px] font-bold rounded-lg transition-colors border flex items-center gap-1 ${
+            className={`px-3 py-2 text-[12px] font-semibold rounded-lg transition-colors border flex items-center gap-1 cursor-pointer ${
               showSnoozeMenu
                 ? "bg-amber-100 text-amber-800 border-amber-300"
                 : "bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200"
             }`}
           >
             <span>Snooze</span>
-            <ChevronUp size={11} className={`transition-transform ${showSnoozeMenu ? "rotate-180" : ""}`} />
+            <ChevronUp size={12} className={`transition-transform ${showSnoozeMenu ? "rotate-180" : ""}`} />
           </button>
 
           <button
             onClick={handleMarkCompleted}
-            className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-extrabold rounded-lg transition-all duration-200 shadow-sm flex items-center gap-1 shrink-0 cursor-pointer"
+            className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[12px] font-semibold rounded-lg transition-all duration-200 shadow-sm flex items-center gap-1 shrink-0 cursor-pointer"
             title="Mark follow-up as done & turn off alert popup for this client"
           >
-            <CheckCircle2 size={12} />
+            <CheckCircle2 size={13} />
             <span>Mark Done</span>
           </button>
 
@@ -436,11 +438,11 @@ export default function GlobalReminderPopup() {
               applyCustomSnooze(1);
               navigate(`/client-overview/${currentReminder.companyId || currentReminder.id}`);
             }}
-            className="flex-1 py-1.5 px-2 text-white text-[10px] font-extrabold rounded-lg transition-all duration-200 hover:opacity-90 shadow-md flex items-center justify-center gap-1 truncate"
+            className="flex-1 py-2 px-3 text-white text-[12px] font-semibold rounded-lg transition-all duration-200 hover:opacity-90 shadow-md flex items-center justify-center gap-1 truncate cursor-pointer"
             style={{ backgroundColor: '#0A2947' }}
           >
             <span className="truncate">View Lead</span>
-            <ExternalLink size={11} className="shrink-0" />
+            <ExternalLink size={12} className="shrink-0" />
           </button>
         </div>
       </div>
