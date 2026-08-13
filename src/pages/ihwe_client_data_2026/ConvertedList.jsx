@@ -252,15 +252,15 @@ const ConvertedList = () => {
       return false;
     });
   }).length;
-  
+
   const newClientsCount = totalConverted - existingClientsCount;
-  
+
   const totalArea = filteredRegs.reduce((acc, curr) => acc + (Number(curr.participation?.stallSize) || Number(curr.stallSize) || 0), 0);
-  
+
   const totalRevenue = filteredRegs.reduce((acc, curr) => acc + (Number(curr.financeBreakdown?.netPayable) || Number(curr.participation?.total) || Number(curr.amountPaid) || 0), 0);
-  
+
   const paymentReceived = filteredRegs.reduce((acc, curr) => acc + (Number(curr.amountPaid) || Number(curr.financeBreakdown?.paidAmount) || 0), 0);
-  
+
   const balancePayment = totalRevenue - paymentReceived;
 
   // Animated stat card component
@@ -488,19 +488,18 @@ const ConvertedList = () => {
               {(() => {
                 const cat = row.participation?.stallCategory || row.exhibitorCategory || row.msme?.msmeCategory || null;
                 const isMsme = cat?.toLowerCase().includes('msme') || cat?.toLowerCase().includes('psm') || row.msme?.udyamRegNo || row.isMSME;
-                
+
                 if (cat) {
                   // Show actual category from backend
                   const isGreen = cat.toLowerCase().includes('msme') || cat.toLowerCase().includes('psm');
                   const isAmber = cat.toLowerCase().includes('general') || cat.toLowerCase().includes('non');
                   const isPurple = cat.toLowerCase().includes('startup') || cat.toLowerCase().includes('women');
                   return (
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded font-bold text-[9px] ${
-                      isGreen ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' :
-                      isAmber ? 'text-amber-700 bg-amber-50 border border-amber-200' :
-                      isPurple ? 'text-purple-700 bg-purple-50 border border-purple-200' :
-                      'text-blue-700 bg-blue-50 border border-blue-200'
-                    }`}>
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded font-bold text-[9px] ${isGreen ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' :
+                        isAmber ? 'text-amber-700 bg-amber-50 border border-amber-200' :
+                          isPurple ? 'text-purple-700 bg-purple-50 border border-purple-200' :
+                            'text-blue-700 bg-blue-50 border border-blue-200'
+                      }`}>
                       {cat}
                     </span>
                   );
@@ -564,21 +563,24 @@ const ConvertedList = () => {
             </td>
             <td className="px-2 py-2 text-center">
               {(() => {
-                // Every row here already has a real Payment record (that's the
-                // definition of "Converted" now — see getConvertedCompanies),
-                // so this can never be "Pending". row.status is always the
-                // literal string "Converted" (not an ExhibitorRegistration
-                // status), so the actual pipeline status — Payment Pending vs
-                // Completed — comes from row.eventLifecycle instead.
                 const lifecycleStatus = (row.eventLifecycle?.status || '').toLowerCase();
-                const isCompleted = lifecycleStatus.includes('completed');
-                const isPartial = lifecycleStatus.includes('payment pending');
+                const totalRev = Number(row.financeBreakdown?.netPayable) || Number(row.participation?.total) || Number(row.amountPaid) || 0;
+                const totalPaid = Number(row.amountPaid) || Number(row.financeBreakdown?.paidAmount) || 0;
+
+                let isCompleted = lifecycleStatus.includes('completed');
+                let isPartial = lifecycleStatus.includes('payment pending') || lifecycleStatus.includes('partial');
+
+                if (!isCompleted && !isPartial) {
+                  if (totalPaid > 0 && totalPaid < totalRev) isPartial = true;
+                  else if (totalPaid >= totalRev && totalRev > 0) isCompleted = true;
+                }
+
                 const badgeClass = isCompleted
                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                   : isPartial
                     ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-                const badgeLabel = isCompleted ? 'Paid (Full)' : isPartial ? 'Partial Payment' : 'Paid';
+                    : 'bg-amber-50 text-amber-700 border border-amber-200';
+                const badgeLabel = isCompleted ? 'Paid (Full)' : isPartial ? 'Partial Payment' : (lifecycleStatus || 'Pending');
                 return (
                   <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${badgeClass}`}>
                     {badgeLabel}
