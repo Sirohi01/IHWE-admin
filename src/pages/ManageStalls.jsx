@@ -632,26 +632,31 @@ const ManageStalls = () => {
                                                 </div>
                                             </div>
                                             {stall.bookedBy && (
-                                                <div className="flex flex-col gap-0.5 pt-0.5">
+                                                <div className="flex items-center flex-wrap gap-1 pt-0.5">
                                                     <span className="text-[10px] font-bold text-[#15173D] uppercase truncate max-w-[200px]" title={stall.bookedBy.exhibitorName}>
                                                         👤 {stall.bookedBy.exhibitorName}
                                                     </span>
                                                     {stall.bookedBy.companyEmail && (
-                                                        <span className="text-[9px] text-slate-900 lowercase truncate max-w-[200px]" title={stall.bookedBy.companyEmail}>
-                                                            ✉️ {stall.bookedBy.companyEmail}
-                                                        </span>
+                                                        <>
+                                                            <span className="text-slate-400 text-[10px]">-</span>
+                                                            <span className="text-[9px] text-slate-900 lowercase truncate max-w-[200px]" title={stall.bookedBy.companyEmail}>
+                                                                ✉️ {stall.bookedBy.companyEmail}
+                                                            </span>
+                                                        </>
                                                     )}
                                                 </div>
                                             )}
                                         </td>
                                         <td className="py-1.5 px-4 min-w-[160px] align-top">
                                             <div className="flex flex-col items-start w-full">
-                                                <span className="w-full text-[#15173D] font-black text-[11px] uppercase tracking-tight leading-tight border-b border-slate-100 pb-1 mb-1">
-                                                    {stall.length}m × {stall.width}m
-                                                </span>
-                                                <span className="w-full font-bold text-[10px] text-slate-600 border-b border-slate-100 pb-1 mb-1">
-                                                    Area: {stall.area} SQM
-                                                </span>
+                                                <div className="flex items-center flex-wrap gap-1.5 w-full border-b border-slate-100 pb-1 mb-1">
+                                                    <span className="text-[#15173D] font-black text-[11px] uppercase tracking-tight leading-tight">
+                                                        {stall.length}m × {stall.width}m
+                                                    </span>
+                                                    <span className="font-bold text-[10px] text-slate-600">
+                                                        ({stall.area} SQM)
+                                                    </span>
+                                                </div>
                                                 <span className="w-full font-bold text-[10px] text-slate-600">
                                                     PL: {stall.plScheme}
                                                     {stall.plcCharges > 0 && (
