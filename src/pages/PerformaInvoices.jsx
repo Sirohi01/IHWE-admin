@@ -88,19 +88,22 @@ const buildImpactPreviewHtml = (preview) => {
         </div>`;
 };
 
+// A fresh row starts fully blank — HSN/Qty/Area/Size/Unit/Rate are only meant
+// to be filled once a Stall No. (and, for rate/HSN, a Stall Type) is picked.
 const newItem = () => ({
     id: Date.now(),
     category: 'Stall',
     description: '',
     subDesc: '',
+    stallType: '',
     hsn: '',
-    qty: 1,
+    qty: '',
     area: '',
     size: '',
-    unit: 'Nos',
-    rate: 0,
+    unit: '',
+    rate: '',
     amount: 0,
-    disc: 0,
+    disc: '',
     taxable: 0,
 });
 
@@ -109,6 +112,7 @@ const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
 const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 const SIZE_BASED_UNITS = ['Sqm', 'Sqft'];
 const ITEM_CATEGORIES = ['Stall', 'Addon Product'];
+const STALL_TYPES = ['Raw Space', 'Shell Space'];
 
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
 const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat';
@@ -182,6 +186,13 @@ export const PerformaInvoices = () => {
     const editEstimateId = location.state?.editEstimateId;
     const [companyData, setCompanyData] = useState(null);
     const [existingEstimateId, setExistingEstimateId] = useState(null);
+    // Not-yet-booked stalls for this PI's event — [{ stallFor, dimension, stallSize, discount, eventId }]
+    const [availableStallDetails, setAvailableStallDetails] = useState([]);
+    // `${eventId}|${currency}|${stallType}` -> StallRate doc ({ ratePerSqm, hsnCode, ... }),
+    // sourced straight from the Manage Stall Rates data for this PI's own event
+    // (the `eventId` URL param).
+    const [eventStallRateMap, setEventStallRateMap] = useState({});
+    const [addonProductOptions, setAddonProductOptions] = useState([]);
 
     const dispatch = useDispatch();
     const { countries: reduxCountries } = useSelector((state) => state.countries || { countries: [] });
@@ -230,9 +241,7 @@ export const PerformaInvoices = () => {
         pinCode: '',
     });
 
-    const [items, setItems] = useState([
-        { id: 1, category: 'Stall', description: 'Exhibition Stall Space (9 Sqm)', subDesc: '', hsn: '997331', qty: 1, area: '3x3', size: 9, unit: 'Sqm', rate: 11200, amount: 100800, disc: 0, taxable: 100800 }
-    ]);
+    const [items, setItems] = useState([newItem()]);
     // 'default' auto-fills the item table from the linked Estimate/PI; 'custom' lets
     // the user build it from scratch. prefillItemsRef remembers what was fetched so
     // switching back to Default doesn't require re-fetching the estimate.
@@ -262,6 +271,12 @@ export const PerformaInvoices = () => {
     // the event it belongs to has to come from the loaded estimate instead —
     // this holds whichever source resolved it (URL first, estimate as fallback).
     const [resolvedCrmEventId, setResolvedCrmEventId] = useState('');
+    // The actual registration Event id used for stall/rate lookups — preferred
+    // from the `?eventId=` URL param when present, else resolved below via
+    // resolvedCrmEventId → CrmEvent.registrationEventId (same chain payment
+    // plans already use), so Stall Type/Stall No. still work when this page is
+    // reached without that query param (e.g. editing an existing PI).
+    const [resolvedEventId, setResolvedEventId] = useState('');
 
     const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
     const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -269,6 +284,9 @@ export const PerformaInvoices = () => {
     useEffect(() => {
         const urlCrmEventId = new URLSearchParams(location.search).get('crmEventId') || '';
         if (urlCrmEventId) setResolvedCrmEventId(urlCrmEventId);
+
+        const urlEventId = new URLSearchParams(location.search).get('eventId') || '';
+        if (urlEventId) setResolvedEventId(urlEventId);
     }, [location.search]);
 
     // Creating a new PI reached without a ?crmEventId= (e.g. not opened from a
@@ -284,6 +302,88 @@ export const PerformaInvoices = () => {
         }
     }, [companyData, resolvedCrmEventId, existingEstimateId]);
 
+    // Item Details → Stall Type: every rate card configured on the Manage Stall
+    // Rates page (/stall-rates) for this PI's own event — not inferred from the
+    // client's booking history, so the dropdown has real options even for a
+    // client with no booked stalls yet.
+    useEffect(() => {
+        if (!resolvedEventId) {
+            setEventStallRateMap({});
+            return;
+        }
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get(`/api/stall-rates/event/${resolvedEventId}`);
+                if (cancelled) return;
+                const rates = res.data?.data || [];
+                setEventStallRateMap(Object.fromEntries(
+                    rates.map((r) => [`${resolvedEventId}|${r.currency}|${r.stallType}`, r])
+                ));
+            } catch (error) {
+                console.error('Error loading stall rates for this event:', error);
+                if (!cancelled) setEventStallRateMap({});
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [resolvedEventId]);
+
+    // Item Details → "Stall" category: the Select Stall dropdown must only ever
+    // offer stalls that are NOT already booked for this event — a booked stall
+    // (by this client or anyone else) must never show up here, full stop —
+    // sourced straight from stall inventory (GET /api/stalls/available). Rate/HSN
+    // aren't known from the stall itself (the Stall model has no price/type on
+    // it); those come from the Stall Type pick + Stall Rate card instead (see
+    // eventStallRateMap above). If every stall for this event is booked, the
+    // dropdown is correctly empty — there is nothing left to sell.
+    useEffect(() => {
+        if (!resolvedEventId) {
+            setAvailableStallDetails([]);
+            return;
+        }
+
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get('/api/stalls/available', { params: { eventId: resolvedEventId } });
+                if (cancelled) return;
+                const stalls = res.data?.data || [];
+                setAvailableStallDetails(stalls.map((s) => ({
+                    stallFor: s.stallNumber,
+                    dimension: `${s.length}x${s.width}`,
+                    stallSize: s.area || 0,
+                    discount: s.discountPercentage || 0,
+                    eventId: resolvedEventId,
+                })));
+            } catch (error) {
+                console.error('Error loading available stalls for this event:', error);
+                if (!cancelled) setAvailableStallDetails([]);
+            }
+        })();
+
+        return () => { cancelled = true; };
+    }, [resolvedEventId]);
+
+    // Item Details → "Addon Product" category: purchasable accessories from the
+    // shared accessories catalog (managed on the Manage Accessories page).
+    useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get('/api/stall-accessories/accessories');
+                if (cancelled) return;
+                const list = (res.data?.data || []).filter((acc) => acc.type === 'purchasable');
+                setAddonProductOptions(list);
+            } catch (error) {
+                console.error('Error loading addon product options:', error);
+                if (!cancelled) setAddonProductOptions([]);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, []);
+
     // Payment plans are configured per-exhibition in Event Setup — resolve the
     // CrmEvent this PI belongs to, then load its linked Event's payment plans.
     useEffect(() => {
@@ -295,6 +395,7 @@ export const PerformaInvoices = () => {
                 const crmEventRes = await api.get(`/api/crm-events/${resolvedCrmEventId}`);
                 const registrationEventId = crmEventRes.data?.registrationEventId;
                 if (!registrationEventId) return;
+                setResolvedEventId((prev) => prev || String(registrationEventId));
 
                 const eventRes = await api.get(`/api/events/${registrationEventId}`);
                 const plans = eventRes.data?.data?.paymentPlans || [];
@@ -400,44 +501,53 @@ export const PerformaInvoices = () => {
                         setPaymentPlanType(existingEstimate.paymentPlanType);
                     }
 
-                    const formattedItems = (estimateForPrefill.items || []).map((item, index) => {
-                        let desc = item.description || '';
-                        let subDesc = '';
-                        if (desc.includes('\n')) {
-                            const parts = desc.split('\n');
-                            desc = parts[0];
-                            subDesc = parts.slice(1).join('\n');
-                        }
+                    // Only an actual edit (existingEstimate, reached via the list's Edit
+                    // action / editEstimateId) should reload its own saved item rows —
+                    // those are real, already-issued line items. A brand-new PI that's
+                    // merely borrowing header/address info from the client's last estimate
+                    // (templateEstimate) must NOT also carry over that old estimate's items:
+                    // stall numbers/rates/HSN go stale, and the row should instead start
+                    // blank and be filled by actually picking a Stall No./Type below.
+                    if (existingEstimate) {
+                        const formattedItems = (existingEstimate.items || []).map((item, index) => {
+                            let desc = item.description || '';
+                            let subDesc = '';
+                            if (desc.includes('\n')) {
+                                const parts = desc.split('\n');
+                                desc = parts[0];
+                                subDesc = parts.slice(1).join('\n');
+                            }
 
-                        const rate = Number(item.rate || 0);
-                        const qty = Number(item.qty || 1);
-                        const size = Number(item.size || 0);
-                        const unit = item.unit || 'Sqm';
-                        const multiplier = SIZE_BASED_UNITS.includes(unit) ? (size > 0 ? size : 1) : 1;
-                        const amount = roundAmount(Number(item.amount) || (qty * rate * multiplier));
-                        const disc = Number(item.disc || 0);
-                        const taxable = roundAmount(amount - (amount * disc) / 100);
+                            const rate = Number(item.rate || 0);
+                            const qty = Number(item.qty || 1);
+                            const size = Number(item.size || 0);
+                            const unit = item.unit || 'Sqm';
+                            const multiplier = SIZE_BASED_UNITS.includes(unit) ? (size > 0 ? size : 1) : 1;
+                            const amount = roundAmount(Number(item.amount) || (qty * rate * multiplier));
+                            const disc = Number(item.disc || 0);
+                            const taxable = roundAmount(amount - (amount * disc) / 100);
 
-                        return {
-                            ...item,
-                            id: item._id || index + 1,
-                            category: item.category || 'Stall',
-                            description: desc,
-                            subDesc: subDesc,
-                            hsn: item.hsn || '',
-                            qty: qty,
-                            area: item.area || '3x3',
-                            size: item.size || '',
-                            unit: item.unit || 'Sqm',
-                            rate: rate,
-                            amount: amount,
-                            disc: disc,
-                            taxable: taxable
-                        };
-                    });
+                            return {
+                                ...item,
+                                id: item._id || index + 1,
+                                category: item.category || 'Stall',
+                                description: desc,
+                                subDesc: subDesc,
+                                hsn: item.hsn || '',
+                                qty: qty,
+                                area: item.area || '3x3',
+                                size: item.size || '',
+                                unit: item.unit || 'Sqm',
+                                rate: rate,
+                                amount: amount,
+                                disc: disc,
+                                taxable: taxable
+                            };
+                        });
 
-                    prefillItemsRef.current = formattedItems;
-                    if (itemsMode === 'default') setItems(formattedItems);
+                        prefillItemsRef.current = formattedItems;
+                        if (itemsMode === 'default') setItems(formattedItems);
+                    }
 
                     // Editing/viewing an already-issued PI (existingEstimate) must stay faithful to what
                     // was actually issued, so its own saved GST/address/location win. A brand-new PI that's
@@ -533,6 +643,10 @@ export const PerformaInvoices = () => {
     const igst = isIGST ? roundAmount((taxable * gstPct) / 100) : 0;
     const totalTax = roundAmount(cgst + sgst + igst);
     const grandTotal = roundAmount(taxable + totalTax);
+    // The Stall Type column is only meaningful for Stall rows — if every row in
+    // the table is an Addon Product, drop the column (header included) entirely
+    // instead of showing a label over a permanently-empty cell.
+    const showStallTypeColumn = itemsMode === 'default' && items.some((item) => item.category === 'Stall');
 
     // ── dynamic location options ─────────────────────────────────────────────────
     const countriesArr = ['Select Country', ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
@@ -577,6 +691,140 @@ export const PerformaInvoices = () => {
             })
         );
     }, []);
+
+    // Rate currency follows the client's Country, not the stall's original
+    // booking currency — India bills in INR, every other country in USD.
+    const getClientCurrency = useCallback(
+        () => (String(form.country || '').trim().toLowerCase() === 'india' ? 'INR' : 'USD'),
+        [form.country]
+    );
+
+    // The event to price against: the stall's own event if one is selected,
+    // else this PI's own resolved event.
+    const getPricingEventId = useCallback(
+        (detail) => detail?.eventId || resolvedEventId || '',
+        [resolvedEventId]
+    );
+
+    // Rate + HSN for a stall depend on its Stall Type and the client's billing
+    // currency (looked up on the per-event Stall Rate card) — resolve together.
+    const getRateForType = useCallback((eventId, stallType) => {
+        const currency = getClientCurrency();
+        const rateDoc = eventStallRateMap[`${eventId}|${currency}|${stallType}`];
+        return { rate: rateDoc?.ratePerSqm || 0, hsn: rateDoc?.hsnCode || '' };
+    }, [eventStallRateMap, getClientCurrency]);
+
+    // Stall Type options come from what's actually configured on the Manage
+    // Stall Rates page for this event + the client's billing currency — not a
+    // hardcoded list — so a type nobody priced there (in that currency) can't
+    // be picked.
+    const getStallTypeOptions = useCallback((item) => {
+        const detail = availableStallDetails.find((d) => d.stallFor === item.description);
+        const eventId = getPricingEventId(detail);
+        const currency = getClientCurrency();
+        const options = eventId
+            ? STALL_TYPES.filter((t) => !!eventStallRateMap[`${eventId}|${currency}|${t}`])
+            : [...new Set(
+                Object.keys(eventStallRateMap)
+                    .filter((key) => eventStallRateMap[key] && key.split('|')[1] === currency)
+                    .map((key) => key.split('|')[2])
+            )];
+        return item.stallType && !options.includes(item.stallType) ? [item.stallType, ...options] : options;
+    }, [availableStallDetails, eventStallRateMap, getClientCurrency, getPricingEventId]);
+
+    // Picking a stall auto-fills everything the system already knows about it
+    // (area/size, discount) plus rate/HSN for its originally booked stall type.
+    // The Stall model has no price/type on the stall itself — those come from
+    // Stall Type (picked separately, resolved against the Stall Rate card). So
+    // picking a stall only fills Qty/Area/Size/Unit/Disc; Rate/HSN are left as
+    // whatever they already are (recomputed against the new size if a Stall
+    // Type was already picked, otherwise still 0 until it is).
+    const selectStall = useCallback((id, stallFor) => {
+        const detail = availableStallDetails.find((d) => d.stallFor === stallFor);
+        setItems((prev) =>
+            prev.map((item) => {
+                if (item.id !== id) return item;
+                if (!detail) return { ...item, description: stallFor };
+                const qty = 1;
+                const size = detail.stallSize;
+                const disc = detail.discount || 0;
+                const unit = 'Sqm';
+                const rate = Number(item.rate) || 0;
+                const multiplier = SIZE_BASED_UNITS.includes(unit) ? (size > 0 ? size : 1) : 1;
+                const amount = roundAmount(qty * rate * multiplier);
+                return {
+                    ...item,
+                    description: stallFor,
+                    qty,
+                    area: detail.dimension,
+                    size,
+                    unit,
+                    disc,
+                    amount,
+                    taxable: roundAmount(amount - (amount * disc) / 100),
+                };
+            })
+        );
+    }, [availableStallDetails]);
+
+    // Switching Stall Type re-resolves Rate + HSN for this PI's event and the
+    // client's billing currency, leaving Qty/Area/Size/Unit (which come from the
+    // stall itself, not its type) untouched.
+    const selectStallType = useCallback((id, stallType) => {
+        setItems((prev) =>
+            prev.map((item) => {
+                if (item.id !== id) return item;
+                const detail = availableStallDetails.find((d) => d.stallFor === item.description);
+                const { rate, hsn } = getRateForType(getPricingEventId(detail), stallType);
+                const qty = Number(item.qty) || 1;
+                const size = Number(item.size) || 0;
+                const disc = Number(item.disc) || 0;
+                const multiplier = SIZE_BASED_UNITS.includes(item.unit) ? (size > 0 ? size : 1) : 1;
+                const amount = roundAmount(qty * rate * multiplier);
+                return {
+                    ...item,
+                    stallType,
+                    rate,
+                    hsn: hsn || item.hsn,
+                    amount,
+                    taxable: roundAmount(amount - (amount * disc) / 100),
+                };
+            })
+        );
+    }, [availableStallDetails, getRateForType, getPricingEventId]);
+
+    // Picking an Addon Product auto-fills everything the accessories catalog
+    // already knows about it (HSN/SAC, unit, rate, dimensions) instead of
+    // leaving those to be typed.
+    const selectAddonProduct = useCallback((id, productName) => {
+        const product = addonProductOptions.find((p) => p.name === productName);
+        setItems((prev) =>
+            prev.map((item) => {
+                if (item.id !== id) return item;
+                if (!product) return { ...item, description: productName };
+                const qty = 1;
+                const rate = Number(product.price) || 0;
+                const unit = product.unit || item.unit;
+                const size = (product.length && product.width) ? Number(product.length) * Number(product.width) : 0;
+                const area = (product.length && product.width) ? `${product.length}x${product.width}` : '';
+                const multiplier = SIZE_BASED_UNITS.includes(unit) ? (size > 0 ? size : 1) : 1;
+                const disc = Number(item.disc) || 0;
+                const amount = roundAmount(qty * rate * multiplier);
+                return {
+                    ...item,
+                    description: productName,
+                    hsn: product.hsnCode || product.sacCode || item.hsn,
+                    qty,
+                    area,
+                    size,
+                    unit,
+                    rate,
+                    amount,
+                    taxable: roundAmount(amount - (amount * disc) / 100),
+                };
+            })
+        );
+    }, [addonProductOptions]);
 
     const addItem = () => setItems((p) => [...p, newItem()]);
     const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
@@ -976,7 +1224,10 @@ export const PerformaInvoices = () => {
                             <table className="w-full text-[10px] border-collapse">
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200">
-                                        {['#', 'Item Category *', 'Item Description *', 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', ''].map((h, i) => (
+                                        {(itemsMode === 'default'
+                                            ? ['#', 'Item Category *', 'Item Description *', ...(showStallTypeColumn ? ['Stall Type'] : []), 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', '']
+                                            : ['#', 'Item Description *', 'HSN No. *', 'Qty. *', 'Area', 'Size', 'Unit *', 'Rate (₹) *', 'Amount (₹)', 'Disc. %', 'Taxable Value (₹)', '']
+                                        ).map((h, i) => (
                                             <th key={i} className="text-left px-1 py-2 font-medium text-[#1a2b4b] whitespace-nowrap">{h}</th>
                                         ))}
                                     </tr>
@@ -985,19 +1236,51 @@ export const PerformaInvoices = () => {
                                     {items.map((item, idx) => (
                                         <tr key={item.id} className=" hover:bg-gray-50/50 border-b border-gray-50 last:border-0">
                                             <td className="px-1 py-1.5 font-medium text-slate-400 text-center">{idx + 1}</td>
-                                            <td className="px-1 py-1.5 w-24">
-                                                <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.category || 'Stall'} onChange={(e) => updateItem(item.id, 'category', e.target.value)}>
-                                                    {ITEM_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                                                </select>
-                                            </td>
+                                            {itemsMode === 'default' && (
+                                                <td className="px-1 py-1.5 w-24">
+                                                    <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.category || 'Stall'} onChange={(e) => { updateItem(item.id, 'category', e.target.value); updateItem(item.id, 'description', ''); updateItem(item.id, 'stallType', ''); }}>
+                                                        {ITEM_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                                                    </select>
+                                                </td>
+                                            )}
                                             <td className="px-1 py-1.5 min-w-[120px]">
                                                 <div className='border border-gray-200 rounded-md overflow-hidden focus-within:border-[#3b82f6] focus-within:ring-1 focus-within:ring-[#3b82f6]/20 transition-all shadow-sm'>
-                                                    <input
-                                                        className="w-full px-1.5 py-1 text-[11px] text-[#1a2b4b] focus:outline-none bg-white"
-                                                        value={item.description}
-                                                        placeholder="Item description"
-                                                        onChange={(e) => updateItem(item.id, 'description', e.target.value)}
-                                                    />
+                                                    {itemsMode === 'custom' ? (
+                                                        <input
+                                                            className="w-full px-1.5 py-1 text-[11px] text-[#1a2b4b] focus:outline-none bg-white"
+                                                            value={item.description}
+                                                            placeholder="Item description"
+                                                            onChange={(e) => updateItem(item.id, 'description', e.target.value)}
+                                                        />
+                                                    ) : item.category === 'Stall' ? (
+                                                        <select
+                                                            className="w-full appearance-none px-1.5 py-1 text-[11px] text-[#1a2b4b] focus:outline-none bg-white cursor-pointer"
+                                                            value={item.description}
+                                                            onChange={(e) => selectStall(item.id, e.target.value)}
+                                                        >
+                                                            <option value="">Select Stall</option>
+                                                            {(item.description && !availableStallDetails.some((d) => d.stallFor === item.description)
+                                                                ? [item.description, ...availableStallDetails.map((d) => d.stallFor)]
+                                                                : availableStallDetails.map((d) => d.stallFor)
+                                                            ).map((stallNo) => (
+                                                                <option key={stallNo} value={stallNo}>{stallNo}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : (
+                                                        <select
+                                                            className="w-full appearance-none px-1.5 py-1 text-[11px] text-[#1a2b4b] focus:outline-none bg-white cursor-pointer"
+                                                            value={item.description}
+                                                            onChange={(e) => selectAddonProduct(item.id, e.target.value)}
+                                                        >
+                                                            <option value="">Select Add-on Product</option>
+                                                            {(item.description && !addonProductOptions.some((p) => p.name === item.description)
+                                                                ? [{ _id: 'current', name: item.description }, ...addonProductOptions]
+                                                                : addonProductOptions
+                                                            ).map((product) => (
+                                                                <option key={product._id} value={product.name}>{product.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    )}
                                                     <input
                                                         className="w-full border-t border-gray-100 px-1.5 py-1 text-[10px] text-gray-400 focus:outline-none bg-gray-50/50"
                                                         value={item.subDesc}
@@ -1006,7 +1289,23 @@ export const PerformaInvoices = () => {
                                                     />
                                                 </div>
                                             </td>
-                                            <td className="px-1 py-1.5 min-w-[50px]">
+                                            {showStallTypeColumn && (
+                                                <td className="px-1 py-1.5 w-20">
+                                                    {item.category === 'Stall' ? (
+                                                        <select
+                                                            className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer"
+                                                            value={item.stallType || ''}
+                                                            onChange={(e) => selectStallType(item.id, e.target.value)}
+                                                        >
+                                                            <option value="">Select Type</option>
+                                                            {getStallTypeOptions(item).map((type) => (
+                                                                <option key={type} value={type}>{type}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : null}
+                                                </td>
+                                            )}
+                                            <td className="px-1 py-1.5 w-12">
                                                 <input type='number' className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px]" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
                                             <td className="px-1 py-1.5 w-14">
@@ -1020,10 +1319,11 @@ export const PerformaInvoices = () => {
                                             </td>
                                             <td className="px-1 py-1.5 w-16">
                                                 <select className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
+                                                    <option value="">Select</option>
                                                     {UNITS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-1 py-1.5 min-w-[60px]">
+                                            <td className="px-1 py-1.5 w-14">
                                                 <input type="number" className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-right" value={item.rate} onChange={(e) => updateItem(item.id, 'rate', e.target.value)} />
                                             </td>
                                             <td className="px-1 py-1.5 min-w-[70px]">

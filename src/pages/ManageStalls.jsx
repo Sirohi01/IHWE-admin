@@ -4,8 +4,9 @@ import api from "../lib/api";
 import {
     Layout, Plus, Trash2, Edit,
     Ruler, Hash, CheckCircle2, XCircle,
-    Info, Search, Download, Filter
+    Info, Search, Download, Filter, Box, AlertCircle, Map, Tag
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import PageHeader from '../components/PageHeader';
 import { useDispatch } from 'react-redux';
 import { createActivityLogThunk } from '../features/activityLog/activityLogSlice';
@@ -18,6 +19,7 @@ const EMPTY_STALL = {
     length: '',
     width: '',
     area: '',
+    stallType: 'Shell Space',
     plScheme: 'One Side Open',
     plcCharges: 0,
     incrementPercentage: 0,
@@ -33,6 +35,7 @@ const ManageStalls = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterEventId, setFilterEventId] = useState('all');
     const [eventRates, setEventRates] = useState([]);
+    const [allRates, setAllRates] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedStalls, setSelectedStalls] = useState([]);
     const dispatch = useDispatch();
@@ -48,6 +51,7 @@ const ManageStalls = () => {
     useEffect(() => {
         fetchStalls();
         fetchEvents();
+        fetchRates();
     }, []);
 
     const fetchStalls = async () => {
@@ -68,6 +72,15 @@ const ManageStalls = () => {
             if (response.data.success) setEvents(response.data.data);
         } catch (error) {
             console.error('Error fetching events:', error);
+        }
+    };
+
+    const fetchRates = async () => {
+        try {
+            const response = await api.get('/api/stall-rates');
+            if (response.data.success) setAllRates(response.data.data || []);
+        } catch (error) {
+            console.error('Error fetching stall rates:', error);
         }
     };
 
@@ -97,10 +110,12 @@ const ManageStalls = () => {
         return () => { cancelled = true; };
     }, [stallForm.eventId]);
 
-    const dynamicPlSchemeCharges = eventRates.reduce((acc, rate) => {
+    const matchingEventRates = eventRates.filter(rate => rate.stallType === stallForm.stallType);
+
+    const dynamicPlSchemeCharges = matchingEventRates.reduce((acc, rate) => {
         (rate.plSchemeCharges || []).forEach(row => {
             if (!acc.some(existing => existing.plScheme === row.plScheme)) {
-                acc.push({ plScheme: row.plScheme, plcCharges: row.plcCharges || 0 });
+                acc.push({ plScheme: row.plScheme });
             }
         });
         return acc;
@@ -115,9 +130,21 @@ const ManageStalls = () => {
     // mirror the PLC Charges configured for whichever scheme ends up selected.
     useEffect(() => {
         const activeScheme = plSchemeOptions.includes(stallForm.plScheme) ? stallForm.plScheme : plSchemeOptions[0];
-        const match = dynamicPlSchemeCharges.find(row => row.plScheme === activeScheme);
-        setStallForm(prev => ({ ...prev, plScheme: activeScheme, plcCharges: match ? match.plcCharges : 0 }));
-    }, [stallForm.plScheme, eventRates]);
+        const preferredRate = matchingEventRates.find(rate => rate.currency === 'INR') || matchingEventRates[0];
+        const match = preferredRate?.plSchemeCharges?.find(row => row.plScheme === activeScheme);
+        setStallForm(prev => ({ ...prev, plScheme: activeScheme, plcCharges: match?.plcCharges || 0 }));
+    }, [stallForm.plScheme, stallForm.stallType, eventRates]);
+
+    const getRatesForStall = (stall) => allRates.filter(rate =>
+        String(rate.eventId?._id || rate.eventId) === String(stall.eventId?._id || stall.eventId) &&
+        rate.stallType === (stall.stallType || 'Shell Space')
+    );
+
+    const getPlcCharge = (rate, plScheme) => Number(
+        rate?.plSchemeCharges?.find(row => row.plScheme === plScheme)?.plcCharges || 0
+    );
+
+    const formatMoney = (currency, amount) => `${currency === 'INR' ? '₹' : '$'}${Number(amount || 0).toLocaleString()}`;
 
     const handleStallSubmit = async (e) => {
         e.preventDefault();
@@ -210,6 +237,8 @@ const ManageStalls = () => {
             stallNumber: stall.stallNumber,
             length: stall.length || '',
             area: stall.area,
+            width: stall.width || '',
+            stallType: stall.stallType || 'Shell Space',
             plScheme: stall.plScheme || 'One Side Open',
             plcCharges: stall.plcCharges || 0,
             incrementPercentage: stall.incrementPercentage || 0,
@@ -320,7 +349,7 @@ const ManageStalls = () => {
                         body, html { overflow: hidden !important; }
                         #root, main, .overflow-y-auto { overflow: hidden !important; }
                     `}</style>
-                    <div className="bg-white border-2 border-gray-200 shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white border-2 border-gray-200 shadow-xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
                         {/* Form Header */}
                         <div className={`px-6 py-4 flex items-center justify-between gap-3 text-white sticky top-0 ${isEditing ? 'bg-amber-500' : 'bg-[#23471d]'}`}>
                             <div className="flex items-center gap-3">
@@ -371,6 +400,19 @@ const ManageStalls = () => {
                                     </div>
                                 </div>
 
+                                <div className="mb-4">
+                                    <label className={labelCls}>Stall Type *</label>
+                                    <select
+                                        required
+                                        value={stallForm.stallType}
+                                        onChange={(e) => setStallForm({ ...stallForm, stallType: e.target.value })}
+                                        className={inputCls}
+                                    >
+                                        <option value="Shell Space">Shell Space (Built-up)</option>
+                                        <option value="Raw Space">Raw Space (Plot)</option>
+                                    </select>
+                                </div>
+
                                 {/* PL Scheme / PLC Charges — sourced from the Stall Rates master */}
                                 <div className="grid grid-cols-2 gap-4 mb-4">
                                     <div>
@@ -383,17 +425,13 @@ const ManageStalls = () => {
                                             {plSchemeOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                                         </select>
                                     </div>
-                                    <div>
-                                        <label className={labelCls}>PLC Charges</label>
-                                        <input
-                                            type="text"
-                                            readOnly
-                                            value={Number(stallForm.plcCharges || 0).toLocaleString()}
-                                            className="w-full px-4 py-2 border-2 border-gray-200 bg-gray-50 outline-none text-xs font-bold text-[#23471d] rounded-[2px]"
-                                        />
+                                    <div className="flex items-end">
+                                        <div className="w-full px-3 py-2 border-2 border-gray-200 bg-gray-50 text-[10px] font-bold text-[#23471d] rounded-[2px]">
+                                            PLC IS CURRENCY-SPECIFIC
+                                        </div>
                                     </div>
                                 </div>
-                                <p className="text-[9px] text-black font-medium -mt-2 mb-4 opacity-50 italic capitalize">* PL Scheme options and PLC Charges are pulled from the Stall Rates master for the selected event</p>
+                                <p className="text-[9px] text-black font-medium -mt-2 mb-4 opacity-50 italic capitalize">* PL Scheme and INR/USD PLC charges are pulled from the matching Event + Stall Type rate</p>
 
                                 {/* Length / Width */}
                                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -435,6 +473,38 @@ const ManageStalls = () => {
                                         <p className="text-[9px] text-black font-medium mt-1 opacity-50 italic capitalize">* Calculated automatically from Length x Width</p>
                                     </div>
                                 </div>
+
+                                {stallForm.eventId && (
+                                    <div className="mb-4 border-2 border-slate-200 bg-slate-50 p-3">
+                                        <div className="flex items-center justify-between gap-2 mb-2">
+                                            <p className="text-[10px] font-black text-[#23471d] tracking-wider">LIVE PRICING PREVIEW</p>
+                                            <span className="text-[9px] font-bold text-slate-500">{stallForm.stallType}</span>
+                                        </div>
+                                        {matchingEventRates.length === 0 ? (
+                                            <p className="text-[10px] font-bold text-red-600 normal-case">No rate configured for this event and stall type.</p>
+                                        ) : (
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                                {matchingEventRates.map(rate => {
+                                                    const plc = getPlcCharge(rate, stallForm.plScheme);
+                                                    const base = Number(stallForm.area || 0) * Number(rate.ratePerSqm || 0);
+                                                    return (
+                                                        <div key={rate._id} className="bg-white border border-slate-200 p-2.5">
+                                                            <div className="flex justify-between text-[10px] font-black">
+                                                                <span>{rate.currency}</span>
+                                                                <span>{formatMoney(rate.currency, rate.ratePerSqm)}/SQM</span>
+                                                            </div>
+                                                            <div className="mt-1 space-y-0.5 text-[9px] font-bold text-slate-600 normal-case">
+                                                                <div className="flex justify-between"><span>Base ({stallForm.area || 0} sqm)</span><span>{formatMoney(rate.currency, base)}</span></div>
+                                                                <div className="flex justify-between"><span>PLC ({stallForm.plScheme})</span><span>{formatMoney(rate.currency, plc)}</span></div>
+                                                                <div className="flex justify-between pt-1 border-t text-[#23471d] uppercase"><span>Estimated</span><span>{formatMoney(rate.currency, base + plc)}</span></div>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
 
                                 {/* Submit */}
@@ -513,7 +583,7 @@ const ManageStalls = () => {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto mt-6">
                         <table className="w-full text-sm font-inter">
                             <thead>
                                 <tr className="border-b-2 border-gray-200 bg-gray-50/50">
@@ -527,18 +597,19 @@ const ManageStalls = () => {
                                     </th>
                                     <th className="py-4 px-2 text-[11px] font-medium text-black uppercase text-left tracking-tight">Stall Detail</th>
                                     <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Specifications</th>
+                                    <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Pricing</th>
                                     <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Status</th>
                                     <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Actions</th>
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {isLoading ? (
-                                    <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
+                                    <tr><td colSpan={6} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">Loading inventory...</td></tr>
                                 ) : currentItems.length === 0 ? (
-                                    <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
+                                    <tr><td colSpan={6} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
                                 ) : currentItems.map((stall, index) => (
-                                <tr className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0" key={stall._id}>
-                                        <td className="py-3 px-4 text-center align-top">
+                                    <tr className={`hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0 divide-x divide-slate-100 ${selectedStalls.includes(stall._id) ? 'bg-[#23471d]/5' : ''}`} key={stall._id}>
+                                        <td className="py-1.5 px-4 text-center align-top">
                                             <input
                                                 type="checkbox"
                                                 className="w-3.5 h-3.5 accent-[#23471d] cursor-pointer mt-0.5"
@@ -546,21 +617,28 @@ const ManageStalls = () => {
                                                 onChange={() => handleSelectStall(stall._id)}
                                             />
                                         </td>
-                                        <td className="py-3 px-2 min-w-[180px] align-top">
-                                            <div className="flex items-center gap-1 mb-1">
-                                                <span className="font-black text-[13px] text-[#093C5D]">{stall.stallNumber}</span>
-                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
-                                                    {stall.eventId?.name || 'N/A'}
-                                                </span>
+                                        <td className="py-1.5 px-3 min-w-[180px] align-top">
+                                            <div className={`flex flex-col gap-0.5 ${stall.bookedBy ? 'pb-1 mb-1 border-b border-slate-100' : ''}`}>
+                                                <div className="flex items-center flex-wrap gap-1.5 mb-0.5 leading-tight">
+                                                    <span className="font-black text-[13px] text-[#093C5D]">{stall.stallNumber}</span>
+                                                    <span className={`px-1 py-0 rounded font-black text-[9px] border ${stall.stallType === 'Raw Space' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                                        {stall.stallType || 'Shell Space'}
+                                                    </span>
+                                                </div>
+                                                <div className="flex flex-col items-start gap-1">
+                                                    <span className="px-1 py-0 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200 w-fit">
+                                                        {stall.eventId?.name || 'N/A'}
+                                                    </span>
+                                                </div>
                                             </div>
                                             {stall.bookedBy && (
-                                                <div className="flex items-center gap-1 mt-1 bg-slate-50 p-1.5 rounded border border-slate-100 flex-wrap">
+                                                <div className="flex items-center flex-wrap gap-1 pt-0.5">
                                                     <span className="text-[10px] font-bold text-[#15173D] uppercase truncate max-w-[200px]" title={stall.bookedBy.exhibitorName}>
                                                         👤 {stall.bookedBy.exhibitorName}
                                                     </span>
                                                     {stall.bookedBy.companyEmail && (
                                                         <>
-                                                            <span className="text-[10px] text-slate-600">-</span>
+                                                            <span className="text-slate-400 text-[10px]">-</span>
                                                             <span className="text-[9px] text-slate-900 lowercase truncate max-w-[200px]" title={stall.bookedBy.companyEmail}>
                                                                 ✉️ {stall.bookedBy.companyEmail}
                                                             </span>
@@ -569,25 +647,48 @@ const ManageStalls = () => {
                                                 </div>
                                             )}
                                         </td>
-                                        <td className="py-3 px-4 min-w-[240px] align-top">
-                                            <div className="flex flex-wrap items-center gap-2">
-                                                <span className="text-[#15173D] font-black text-[11px] uppercase tracking-tight">
-                                                    {stall.length}m × {stall.width}m
-                                                </span>
-                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
-                                                    {stall.area} SQM
-                                                </span>
-                                                <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
-                                                    PL: {stall.plScheme}
-                                                </span>
-                                                {stall.plcCharges > 0 && (
-                                                    <span className="px-1.5 py-0.5 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200">
-                                                        PLC: {Number(stall.plcCharges).toLocaleString()}
+                                        <td className="py-1.5 px-4 min-w-[160px] align-top">
+                                            <div className="flex flex-col items-start w-full">
+                                                <div className="flex items-center flex-wrap gap-1.5 w-full border-b border-slate-100 pb-1 mb-1">
+                                                    <span className="text-[#15173D] font-black text-[11px] uppercase tracking-tight leading-tight">
+                                                        {stall.length}m × {stall.width}m
                                                     </span>
-                                                )}
+                                                    <span className="font-bold text-[10px] text-slate-600">
+                                                        ({stall.area} SQM)
+                                                    </span>
+                                                </div>
+                                                <span className="w-full font-bold text-[10px] text-slate-600">
+                                                    PL: {stall.plScheme}
+                                                    {stall.plcCharges > 0 && (
+                                                        <span className="ml-1 text-[#23471d]">
+                                                            (PLC: {Number(stall.plcCharges).toLocaleString()})
+                                                        </span>
+                                                    )}
+                                                </span>
                                             </div>
                                         </td>
-                                        <td className="py-3 px-4 text-center align-top">
+                                        <td className="py-1.5 px-4 min-w-[180px] align-top">
+                                            {(() => {
+                                                const mappedRates = getRatesForStall(stall);
+                                                if (!mappedRates.length) return <span className="text-[9px] font-bold text-red-600">PRICING NOT MAPPED</span>;
+                                                return (
+                                                    <div className="flex flex-wrap gap-4">
+                                                        {mappedRates.map(rate => {
+                                                            const plc = getPlcCharge(rate, stall.plScheme);
+                                                            const base = Number(stall.area || 0) * Number(rate.ratePerSqm || 0);
+                                                            return (
+                                                                <div key={rate._id} className="flex flex-col gap-0 text-[9px] font-bold border-r border-slate-100 pr-4 last:border-0 last:pr-0">
+                                                                    <span className="text-[#093C5D] font-black">{rate.currency} {formatMoney(rate.currency, rate.ratePerSqm)}/SQM</span>
+                                                                    <span className="text-slate-500 leading-none">PLC: {formatMoney(rate.currency, plc)}</span>
+                                                                    <span className="text-[#23471d] leading-none mt-0.5">TOTAL: {formatMoney(rate.currency, base + plc)}</span>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                );
+                                            })()}
+                                        </td>
+                                        <td className="py-1.5 px-4 text-center align-top">
                                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${stall.status === 'available' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
                                                 stall.status === 'booked' ? 'bg-red-50 text-red-700 border-red-100' :
                                                     'bg-orange-50 text-orange-700 border-orange-100'
@@ -599,18 +700,18 @@ const ManageStalls = () => {
                                                 {stall.status}
                                             </span>
                                         </td>
-                                        <td className="py-3 px-4 align-top">
+                                        <td className="py-1.5 px-4 align-top">
                                             <div className="flex items-center justify-center gap-1.5">
                                                 <button
                                                     onClick={() => startEdit(stall)}
-                                                    className="text-blue-500 hover:bg-blue-100 p-1.5 transition-all rounded-md"
+                                                    className="text-blue-500 hover:bg-blue-100 p-1 transition-all rounded-md"
                                                     title="Edit"
                                                 >
                                                     <Edit size={14} />
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(stall._id)}
-                                                    className="text-red-500 hover:bg-red-100 p-1.5 transition-all rounded-md"
+                                                    className="text-red-500 hover:bg-red-100 p-1 transition-all rounded-md"
                                                     title="Delete"
                                                 >
                                                     <Trash2 size={14} />

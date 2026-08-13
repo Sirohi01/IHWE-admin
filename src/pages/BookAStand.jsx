@@ -399,14 +399,20 @@ const BookAStand = () => {
         }
     }, [marketingStaff, formData.spokenWith]);
 
+    // Server-side authoritative availability (status: 'available', scoped to the
+    // event) — not the admin /api/stalls list, which returns every stall across
+    // every event regardless of booked/reserved status.
+    const fetchAvailableStalls = (eventId) => {
+        if (!eventId) return;
+        api.get(`/api/stalls/available?eventId=${eventId}`).then(res => {
+            if (res.data.success) {
+                setAvailableStalls(res.data.data);
+            }
+        });
+    };
+
     useEffect(() => {
-        if (selectedEventId) {
-            api.get(`/api/stalls?eventId=${selectedEventId}`).then(res => {
-                if (res.data.success) {
-                    setAvailableStalls(res.data.data.filter(s => s.status === 'available'));
-                }
-            });
-        }
+        fetchAvailableStalls(selectedEventId);
     }, [selectedEventId]);
 
     // Rate Fetching
@@ -673,6 +679,14 @@ const BookAStand = () => {
             }
         } catch (error) {
             Swal.fire('Error', error.response?.data?.message || 'Submission failed. Please try again.', 'error');
+            // The stall may have just been booked by someone else — refresh
+            // availability and drop the now-possibly-stale selection instead of
+            // leaving an already-taken stall sitting in the picker as "available".
+            fetchAvailableStalls(selectedEventId);
+            setFormData(prev => ({
+                ...prev,
+                participation: { ...prev.participation, stallNo: '', stallFor: '' }
+            }));
         } finally {
             setIsLoading(false);
         }

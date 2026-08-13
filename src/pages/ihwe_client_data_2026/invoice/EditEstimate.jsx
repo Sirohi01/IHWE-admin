@@ -13,6 +13,9 @@ import { showError, showSuccess } from "../../../utils/toastMessage";
 import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X } from "lucide-react";
 import api from "../../../lib/api";
 
+const ITEM_CATEGORIES = ["Stall", "Addon Product"];
+const STALL_TYPES = ["Raw Space", "Shell Space"];
+
 const EditEstimate = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -42,6 +45,7 @@ const EditEstimate = () => {
 
   const [items, setItems] = useState([
     {
+      category: "Stall",
       description: "",
       hsn: "",
       qty: "",
@@ -56,6 +60,11 @@ const EditEstimate = () => {
       remarks: "",
     },
   ]);
+  // [{ stallFor, dimension, stallSize, discount, gstPercent, stallType, eventId, currency }]
+  const [bookedStallDetails, setBookedStallDetails] = useState([]);
+  // `${eventId}|${currency}|${stallType}` -> StallRate doc ({ ratePerSqm, hsnCode, ... })
+  const [stallRateMap, setStallRateMap] = useState({});
+  const [addonProductOptions, setAddonProductOptions] = useState([]);
   const unitOptions = [
     "Inch",
     "Feet",
@@ -127,13 +136,93 @@ const EditEstimate = () => {
           remarks: estimateToEdit.remarks || "",
         });
         setItems(estimateToEdit.items?.length > 0 ? estimateToEdit.items : [{
-          description: "", hsn: "", qty: "", size: "", unit: "", rate: "", amount: "0.00", disc: "0", tax: "0.00", gstRate: "", finalAmount: "0.00", remarks: "",
+          category: "Stall", description: "", stallType: "", hsn: "", qty: "", size: "", unit: "", rate: "", amount: "0.00", disc: "0", tax: "0.00", gstRate: "", finalAmount: "0.00", remarks: "",
         }]);
+
+        // Resolve the client this estimate belongs to, so the "Stall" item
+        // category can offer only their actually booked stall(s) — with the
+        // detail needed to auto-fill area/size + discount. Rate and HSN are
+        // NOT baked in here — both live on the per-event Stall Rate card keyed
+        // by (event, currency, stall type), resolved separately below so
+        // changing Stall Type can re-resolve them without another round trip.
+        if (estimateToEdit.companyId) {
+          try {
+            const companyRes = await api.get(`/api/companies/${estimateToEdit.companyId}`);
+            const company = companyRes.data?.data || companyRes.data;
+            const assignments = company?.eventAssignments || [];
+            const registrationIds = [...new Set(
+              assignments.map((a) => a.exhibitorRegistrationId).filter(Boolean).map(String)
+            )];
+            if (registrationIds.length) {
+              const regResults = await Promise.all(
+                registrationIds.map((regId) =>
+                  api.get(`/api/exhibitor-registration/${regId}`).catch(() => null)
+                )
+              );
+              const registrations = regResults
+                .map((res) => res?.data?.data)
+                .filter((reg) => reg?.participation?.stallFor);
+
+              const details = registrations.map((reg) => {
+                const p = reg.participation;
+                return {
+                  stallFor: p.stallFor,
+                  dimension: p.dimension || "",
+                  stallSize: p.stallSize || 0,
+                  discount: p.discount || 0,
+                  gstPercent: p.gstPercent ?? 18,
+                  stallType: p.stallType || "",
+                  eventId: reg.eventId,
+                  currency: p.currency || "INR",
+                };
+              });
+              setBookedStallDetails([...new Map(details.map((d) => [d.stallFor, d])).values()]);
+
+              const comboKeys = [...new Set(details.map((d) => `${d.eventId}|${d.currency}`))];
+              const rateEntries = await Promise.all(
+                comboKeys.flatMap((combo) => {
+                  const [eventId, currency] = combo.split("|");
+                  return STALL_TYPES.map((stallType) =>
+                    api.get("/api/stall-rates/find", { params: { eventId, currency, stallType } })
+                      .then((res) => [`${eventId}|${currency}|${stallType}`, res?.data?.data])
+                      .catch(() => [`${eventId}|${currency}|${stallType}`, null])
+                  );
+                })
+              );
+              setStallRateMap(Object.fromEntries(rateEntries));
+            } else {
+              setBookedStallDetails([]);
+              setStallRateMap({});
+            }
+          } catch (err) {
+            console.error("Error resolving client/booked stalls for this estimate:", err);
+            setBookedStallDetails([]);
+            setStallRateMap({});
+          }
+        }
       }
     };
-    
+
     loadEstimateData();
   }, [id, estimates]);
+
+  // Item rows → "Addon Product" category: purchasable accessories from the
+  // shared accessories catalog (managed on the Manage Accessories page).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/api/stall-accessories/accessories");
+        if (cancelled) return;
+        const list = (res.data?.data || []).filter((acc) => acc.type === "purchasable");
+        setAddonProductOptions(list);
+      } catch (err) {
+        console.error("Error loading addon product options:", err);
+        if (!cancelled) setAddonProductOptions([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // Effect for API feedback
   useEffect(() => {
@@ -191,6 +280,101 @@ const EditEstimate = () => {
     const { name, value } = e.target;
     const updatedItems = [...items];
     updatedItems[index] = { ...updatedItems[index], [name]: value };
+    if (name === "category") {
+      updatedItems[index].description = "";
+      updatedItems[index].stallType = "";
+    }
+    setItems(updatedItems);
+  };
+
+  // Rate + HSN for a stall depend on its Stall Type (looked up on the per-event
+  // Stall Rate card), not on the stall itself — resolve them together here.
+  const getRateForType = (detail, stallType) => {
+    const rateDoc = stallRateMap[`${detail.eventId}|${detail.currency}|${stallType}`];
+    return { rate: rateDoc?.ratePerSqm || 0, hsn: rateDoc?.hsnCode || "" };
+  };
+
+  // Stall Type options come from what's actually configured on the Manage
+  // Stall Rates page for this stall's event/currency — not a hardcoded list —
+  // so a type nobody priced there can't be picked. Before a stall is chosen,
+  // fall back to every type priced for ANY of the client's booked events.
+  const getStallTypeOptions = (item) => {
+    const detail = bookedStallDetails.find((d) => d.stallFor === item.description);
+    const hasRate = (eventId, currency, stallType) => !!stallRateMap[`${eventId}|${currency}|${stallType}`];
+    const options = detail
+      ? STALL_TYPES.filter((t) => hasRate(detail.eventId, detail.currency, t))
+      : [...new Set(
+          Object.keys(stallRateMap)
+            .filter((key) => stallRateMap[key])
+            .map((key) => key.split("|")[2])
+        )];
+    return item.stallType && !options.includes(item.stallType) ? [item.stallType, ...options] : options;
+  };
+
+  // Picking a stall auto-fills everything the system already knows about it
+  // (area/size, discount, GST) plus rate/HSN for its originally booked type.
+  const selectStall = (index, stallFor) => {
+    const detail = bookedStallDetails.find((d) => d.stallFor === stallFor);
+    const updatedItems = [...items];
+    if (!detail) {
+      updatedItems[index] = { ...updatedItems[index], description: stallFor };
+    } else {
+      const { rate, hsn } = getRateForType(detail, detail.stallType);
+      updatedItems[index] = {
+        ...updatedItems[index],
+        description: stallFor,
+        stallType: detail.stallType,
+        hsn: hsn || updatedItems[index].hsn,
+        qty: 1,
+        size: detail.dimension || String(detail.stallSize || ""),
+        unit: "Sqmtr.",
+        rate,
+        disc: String(detail.discount || 0),
+        gstRate: String(detail.gstPercent ?? 18),
+      };
+    }
+    setItems(updatedItems);
+  };
+
+  // Switching Stall Type re-resolves Rate + HSN for the currently selected
+  // stall's event/currency, leaving Qty/Area/Size/Unit untouched.
+  const selectStallType = (index, stallType) => {
+    const updatedItems = [...items];
+    const detail = bookedStallDetails.find((d) => d.stallFor === updatedItems[index].description);
+    if (!detail) {
+      updatedItems[index] = { ...updatedItems[index], stallType };
+    } else {
+      const { rate, hsn } = getRateForType(detail, stallType);
+      updatedItems[index] = {
+        ...updatedItems[index],
+        stallType,
+        rate,
+        hsn: hsn || updatedItems[index].hsn,
+      };
+    }
+    setItems(updatedItems);
+  };
+
+  // Picking an Addon Product auto-fills everything the accessories catalog
+  // already knows about it (HSN/SAC, unit, rate, dimensions).
+  const selectAddonProduct = (index, productName) => {
+    const product = addonProductOptions.find((p) => p.name === productName);
+    const updatedItems = [...items];
+    if (!product) {
+      updatedItems[index] = { ...updatedItems[index], description: productName };
+    } else {
+      const hasDims = product.length && product.width;
+      updatedItems[index] = {
+        ...updatedItems[index],
+        description: productName,
+        hsn: product.hsnCode || product.sacCode || updatedItems[index].hsn,
+        qty: 1,
+        size: hasDims ? `${product.length}x${product.width}` : "",
+        unit: product.unit || updatedItems[index].unit,
+        rate: Number(product.price) || 0,
+        gstRate: String(product.gstPercent ?? 18),
+      };
+    }
     setItems(updatedItems);
   };
 
@@ -198,7 +382,9 @@ const EditEstimate = () => {
     setItems([
       ...items,
       {
+        category: "Stall",
         description: "",
+        stallType: "",
         hsn: "",
         qty: "",
         size: "",
@@ -469,19 +655,75 @@ const EditEstimate = () => {
 
                   {/* Item Fields Row 1 */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-9 gap-3 mb-3">
+                    <div>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">
+                        Item Category <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        name="category"
+                        value={item.category || "Stall"}
+                        onChange={(e) => handleItemChange(index, e)}
+                        className="w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
+                      >
+                        {ITEM_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>{c}</option>
+                        ))}
+                      </select>
+                    </div>
                     <div className="col-span-2">
                       <label className="block text-xs font-semibold text-gray-700 mb-1">
                         Item Description <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        type="text"
-                        name="description"
-                        value={item.description}
-                        onChange={(e) => handleItemChange(index, e)}
-                        className="w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
-                        placeholder="Type here..."
-                      />
+                      {item.category === "Addon Product" ? (
+                        <select
+                          name="description"
+                          value={item.description}
+                          onChange={(e) => selectAddonProduct(index, e.target.value)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
+                        >
+                          <option value="">Select Add-on Product</option>
+                          {(item.description && !addonProductOptions.some((p) => p.name === item.description)
+                            ? [{ _id: "current", name: item.description }, ...addonProductOptions]
+                            : addonProductOptions
+                          ).map((product) => (
+                            <option key={product._id} value={product.name}>{product.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          name="description"
+                          value={item.description}
+                          onChange={(e) => selectStall(index, e.target.value)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
+                        >
+                          <option value="">Select Stall</option>
+                          {(item.description && !bookedStallDetails.some((d) => d.stallFor === item.description)
+                            ? [item.description, ...bookedStallDetails.map((d) => d.stallFor)]
+                            : bookedStallDetails.map((d) => d.stallFor)
+                          ).map((stallNo) => (
+                            <option key={stallNo} value={stallNo}>{stallNo}</option>
+                          ))}
+                        </select>
+                      )}
                     </div>
+                    {item.category === "Stall" && (
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-700 mb-1">
+                          Stall Type
+                        </label>
+                        <select
+                          name="stallType"
+                          value={item.stallType || ""}
+                          onChange={(e) => selectStallType(index, e.target.value)}
+                          className="w-full px-2 py-1.5 text-xs border border-gray-300 focus:ring-1 focus:ring-blue-500 focus:border-transparent focus:outline-none"
+                        >
+                          <option value="">Select Type</option>
+                          {getStallTypeOptions(item).map((type) => (
+                            <option key={type} value={type}>{type}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-xs font-semibold text-gray-700 mb-1">
                         HSN No. <span className="text-red-500">*</span>
