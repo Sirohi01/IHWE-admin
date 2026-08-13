@@ -12,6 +12,7 @@ import { fetchCities } from "../../features/city/citySlice";
 import { fetchCompanies } from "../../features/company/companySlice";
 import { showError, showSuccess } from "../../utils/toastMessage";
 import { Upload, LayoutGrid, UserCheck } from "lucide-react";
+import api from "../../lib/api";
 
 const unitOptions = [
   "Inch",
@@ -42,6 +43,9 @@ const unitOptions = [
   "nos",
   "inch",
 ];
+
+const ITEM_CATEGORIES = ["Stall", "Addon Product"];
+const STALL_TYPES = ["Raw Space", "Shell Space"];
 
 const EVENT_NAME = "9th Edition of International Health & Wellness Expo (IHWE Global Edition)";
 const EVENT_PLACE_OF_SUPPLY = "Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat";
@@ -122,7 +126,9 @@ const CreateEstimate1 = () => {
 
   const [items, setItems] = useState([
     {
+      category: "Stall",
       description: "",
+      stallType: "",
       hsn: "",
       qty: "",
       size: "",
@@ -136,6 +142,12 @@ const CreateEstimate1 = () => {
       remarks: "",
     },
   ]);
+
+  // [{ stallFor, dimension, stallSize, discount, gstPercent, stallType, eventId, currency }]
+  const [bookedStallDetails, setBookedStallDetails] = useState([]);
+  // `${eventId}|${currency}|${stallType}` -> StallRate doc ({ ratePerSqm, hsnCode, ... })
+  const [stallRateMap, setStallRateMap] = useState({});
+  const [addonProductOptions, setAddonProductOptions] = useState([]);
 
   useEffect(() => {
     if (!companyIdFromParams || !companies.length) return;
@@ -153,6 +165,96 @@ const CreateEstimate1 = () => {
       pincode: prev.pincode || company.pincode || "",
     }));
   }, [companyIdFromParams, companies]);
+
+  // Item rows → "Stall" category: this client's actually booked stall(s) with
+  // the detail needed to auto-fill area/size + discount once a stall is picked.
+  // Rate and HSN are NOT baked in here — both live on the per-event Stall Rate
+  // card keyed by (event, currency, stall type), so they're resolved separately
+  // (see stallRateMap) and re-resolved whenever Stall Type changes.
+  useEffect(() => {
+    if (!companyIdFromParams || !companies.length) return;
+    const company = companies.find((item) => item._id === companyIdFromParams);
+    const assignments = company?.eventAssignments || [];
+    const registrationIds = [...new Set(
+      assignments.map((a) => a.exhibitorRegistrationId).filter(Boolean).map(String)
+    )];
+    if (!registrationIds.length) {
+      setBookedStallDetails([]);
+      setStallRateMap({});
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const regResults = await Promise.all(
+          registrationIds.map((regId) =>
+            api.get(`/api/exhibitor-registration/${regId}`).catch(() => null)
+          )
+        );
+        if (cancelled) return;
+
+        const registrations = regResults
+          .map((res) => res?.data?.data)
+          .filter((reg) => reg?.participation?.stallFor);
+
+        const details = registrations.map((reg) => {
+          const p = reg.participation;
+          return {
+            stallFor: p.stallFor,
+            dimension: p.dimension || "",
+            stallSize: p.stallSize || 0,
+            discount: p.discount || 0,
+            gstPercent: p.gstPercent ?? 18,
+            stallType: p.stallType || "",
+            eventId: reg.eventId,
+            currency: p.currency || "INR",
+          };
+        });
+        setBookedStallDetails([...new Map(details.map((d) => [d.stallFor, d])).values()]);
+
+        // Rate + HSN for every (event, currency, stall type) combination this
+        // client's stalls could switch to, so changing Stall Type doesn't need
+        // another round trip.
+        const comboKeys = [...new Set(details.map((d) => `${d.eventId}|${d.currency}`))];
+        const rateEntries = await Promise.all(
+          comboKeys.flatMap((combo) => {
+            const [eventId, currency] = combo.split("|");
+            return STALL_TYPES.map((stallType) =>
+              api.get("/api/stall-rates/find", { params: { eventId, currency, stallType } })
+                .then((res) => [`${eventId}|${currency}|${stallType}`, res?.data?.data])
+                .catch(() => [`${eventId}|${currency}|${stallType}`, null])
+            );
+          })
+        );
+        if (cancelled) return;
+        setStallRateMap(Object.fromEntries(rateEntries));
+      } catch (err) {
+        console.error("Error resolving booked stalls for client:", err);
+        if (!cancelled) { setBookedStallDetails([]); setStallRateMap({}); }
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [companyIdFromParams, companies]);
+
+  // Item rows → "Addon Product" category: purchasable accessories from the
+  // shared accessories catalog (managed on the Manage Accessories page).
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await api.get("/api/stall-accessories/accessories");
+        if (cancelled) return;
+        const list = (res.data?.data || []).filter((acc) => acc.type === "purchasable");
+        setAddonProductOptions(list);
+      } catch (err) {
+        console.error("Error loading addon product options:", err);
+        if (!cancelled) setAddonProductOptions([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   // 🟢 NEW: Handle API feedback (Success/Error)
   useEffect(() => {
@@ -177,6 +279,101 @@ const CreateEstimate1 = () => {
     const { name, value } = e.target;
     const newItems = [...items];
     newItems[index][name] = value;
+    if (name === "category") {
+      newItems[index].description = "";
+      newItems[index].stallType = "";
+    }
+    setItems(newItems);
+  };
+
+  // Rate + HSN for a stall depend on its Stall Type (looked up on the per-event
+  // Stall Rate card), not on the stall itself — resolve them together here.
+  const getRateForType = (detail, stallType) => {
+    const rateDoc = stallRateMap[`${detail.eventId}|${detail.currency}|${stallType}`];
+    return { rate: rateDoc?.ratePerSqm || 0, hsn: rateDoc?.hsnCode || "" };
+  };
+
+  // Stall Type options come from what's actually configured on the Manage
+  // Stall Rates page for this stall's event/currency — not a hardcoded list —
+  // so a type nobody priced there can't be picked. Before a stall is chosen,
+  // fall back to every type priced for ANY of the client's booked events.
+  const getStallTypeOptions = (item) => {
+    const detail = bookedStallDetails.find((d) => d.stallFor === item.description);
+    const hasRate = (eventId, currency, stallType) => !!stallRateMap[`${eventId}|${currency}|${stallType}`];
+    const options = detail
+      ? STALL_TYPES.filter((t) => hasRate(detail.eventId, detail.currency, t))
+      : [...new Set(
+          Object.keys(stallRateMap)
+            .filter((key) => stallRateMap[key])
+            .map((key) => key.split("|")[2])
+        )];
+    return item.stallType && !options.includes(item.stallType) ? [item.stallType, ...options] : options;
+  };
+
+  // Picking a stall auto-fills everything the system already knows about it
+  // (area/size, discount, GST) plus rate/HSN for its originally booked type.
+  const selectStall = (index, stallFor) => {
+    const detail = bookedStallDetails.find((d) => d.stallFor === stallFor);
+    const newItems = [...items];
+    if (!detail) {
+      newItems[index].description = stallFor;
+    } else {
+      const { rate, hsn } = getRateForType(detail, detail.stallType);
+      newItems[index] = {
+        ...newItems[index],
+        description: stallFor,
+        stallType: detail.stallType,
+        hsn: hsn || newItems[index].hsn,
+        qty: 1,
+        size: detail.dimension || String(detail.stallSize || ""),
+        unit: "Sqmtr.",
+        rate,
+        disc: String(detail.discount || 0),
+        gstRate: String(detail.gstPercent ?? 18),
+      };
+    }
+    setItems(newItems);
+  };
+
+  // Switching Stall Type re-resolves Rate + HSN for the currently selected
+  // stall's event/currency, leaving Qty/Area/Size/Unit untouched.
+  const selectStallType = (index, stallType) => {
+    const newItems = [...items];
+    const detail = bookedStallDetails.find((d) => d.stallFor === newItems[index].description);
+    if (!detail) {
+      newItems[index] = { ...newItems[index], stallType };
+    } else {
+      const { rate, hsn } = getRateForType(detail, stallType);
+      newItems[index] = {
+        ...newItems[index],
+        stallType,
+        rate,
+        hsn: hsn || newItems[index].hsn,
+      };
+    }
+    setItems(newItems);
+  };
+
+  // Picking an Addon Product auto-fills everything the accessories catalog
+  // already knows about it (HSN/SAC, unit, rate, dimensions).
+  const selectAddonProduct = (index, productName) => {
+    const product = addonProductOptions.find((p) => p.name === productName);
+    const newItems = [...items];
+    if (!product) {
+      newItems[index].description = productName;
+    } else {
+      const hasDims = product.length && product.width;
+      newItems[index] = {
+        ...newItems[index],
+        description: productName,
+        hsn: product.hsnCode || product.sacCode || newItems[index].hsn,
+        qty: 1,
+        size: hasDims ? `${product.length}x${product.width}` : "",
+        unit: product.unit || newItems[index].unit,
+        rate: Number(product.price) || 0,
+        gstRate: String(product.gstPercent ?? 18),
+      };
+    }
     setItems(newItems);
   };
 
@@ -231,7 +428,9 @@ const CreateEstimate1 = () => {
     setItems((prev) => [
       ...prev,
       {
+        category: "Stall",
         description: "",
+        stallType: "",
         hsn: "",
         qty: "",
         size: "",
@@ -675,6 +874,24 @@ const CreateEstimate1 = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-6 lg:grid-cols-12 gap-x-4 gap-y-3 items-end">
                 {/* ... (Item fields: Description, HSN, Qty, Size, Unit, Rate, Amount) ... */}
+                {/* 0. Item Category */}
+                <div className="col-span-full md:col-span-2 lg:col-span-2">
+                  <label htmlFor={`category-${index}`} className={labelClass}>
+                    Item Category *
+                  </label>
+                  <select
+                    id={`category-${index}`}
+                    name="category"
+                    value={item.category || "Stall"}
+                    onChange={(e) => handleItemChange(index, e)}
+                    className={`w-full ${inputClass}`}
+                    required
+                  >
+                    {ITEM_CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
                 {/* 1. Item Description */}
                 <div className="col-span-full md:col-span-3 lg:col-span-3">
                   <label
@@ -683,19 +900,60 @@ const CreateEstimate1 = () => {
                   >
                     Item Description *
                   </label>
-                  <input
-                    type="text"
-                    id={`description-${index}`}
-                    name="description"
-                    value={item.description}
-                    onChange={(e) => handleItemChange(index, e)}
-                    className={`w-full ${inputClass}`}
-                    placeholder="Type Here"
-                    required
-                  />
+                  {item.category === "Addon Product" ? (
+                    <select
+                      id={`description-${index}`}
+                      name="description"
+                      value={item.description}
+                      onChange={(e) => selectAddonProduct(index, e.target.value)}
+                      className={`w-full ${inputClass}`}
+                      required
+                    >
+                      <option value="">Select Add-on Product</option>
+                      {(item.description && !addonProductOptions.some((p) => p.name === item.description)
+                        ? [{ _id: "current", name: item.description }, ...addonProductOptions]
+                        : addonProductOptions
+                      ).map((product) => (
+                        <option key={product._id} value={product.name}>{product.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <select
+                      id={`description-${index}`}
+                      name="description"
+                      value={item.description}
+                      onChange={(e) => selectStall(index, e.target.value)}
+                      className={`w-full ${inputClass}`}
+                      required
+                    >
+                      <option value="">Select Stall</option>
+                      {(item.description && !bookedStallDetails.some((d) => d.stallFor === item.description)
+                        ? [item.description, ...bookedStallDetails.map((d) => d.stallFor)]
+                        : bookedStallDetails.map((d) => d.stallFor)
+                      ).map((stallNo) => (
+                        <option key={stallNo} value={stallNo}>{stallNo}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
+                {/* Stall Type */}
+                {item.category === "Stall" && (
+                  <div className="col-span-2 md:col-span-2 lg:col-span-1">
+                    <label className={labelClass}>Stall Type</label>
+                    <select
+                      value={item.stallType || ""}
+                      onChange={(e) => selectStallType(index, e.target.value)}
+                      className={`w-full ${inputClass}`}
+                    >
+                      <option value="">Select Type</option>
+                      {getStallTypeOptions(item).map((type) => (
+                        <option key={type} value={type}>{type}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
                 {/* 2. HSN No. */}
-                <div className="col-span-3 md:col-span-3 lg:col-span-2">
+                <div className="col-span-2 md:col-span-2 lg:col-span-1">
                   <label htmlFor={`hsn-${index}`} className={labelClass}>
                     HSN No. *
                   </label>
@@ -762,7 +1020,7 @@ const CreateEstimate1 = () => {
                   </select>
                 </div>
                 {/* 6. Rate */}
-                <div className="col-span-3 md:col-span-2 lg:col-span-1">
+                <div className="col-span-2 md:col-span-1 lg:col-span-1">
                   <label htmlFor={`rate-${index}`} className={labelClass}>
                     Rate *
                   </label>
