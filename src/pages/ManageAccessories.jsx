@@ -117,9 +117,13 @@ export default function ManageAccessories() {
   };
 
   const openAdd = () => {
+    const activeCat = filterCategory || urlCategory;
+    const isServiceCat = activeCat === 'Services';
     setForm({
       ...EMPTY,
-      category: filterCategory || (categories.length > 0 ? categories[0] : 'Furniture')
+      category: activeCat || (categories.length > 0 ? categories[0] : 'Furniture'),
+      type: isServiceCat ? 'purchasable' : 'complimentary',
+      itemType: isServiceCat ? 'Service' : 'Product'
     });
     setEditId(null);
     setSelectedFile(null);
@@ -345,16 +349,18 @@ export default function ManageAccessories() {
     </>
   );
 
+  const isServiceCategory = filterCategory === 'Services';
+
   const tableHeadersComponent = (
     <>
       <th className="px-3 py-2 font-medium text-left">Item Details</th>
       <th className="px-3 py-2 font-medium text-center">Fulfillment</th>
       <th className="px-3 py-2 font-medium text-left">Category</th>
-      <th className="px-3 py-2 font-medium text-left">Code (HSN/SAC)</th>
-      <th className="px-3 py-2 font-medium text-left">Dimensions</th>
+      <th className="px-3 py-2 font-medium text-left">{isServiceCategory ? 'Code (SAC)' : 'Code (HSN/SAC)'}</th>
+      {!isServiceCategory && <th className="px-3 py-2 font-medium text-left">Dimensions</th>}
       <th className="px-3 py-2 font-medium text-left">Rate / GST</th>
       <th className="px-3 py-2 font-medium text-center">Unit</th>
-      <th className="px-3 py-2 font-medium text-center">Stock</th>
+      {!isServiceCategory && <th className="px-3 py-2 font-medium text-center">Stock</th>}
       <th className="px-3 py-2 font-medium text-center">Status</th>
       <th className="px-3 py-2 w-20 text-center">Actions</th>
     </>
@@ -364,7 +370,7 @@ export default function ManageAccessories() {
     <>
       {loading ? (
         <tr>
-          <td colSpan="10" className="text-center py-10 text-slate-400 text-[11px]">
+          <td colSpan={isServiceCategory ? 9 : 11} className="text-center py-10 text-slate-400 text-[11px]">
             <div className="flex items-center justify-center gap-2">
               <RefreshCw size={14} className="animate-spin text-slate-500" />
               Loading stall accessories...
@@ -373,7 +379,7 @@ export default function ManageAccessories() {
         </tr>
       ) : paginatedItems.length === 0 ? (
         <tr>
-          <td colSpan="10" className="text-center py-12 text-slate-500">
+          <td colSpan={isServiceCategory ? 9 : 11} className="text-center py-12 text-slate-500">
             <div className="flex flex-col items-center justify-center gap-2 py-4">
               <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200">
                 <Package size={22} />
@@ -442,13 +448,15 @@ export default function ManageAccessories() {
             </td>
 
             {/* Dimensions */}
-            <td className="px-3 py-2 whitespace-nowrap">
-              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600">
-                <Ruler size={10} className="text-slate-400" />
-                {[item.length, item.width, item.height].filter(Boolean).join('×') || '—'}
-                {item.dimensionUnit && item.length && <span className="text-[9px] text-slate-400 lowercase">{item.dimensionUnit}</span>}
-              </div>
-            </td>
+            {!isServiceCategory && (
+              <td className="px-3 py-2 whitespace-nowrap">
+                <div className="flex items-center gap-1 text-[10px] font-bold text-slate-600">
+                  <Ruler size={10} className="text-slate-400" />
+                  {[item.length, item.width, item.height].filter(Boolean).join('×') || '—'}
+                  {item.dimensionUnit && item.length && <span className="text-[9px] text-slate-400 lowercase">{item.dimensionUnit}</span>}
+                </div>
+              </td>
+            )}
 
             {/* Rate / GST */}
             <td className="px-3 py-2 whitespace-nowrap">
@@ -475,9 +483,11 @@ export default function ManageAccessories() {
             </td>
 
             {/* Stock */}
-            <td className="px-3 py-2 text-center whitespace-nowrap">
-              <span className="text-[10px] font-bold text-slate-900">{item.availableQty || 0}</span>
-            </td>
+            {!isServiceCategory && (
+              <td className="px-3 py-2 text-center whitespace-nowrap">
+                <span className="text-[10px] font-bold text-slate-900">{item.availableQty || 0}</span>
+              </td>
+            )}
 
             {/* Status */}
             <td className="px-3 py-2 text-center whitespace-nowrap">
@@ -589,32 +599,34 @@ export default function ManageAccessories() {
               {/* Section 1: Identity & Fulfillment */}
               <div className="space-y-4">
                 <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Basic Information</p>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className={`grid grid-cols-1 ${form.itemType === 'Service' ? 'md:grid-cols-1' : 'md:grid-cols-4'} gap-6`}>
                   {/* Image Selection */}
-                  <div className="md:col-span-1">
-                    <label className={lCls}>Item Image</label>
-                    <div className="relative aspect-square w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center group overflow-hidden rounded-xl hover:border-[#0A2947]/30 transition-colors">
-                      {previewUrl ? (
-                        <>
-                          <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
-                            <button type="button" onClick={() => document.getElementById('accImg').click()} className="p-2 bg-white rounded-full text-[#0A2947] shadow-lg">
-                              <ImageIcon size={18} />
-                            </button>
-                          </div>
-                        </>
-                      ) : (
-                        <button type="button" onClick={() => document.getElementById('accImg').click()} className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#0A2947] transition-colors">
-                          <ImageIcon size={28} strokeWidth={1.5} />
-                          <span className="text-[9px] font-bold uppercase tracking-widest">Upload</span>
-                        </button>
-                      )}
-                      <input type="file" id="accImg" hidden accept="image/*" onChange={handleFileChange} />
+                  {form.itemType !== 'Service' && (
+                    <div className="md:col-span-1">
+                      <label className={lCls}>Item Image</label>
+                      <div className="relative aspect-square w-full border-2 border-dashed border-slate-200 bg-slate-50 flex items-center justify-center group overflow-hidden rounded-xl hover:border-[#0A2947]/30 transition-colors">
+                        {previewUrl ? (
+                          <>
+                            <img loading="lazy" decoding="async" src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all">
+                              <button type="button" onClick={() => document.getElementById('accImg').click()} className="p-2 bg-white rounded-full text-[#0A2947] shadow-lg">
+                                <ImageIcon size={18} />
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <button type="button" onClick={() => document.getElementById('accImg').click()} className="flex flex-col items-center gap-2 text-slate-400 hover:text-[#0A2947] transition-colors">
+                            <ImageIcon size={28} strokeWidth={1.5} />
+                            <span className="text-[9px] font-bold uppercase tracking-widest">Upload</span>
+                          </button>
+                        )}
+                        <input type="file" id="accImg" hidden accept="image/*" onChange={handleFileChange} />
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Main Details */}
-                  <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className={`${form.itemType === 'Service' ? 'w-full' : 'md:col-span-3'} grid grid-cols-1 md:grid-cols-2 gap-4`}>
                     <div className="md:col-span-2">
                       <label className={lCls}>Item Name *</label>
                       <input value={form.name} onChange={e => inp('name', e.target.value)} className={iCls} placeholder="e.g. Premium Leather Sofa" />
@@ -628,7 +640,19 @@ export default function ManageAccessories() {
                     </div>
                     <div>
                       <label className={lCls}>Item Category</label>
-                      <select value={form.category} onChange={e => inp('category', e.target.value)} className={iCls}>
+                      <select
+                        value={form.category}
+                        onChange={e => {
+                          const cat = e.target.value;
+                          setForm(p => ({
+                            ...p,
+                            category: cat,
+                            type: cat === 'Services' ? 'purchasable' : p.type,
+                            itemType: cat === 'Services' ? 'Service' : p.itemType
+                          }));
+                        }}
+                        className={iCls}
+                      >
                         {categories.map((cat, idx) => (
                           <option key={idx} value={cat}>{cat}</option>
                         ))}
@@ -637,8 +661,8 @@ export default function ManageAccessories() {
                     <div>
                       <label className={lCls}>Billing Type</label>
                       <select value={form.itemType} onChange={e => inp('itemType', e.target.value)} className={iCls}>
-                        <option value="Product">Product</option>
                         <option value="Service">Service</option>
+                        <option value="Product">Product</option>
                       </select>
                     </div>
                     <div>
@@ -652,44 +676,62 @@ export default function ManageAccessories() {
                 </div>
               </div>
 
-              {/* Section 2: Logistics & Stock */}
+              {/* Section 2: Logistics & Pricing */}
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="space-y-4">
-                    <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Logistics & Dimensions</p>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2">
-                        <label className={lCls}>Dimension Unit</label>
-                        <select value={form.dimensionUnit} onChange={e => inp('dimensionUnit', e.target.value)} className={iCls}>
-                          <option value="">No Dimensions</option>
-                          {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className={lCls}>Length {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
-                        <input value={form.length} onChange={e => inp('length', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
-                      </div>
-                      <div>
-                        <label className={lCls}>Width {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
-                        <input value={form.width} onChange={e => inp('width', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
-                      </div>
-                      <div className="col-span-2">
-                        <label className={lCls}>Height {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
-                        <input value={form.height} onChange={e => inp('height', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                <div className={`grid grid-cols-1 ${form.itemType === 'Service' ? 'md:grid-cols-1' : 'md:grid-cols-2'} gap-10`}>
+                  {form.itemType !== 'Service' && (
+                    <div className="space-y-4">
+                      <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Logistics & Dimensions</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="col-span-2">
+                          <label className={lCls}>Dimension Unit</label>
+                          <select value={form.dimensionUnit} onChange={e => inp('dimensionUnit', e.target.value)} className={iCls}>
+                            <option value="">No Dimensions</option>
+                            {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
+                          </select>
+                        </div>
+                        <div>
+                          <label className={lCls}>Length {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
+                          <input value={form.length} onChange={e => inp('length', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                        </div>
+                        <div>
+                          <label className={lCls}>Width {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
+                          <input value={form.width} onChange={e => inp('width', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                        </div>
+                        <div className="col-span-2">
+                          <label className={lCls}>Height {form.dimensionUnit && `(${form.dimensionUnit})`}</label>
+                          <input value={form.height} onChange={e => inp('height', e.target.value)} className={iCls} disabled={!form.dimensionUnit} />
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   <div className="space-y-4">
                     <p className="text-[12px] font-semibold text-black uppercase tracking-wider border-l-4 border-[#0A2947] pl-3">Pricing & Inventory</p>
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="col-span-2">
+                      <div className={form.type === 'complimentary' ? '' : 'col-span-2'}>
                         <label className={lCls}>Quantity Unit *</label>
                         <select value={form.unit} onChange={e => inp('unit', e.target.value)} className={iCls}>
                           <option value="">Select Unit</option>
                           {units.map(u => <option key={u._id} value={u.unit}>{u.unit}</option>)}
                         </select>
                       </div>
+                      {form.type === 'complimentary' ? (
+                        <div>
+                          <label className={lCls}>Allocation Mode</label>
+                          <select value={form.allocationMode} onChange={e => inp('allocationMode', e.target.value)} className={iCls}>
+                            <option value="fixed">Fixed Qty (same for every exhibitor)</option>
+                            <option value="perArea">Per Stall Area (auto-scales by stall size)</option>
+                          </select>
+                        </div>
+                      ) : (
+                        form.itemType !== 'Service' && (
+                          <div>
+                            <label className={lCls}>Min Order Qty</label>
+                            <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
+                          </div>
+                        )
+                      )}
                       {form.type === 'purchasable' && (
                         <>
                           <div>
@@ -704,23 +746,9 @@ export default function ManageAccessories() {
                           </div>
                         </>
                       )}
-                      {form.type === 'complimentary' ? (
-                        <div className="col-span-2">
-                          <label className={lCls}>Allocation Mode</label>
-                          <select value={form.allocationMode} onChange={e => inp('allocationMode', e.target.value)} className={iCls}>
-                            <option value="fixed">Fixed Qty (same for every exhibitor)</option>
-                            <option value="perArea">Per Stall Area (auto-scales by stall size)</option>
-                          </select>
-                        </div>
-                      ) : (
-                        <div>
-                          <label className={lCls}>Min Order Qty</label>
-                          <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
-                        </div>
-                      )}
 
-                      {form.type === 'complimentary' && form.allocationMode === 'fixed' && (
-                        <div>
+                      {form.type === 'complimentary' && form.allocationMode === 'fixed' && form.itemType !== 'Service' && (
+                        <div className="col-span-2">
                           <label className={lCls}>Included Qty</label>
                           <input type="number" value={form.includedQty} onChange={e => inp('includedQty', e.target.value)} className={iCls} min={1} />
                         </div>
@@ -747,10 +775,12 @@ export default function ManageAccessories() {
                         </>
                       )}
 
-                      <div className={form.type === 'complimentary' && form.allocationMode === 'perArea' ? '' : 'col-span-2'}>
-                        <label className={lCls}>Available Stock</label>
-                        <input type="number" value={form.availableQty} onChange={e => inp('availableQty', e.target.value)} className={iCls} placeholder="0" />
-                      </div>
+                      {form.itemType !== 'Service' && (
+                        <div className={form.type === 'complimentary' && form.allocationMode === 'perArea' ? '' : 'col-span-2'}>
+                          <label className={lCls}>Available Stock</label>
+                          <input type="number" value={form.availableQty} onChange={e => inp('availableQty', e.target.value)} className={iCls} placeholder="0" />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
