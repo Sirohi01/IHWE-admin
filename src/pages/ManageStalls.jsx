@@ -525,7 +525,6 @@ const ManageStalls = () => {
                                             onChange={handleSelectAll}
                                         />
                                     </th>
-                                    <th className="py-4 px-2 text-[11px] font-medium text-black uppercase text-center w-12 tracking-tight">No.</th>
                                     <th className="py-4 px-2 text-[11px] font-medium text-black uppercase text-left tracking-tight">Stall Detail</th>
                                     <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-left tracking-tight">Specifications</th>
                                     <th className="py-4 px-4 text-[11px] font-medium text-black uppercase text-center tracking-tight">Status</th>
@@ -538,7 +537,7 @@ const ManageStalls = () => {
                                 ) : currentItems.length === 0 ? (
                                     <tr><td colSpan={5} className="py-12 text-center text-black font-medium uppercase tracking-widest text-[10px] italic">No stalls found matching criteria</td></tr>
                                 ) : currentItems.map((stall, index) => (
-                                    <tr key={stall._id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0">
+                                <tr className="hover:bg-slate-50 transition-colors border-b border-slate-100 bg-white last:border-0" key={stall._id}>
                                         <td className="py-3 px-4 text-center align-top">
                                             <input
                                                 type="checkbox"
@@ -547,7 +546,6 @@ const ManageStalls = () => {
                                                 onChange={() => handleSelectStall(stall._id)}
                                             />
                                         </td>
-                                        <td className="py-3 px-2 text-[#15173D] font-black text-center text-xs align-top">{indexOfFirstItem + index + 1}</td>
                                         <td className="py-3 px-2 min-w-[180px] align-top">
                                             <div className="flex items-center gap-1 mb-1">
                                                 <span className="font-black text-[13px] text-[#093C5D]">{stall.stallNumber}</span>
