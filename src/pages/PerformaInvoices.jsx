@@ -271,6 +271,12 @@ export const PerformaInvoices = () => {
     // the event it belongs to has to come from the loaded estimate instead —
     // this holds whichever source resolved it (URL first, estimate as fallback).
     const [resolvedCrmEventId, setResolvedCrmEventId] = useState('');
+    // The actual registration Event id used for stall/rate lookups — preferred
+    // from the `?eventId=` URL param when present, else resolved below via
+    // resolvedCrmEventId → CrmEvent.registrationEventId (same chain payment
+    // plans already use), so Stall Type/Stall No. still work when this page is
+    // reached without that query param (e.g. editing an existing PI).
+    const [resolvedEventId, setResolvedEventId] = useState('');
 
     const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
     const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -278,6 +284,9 @@ export const PerformaInvoices = () => {
     useEffect(() => {
         const urlCrmEventId = new URLSearchParams(location.search).get('crmEventId') || '';
         if (urlCrmEventId) setResolvedCrmEventId(urlCrmEventId);
+
+        const urlEventId = new URLSearchParams(location.search).get('eventId') || '';
+        if (urlEventId) setResolvedEventId(urlEventId);
     }, [location.search]);
 
     // Creating a new PI reached without a ?crmEventId= (e.g. not opened from a
@@ -294,12 +303,11 @@ export const PerformaInvoices = () => {
     }, [companyData, resolvedCrmEventId, existingEstimateId]);
 
     // Item Details → Stall Type: every rate card configured on the Manage Stall
-    // Rates page (/stall-rates) for this PI's own event — read straight off the
-    // `eventId` URL param, not inferred from the client's booking history, so the
-    // dropdown has real options even for a client with no booked stalls yet.
+    // Rates page (/stall-rates) for this PI's own event — not inferred from the
+    // client's booking history, so the dropdown has real options even for a
+    // client with no booked stalls yet.
     useEffect(() => {
-        const urlEventId = new URLSearchParams(location.search).get('eventId') || '';
-        if (!urlEventId) {
+        if (!resolvedEventId) {
             setEventStallRateMap({});
             return;
         }
@@ -307,11 +315,11 @@ export const PerformaInvoices = () => {
         let cancelled = false;
         (async () => {
             try {
-                const res = await api.get(`/api/stall-rates/event/${urlEventId}`);
+                const res = await api.get(`/api/stall-rates/event/${resolvedEventId}`);
                 if (cancelled) return;
                 const rates = res.data?.data || [];
                 setEventStallRateMap(Object.fromEntries(
-                    rates.map((r) => [`${urlEventId}|${r.currency}|${r.stallType}`, r])
+                    rates.map((r) => [`${resolvedEventId}|${r.currency}|${r.stallType}`, r])
                 ));
             } catch (error) {
                 console.error('Error loading stall rates for this event:', error);
@@ -320,7 +328,7 @@ export const PerformaInvoices = () => {
         })();
 
         return () => { cancelled = true; };
-    }, [location.search]);
+    }, [resolvedEventId]);
 
     // Item Details → "Stall" category: the Select Stall dropdown must only ever
     // offer stalls that are NOT already booked for this event — a booked stall
@@ -331,8 +339,7 @@ export const PerformaInvoices = () => {
     // eventStallRateMap above). If every stall for this event is booked, the
     // dropdown is correctly empty — there is nothing left to sell.
     useEffect(() => {
-        const urlEventId = new URLSearchParams(location.search).get('eventId') || '';
-        if (!urlEventId) {
+        if (!resolvedEventId) {
             setAvailableStallDetails([]);
             return;
         }
@@ -340,7 +347,7 @@ export const PerformaInvoices = () => {
         let cancelled = false;
         (async () => {
             try {
-                const res = await api.get('/api/stalls/available', { params: { eventId: urlEventId } });
+                const res = await api.get('/api/stalls/available', { params: { eventId: resolvedEventId } });
                 if (cancelled) return;
                 const stalls = res.data?.data || [];
                 setAvailableStallDetails(stalls.map((s) => ({
@@ -348,7 +355,7 @@ export const PerformaInvoices = () => {
                     dimension: `${s.length}x${s.width}`,
                     stallSize: s.area || 0,
                     discount: s.discountPercentage || 0,
-                    eventId: urlEventId,
+                    eventId: resolvedEventId,
                 })));
             } catch (error) {
                 console.error('Error loading available stalls for this event:', error);
@@ -357,7 +364,7 @@ export const PerformaInvoices = () => {
         })();
 
         return () => { cancelled = true; };
-    }, [location.search]);
+    }, [resolvedEventId]);
 
     // Item Details → "Addon Product" category: purchasable accessories from the
     // shared accessories catalog (managed on the Manage Accessories page).
@@ -388,6 +395,7 @@ export const PerformaInvoices = () => {
                 const crmEventRes = await api.get(`/api/crm-events/${resolvedCrmEventId}`);
                 const registrationEventId = crmEventRes.data?.registrationEventId;
                 if (!registrationEventId) return;
+                setResolvedEventId((prev) => prev || String(registrationEventId));
 
                 const eventRes = await api.get(`/api/events/${registrationEventId}`);
                 const plans = eventRes.data?.data?.paymentPlans || [];
@@ -692,10 +700,10 @@ export const PerformaInvoices = () => {
     );
 
     // The event to price against: the stall's own event if one is selected,
-    // else this PI's own event (the `eventId` URL param).
+    // else this PI's own resolved event.
     const getPricingEventId = useCallback(
-        (detail) => detail?.eventId || new URLSearchParams(location.search).get('eventId') || '',
-        [location.search]
+        (detail) => detail?.eventId || resolvedEventId || '',
+        [resolvedEventId]
     );
 
     // Rate + HSN for a stall depend on its Stall Type and the client's billing
