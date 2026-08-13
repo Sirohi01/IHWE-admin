@@ -619,11 +619,13 @@ const ManageStalls = () => {
                                         </td>
                                         <td className="py-1.5 px-3 min-w-[180px] align-top">
                                             <div className={`flex flex-col gap-0.5 ${stall.bookedBy ? 'pb-1 mb-1 border-b border-slate-100' : ''}`}>
-                                                <span className="font-black text-[13px] text-[#093C5D] leading-tight">{stall.stallNumber}</span>
-                                                <div className="flex flex-col items-start gap-1 mt-0.5">
-                                                    <span className={`px-1 py-0 rounded font-black text-[9px] border w-fit ${stall.stallType === 'Raw Space' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                                                <div className="flex items-center flex-wrap gap-1.5 mb-0.5 leading-tight">
+                                                    <span className="font-black text-[13px] text-[#093C5D]">{stall.stallNumber}</span>
+                                                    <span className={`px-1 py-0 rounded font-black text-[9px] border ${stall.stallType === 'Raw Space' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
                                                         {stall.stallType || 'Shell Space'}
                                                     </span>
+                                                </div>
+                                                <div className="flex flex-col items-start gap-1">
                                                     <span className="px-1 py-0 rounded font-bold text-[9px] bg-slate-100 text-slate-600 border border-slate-200 w-fit">
                                                         {stall.eventId?.name || 'N/A'}
                                                     </span>
@@ -665,12 +667,12 @@ const ManageStalls = () => {
                                                 const mappedRates = getRatesForStall(stall);
                                                 if (!mappedRates.length) return <span className="text-[9px] font-bold text-red-600">PRICING NOT MAPPED</span>;
                                                 return (
-                                                    <div className="space-y-1">
+                                                    <div className="flex flex-wrap gap-4">
                                                         {mappedRates.map(rate => {
                                                             const plc = getPlcCharge(rate, stall.plScheme);
                                                             const base = Number(stall.area || 0) * Number(rate.ratePerSqm || 0);
                                                             return (
-                                                                <div key={rate._id} className="flex flex-col gap-0 text-[9px] font-bold border-b border-slate-100 pb-0.5 mb-0.5 last:border-0 last:pb-0 last:mb-0">
+                                                                <div key={rate._id} className="flex flex-col gap-0 text-[9px] font-bold border-r border-slate-100 pr-4 last:border-0 last:pr-0">
                                                                     <span className="text-[#093C5D] font-black">{rate.currency} {formatMoney(rate.currency, rate.ratePerSqm)}/SQM</span>
                                                                     <span className="text-slate-500 leading-none">PLC: {formatMoney(rate.currency, plc)}</span>
                                                                     <span className="text-[#23471d] leading-none mt-0.5">TOTAL: {formatMoney(rate.currency, base + plc)}</span>
