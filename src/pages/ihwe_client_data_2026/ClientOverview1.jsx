@@ -1008,7 +1008,7 @@ const ClientOverview1 = () => {
   }
 
   return (
-    <div className="bg-[#f5f7fb] px-6 py-4">
+    <div className="bg-[#f5f7fb] px-6 py-4" style={{ fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif" }}>
 
       {/* TOP HEADER */}
 
@@ -1392,7 +1392,7 @@ const ClientOverview1 = () => {
 
           <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
             <div className="flex justify-between items-center -mx-2.5 -mt-2.5 mb-3 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
-              <h2 className="text-[12px] font-bold text-[#15173D] tracking-tight">
+              <h2 className="text-[12px] font-semibold text-[#15173D] tracking-tight uppercase">
                 Lead Status Updates
               </h2>
             </div>
@@ -1402,7 +1402,7 @@ const ClientOverview1 = () => {
               <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 items-end">
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Status Update</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Status Update</label>
                   <SearchableDropdown
                     id="status_short"
                     options={statusOptions?.map((item) => ({ label: item.name, value: item.name })) || []}
@@ -1413,7 +1413,7 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Next Action</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Next Action</label>
                   <SearchableDropdown
                     options={nextActions?.filter(n => n.status === 'active').map((n) => ({ label: n.name, value: n.name })) || []}
                     value={reviewData.forward_to}
@@ -1424,7 +1424,7 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Forward To</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Forward To</label>
                   <SearchableDropdown
                     id="forward_to"
                     options={users?.map((u) => ({ label: u.fullName || u.username, value: u.username })) || []}
@@ -1437,30 +1437,30 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-bold text-slate-700 mb-1 block">Follow Up Date</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Follow Up Date</label>
                   <input
                     type="datetime-local"
                     value={reviewData.follow_up_date}
                     onChange={(e) => setReviewData(prev => ({ ...prev, follow_up_date: e.target.value }))}
-                    className={`w-full h-[32px] rounded border border-slate-200 px-2 outline-none text-[11px] font-bold text-[#15173D] focus:border-emerald-500 ${typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested" ? 'bg-slate-100 cursor-not-allowed opacity-70' : 'bg-white'}`}
+                    className={`w-full h-[32px] rounded border border-slate-200 px-2 outline-none text-[11px] font-semibold text-[#0A2947] focus:border-emerald-500 ${typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested" ? 'bg-slate-100 cursor-not-allowed opacity-70' : 'bg-white'}`}
                     disabled={typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested"}
                   />
                 </div>
 
                 <div className="col-span-2 xl:col-span-4 flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-[10px] font-bold text-slate-700 mb-1 block">Remark</label>
+                    <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Remark</label>
                     <textarea
                       id="Remark"
                       value={reviewData.re_msg}
                       onChange={handleChange}
-                      className="w-full h-[36px] rounded border border-slate-200 p-2 outline-none resize-none text-[11px] font-bold text-[#15173D] focus:border-emerald-500"
+                      className="w-full h-[36px] rounded border border-slate-200 p-2 outline-none resize-none text-[11px] font-semibold text-[#0A2947] focus:border-emerald-500"
                       placeholder="Write your remark here..."
                     />
                   </div>
                   <button
                     type="submit"
-                    className="h-[36px] px-5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-bold flex items-center gap-1.5 text-[11px] flex-shrink-0 transition-colors shadow-sm"
+                    className="h-[36px] px-5 rounded bg-emerald-600 hover:bg-emerald-700 text-white font-semibold flex items-center gap-1.5 text-[11px] flex-shrink-0 transition-colors shadow-sm cursor-pointer"
                   >
                     Update Status
                     <Send size={14} />
@@ -1473,12 +1473,12 @@ const ClientOverview1 = () => {
           {/* CONTACT DETAILS */}
           <div className="bg-white rounded-lg p-2.5" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
             <div className="flex items-center justify-between -mx-2.5 -mt-2.5 mb-3 px-3 py-2 bg-slate-100 border-b border-slate-200 rounded-t-lg">
-              <h2 className="text-[12px] font-bold text-[#15173D] tracking-tight">CONTACT DETAILS</h2>
+              <h2 className="text-[12px] font-semibold text-[#15173D] tracking-tight uppercase">CONTACT DETAILS</h2>
               <div className="flex gap-2">
-                <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="h-6 px-3 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[10px] font-bold flex items-center gap-2 shadow-sm">
+                <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="h-6 px-3 rounded bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-[10px] font-semibold flex items-center gap-2 shadow-sm cursor-pointer">
                   View All
                 </button>
-                <button onClick={() => navigate(`/add-team-members/${company?.clientId || company?._id || id}`)} className="h-6 px-3 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold flex items-center gap-1.5 shadow-sm">
+                <button onClick={() => navigate(`/add-team-members/${company?.clientId || company?._id || id}`)} className="h-6 px-3 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-semibold flex items-center gap-1.5 shadow-sm cursor-pointer">
                   + Add Team Members
                 </button>
               </div>
@@ -1488,11 +1488,11 @@ const ClientOverview1 = () => {
               <div className="grid grid-cols-1 sm:grid-cols-3 min-[1100px]:grid-cols-3 gap-1.5 px-1 pb-1">
                 {company.contacts.slice(0, 3).map((contact, idx) => (
                   <div key={idx} className="flex flex-row items-center gap-2 p-2 rounded-lg border border-slate-200 bg-slate-50 w-full relative pr-6 hover:bg-white hover:border-emerald-200 transition-colors group">
-                    <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="absolute top-1.5 right-1.5 p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-emerald-600 rounded transition-all">
+                    <button onClick={() => navigate(`/client-contacts/${company?.clientId || company?._id || id}`)} className="absolute top-1.5 right-1.5 p-1 text-slate-400 opacity-0 group-hover:opacity-100 hover:text-emerald-600 rounded transition-all cursor-pointer">
                       <Pencil size={12} />
                     </button>
                     {/* Avatar */}
-                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-600 font-bold text-sm overflow-hidden border border-indigo-200">
+                    <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center flex-shrink-0 text-indigo-700 font-semibold text-sm overflow-hidden border border-indigo-200">
                       {(contact.photoUrl || contact.photo) ? (
                         <SecureImage
                           src={contact.photoUrl || contact.photo}
@@ -1505,13 +1505,13 @@ const ClientOverview1 = () => {
                     </div>
                     {/* Info */}
                     <div className="min-w-0 flex-1 text-left">
-                      <p className="text-[11px] font-bold text-[#15173D] truncate">
-                        {contact.name || [contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / <span className="text-[#5E0006]">{contact.designation || "-"}</span>
+                      <p className="text-[11px] font-semibold text-black truncate">
+                        {contact.name || [contact.title, contact.firstName, isExhibitor ? contact.lastName : contact.surname].filter(Boolean).join(" ") || "-"} / <span className="text-[#4B1426]">{contact.designation || "-"}</span>
                       </p>
-                      <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[9px] text-[#093C5D] font-bold hover:underline">
+                      <a href={`tel:${contact.mobile}`} className="flex items-center justify-start gap-1 text-[9px] text-[#093C5D] font-semibold hover:underline">
                         <Phone size={10} className="flex-shrink-0" /> <span className="truncate">{contact.mobile || "-"}{(isExhibitor ? contact.alternateNo : contact.alternate) ? ` / ${isExhibitor ? contact.alternateNo : contact.alternate}` : ""}</span>
                       </a>
-                      <a href={`mailto:${contact.email}`} className="flex items-center justify-start gap-1 text-[9px] text-[#443199] font-bold hover:underline mt-0.5">
+                      <a href={`mailto:${contact.email}`} className="flex items-center justify-start gap-1 text-[9px] text-[#443199] font-semibold hover:underline mt-0.5">
                         <Mail size={10} className="flex-shrink-0" />
                         <span className="truncate">{contact.email || "-"}</span>
                       </a>
@@ -1520,7 +1520,7 @@ const ClientOverview1 = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-[10px] font-bold text-slate-400 italic px-2">No contact details available.</p>
+              <p className="text-[10px] font-semibold text-slate-400 italic px-2">No contact details available.</p>
             )}
           </div>
         </div>

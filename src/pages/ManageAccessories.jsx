@@ -307,7 +307,7 @@ export default function ManageAccessories() {
       <button
         onClick={openAdd}
         className="flex items-center gap-1.5 py-2 px-4 rounded-none text-xs font-semibold text-white transition-all duration-200 hover:opacity-90 shadow-2xs whitespace-nowrap cursor-pointer"
-        style={{ backgroundColor: '#0A2947', fontFamily: "'Inter', sans-serif" }}
+        style={{ backgroundColor: '#007DCC', fontFamily: "'Inter', sans-serif" }}
       >
         <Plus size={13} /> Add Item
       </button>
@@ -419,7 +419,7 @@ export default function ManageAccessories() {
                     : <Package size={14} className="text-slate-400" />}
                 </div>
                 <div className="flex flex-col items-start gap-0.5">
-                  <span className="font-bold text-[11px] hover:text-emerald-600 transition-colors cursor-pointer" style={{ color: '#093C5D' }}>
+                  <span className="font-medium text-[11px] hover:text-emerald-600 transition-colors cursor-pointer" style={{ color: '#093C5D' }}>
                     {item.name}
                   </span>
                   <span className="text-[9px] font-bold text-slate-400">
