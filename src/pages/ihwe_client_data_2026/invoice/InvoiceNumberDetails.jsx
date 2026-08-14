@@ -498,6 +498,25 @@ const InvoiceNumberDetails = () => {
   }, [matchedInvoice, companies]);
 
   useEffect(() => {
+    const fetchSourceEstimate = async () => {
+      const estimateId = matchedInvoice?.source_estimate_id;
+      if (!estimateId) {
+        setMatchedEstimate(null);
+        return;
+      }
+
+      try {
+        const response = await api.get(`/api/estimates/${estimateId}`);
+        setMatchedEstimate(response.data?.data || response.data || null);
+      } catch (error) {
+        setMatchedEstimate(null);
+      }
+    };
+
+    fetchSourceEstimate();
+  }, [matchedInvoice?.source_estimate_id]);
+
+  useEffect(() => {
     const checkChanges = async () => {
       if (
         matchedInvoice &&
@@ -817,6 +836,7 @@ const InvoiceNumberDetails = () => {
           >
             <InvoicePreviewTemplate
               matchedInvoice={matchedInvoice}
+              matchedEstimate={matchedEstimate}
               heading={heading}
               invoiceCopy={copyLabel}
             />
