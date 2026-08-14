@@ -293,7 +293,7 @@ const PerformaInvoiceDetails = () => {
                 <tr>
                   <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">S.No.</th>
                   <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129]">Particulars</th>
-                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-20">HSN Code</th>
+                  <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-20">HSN/SAC Code</th>
                   <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">Qty.</th>
                   <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">Size</th>
                   <th className="border px-2 py-0.5 text-[10px] font-bold text-[#1D2129] w-12">Unit</th>
