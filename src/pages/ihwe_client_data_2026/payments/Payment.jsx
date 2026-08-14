@@ -217,9 +217,10 @@ const Payments = ({ client, onBack }) => {
         (est) => est.est_no === selectedDoc.est_no && est.companyId === id
       );
 
-      if (relatedEstimate && relatedEstimate.items) {
-        // Calculate the total final amount from the estimate's items
-        const totalAmount = relatedEstimate.items.reduce(
+      if (relatedEstimate) {
+        // The estimate's own saved finalAmount includes PLC Charges (not a
+        // line item) — re-summing items would under-count it.
+        const totalAmount = Number(relatedEstimate.finalAmount) || (relatedEstimate.items || []).reduce(
           (sum, item) => sum + (parseFloat(item.finalAmount) || 0),
           0
         );

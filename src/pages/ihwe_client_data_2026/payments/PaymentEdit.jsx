@@ -205,9 +205,10 @@ const PaymentEdit = () => {
           est.companyId === formData.companyId
       );
 
-      if (relatedEstimate && relatedEstimate.items) {
-        // Calculate the total final amount from the estimate's items
-        const totalAmount = relatedEstimate.items.reduce(
+      if (relatedEstimate) {
+        // The estimate's own saved finalAmount includes PLC Charges (not a
+        // line item) — re-summing items would under-count it.
+        const totalAmount = Number(relatedEstimate.finalAmount) || (relatedEstimate.items || []).reduce(
           (sum, item) => sum + (parseFloat(item.finalAmount) || 0),
           0
         );

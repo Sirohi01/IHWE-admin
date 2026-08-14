@@ -8,7 +8,9 @@ import {
     File,
     List,
     Package,
-    Truck
+    Truck,
+    Percent,
+    Wallet
 } from 'lucide-react';
 import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
@@ -25,6 +27,39 @@ import { getCurrentUserName } from '../utils/currentUser';
 import { resolveLinkedIds } from '../utils/resolveLinkedIds';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
+const WORD_ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
+    'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+const WORD_TENS = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+const twoDigitWords = (num) => {
+    if (num < 20) return WORD_ONES[num];
+    const tens = Math.floor(num / 10);
+    const ones = num % 10;
+    return WORD_TENS[tens] + (ones ? ` ${WORD_ONES[ones]}` : '');
+};
+const threeDigitWords = (num) => {
+    const hundreds = Math.floor(num / 100);
+    const rest = num % 100;
+    let str = hundreds ? `${WORD_ONES[hundreds]} Hundred` : '';
+    if (rest) str += (str ? ' ' : '') + twoDigitWords(rest);
+    return str;
+};
+const numberToIndianWords = (num) => {
+    num = Math.round(Number(num) || 0);
+    if (num === 0) return 'Zero';
+    const crore = Math.floor(num / 10000000); num %= 10000000;
+    const lakh = Math.floor(num / 100000); num %= 100000;
+    const thousand = Math.floor(num / 1000); num %= 1000;
+    const hundred = num;
+
+    const parts = [];
+    if (crore) parts.push(`${threeDigitWords(crore)} Crore`);
+    if (lakh) parts.push(`${threeDigitWords(lakh)} Lakh`);
+    if (thousand) parts.push(`${threeDigitWords(thousand)} Thousand`);
+    if (hundred) parts.push(threeDigitWords(hundred));
+    return parts.join(' ');
+};
+const amountInWords = (num) => `${numberToIndianWords(num)} Rupees Only`;
+
 const newItem = () => ({
     id: Date.now(),
     description: '',
@@ -1324,6 +1359,53 @@ const CreateInvoice = () => {
                                 {!selectedIsInstalmentPlan ? <div><h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Payment Terms</h4><div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 space-y-2"><p className="text-[12px] text-[#1a2b4b]"><strong>Advance Payment – 100%:</strong> Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.</p>{selectedTdsApplicable && (selectedTdsLines.length ? selectedTdsLines : ['TDS under Section 194C shall be deducted on the basic value only (excluding GST). Applicable rate: 2% for Companies/Firms/other entities and 1% for Individual/HUF.', 'Please share the applicable TDS Certificate (Form 16A) after deduction.']).map((line, index) => <p key={index} className="text-[12px] text-[#1a2b4b]">{line}</p>)}</div></div> : <div><h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Instalment Plan Details</h4><div className="overflow-x-auto"><table className="w-full text-[11px]"><thead><tr className="bg-gray-50">{['#', 'Instalment Name', '%', 'Amt', 'Due Date', 'Remarks'].map((heading) => <th key={heading} className="text-left px-2 py-2">{heading}</th>)}</tr></thead><tbody>{selectedInstalments.map((row, index) => <tr key={row.id || index} className="border-b"><td className="px-2 py-2">{index + 1}</td><td className="px-2 py-2">{row.label}</td><td className="px-2 py-2">{Number(row.percentage || 0)}%</td><td className="px-2 py-2">{Number(row.amount || 0).toLocaleString('en-IN')}</td><td className="px-2 py-2">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-GB') : '—'}</td><td className="px-2 py-2">{row.remarks || '—'}</td></tr>)}</tbody></table></div>{selectedTdsApplicable && <div className="mt-3 bg-gray-50 rounded-lg px-3 py-2.5 space-y-2">{selectedTdsLines.map((line, index) => <p key={index} className="text-[12px]">{line}</p>)}</div>}</div>}
                             </div>
                         </fieldset>
+
+                        {/* Totals summary bar — Taxable Value − Discount + GST = Final Amount — and Amount in Words */}
+                        <div className="mt-4 border-t border-gray-100 pt-4 flex items-stretch gap-3">
+                            <div className="w-[60%] bg-slate-50/60 border border-gray-100 rounded-xl px-4 py-3 flex items-stretch gap-3">
+                                <div className="flex-1 flex items-center justify-center gap-2.5 min-w-0">
+                                    <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                        <FileText size={16} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] text-slate-500 font-medium truncate">Total Taxable Value</p>
+                                        <p className="text-[14px] font-bold text-[#1a2b4b]">₹ {Math.round(sumTaxable).toLocaleString('en-IN')}</p>
+                                    </div>
+                                </div>
+                                <span className="flex items-center text-slate-300 text-lg font-light px-1 shrink-0">−</span>
+                                <div className="flex-1 flex items-center justify-center gap-2.5 min-w-0">
+                                    <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
+                                        <Percent size={14} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] text-slate-500 font-medium truncate">Total Discount</p>
+                                        <p className="text-[14px] font-bold text-[#1a2b4b]">₹ {Math.round(sumDiscount).toLocaleString('en-IN')}</p>
+                                    </div>
+                                </div>
+                                <span className="flex items-center text-slate-300 text-lg font-light px-1 shrink-0">+</span>
+                                <div className="flex-1 flex items-center justify-center gap-2.5 min-w-0">
+                                    <div className="w-9 h-9 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0 text-[9px] font-bold">GST</div>
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] text-slate-500 font-medium truncate">Total GST ({sumTaxable > 0 ? Math.round((sumGst / sumTaxable) * 100) : 0}%)</p>
+                                        <p className="text-[14px] font-bold text-[#1a2b4b]">₹ {Math.round(sumGst).toLocaleString('en-IN')}</p>
+                                    </div>
+                                </div>
+                                <span className="flex items-center text-slate-300 text-lg font-light px-1 shrink-0">=</span>
+                                <div className="flex-1 flex items-center justify-center gap-2.5 min-w-0 bg-emerald-50 rounded-lg px-4 py-2">
+                                    <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                                        <Wallet size={16} />
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] text-slate-500 font-medium truncate">Final Amount</p>
+                                        <p className="text-[16px] font-bold text-emerald-600">₹ {Math.round(sumTotal).toLocaleString('en-IN')}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="w-[40%] bg-slate-50/60 border border-gray-100 rounded-xl px-4 py-3 flex flex-col justify-center">
+                                <p className="text-[11px] text-slate-500 font-medium mb-1">Amount In Words</p>
+                                <p className="text-[13px] font-semibold text-[#1a2b4b] leading-snug">{amountInWords(sumTotal)}.</p>
+                            </div>
+                        </div>
                     </div>
 
                     {false && !isProformaEditMode && (

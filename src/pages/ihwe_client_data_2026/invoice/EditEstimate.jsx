@@ -136,6 +136,14 @@ const EditEstimate = () => {
           city: estimateToEdit.city || "",
           pincode: estimateToEdit.pincode || "",
           remarks: estimateToEdit.remarks || "",
+          // This form has no PLC UI — carry these through unchanged so a save
+          // here doesn't wipe an existing PLC Charge (plcCharges/plcGstAmount
+          // are a real part of finalAmount, computed as part of it below).
+          plcCharges: estimateToEdit.plcCharges || 0,
+          plcGstAmount: estimateToEdit.plcGstAmount || 0,
+          plcPct: estimateToEdit.plcPct || 0,
+          plcGstPct: estimateToEdit.plcGstPct || 0,
+          plcFinalAmount: estimateToEdit.plcFinalAmount || 0,
         });
         setItems(estimateToEdit.items?.length > 0 ? estimateToEdit.items : [{
           category: "Stall", description: "", stallType: "", hsn: "", qty: "", size: "", unit: "", rate: "", amount: "0.00", disc: "0", tax: "0.00", gstRate: "", finalAmount: "0.00", remarks: "",
@@ -261,14 +269,17 @@ const EditEstimate = () => {
     });
     setItems(newItems);
 
-    const totalFinalAmount = newItems.reduce(
+    const itemsTotal = newItems.reduce(
       (sum, item) => sum + (parseFloat(item.finalAmount) || 0),
       0
     );
-    setFormData((prev) => ({
-      ...prev,
-      finalAmount: totalFinalAmount.toFixed(2),
-    }));
+    setFormData((prev) => {
+      // PLC Charges (+ its own GST) aren't a line item, but are a real part
+      // of the invoice total — carried through unchanged from the loaded
+      // estimate since this form has no PLC UI.
+      const plcTotal = (parseFloat(prev.plcCharges) || 0) + (parseFloat(prev.plcGstAmount) || 0);
+      return { ...prev, finalAmount: (itemsTotal + plcTotal).toFixed(2) };
+    });
   }, [
     // This effect runs when any of these core values change in any item
     ...items.flatMap((item) => [item.qty, item.rate, item.disc, item.gstRate]),

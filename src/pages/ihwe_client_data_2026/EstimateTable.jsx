@@ -327,7 +327,12 @@ const EstimateTable = ({ clientId }) => {
   const displayRows = currentEstimates.flatMap((estimate) => {
     const baseSeq = getDocumentSeq(estimate.est_no);
     const basePrefix = getDocumentPrefix(estimate.est_no);
-    const estimateAmount = (estimate?.items || []).reduce((total, item) => {
+    // Prefer the estimate's own saved finalAmount — it's the actual grand
+    // total (includes PLC Charges + its GST, which aren't line items).
+    // Re-summing item.finalAmount here under-counts by exactly that PLC
+    // amount whenever one applies. Fall back to the item sum only for very
+    // old records that predate finalAmount being saved.
+    const estimateAmount = Number(estimate?.finalAmount) || (estimate?.items || []).reduce((total, item) => {
       return total + (parseFloat(item.finalAmount) || 0);
     }, 0);
     const matchingPerformaInvoices = perInvoices
@@ -399,7 +404,9 @@ const EstimateTable = ({ clientId }) => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const totalProformas = estimates?.length || 0;
-  const totalValue = (estimates || []).reduce((sum, est) => sum + (est.items || []).reduce((s, i) => s + (parseFloat(i.finalAmount) || 0), 0), 0);
+  // Same as estimateAmount/totalFinalAmount below — use each estimate's saved
+  // grand total (includes PLC Charges) rather than re-summing items.
+  const totalValue = (estimates || []).reduce((sum, est) => sum + (Number(est.finalAmount) || (est.items || []).reduce((s, i) => s + (parseFloat(i.finalAmount) || 0), 0)), 0);
   const activeProformas = (estimates || []).filter(est => !isCancelled(est)).length;
   const cancelledProformas = (estimates || []).filter(est => isCancelled(est)).length;
 
@@ -471,10 +478,12 @@ const EstimateTable = ({ clientId }) => {
         <tbody className="bg-white divide-y divide-gray-200">
           {displayRows.map((row, index) => {
             const { estimate, piData, invoiceData, rowType, displayEstNo, isFirstForEstimate, estimateRowSpan, rowInstanceKey } = row;
-            const totalFinalAmount = estimate?.items?.reduce((total, item) => {
+            // Same as estimateAmount above — use the saved grand total (includes
+            // PLC Charges) rather than re-summing items, which under-counts it.
+            const totalFinalAmount = Number(estimate?.finalAmount) || estimate?.items?.reduce((total, item) => {
               return total + (parseFloat(item.finalAmount) || 0);
-            }, 0);
-            const displayAmount = totalFinalAmount?.toFixed(2) || "0.00";
+            }, 0) || 0;
+            const displayAmount = totalFinalAmount.toFixed(2);
 
             let formattedDate = "N/A";
             if (estimate?.supply_date) {

@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import { Check } from "lucide-react";
 import api from "../../../lib/api";
@@ -18,6 +18,11 @@ const formatCurrency = (amount) => {
 
 const PAYMENT_MODE_OPTIONS = ["NEFT", "IMPS", "RTGS", "UPI", "Cash", "Cheque", "Card", "Wallet", "Other"];
 const PAYMENT_TYPE_OPTIONS = ["Advance Payment", "Final Payment", "Full Payment", "Running Payment"];
+const ACCOUNT_STATUS_STYLES = {
+  Overdue: "bg-rose-50 text-rose-600 border-rose-100",
+  Due: "bg-amber-50 text-amber-600 border-amber-100",
+  Received: "bg-emerald-50 text-emerald-600 border-emerald-100",
+};
 const getAutomaticNarration = (paymentType) => paymentType.replace(/\s+Payment$/i, "");
 
 const nowLocalDate = () => {
@@ -44,6 +49,14 @@ const getDocumentLabel = (doc, docType, fallbackName) => [
 const AddPayment = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  // Coming from a specific row on the Payments list (e.g. "Book Payment") —
+  // that row already knows exactly which document it is and whether it's
+  // still a PI or was already converted to a Tax Invoice, so open straight
+  // on the right one instead of always defaulting to Proforma Invoice (which
+  // is empty for a client whose PIs have all been converted already).
+  const preselectDocType = location.state?.docType;
+  const preselectDocId = location.state?.docId;
 
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -53,7 +66,9 @@ const AddPayment = () => {
   const [payments, setPayments] = useState([]);
 
   // New UI States
-  const [paymentForSelection, setPaymentForSelection] = useState("Against Proforma Invoice");
+  const [paymentForSelection, setPaymentForSelection] = useState(
+    preselectDocType === "Invoice" ? "Against Tax Invoice" : "Against Proforma Invoice"
+  );
   const docType = paymentForSelection === "Against Proforma Invoice" ? "Proforma Invoice" : "Invoice";
 
   const [selectedDocId, setSelectedDocId] = useState("");
@@ -152,6 +167,19 @@ const AddPayment = () => {
   useEffect(() => {
     setSelectedDocId("");
   }, [paymentForSelection]);
+
+  // Apply the row-specific document passed in from the Payments list, once
+  // its list has loaded and actually contains it. Runs at most once — after
+  // that the user's own selection (and the reset-on-tab-change effect above)
+  // takes over normally.
+  const appliedPreselectRef = useRef(false);
+  useEffect(() => {
+    if (appliedPreselectRef.current || !preselectDocId) return;
+    if (documentOptions.some((d) => d._id === preselectDocId)) {
+      setSelectedDocId(preselectDocId);
+      appliedPreselectRef.current = true;
+    }
+  }, [documentOptions, preselectDocId]);
 
   const selectedDoc = useMemo(
     () => documentOptions.find((d) => d._id === selectedDocId) || null,
@@ -330,8 +358,8 @@ const AddPayment = () => {
 
         <div className="min-w-[100px]">
           <div className="text-[11px] text-slate-500 font-medium mb-1">Account Status</div>
-          <span className="bg-amber-50 text-amber-600 px-3 py-1 rounded text-xs font-semibold border border-amber-100">
-            {companyInfo?.statusLabel || "Lead"}
+          <span className={`px-3 py-1 rounded text-xs font-semibold border ${ACCOUNT_STATUS_STYLES[financials?.accountStatus] || ACCOUNT_STATUS_STYLES.Due}`}>
+            {financials?.accountStatus || "Due"}
           </span>
         </div>
       </div>

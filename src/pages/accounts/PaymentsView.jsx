@@ -396,6 +396,10 @@ const PaymentList = () => {
     };
 
     const filteredPayments = payments.filter(pmt => {
+        // Only exhibitors who've actually booked a stand belong on this list —
+        // a lead with no booking has nothing to collect payment against yet.
+        if (!pmt.hasBookedStand) return false;
+
         // Event filter
         if (filterEvent !== 'all' && String(pmt.eventId || pmt.crmEventId || '') !== String(filterEvent)) return false;
 
@@ -404,8 +408,6 @@ const PaymentList = () => {
 
         // Status filter
         if (filterStatus && pmt.status !== filterStatus) return false;
-
-        if ((parseFloat(pmt.outstanding) || 0) <= 0) return false;
 
         // Date filter
         if (filterDate !== 'all') {
@@ -459,19 +461,26 @@ const PaymentList = () => {
     const groupedPayments = filteredPayments.map((row) => {
         const dueDate = row.dueDate || row.installmentDueDate || row.invDate;
         const overdueDays = getOverdueDays(row, dueDate);
+        const isFullyPaid = (parseFloat(row.outstanding) || 0) <= 0;
 
         return {
             key: row.id,
+            docId: row.id,
+            docType: row.docType,
             companyId: row.companyId,
             proformaNo: row.proformaNo || (row.docType === 'Proforma Invoice' ? row.invNo : ''),
             invoiceNo: row.invoiceNo || (row.docType === 'Invoice' ? row.invNo : ''),
             clientName: getClientCompanyName(row),
             hasBookedStand: Boolean(row.hasBookedStand),
-            pymtReq: row.outstanding || row.invValue || 0,
-            paymentType: row.pymtType || getPaymentTypeLabel(row),
+            isFullyPaid,
+            pymtReq: (row.outstanding ?? row.invValue) || 0,
+            // The actual type of the last payment recorded against this
+            // document — falls back to the derived progress label only when
+            // no payment has been logged yet at all.
+            paymentType: row.lastPymtType || row.pymtType || getPaymentTypeLabel(row),
             dueDate,
             handledBy: toTitleCase(row.handledBy || row.addedBy || '') || '—',
-            status: overdueDays > 0 ? 'Overdue' : (row.status || 'Unpaid'),
+            status: isFullyPaid ? 'Payment Received' : (overdueDays > 0 ? 'Overdue' : (row.status || 'Unpaid')),
             overdueDays,
         };
     });
@@ -786,25 +795,33 @@ const PaymentList = () => {
                                             <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.handledBy || '—'}</div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top text-center">
-                                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${group.status === 'Overdue' ? 'bg-red-50 text-red-600 border border-red-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
-                                                <div className={`w-1.5 h-1.5 rounded-full ${group.status === 'Overdue' ? 'bg-red-500' : 'bg-slate-500'}`}></div>
+                                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap ${group.status === 'Overdue' ? 'bg-red-50 text-red-600 border border-red-200' : group.status === 'Payment Received' ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' : 'bg-slate-50 text-slate-700 border border-slate-200'}`}>
+                                                <div className={`w-1.5 h-1.5 rounded-full ${group.status === 'Overdue' ? 'bg-red-500' : group.status === 'Payment Received' ? 'bg-emerald-500' : 'bg-slate-500'}`}></div>
                                                 {group.status === 'Overdue'
                                                     ? `Overdue · ${group.overdueDays || 1}d`
-                                                    : 'Pymt required'}
+                                                    : group.status === 'Payment Received'
+                                                        ? 'Payment Received'
+                                                        : 'Pymt required'}
                                             </div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top text-center">
-                                            <button
-                                                onClick={() => {
-                                                    if (!group.hasBookedStand) return;
-                                                    navigate(`/dashboard/account/AddPayment/${group.companyId}`);
-                                                }}
-                                                disabled={!group.hasBookedStand}
-                                                title={!group.hasBookedStand ? 'Book a stand required' : 'Book payment'}
-                                                className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${group.hasBookedStand ? 'bg-[#124170] text-white hover:bg-[#0c2b4a]' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
-                                            >
-                                                Book payment
-                                            </button>
+                                            {group.isFullyPaid ? (
+                                                <span className="text-emerald-600 text-[11px] font-bold">—</span>
+                                            ) : (
+                                                <button
+                                                    onClick={() => {
+                                                        if (!group.hasBookedStand) return;
+                                                        navigate(`/dashboard/account/AddPayment/${group.companyId}`, {
+                                                            state: { docType: group.docType, docId: group.docId },
+                                                        });
+                                                    }}
+                                                    disabled={!group.hasBookedStand}
+                                                    title={!group.hasBookedStand ? 'Book a stand required' : 'Book payment'}
+                                                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${group.hasBookedStand ? 'bg-[#124170] text-white hover:bg-[#0c2b4a]' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
+                                                >
+                                                    Book payment
+                                                </button>
+                                            )}
                                         </td>
                                     </tr>
 
