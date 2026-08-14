@@ -325,7 +325,22 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
             && String(candidate?.hsn || '').trim() === String(item?.hsn || '').trim()
         ) || matchedEstimate?.items?.[index] || {};
         return { ...sourceItem, ...item };
-    });
+    }) || [];
+    const legacyPlcCharges = parseNum(matchedEstimate?.plcCharges);
+    if (legacyPlcCharges > 0 && !activeItems.some((item) => item?.category === 'PLC Charges')) {
+        const stall = matchedEstimate?.items?.find((item) => item?.category !== 'Addon Product') || matchedEstimate?.items?.[0] || {};
+        const plcPct = parseNum(matchedEstimate?.plcPct);
+        const plcGstPct = parseNum(matchedEstimate?.plcGstPct) || 18;
+        const plcGstAmount = parseNum(matchedEstimate?.plcGstAmount) || legacyPlcCharges * plcGstPct / 100;
+        activeItems.push({
+            description: `Preferred Location Charges (PLC)${plcPct ? ` @ ${plcPct}%` : ''}`,
+            hsn: stall.hsn || '', qty: 1, size: stall.size || '', area: stall.area || '', unit: 'Nos',
+            rate: parseNum(stall.rate) * plcPct / 100, amount: legacyPlcCharges, taxableValue: legacyPlcCharges,
+            gstPct: plcGstPct, gstAmount: plcGstAmount,
+            total: parseNum(matchedEstimate?.plcFinalAmount) || legacyPlcCharges + plcGstAmount,
+            category: 'PLC Charges', plScheme: stall.plScheme || '', stallType: stall.stallType || '',
+        });
+    }
     const invoiceNo = matchedInvoice ? matchedInvoice.invoice_no : (form?.invoiceNo || '');
     const dateVal = matchedInvoice ? (matchedInvoice.invoice_date || matchedInvoice.supply_date) : form?.invoiceDate;
     const invoiceDate = dateVal ? new Date(dateVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';

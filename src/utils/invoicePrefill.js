@@ -54,13 +54,17 @@ export const getClientDisplayData = (client = {}) => {
   const contactName = firstContact
     ? [firstContact.firstName, firstContact.surname, firstContact.name].filter(Boolean)[0]
     : "";
+  const primaryContactName = [client.contact1?.firstName, client.contact1?.surname, client.contact1?.lastName]
+    .filter(Boolean)
+    .join(" ");
   const address = client.address || client.companyAddress || [client.addressLine1, client.city, client.state].filter(Boolean).join(", ");
 
   return {
     name: client.companyName || client.exhibitorName || "",
     address,
-    contactPerson: client.contactPerson || contactName || "",
-    phone: client.mobile || client.contact1?.mobile || firstContact?.mobile || "",
+    contactPerson: client.contactPerson || primaryContactName || contactName || "",
+    phone: client.contact1?.mobile || client.mobile || firstContact?.mobile || "",
+    email: client.contact1?.email || client.companyEmail || client.email || firstContact?.email || "",
     gst: client.gst || client.gstNo || client.gstNumber || "",
     country: client.country || "India",
     state: client.state || "",
@@ -129,6 +133,9 @@ export const estimateItemsToInvoiceItems = (estimateItems = []) => {
       gstPct,
       gstAmount,
       total,
+      category: item.category || "",
+      plScheme: item.plScheme || "",
+      stallType: item.stallType || "",
     };
   });
 };
@@ -171,10 +178,19 @@ export const estimateToInvoiceForm = (estimate, client, prev = {}) => {
     company_name: companyName || prev.company_name,
     company_addr: companyAddress || prev.company_addr,
     event_name: estimate?.event_name || PROFORMA_EVENT_NAME,
-    consignee_name: estimate?.event_name || estimate?.consignee_name || PROFORMA_EVENT_NAME,
+    consignee_name: estimate?.consignee_name || estimate?.event_name || PROFORMA_EVENT_NAME,
     consignee_addr: eventAddress || prev.consignee_addr,
-    consignee_person: estimate?.consignee_person || clientData.contactPerson || prev.consignee_person,
-    consignee_phone: estimate?.consignee_phone || clientData.phone || prev.consignee_phone,
+    consignee_person: estimate?.consignee_person || "",
+    consignee_phone: estimate?.consignee_phone || "",
+    consignee_email: estimate?.consignee_email || "",
+    consignee_country: estimate?.consignee_country || "",
+    consignee_state: estimate?.consignee_state || "",
+    consignee_city: estimate?.consignee_city || "",
+    consignee_pincode: estimate?.consignee_pincode || "",
+    event_gst_no: estimate?.event_gst_no || "",
+    companyContactPerson: estimate?.company_contact_person || clientData.contactPerson || prev.companyContactPerson,
+    companyContactMobile: estimate?.company_contact_mobile || clientData.phone || prev.companyContactMobile,
+    companyEmail: estimate?.company_email || clientData.email || prev.companyEmail || "",
     billingState: estimate?.state || clientData.state || prev.billingState,
     billingPin: estimate?.pincode || clientData.pincode || prev.billingPin,
     country: estimate?.country || clientData.country || prev.country,

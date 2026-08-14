@@ -790,16 +790,17 @@ const InvoiceNumberDetails = () => {
     <div className="bg-gray-100 p-6 min-h-screen ">
       <div className="max-w-[1000px] mx-auto flex justify-end mb-2">
         {(matchedInvoice.source_estimate_id || matchedInvoice.estimate_no)
-          && String(matchedInvoice.status || "").toLowerCase() !== "cancelled" && (
+          && String(matchedInvoice.status || "").toLowerCase() !== "cancelled"
+          && !isCheckingChanges
+          && hasChanges && (
             <button
               onClick={handleRevise}
-              disabled={isRevising || isCheckingChanges || !hasChanges}
-              className={`mr-auto rounded px-3 py-2 text-white shadow-sm transition flex items-center gap-2 ${isCheckingChanges || !hasChanges ? "bg-gray-400 cursor-not-allowed" : "bg-amber-600 hover:bg-amber-700"
-                }`}
-              title={!hasChanges ? "No changes found" : "Update this invoice from latest Proforma Invoice while keeping the same invoice number"}
+              disabled={isRevising}
+              className="mr-auto rounded px-3 py-2 text-white shadow-sm transition flex items-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              title="Update this invoice from latest Proforma Invoice while keeping the same invoice number"
             >
-              <RefreshCw size={16} className={isRevising || isCheckingChanges ? "animate-spin" : ""} />
-              {isRevising ? "Checking..." : isCheckingChanges ? "Checking changes..." : "Revise from PI"}
+              <RefreshCw size={16} className={isRevising ? "animate-spin" : ""} />
+              {isRevising ? "Checking..." : "Revise from PI"}
             </button>
           )}
         {Number(matchedInvoice.revision_no || 0) > 0 && (

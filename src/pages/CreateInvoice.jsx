@@ -57,6 +57,18 @@ const isCancelledDoc = (doc) => String(doc?.status || '').trim().toLowerCase() =
 const SIZE_BASED_UNITS = ['Sqm', 'Sqft'];
 const recalculateItemForQty = (item, qty) => {
     const nextQty = Number(qty) || 0;
+    if (item.category === 'PLC Charges') {
+        const sourceQty = Number(item.qty) || 1;
+        const scale = nextQty / sourceQty;
+        return {
+            ...item,
+            qty: nextQty,
+            amount: Number(item.amount || 0) * scale,
+            taxableValue: Number(item.taxableValue || item.amount || 0) * scale,
+            gstAmount: Number(item.gstAmount || 0) * scale,
+            total: Number(item.total || 0) * scale,
+        };
+    }
     const rate = Number(item.rate) || 0;
     const area = Number(item.area) || 0;
     const sizeAsNumber = Number(item.size);
@@ -76,6 +88,24 @@ const recalculateItemForQty = (item, qty) => {
         taxableValue,
         gstAmount,
         total: taxableValue + gstAmount,
+    };
+};
+
+const getEstimatePlcItem = (estimate) => {
+    const stall = (estimate.items || []).find((item) => item?.category !== 'Addon Product') || estimate.items?.[0] || {};
+    const plcPct = Number(estimate?.plcPct) || 0;
+    const plcCharges = Number(estimate?.plcCharges) || ((Number(stall.amount) || 0) * plcPct / 100);
+    if (plcCharges <= 0) return null;
+    const gstPct = Number(estimate?.plcGstPct) || 18;
+    const gstAmount = Number(estimate?.plcGstAmount) || (plcCharges * gstPct / 100);
+    return {
+        id: `plc-${estimate._id || estimate.est_no}`,
+        description: `Preferred Location Charges (PLC)${plcPct ? ` @ ${plcPct}%` : ''}`,
+        hsn: stall.hsn || '', qty: 1, size: stall.size || '', area: stall.area || '', unit: 'Nos',
+        rate: (Number(stall.rate) || 0) * plcPct / 100,
+        amount: plcCharges, discountPct: 0, taxableValue: plcCharges,
+        gstPct: `${gstPct}%`, gstAmount, total: Number(estimate?.plcFinalAmount) || plcCharges + gstAmount,
+        category: 'PLC Charges', plScheme: stall.plScheme || '', stallType: stall.stallType || '',
     };
 };
 
@@ -102,6 +132,12 @@ const Input = (props) => (
         {...props}
         className={`w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed ${props.className || ''}`}
     />
+);
+
+const ReadOnlyValue = ({ children }) => (
+    <div className="min-h-[32px] w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-[13px] leading-5 text-[#1a2b4b] break-words">
+        {children || '—'}
+    </div>
 );
 
 // ── Select ───────────────────────────────────────────────────────────────────
@@ -134,10 +170,11 @@ const CreateInvoice = () => {
     const sourceEstimateId = navigationState.sourceEstimateId || '';
     const [resolvedSourceEstimateId, setResolvedSourceEstimateId] = useState(sourceEstimateId);
     const fileInputRef = useRef(null);
-    const [attachedFile, setAttachedFile] = useState(null);
+    const [attachedFiles, setAttachedFiles] = useState([]);
     const [estimates, setEstimates] = useState([]);
     const [existingInvoices, setExistingInvoices] = useState([]);
     const [selectedPi, setSelectedPi] = useState('');
+    const [sourceEstimate, setSourceEstimate] = useState(null);
     const [isEditMode, setIsEditMode] = useState(false);
     const [editingInvoiceId, setEditingInvoiceId] = useState('');
     const [isProformaEditMode, setIsProformaEditMode] = useState(false);
@@ -205,10 +242,10 @@ const CreateInvoice = () => {
                         companyId: inv.companyId || f.companyId,
                         clientName: inv.consignee_name || f.clientName,
                         gstin: inv.gst_no || f.gstin,
-                        invoiceType: inv.type_of_invoice || 'Standard',
+                        invoiceType: inv.type_of_invoice || 'Select Invoice Type',
                         invoiceNo: inv.invoice_no || 'Auto-generated on save',
                         invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
-                        dueDate: inv.due_date ? new Date(inv.due_date).toISOString().split('T')[0] : f.dueDate,
+                        ewayBillNo: inv.eway_bill_no || f.ewayBillNo,
                         poNo: inv.po_no || f.poNo,
                         currency: inv.currency || f.currency,
                         billingAddress: inv.billing_address || f.billingAddress,
@@ -224,8 +261,6 @@ const CreateInvoice = () => {
                         state: inv.state || f.state,
                         city: inv.city || f.city,
                         placeOfSupply: inv.place_of_supply ? (inv.place_of_supply.toLowerCase().includes('delhi') ? 'Delhi (07)' : inv.place_of_supply.toLowerCase().includes('maharashtra') ? 'Maharashtra (27)' : inv.place_of_supply.toLowerCase().includes('uttar') ? 'Uttar Pradesh (09)' : inv.place_of_supply.toLowerCase().includes('haryana') ? 'Haryana (06)' : inv.place_of_supply) : f.placeOfSupply,
-                        remarks: inv.remarks || f.remarks,
-                        terms: inv.terms || f.terms
                     }));
                     if (inv.items && inv.items.length > 0) {
                         setItems(estimateItemsToInvoiceItems(inv.items || []));
@@ -244,13 +279,15 @@ const CreateInvoice = () => {
                             const estRes = await api.get(`/api/estimates/${sourceEstimateId}`);
                             const estimate = estRes.data?.data || estRes.data;
                             if (estimate?._id) {
+                                const estimateCompany = await loadClientLikeProforma(estimate.companyId).catch(() => ({}));
+                                setSourceEstimate(estimate);
                                 setResolvedSourceEstimateId(estimate._id);
                                 setSelectedPi(selectedPiFromUrl);
                                 addEstimateOption({ ...estimate, est_no: selectedPiFromUrl });
                                 setForm(f => ({
-                                    ...estimateToInvoiceForm(estimate, estimate.exhibitor || {}, f),
+                                    ...estimateToInvoiceForm(estimate, estimateCompany || {}, f),
                                     invoiceNo: 'Auto-generated on save',
-                                    invoiceDate: f.invoiceDate,
+                                    invoiceDate: estimate.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : f.invoiceDate,
                                     gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
                                     invoiceType: estimate.est_type || f.invoiceType,
                                 }));
@@ -269,6 +306,7 @@ const CreateInvoice = () => {
                     const res = await api.get(`/api/invoices/${id}`);
                     const inv = res.data?.data || res.data;
                     if (inv && inv._id) {
+                        setSourceEstimate(null);
                         applyInvoiceToForm(inv);
                         return;
                     }
@@ -281,13 +319,15 @@ const CreateInvoice = () => {
                     const estRes = await api.get(`/api/estimates/${id}`);
                     const estimate = estRes.data?.data || estRes.data;
                     if (estimate?._id) {
+                        const estimateCompany = await loadClientLikeProforma(estimate.companyId).catch(() => ({}));
+                        setSourceEstimate(estimate);
                         setResolvedSourceEstimateId(estimate._id);
                         setIsProformaEditMode(true);
                         setEditingProformaId(estimate._id);
                         setSelectedPi(estimate.est_no || '');
                         addEstimateOption(estimate);
                         setForm(f => ({
-                            ...estimateToInvoiceForm(estimate, estimate.exhibitor || {}, f),
+                            ...estimateToInvoiceForm(estimate, estimateCompany || {}, f),
                             invoiceNo: estimate.est_no || f.invoiceNo,
                             invoiceDate: estimate.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : f.invoiceDate,
                             gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
@@ -318,9 +358,13 @@ const CreateInvoice = () => {
     }, [id, selectedPiFromUrl, sourceEstimateId]);
 
     const handleFileChange = (e) => {
-        if (e.target.files && e.target.files[0]) {
-            setAttachedFile(e.target.files[0]);
+        const selected = Array.from(e.target.files || []);
+        const oversized = selected.filter((file) => file.size > 25 * 1024 * 1024);
+        if (oversized.length) {
+            Swal.fire('File Too Large', `${oversized.map((file) => file.name).join(', ')} must be 25MB or smaller.`, 'warning');
         }
+        setAttachedFiles((current) => [...current, ...selected.filter((file) => file.size <= 25 * 1024 * 1024)].slice(0, 10));
+        e.target.value = '';
     };
 
     // ── form state ──────────────────────────────────────────────────────────────
@@ -330,10 +374,10 @@ const CreateInvoice = () => {
         crmEventId: '',
         clientName: '',
         gstin: '',
-        invoiceType: 'Standard',
+        invoiceType: 'Select Invoice Type',
         invoiceNo: 'Auto-generated on save',
         invoiceDate: new Date().toISOString().split('T')[0],
-        dueDate: '',
+        ewayBillNo: '',
         poNo: '',
         currency: 'INR - Indian Rupee (₹)',
         company_name: '',
@@ -349,9 +393,18 @@ const CreateInvoice = () => {
         state: '',
         city: '',
         placeOfSupply: '',
+        companyContactPerson: '',
+        companyContactMobile: '',
+        companyEmail: '',
+        consignee_person: '',
+        consignee_phone: '',
+        consignee_email: '',
+        consignee_country: '',
+        consignee_state: '',
+        consignee_city: '',
+        consignee_pincode: '',
+        event_gst_no: '',
 
-        remarks: '',
-        terms: ''
     });
 
     const [items, setItems] = useState([newItem()]);
@@ -406,6 +459,23 @@ const CreateInvoice = () => {
     const dropdownEstimates = selectedPiFromUrl && !estimates.some((estimate) => estimate.est_no === selectedPiFromUrl)
         ? [{ est_no: selectedPiFromUrl }, ...estimates]
         : estimates;
+    const selectedEstimate = sourceEstimate?.est_no === selectedPi
+        ? sourceEstimate
+        : estimates.find((estimate) => estimate.est_no === selectedPi) || null;
+    const selectedPrimaryStall = selectedEstimate?.items?.find((item) => item?.category !== 'Addon Product') || selectedEstimate?.items?.[0] || null;
+    const selectedPlcPct = Number(selectedEstimate?.plcPct || 0);
+    const selectedPlcCharges = Number(selectedEstimate?.plcCharges || 0)
+        || ((Number(selectedPrimaryStall?.amount) || 0) * selectedPlcPct / 100);
+    const selectedPlcGstPct = Number(selectedEstimate?.plcGstPct || 0) || 18;
+    const selectedPlcGstAmount = Number(selectedEstimate?.plcGstAmount || 0)
+        || (selectedPlcCharges * selectedPlcGstPct / 100);
+    const selectedPlcFinalAmount = Number(selectedEstimate?.plcFinalAmount || 0)
+        || selectedPlcCharges + selectedPlcGstAmount;
+    const selectedTdsApplicable = selectedEstimate?.tdsApplicable !== false;
+    const selectedInstalments = Array.isArray(selectedEstimate?.instalments) ? selectedEstimate.instalments : [];
+    const selectedIsInstalmentPlan = selectedInstalments.length > 0
+        || /instal/i.test(`${selectedEstimate?.paymentPlanLabel || ''} ${selectedEstimate?.paymentPlanType || ''}`);
+    const selectedTdsLines = Array.isArray(selectedEstimate?.tdsLines) ? selectedEstimate.tdsLines : [];
     const selectedDeliveryChallans = deliveryChallans.filter((challan) =>
         selectedChallanIds.includes(String(challan._id))
     );
@@ -451,7 +521,10 @@ const CreateInvoice = () => {
                 });
             });
 
-        return estimateItemsToInvoiceItems(estimate.items || [])
+        const sourceItems = estimateItemsToInvoiceItems(estimate.items || []);
+        const plcItem = getEstimatePlcItem(estimate);
+        if (plcItem) sourceItems.push(plcItem);
+        return sourceItems
             .map((item) => {
                 const remainingQty = Math.max(0, (Number(item.qty) || 0) - (usedQtyByKey.get(getItemKey(item)) || 0));
                 return {
@@ -482,11 +555,20 @@ const CreateInvoice = () => {
             return;
         }
 
-        const est = estimates.find(e => e.est_no === estNo);
-        if (est) {
+        const estimateOption = estimates.find(e => e.est_no === estNo);
+        if (estimateOption) {
+            let est = estimateOption;
+            try {
+                const detailResponse = await api.get(`/api/estimates/${estimateOption._id}`);
+                est = detailResponse.data?.data || detailResponse.data || estimateOption;
+            } catch (error) {
+                console.warn('Could not load complete proforma details; using the selected record.', error);
+            }
+            setSourceEstimate(est);
+            const estimateCompany = await loadClientLikeProforma(est.companyId).catch(() => ({}));
             setResolvedSourceEstimateId(est._id || '');
             setForm(f => ({
-                ...f,
+                ...estimateToInvoiceForm(est, estimateCompany || {}, f),
                 companyId: est.companyId || f.companyId,
                 clientName: est.company_name || est.consignee_name || f.clientName,
                 gstin: est.company_gst_no || est.gst_no || f.gstin,
@@ -499,12 +581,26 @@ const CreateInvoice = () => {
                 city: est.city || f.city,
                 billingPin: est.pincode || f.billingPin,
                 remarks: est.remarks || f.remarks,
-                invoiceType: 'Standard',
+                invoiceType: est.est_type || f.invoiceType,
                 company_name: est.company_name || f.company_name,
                 company_addr: est.company_addr || f.company_addr,
                 event_name: est.event_name || f.event_name,
-                consignee_name: est.event_name || est.consignee_name || f.consignee_name,
-                consignee_addr: est.consignee_addr || f.consignee_addr,
+                consignee_name: est.consignee_name || est.event_name || '',
+                consignee_addr: est.consignee_addr || est.event_place_of_supply || '',
+                consignee_person: est.consignee_person || '',
+                consignee_phone: est.consignee_phone || '',
+                consignee_email: est.consignee_email || '',
+                consignee_country: est.consignee_country || '',
+                consignee_state: est.consignee_state || '',
+                consignee_city: est.consignee_city || '',
+                consignee_pincode: est.consignee_pincode || '',
+                event_gst_no: est.event_gst_no || '',
+                companyContactPerson: est.company_contact_person || estimateCompany?.contactPerson || f.companyContactPerson,
+                companyContactMobile: est.company_contact_mobile || estimateCompany?.mobile || estimateCompany?.contact1?.mobile || f.companyContactMobile,
+                companyEmail: est.company_email || estimateCompany?.email || estimateCompany?.companyEmail || f.companyEmail,
+                invoiceDate: est.supply_date ? new Date(est.supply_date).toISOString().split('T')[0] : f.invoiceDate,
+                poNo: est.po_no || est.poNo || f.poNo,
+                currency: String(est.country || '').toLowerCase() === 'india' ? 'INR - Indian Rupee (₹)' : 'USD - US Dollar ($)',
             }));
 
             if (est.items && est.items.length > 0) {
@@ -565,6 +661,11 @@ const CreateInvoice = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        if (!isEditMode && !isProformaEditMode && !selectedPi) {
+            Swal.fire('Proforma Invoice Required', 'Please select a Proforma Invoice number first.', 'warning');
+            return;
+        }
 
         if (!isProformaEditMode && includeDeliveryChallans && selectedChallanIds.length === 0) {
             Swal.fire('Delivery Challan Required', 'Select at least one delivery challan or choose No.', 'warning');
@@ -664,7 +765,7 @@ const CreateInvoice = () => {
             delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
-            due_date: form.dueDate,
+            eway_bill_no: form.ewayBillNo,
             po_no: form.poNo,
             currency: form.currency,
             gst_no: form.gstin,
@@ -698,10 +799,11 @@ const CreateInvoice = () => {
                 gstPct: i.gstPct,
                 gstAmount: Number(i.gstAmount),
                 total: Number(i.total),
+                category: i.category || '',
+                plScheme: i.plScheme || '',
+                stallType: i.stallType || '',
             })),
             finalAmount: finalAmount,
-            remarks: form.remarks,
-            terms: form.terms,
             added_by: getCurrentUserName(),
             updated_by: getCurrentUserName(),
         };
@@ -722,18 +824,47 @@ const CreateInvoice = () => {
             } else {
                 res = await api.post('/api/invoices', payload);
                 if (res.status === 201 || res.status === 200) {
+                    const createdInvoiceId = res.data?.data?._id || res.data?._id;
+                    let attachmentWarning = '';
+                    if (createdInvoiceId && attachedFiles.length) {
+                        const attachmentData = new FormData();
+                        attachedFiles.forEach((file) => attachmentData.append('attachments', file));
+                        try {
+                            await api.post(`/api/invoices/${createdInvoiceId}/attachments`, attachmentData, {
+                                headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                        } catch (attachmentError) {
+                            attachmentWarning = attachmentError.response?.data?.message || 'Invoice was created, but attachments could not be uploaded.';
+                        }
+                    }
                     await Swal.fire({
-                        icon: 'success',
+                        icon: attachmentWarning ? 'warning' : 'success',
                         title: 'Invoice Generated!',
-                        text: 'Invoice generated successfully.',
+                        text: attachmentWarning ? `Invoice generated successfully. ${attachmentWarning}` : 'Invoice generated successfully.',
                         confirmButtonColor: '#194090',
                     });
-                    const createdInvoiceId = res.data?.data?._id || res.data?._id;
                     navigate(createdInvoiceId ? `/payments/invoiceDetails/${createdInvoiceId}` : postSaveRoute);
                 }
             }
         } catch (err) {
             console.error(err);
+            const existingInvoiceId = err.response?.data?.existingInvoiceId;
+            if (!isEditMode && existingInvoiceId) {
+                if (attachedFiles.length) {
+                    const attachmentData = new FormData();
+                    attachedFiles.forEach((file) => attachmentData.append('attachments', file));
+                    try {
+                        await api.post(`/api/invoices/${existingInvoiceId}/attachments`, attachmentData, {
+                            headers: { 'Content-Type': 'multipart/form-data' },
+                        });
+                    } catch (attachmentError) {
+                        console.error('Failed to attach files to the already-created invoice', attachmentError);
+                    }
+                }
+                await Swal.fire('Invoice Already Generated', `Opening ${err.response?.data?.existingInvoiceNo || 'the existing invoice'}.`, 'info');
+                navigate(`/payments/invoiceDetails/${existingInvoiceId}`);
+                return;
+            }
             await Swal.fire({
                 icon: 'error',
                 title: isEditMode ? 'Update Failed' : 'Generation Failed',
@@ -843,7 +974,7 @@ const CreateInvoice = () => {
                 </button>
             </div>
 
-            <div className="w-full  pr-16 px-4 pt-3 flex gap-3 items-start">
+            <div className="w-full px-4 pt-3 flex items-start">
 
                 {/* ── LEFT FORM ── */}
                 <form onSubmit={handleSubmit} className="flex-1 space-y-3 min-w-0">
@@ -876,11 +1007,11 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label>GSTIN / PAN No.</Label>
-                                <Input placeholder="Enter GSTIN / PAN No." value={form.gstin} onChange={(e) => setField('gstin', e.target.value)} />
+                                <Input value={form.gstin} disabled />
                             </div>
                             <div>
                                 <Label required>Invoice Type</Label>
-                                <Select required options={['Select Invoice Type', 'Intrastate', 'Interstate Sale', 'Foreign Sale']} value={form.invoiceType} onChange={(e) => setField('invoiceType', e.target.value)} />
+                                <Select required disabled options={['Select Invoice Type', 'Intrastate', 'Interstate Sale', 'Foreign Sale']} value={form.invoiceType} />
                             </div>
                             <div>
                                 <Label required>Invoice No.</Label>
@@ -897,14 +1028,12 @@ const CreateInvoice = () => {
                             <div>
                                 <Label required>Invoice Date</Label>
                                 <div className="relative">
-                                    <Input required type="date" value={form.invoiceDate} onChange={(e) => setField('invoiceDate', e.target.value)} className="py-2.5" />
+                                    <Input required disabled type="date" value={form.invoiceDate} className="py-2.5" />
                                 </div>
                             </div>
                             <div>
-                                <Label required>Due Date</Label>
-                                <div className="relative">
-                                    <Input required type="date" value={form.dueDate} onChange={(e) => setField('dueDate', e.target.value)} className="py-2.5" />
-                                </div>
+                                <Label>E-way Bill Number</Label>
+                                <Input placeholder="Enter E-way Bill No. (Optional)" value={form.ewayBillNo} onChange={(e) => setField('ewayBillNo', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
                                 <Label>Purchase Order No.</Label>
@@ -912,7 +1041,7 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label required>Currency</Label>
-                                <Select required options={['INR - Indian Rupee (₹)', 'USD - US Dollar ($)']} value={form.currency} onChange={(e) => setField('currency', e.target.value)} className="py-2.5" />
+                                <Select required disabled options={['INR - Indian Rupee (₹)', 'USD - US Dollar ($)']} value={form.currency} className="py-2.5" />
                             </div>
                         </div>
                     </div>
@@ -921,11 +1050,54 @@ const CreateInvoice = () => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
                         <SectionHead num="2" label="Billing & Shipping Details" />
 
-                        <div className="grid grid-cols-4 gap-4 mb-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            <div className="border border-gray-100 rounded-lg p-4 bg-white">
+                                <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-3">Company / Billing Details</h4>
+                                <div className="space-y-3">
+                                    <div><Label>Company Name</Label><ReadOnlyValue>{form.company_name || form.clientName}</ReadOnlyValue></div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div><Label>Contact Person</Label><Input disabled value={form.companyContactPerson} /></div>
+                                        <div><Label>Mobile No.</Label><Input disabled value={form.companyContactMobile} /></div>
+                                        <div><Label>Email</Label><Input disabled value={form.companyEmail} /></div>
+                                    </div>
+                                    <div><Label>Address</Label><Input disabled value={form.company_addr || form.billingAddress} /></div>
+                                    <div className="grid grid-cols-4 gap-3">
+                                        <div><Label>Country</Label><Input disabled value={form.country} /></div>
+                                        <div><Label>State</Label><Input disabled value={form.state} /></div>
+                                        <div><Label>City</Label><Input disabled value={form.city} /></div>
+                                        <div><Label>Pin Code</Label><Input disabled value={form.billingPin} /></div>
+                                    </div>
+                                    <div><Label>GSTIN No. / PAN No.</Label><Input disabled value={form.gstin} /></div>
+                                </div>
+                            </div>
+
+                            <div className="border border-gray-100 rounded-lg p-4 bg-white">
+                                <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-3">Consignee Details</h4>
+                                <div className="space-y-3">
+                                    <div><Label>Consignee Name</Label><ReadOnlyValue>{form.consignee_name || form.event_name}</ReadOnlyValue></div>
+                                    <div className="grid grid-cols-3 gap-3">
+                                        <div><Label>Contact Person</Label><Input disabled value={form.consignee_person} /></div>
+                                        <div><Label>Mobile No.</Label><Input disabled value={form.consignee_phone} /></div>
+                                        <div><Label>Email</Label><Input disabled value={form.consignee_email} /></div>
+                                    </div>
+                                    <div><Label>Consignee Address</Label><Input disabled value={form.consignee_addr || form.shippingAddress} /></div>
+                                    <div className="grid grid-cols-4 gap-3">
+                                        <div><Label>Country</Label><Input disabled value={form.consignee_country} /></div>
+                                        <div><Label>State</Label><Input disabled value={form.consignee_state} /></div>
+                                        <div><Label>City</Label><Input disabled value={form.consignee_city} /></div>
+                                        <div><Label>Pin Code</Label><Input disabled value={form.consignee_pincode} /></div>
+                                    </div>
+                                    <div><Label>GSTIN / UIN</Label><Input disabled value={form.event_gst_no} /></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="hidden">
                             <div>
                                 <Label required>Billing Address</Label>
                                 <textarea
                                     required
+                                    disabled
                                     value={form.company_addr}
                                     onChange={(e) => setField('company_addr', e.target.value)}
                                     className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all resize-y h-[60px]"
@@ -934,7 +1106,7 @@ const CreateInvoice = () => {
                             <div>
                                 <Label>Shipping / Consignee Address</Label>
                                 <textarea
-                                    disabled={form.sameAsBilling}
+                                    disabled
                                     placeholder={form.sameAsBilling ? "Same as billing address" : "Enter shipping address"}
                                     value={form.sameAsBilling ? form.company_addr : form.consignee_addr}
                                     onChange={(e) => setField('consignee_addr', e.target.value)}
@@ -943,6 +1115,7 @@ const CreateInvoice = () => {
                                 <div className="flex items-center gap-1.5 mt-1.5">
                                     <input
                                         type="checkbox"
+                                        disabled
                                         id="sameAsBilling"
                                         checked={form.sameAsBilling}
                                         onChange={(e) => setField('sameAsBilling', e.target.checked)}
@@ -953,30 +1126,30 @@ const CreateInvoice = () => {
                             </div>
                             <div>
                                 <Label required>Billing State</Label>
-                                <Select required options={['Delhi', 'Maharashtra', 'Karnataka']} value={form.billingState} onChange={(e) => setField('billingState', e.target.value)} className="py-2.5" />
+                                <Input required disabled value={form.billingState} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>Pin Code</Label>
-                                <Input required value={form.billingPin} onChange={(e) => setField('billingPin', e.target.value)} className="py-2.5" />
+                                <Input required disabled value={form.billingPin} className="py-2.5" />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-4 gap-4">
+                        <div className="hidden">
                             <div>
                                 <Label required>State</Label>
-                                <Select required options={['Delhi', 'Maharashtra', 'Karnataka']} value={form.state} onChange={(e) => setField('state', e.target.value)} className="py-2.5" />
+                                <Input required disabled value={form.state} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>City</Label>
-                                <Input required value={form.city} onChange={(e) => setField('city', e.target.value)} className="py-2.5" />
+                                <Input required disabled value={form.city} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>Country</Label>
-                                <Select required options={['India', 'USA', 'UK']} value={form.country} onChange={(e) => setField('country', e.target.value)} className="py-2.5" />
+                                <Input required disabled value={form.country} className="py-2.5" />
                             </div>
                             <div>
                                 <Label required>Place of Supply</Label>
-                                <Select required options={['Select Place of Supply', 'Delhi (07)', 'Maharashtra (27)', 'Uttar Pradesh (09)', 'Haryana (06)']} value={form.placeOfSupply} onChange={(e) => setField('placeOfSupply', e.target.value)} />
+                                <Input required disabled value={form.placeOfSupply} />
                             </div>
                         </div>
                     </div>
@@ -984,32 +1157,53 @@ const CreateInvoice = () => {
                     {/* SECTION 3 – Items */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 px-6 py-3">
                         <SectionHead num="3" label="Item Details" />
+                        <fieldset disabled>
 
-                        <div className="overflow-x-none mb-3">
-                            <table className="w-full text-[9px] border-collapse">
+                        <div className="w-full overflow-hidden mb-3">
+                            <table className="w-full table-fixed text-[8px] border-collapse [&_th]:min-w-0 [&_th]:px-0.5 [&_td]:min-w-0 [&_td]:px-0.5 [&_input]:min-w-0 [&_input]:w-full [&_select]:min-w-0 [&_select]:w-full">
+                                <colgroup>
+                                    <col className="w-[2%]" />
+                                    <col className="w-[11%]" />
+                                    <col className="w-[13%]" />
+                                    <col className="w-[10%]" />
+                                    <col className="w-[8%]" />
+                                    <col className="w-[4%]" />
+                                    <col className="w-[7%]" />
+                                    <col className="w-[7%]" />
+                                    <col className="w-[5%]" />
+                                    <col className="w-[8%]" />
+                                    <col className="w-[7%]" />
+                                    <col className="w-[4%]" />
+                                    <col className="w-[6%]" />
+                                    <col className="w-[4%]" />
+                                    <col className="w-[6%]" />
+                                    <col className="w-[8%]" />
+                                </colgroup>
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 whitespace-nowrap">
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-8">#</th>
+                                        <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[105px]">Item Category <span className="text-red-500">*</span></th>
                                         <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[110px]">Item Description <span className="text-red-500">*</span></th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">HSN / SAC</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[80px]">Stall Type</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[65px]">HSN No. <span className="text-red-500">*</span></th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Qty <span className="text-red-500">*</span></th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[40px]">Area</th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[40px]">Size</th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Unit <span className="text-red-500">*</span></th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Rate (₹) <span className="text-red-500">*</span></th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Amount (₹)</th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Disc. %</th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Taxable (₹)</th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">GST % <span className="text-red-500">*</span></th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">GST (₹)</th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Total (₹)</th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Action</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[65px]">Basic Amt</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[45px]">GST%</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[65px]">GST Amt</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[45px]">Disc%</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[65px]">Disc Amt</th>
+                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[70px]">Total Amt</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {items.map((item, idx) => (
+                                    {items.filter((item) => item.category !== 'PLC Charges').map((item, idx) => (
                                         <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                                             <td className="px-1 py-1.5 text-center text-slate-400 font-medium text-[11px]">{idx + 1}</td>
+                                            <td className="px-1 py-1.5"><input className="w-full border border-gray-200 rounded-md px-1.5 h-[26px] text-[11px]" value={item.category || ''} readOnly /></td>
                                             <td className="px-1 py-1.5">
                                                 <input
                                                     required
@@ -1018,6 +1212,7 @@ const CreateInvoice = () => {
                                                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                                 />
                                             </td>
+                                            <td className="px-1 py-1.5"><input className="w-full border border-gray-200 rounded-md px-1.5 h-[26px] text-[11px] text-center" value={item.stallType || ''} readOnly /></td>
                                             <td className="px-1 py-1.5">
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
@@ -1034,7 +1229,7 @@ const CreateInvoice = () => {
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.size} onChange={(e) => updateItem(item.id, 'size', e.target.value)} placeholder="Size" />
                                             </td>
                                             <td className="px-1 py-1.5">
-                                                <select required className="min-w-[40px] appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
+                                                <select required className="w-full min-w-0 appearance-none border border-gray-200 rounded-md px-1 py-1 text-[10px] text-[#1a2b4b] bg-white shadow-sm h-[26px] cursor-pointer" value={item.unit} onChange={(e) => updateItem(item.id, 'unit', e.target.value)}>
                                                     {UNITS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
@@ -1046,20 +1241,22 @@ const CreateInvoice = () => {
                                                     {item.amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
+                                            <td className="px-1 py-1.5"><div className="h-[26px] flex items-center justify-center rounded-md bg-gray-50 border border-gray-100 text-[11px]">{item.gstPct}</div></td>
+                                            <td className="px-1 py-1.5"><div className="h-[26px] flex items-center justify-end px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium">{item.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</div></td>
                                             <td className="px-1 py-1.5">
                                                 <input type="number" className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.discountPct} onChange={(e) => updateItem(item.id, 'discountPct', e.target.value)} />
                                             </td>
                                             <td className="px-1 py-1.5">
                                                 <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
-                                                    {item.taxableValue.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                                    {(Number(item.amount || 0) - Number(item.taxableValue || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-1 py-1.5">
+                                            <td className="hidden">
                                                 <select required className="min-w-[40px] appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] cursor-pointer" value={item.gstPct} onChange={(e) => updateItem(item.id, 'gstPct', e.target.value)}>
                                                     {GST_OPTIONS.map((u) => <option key={u}>{u}</option>)}
                                                 </select>
                                             </td>
-                                            <td className="px-1 py-1.5">
+                                            <td className="hidden">
                                                 <div className="flex items-center justify-end h-[26px] px-1.5 rounded-md bg-gray-50 border border-gray-100 text-[11px] font-medium text-slate-700 text-right">
                                                     {item.gstAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
@@ -1069,28 +1266,67 @@ const CreateInvoice = () => {
                                                     {item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                                 </div>
                                             </td>
-                                            <td className="px-1 py-1.5 text-center">
-                                                <button type="button" onClick={() => removeItem(item.id)} className="p-1 text-red-400 hover:text-red-500 hover:bg-red-50 rounded transition">
-                                                    <Trash2 className="w-3.5 h-3.5 mx-auto" />
-                                                </button>
-                                            </td>
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
                         </div>
 
+                        {false && (selectedPlcCharges > 0 || selectedPlcPct > 0 || selectedPrimaryStall?.plScheme) && (
+                            <div className="mt-4">
+                                <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Additional Charges</h4>
+                                <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                                    <Label>PLC Charges (₹)</Label>
+                                    <div className="grid grid-cols-5 gap-2 mt-1">
+                                        <div><p className="text-[10px] text-slate-500">%</p><p className="text-[13px] font-semibold text-[#1a2b4b]">{selectedPlcPct}%</p></div>
+                                        <div><p className="text-[10px] text-slate-500">Amount</p><p className="text-[13px] font-semibold text-[#1a2b4b]">{selectedPlcCharges.toLocaleString('en-IN')}</p></div>
+                                        <div><p className="text-[10px] text-slate-500">GST %</p><p className="text-[13px] font-semibold text-[#1a2b4b]">{selectedPlcGstPct}%</p></div>
+                                        <div><p className="text-[10px] text-slate-500">GST Amount</p><p className="text-[13px] font-semibold text-[#1a2b4b]">{selectedPlcGstAmount.toLocaleString('en-IN')}</p></div>
+                                        <div><p className="text-[10px] text-slate-500">PLC Final Amount</p><p className="text-[13px] font-bold text-emerald-600">{selectedPlcFinalAmount.toLocaleString('en-IN')}</p></div>
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2">For: {selectedPrimaryStall?.plScheme || '—'}</p>
+                                </div>
+                            </div>
+                        )}
+
                         <button
                             type="button"
                             onClick={addItem}
-                            className="flex items-center gap-1.5 bg-[#00A859] hover:bg-[#00904C] text-white rounded-md px-4 py-2 text-xs font-semibold shadow-sm transition mt-4"
+                            className="hidden"
                         >
                             <Plus className="w-4 h-4 stroke-[3]" /> Add Item
                         </button>
+                        </fieldset>
                     </div>
 
                     {/* SECTION 4 – Additional Info */}
-                    {!isProformaEditMode && (
+                    <div className="bg-white rounded-lg border border-gray-200 p-5 mt-4">
+                        <SectionHead num="4" label="Charges & Payment Plan" />
+                        <fieldset disabled className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+                            <div className="lg:col-span-2">
+                                <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Additional Charges</h4>
+                                <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+                                    <Label>PLC Charges (₹)</Label>
+                                    <div className="grid grid-cols-5 gap-2 mt-1">
+                                        {[['%', `${selectedPlcPct}%`], ['Amount', selectedPlcCharges.toLocaleString('en-IN')], ['GST %', `${selectedPlcGstPct}%`], ['GST Amount', selectedPlcGstAmount.toLocaleString('en-IN')], ['PLC Final Amount', selectedPlcFinalAmount.toLocaleString('en-IN')]].map(([label, value]) => <div key={label}><p className="text-[10px] text-slate-500">{label}</p><p className={`text-[13px] font-semibold ${label === 'PLC Final Amount' ? 'text-emerald-600' : 'text-[#1a2b4b]'}`}>{value}</p></div>)}
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-2">For: {selectedPrimaryStall?.plScheme || '—'}</p>
+                                </div>
+                                <div className="mt-3 flex items-center gap-4">
+                                    <span className="text-[12px] font-medium text-[#1a2b4b]">TDS Applicable<span className="text-red-500">*</span></span>
+                                    <label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={selectedTdsApplicable} readOnly /> Yes</label>
+                                    <label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={!selectedTdsApplicable} readOnly /> No</label>
+                                </div>
+                                {selectedTdsApplicable && <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5"><p className="text-[12px] font-semibold text-amber-800">TDS Deduction (Section 194C)</p><p className="text-[11px] text-amber-700 mt-0.5">TDS shall be deducted on the basic value only (excluding GST). Applicable rate: <strong>2%</strong> for Companies/Firms/other entities and <strong>1%</strong> for Individual/HUF.</p></div>}
+                            </div>
+                            <div className="lg:col-span-3">
+                                <div className="flex items-center gap-4 mb-3"><span className="text-[13px] font-semibold text-[#1a2b4b]">Payment Plan<span className="text-red-500">*</span></span><label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={!selectedIsInstalmentPlan} readOnly /> Full Payment</label><label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={selectedIsInstalmentPlan} readOnly /> Instalment Plan</label></div>
+                                {!selectedIsInstalmentPlan ? <div><h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Payment Terms</h4><div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 space-y-2"><p className="text-[12px] text-[#1a2b4b]"><strong>Advance Payment – 100%:</strong> Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.</p>{selectedTdsApplicable && (selectedTdsLines.length ? selectedTdsLines : ['TDS under Section 194C shall be deducted on the basic value only (excluding GST). Applicable rate: 2% for Companies/Firms/other entities and 1% for Individual/HUF.', 'Please share the applicable TDS Certificate (Form 16A) after deduction.']).map((line, index) => <p key={index} className="text-[12px] text-[#1a2b4b]">{line}</p>)}</div></div> : <div><h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Instalment Plan Details</h4><div className="overflow-x-auto"><table className="w-full text-[11px]"><thead><tr className="bg-gray-50">{['#', 'Instalment Name', '%', 'Amt', 'Due Date', 'Remarks'].map((heading) => <th key={heading} className="text-left px-2 py-2">{heading}</th>)}</tr></thead><tbody>{selectedInstalments.map((row, index) => <tr key={row.id || index} className="border-b"><td className="px-2 py-2">{index + 1}</td><td className="px-2 py-2">{row.label}</td><td className="px-2 py-2">{Number(row.percentage || 0)}%</td><td className="px-2 py-2">{Number(row.amount || 0).toLocaleString('en-IN')}</td><td className="px-2 py-2">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-GB') : '—'}</td><td className="px-2 py-2">{row.remarks || '—'}</td></tr>)}</tbody></table></div>{selectedTdsApplicable && <div className="mt-3 bg-gray-50 rounded-lg px-3 py-2.5 space-y-2">{selectedTdsLines.map((line, index) => <p key={index} className="text-[12px]">{line}</p>)}</div>}</div>}
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    {false && !isProformaEditMode && (
                         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
                             <SectionHead num="4" label="Delivery Challan" />
                             <div className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -1164,9 +1400,9 @@ const CreateInvoice = () => {
                     )}
 
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-3 mt-4">
-                        <SectionHead num={isProformaEditMode ? "4" : "5"} label="Additional Information" />
+                        <SectionHead num={isProformaEditMode ? "4" : "5"} label="Attachments" />
 
-                        <div className="grid grid-cols-2 gap-6 mb-2">
+                        <div className="hidden">
                             <div>
                                 <Label>Remarks / Notes</Label>
                                 <textarea
@@ -1188,8 +1424,8 @@ const CreateInvoice = () => {
                         </div>
 
                         <div>
-                            <Label>Attach Documents</Label>
-                            <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileChange} accept=".png,.jpg,.jpeg,.pdf" />
+                            <Label>Attach Documents (up to 10 files)</Label>
+                            <input type="file" multiple ref={fileInputRef} className="hidden" onChange={handleFileChange} accept=".png,.jpg,.jpeg,.pdf" />
                             <div
                                 onClick={() => fileInputRef.current?.click()}
                                 className="border border-gray-200 border-dashed rounded-md h-[60px] flex items-center px-4 bg-white hover:bg-gray-50 transition cursor-pointer max-w-[50%]"
@@ -1198,22 +1434,35 @@ const CreateInvoice = () => {
                                     <Upload className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />
                                 </div>
                                 <div className="flex flex-col flex-1 truncate pr-2">
-                                    {attachedFile ? (
+                                    {attachedFiles.length ? (
                                         <>
-                                            <p className="text-xs font-bold text-gray-800 truncate">{attachedFile.name}</p>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">{(attachedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                                            <p className="text-xs font-bold text-gray-800 truncate">{attachedFiles.length} file(s) selected</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">Click to add more files</p>
                                         </>
                                     ) : (
                                         <>
                                             <p className="text-xs text-gray-500"><span className="font-bold text-indigo-700">Click to upload</span> or drag and drop</p>
-                                            <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, PDF (Max. 5MB)</p>
+                                            <p className="text-[10px] text-gray-400 mt-0.5">PNG, JPG, PDF (Max. 25MB each)</p>
                                         </>
                                     )}
                                 </div>
                                 <button type="button" className="ml-auto border border-gray-200 rounded-md px-3 py-1.5 text-[11px] font-bold text-indigo-600 bg-white shadow-sm shrink-0">
-                                    {attachedFile ? "Change" : "Browse Files"}
+                                    {attachedFiles.length ? "Add More" : "Browse Files"}
                                 </button>
                             </div>
+                            {attachedFiles.length > 0 && (
+                                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                                    {attachedFiles.map((file, index) => (
+                                        <div key={`${file.name}-${file.lastModified}-${index}`} className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                                            <File size={14} className="shrink-0 text-indigo-600" />
+                                            <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-slate-700">{file.name}</span>
+                                            <button type="button" onClick={() => setAttachedFiles((current) => current.filter((_, fileIndex) => fileIndex !== index))} className="rounded p-1 text-red-500 hover:bg-red-50">
+                                                <XIcon size={13} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
@@ -1255,7 +1504,7 @@ const CreateInvoice = () => {
                 )}
 
                 {/* ── RIGHT SIDEBAR ── */}
-                <div className="w-[250px] flex-shrink-0 space-y-3">
+                <div className="hidden">
 
                     {/* Summary */}
                     {/* Invoice Summary */}
