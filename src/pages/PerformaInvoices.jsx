@@ -190,6 +190,15 @@ const Input = (props) => (
     />
 );
 
+// ── ReadOnlyField ────────────────────────────────────────────────────────────
+// Company / Billing Details are sourced from the CRM Company record and must
+// not be hand-edited per-PI — shown as static text instead of an input.
+const ReadOnlyField = ({ value, placeholder }) => (
+    <div className="w-full border border-gray-100 rounded-lg px-3 py-1.5 text-[13px] text-[#1a2b4b] bg-gray-50 h-[32px] flex items-center overflow-hidden text-ellipsis whitespace-nowrap">
+        {value || <span className="text-gray-400">{placeholder || '—'}</span>}
+    </div>
+);
+
 // ── Select ───────────────────────────────────────────────────────────────────
 const Select = ({ options, ...props }) => (
     <select
@@ -406,9 +415,16 @@ export const PerformaInvoices = () => {
     // Instalment row remarks start out auto-generated (see instalmentRowsWithRemark)
     // but stay editable — this holds any row the user has overridden, keyed by plan id.
     const [instalmentRemarkOverrides, setInstalmentRemarkOverrides] = useState({});
+    // Which of the event's configured instalment phases actually apply to this
+    // PI — not every deal uses every phase. null = not yet touched, default to
+    // all phases selected (old behaviour); otherwise a Set of plan ids.
+    const [selectedPhaseIds, setSelectedPhaseIds] = useState(null);
     // Whether TDS applies to this client/booking at all — when off, every TDS
     // note/line is hidden (not just visually collapsed to empty).
     const [tdsApplicable, setTdsApplicable] = useState(true);
+    // PLC % defaults to the stall's saved PL Scheme increment%, but stays
+    // editable per-PI — null means "not overridden, use the stall default".
+    const [plcPctOverride, setPlcPctOverride] = useState(null);
     // Editing an existing PI is reached without a ?crmEventId= query param, so
     // the event it belongs to has to come from the loaded estimate instead —
     // this holds whichever source resolved it (URL first, estimate as fallback).
@@ -664,6 +680,9 @@ export const PerformaInvoices = () => {
                     if (existingEstimate && typeof existingEstimate.tdsApplicable === 'boolean') {
                         setTdsApplicable(existingEstimate.tdsApplicable);
                     }
+                    if (existingEstimate && typeof existingEstimate.plcPct === 'number') {
+                        setPlcPctOverride(existingEstimate.plcPct);
+                    }
                     if (existingEstimate?.instalments?.length) {
                         const overrides = {};
                         existingEstimate.instalments.forEach((inst) => {
@@ -671,6 +690,11 @@ export const PerformaInvoices = () => {
                             if (key && inst.remarks) overrides[key] = inst.remarks;
                         });
                         setInstalmentRemarkOverrides(overrides);
+                        // Restore exactly which phases were selected last time, so
+                        // re-opening a PI that skipped a phase doesn't silently
+                        // bring it back.
+                        const savedPhaseIds = existingEstimate.instalments.map((inst) => inst.id).filter(Boolean);
+                        if (savedPhaseIds.length) setSelectedPhaseIds(new Set(savedPhaseIds));
                     }
 
                     // Only an actual edit (existingEstimate, reached via the list's Edit
@@ -698,6 +722,9 @@ export const PerformaInvoices = () => {
                             const amount = roundAmount(Number(item.amount) || (qty * rate * multiplier));
                             const disc = Number(item.disc || 0);
                             const taxable = roundAmount(amount - (amount * disc) / 100);
+                            // Saved items only carry gstRate ("18% IGST") / cgst_per / igst_per,
+                            // not a flat gstPct — derive it back so the % input isn't blank on edit.
+                            const gstPct = Number(item.igst_per) || (Number(item.cgst_per) * 2) || parseFloat(item.gstRate) || 18;
 
                             return {
                                 ...item,
@@ -713,7 +740,8 @@ export const PerformaInvoices = () => {
                                 rate: rate,
                                 amount: amount,
                                 disc: disc,
-                                taxable: taxable
+                                taxable: taxable,
+                                gstPct: gstPct
                             };
                         });
 
@@ -821,6 +849,27 @@ export const PerformaInvoices = () => {
     }, [id, editEstimateId]);
 
     // ── computed ─────────────────────────────────────────────────────────────────
+    // Company / Billing Details' Contact Person is the one editable field in that
+    // section — a dropdown over the CRM Company's saved contacts (or, when this PI
+    // is against an ExhibitorRegistration instead, its contact1/contact2/
+    // accountsContact) — selecting one drives Mobile/Email, which aren't
+    // independently editable.
+    const companyContactOptions = companyData?.contacts?.length
+        ? companyData.contacts.map((c, i) => ({
+            key: c._id || `c-${i}`,
+            label: [c.firstName, c.surname].filter(Boolean).join(' ') || c.name || `Contact ${i + 1}`,
+            mobile: c.mobile || '',
+            email: c.email || '',
+        }))
+        : [companyData?.contact1, companyData?.contact2, companyData?.accountsContact]
+            .filter(Boolean)
+            .map((c, i) => ({
+                key: `c-${i}`,
+                label: [c.firstName, c.lastName].filter(Boolean).join(' ') || `Contact ${i + 1}`,
+                mobile: c.mobile || '',
+                email: c.email || '',
+            }));
+
     const subTotal = roundAmount(items.reduce((s, i) => s + Number(i.amount || 0), 0));
     const calculatedDiscount = roundAmount(items.reduce((s, i) => s + (Number(i.amount || 0) * Number(i.disc || 0)) / 100, 0));
     const isIGST = gstOption.includes('IGST');
@@ -840,12 +889,25 @@ export const PerformaInvoices = () => {
     const primaryStallRateDoc = primaryStallDetail
         ? eventStallRateMap[`${primaryStallDetail.eventId}|${plcCurrency}|${primaryStallItem.stallType}`]
         : null;
-    const plcPct = Number(primaryStallDetail?.incrementPercentage) || 0;
+    const defaultPlcPct = Number(primaryStallDetail?.incrementPercentage) || 0;
+    const plcPct = plcPctOverride !== null ? plcPctOverride : defaultPlcPct;
     const plcCharges = roundAmount((Number(primaryStallItem?.amount) || 0) * plcPct / 100);
     // PLC is taxed at the same GST rate as the stall it belongs to.
     const plcGstPct = Number(primaryStallItem?.gstPct) || 18;
     const plcGstAmount = roundAmount((plcCharges * plcGstPct) / 100);
     const plcFinalAmount = plcCharges + plcGstAmount;
+
+    // A manually-edited PLC % only makes sense for the stall it was entered
+    // against — if the primary stall actually changes (not just the initial
+    // load), drop the override so the new stall's own default applies.
+    const primaryStallKeyRef = useRef(undefined);
+    useEffect(() => {
+        const key = primaryStallItem?.description || null;
+        if (primaryStallKeyRef.current !== undefined && primaryStallKeyRef.current !== key) {
+            setPlcPctOverride(null);
+        }
+        primaryStallKeyRef.current = key;
+    }, [primaryStallItem?.description]);
 
     // Taxable Value / GST / Final Amount now include PLC Charges — it's a real
     // part of what the client owes, not just an informational side note.
@@ -887,6 +949,10 @@ export const PerformaInvoices = () => {
     const instalmentPlanId = firstInstalmentPlan?.id || 'installment';
     const isInstalmentPlanSelected = paymentPlanType === instalmentPlanId;
 
+    // Full Payment's Payment Terms text — always this single line, not the
+    // Estimate Terms config's Payment Conditions list.
+    const fullPaymentConditions = ['Advance Payment – 100%: Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.'];
+
     // Instalment schedule = the event's configured payment-plan phases (< 100%
     // each, from Event Setup), amounts split from this invoice's own Final
     // Amount, due dates computed relative to the event's own start date.
@@ -899,19 +965,39 @@ export const PerformaInvoices = () => {
         }
         return null;
     };
-    const instalmentRows = paymentPlans
+    // All of the event's configured instalment phases, before this PI's own
+    // selection is applied — used to drive the phase checkboxes below.
+    const allInstalmentPhases = paymentPlans
         .filter((plan) => Number(plan.percentage) < 100)
         .sort((a, b) => (a.id === 'advance' ? -1 : b.id === 'advance' ? 1 : 0))
-        .map((plan) => {
-            const pct = Number(plan.percentage) || 0;
-            return {
-                id: plan.id,
-                label: plan.label,
-                percentage: pct,
-                amount: roundAmount((grandTotal * pct) / 100),
-                dueDate: computeInstalmentDueDate(plan),
-            };
-        });
+        .map((plan) => ({ id: plan.id, label: plan.label, percentage: Number(plan.percentage) || 0, plan }));
+    const effectiveSelectedPhaseIds = selectedPhaseIds !== null
+        ? selectedPhaseIds
+        : new Set(allInstalmentPhases.map((p) => p.id));
+    const selectedPhases = allInstalmentPhases.filter((p) => effectiveSelectedPhaseIds.has(p.id));
+    // Skipping a phase (e.g. this deal only uses Advance + Final, not Mid
+    // Payment) means the remaining selected phases must still cover 100% of
+    // the invoice — redistribute the dropped phase's % proportionally across
+    // what's left, rather than under-billing.
+    const selectedPctBase = selectedPhases.reduce((s, p) => s + p.percentage, 0);
+    let runningInstalmentTotal = 0;
+    const instalmentRows = selectedPhases.map((p, idx) => {
+        const redistributedPct = selectedPctBase > 0 ? (p.percentage * 100) / selectedPctBase : 0;
+        const isLast = idx === selectedPhases.length - 1;
+        // Remainder goes to the last row so rounding never leaves the total
+        // short of (or over) the invoice's actual Grand Total.
+        const amount = isLast
+            ? Math.max(0, grandTotal - runningInstalmentTotal)
+            : roundAmount((grandTotal * redistributedPct) / 100);
+        runningInstalmentTotal += amount;
+        return {
+            id: p.id,
+            label: p.label,
+            percentage: Math.round(redistributedPct * 100) / 100,
+            amount,
+            dueDate: computeInstalmentDueDate(p.plan),
+        };
+    });
     const instalmentTotalPct = instalmentRows.reduce((s, r) => s + r.percentage, 0);
     const instalmentTotalAmt = instalmentRows.reduce((s, r) => s + r.amount, 0);
     const formatDueDate = (date) => date
@@ -932,6 +1018,15 @@ export const PerformaInvoices = () => {
             remark: instalmentRemarkOverrides[row.id] ?? defaultRemark,
         };
     });
+    const togglePhase = (phaseId) => {
+        setSelectedPhaseIds((prev) => {
+            const base = prev !== null ? prev : new Set(allInstalmentPhases.map((p) => p.id));
+            const next = new Set(base);
+            if (next.has(phaseId)) next.delete(phaseId);
+            else next.add(phaseId);
+            return next;
+        });
+    };
 
     // ── dynamic location options ─────────────────────────────────────────────────
     const countriesArr = ['Select Country', ...(reduxCountries || []).map(c => c.name).filter(Boolean)];
@@ -956,14 +1051,9 @@ export const PerformaInvoices = () => {
         return ["Select City", ...filtered.map(c => c.name).filter(Boolean)];
     };
 
-    const filteredStatesArr = getFilteredStatesArr(form.country);
-    const filteredCitiesArr = getFilteredCitiesArr(form.state);
     const consigneeFilteredStatesArr = getFilteredStatesArr(form.consigneeCountry);
     const consigneeFilteredCitiesArr = getFilteredCitiesArr(form.consigneeState);
 
-    const countryOptions = [...Array.from(new Set([...countriesArr, form.country].filter(Boolean)))].map(c => ({ label: c, value: c }));
-    const stateOptions = [...Array.from(new Set([...filteredStatesArr, form.state].filter(Boolean)))].map(s => ({ label: s, value: s }));
-    const cityOptions = [...Array.from(new Set([...filteredCitiesArr, form.city].filter(Boolean)))].map(c => ({ label: c, value: c }));
     const consigneeCountryOptions = [...Array.from(new Set([...countriesArr, form.consigneeCountry].filter(Boolean)))].map(c => ({ label: c, value: c }));
     const consigneeStateOptions = [...Array.from(new Set([...consigneeFilteredStatesArr, form.consigneeState].filter(Boolean)))].map(s => ({ label: s, value: s }));
     const consigneeCityOptions = [...Array.from(new Set([...consigneeFilteredCitiesArr, form.consigneeCity].filter(Boolean)))].map(c => ({ label: c, value: c }));
@@ -1298,6 +1388,7 @@ export const PerformaInvoices = () => {
                     remarks: row.remark,
                 }))
                 : [],
+            paymentConditions: isInstalmentPlanSelected ? [] : fullPaymentConditions,
             added_by: currentUserName,
             status: 'active'
         };
@@ -1450,69 +1541,70 @@ export const PerformaInvoices = () => {
                                 <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-3">Company / Billing Details</h4>
                                 <div className="space-y-3">
                                     <div>
-                                        <Label required>Company Name</Label>
-                                        <Input placeholder="Company name" value={form.consigneeName} onChange={(e) => setField('consigneeName', e.target.value)} />
+                                        <Label>Company Name</Label>
+                                        <ReadOnlyField value={form.consigneeName} placeholder="Company name" />
                                     </div>
                                     <div className="grid grid-cols-3 gap-3">
                                         <div>
                                             <Label required>Contact Person</Label>
-                                            <Input placeholder="Contact Person" value={form.companyContactPerson} onChange={(e) => setField('companyContactPerson', e.target.value)} />
+                                            <select
+                                                value={form.companyContactPerson}
+                                                onChange={(e) => {
+                                                    const selected = companyContactOptions.find((c) => c.label === e.target.value);
+                                                    setForm((f) => ({
+                                                        ...f,
+                                                        companyContactPerson: e.target.value,
+                                                        companyContactMobile: selected?.mobile || f.companyContactMobile,
+                                                        companyEmail: selected?.email || f.companyEmail,
+                                                    }));
+                                                }}
+                                                className="w-full appearance-none border border-gray-200 rounded-lg px-3 py-1 text-[13px] text-[#1a2b4b] bg-white shadow-[0_1px_2px_rgba(0,0,0,0.02)] hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-2 focus:ring-[#3b82f6]/10 transition-all h-[32px] cursor-pointer"
+                                            >
+                                                {!companyContactOptions.length && (
+                                                    <option value="">No saved contacts</option>
+                                                )}
+                                                {!companyContactOptions.some((c) => c.label === form.companyContactPerson) && form.companyContactPerson && (
+                                                    <option value={form.companyContactPerson}>{form.companyContactPerson}</option>
+                                                )}
+                                                {companyContactOptions.map((c) => (
+                                                    <option key={c.key} value={c.label}>{c.label}</option>
+                                                ))}
+                                            </select>
                                         </div>
                                         <div>
-                                            <Label required>Mobile No.</Label>
-                                            <Input placeholder="Mobile Number" value={form.companyContactMobile} onChange={(e) => setField('companyContactMobile', e.target.value)} />
+                                            <Label>Mobile No.</Label>
+                                            <ReadOnlyField value={form.companyContactMobile} placeholder="Mobile Number" />
                                         </div>
                                         <div>
-                                            <Label required>Email</Label>
-                                            <Input type="email" placeholder="Email" value={form.companyEmail} onChange={(e) => setField('companyEmail', e.target.value)} />
+                                            <Label>Email</Label>
+                                            <ReadOnlyField value={form.companyEmail} placeholder="Email" />
                                         </div>
                                     </div>
                                     <div>
-                                        <Label required>Address</Label>
-                                        <Input placeholder="Company address" value={form.consigneeAddress} onChange={(e) => setField('consigneeAddress', e.target.value)} />
+                                        <Label>Address</Label>
+                                        <ReadOnlyField value={form.consigneeAddress} placeholder="Company address" />
                                     </div>
                                     <div className="grid grid-cols-4 gap-3">
                                         <div>
-                                            <Label required>Country</Label>
-                                            <SearchableDropdown
-                                                options={countryOptions}
-                                                value={form.country}
-                                                onChange={(e) => {
-                                                    setForm(f => ({ ...f, country: e.target.value, state: '', city: '' }));
-                                                }}
-                                                placeholder="Select Country"
-                                            />
+                                            <Label>Country</Label>
+                                            <ReadOnlyField value={form.country} placeholder="Country" />
                                         </div>
                                         <div>
-                                            <Label required>State</Label>
-                                            <SearchableDropdown
-                                                options={stateOptions}
-                                                value={form.state}
-                                                onChange={(e) => {
-                                                    setForm(f => ({ ...f, state: e.target.value, city: '' }));
-                                                }}
-                                                placeholder="Select State"
-                                                disabled={!form.country || form.country === 'Select Country'}
-                                            />
+                                            <Label>State</Label>
+                                            <ReadOnlyField value={form.state} placeholder="State" />
                                         </div>
                                         <div>
-                                            <Label required>City</Label>
-                                            <SearchableDropdown
-                                                options={cityOptions}
-                                                value={form.city}
-                                                onChange={(e) => setField('city', e.target.value)}
-                                                placeholder="Select City"
-                                                disabled={!form.state || form.state === 'Select State'}
-                                            />
+                                            <Label>City</Label>
+                                            <ReadOnlyField value={form.city} placeholder="City" />
                                         </div>
                                         <div>
-                                            <Label required>Pin Code</Label>
-                                            <Input placeholder="110001" maxLength={6} value={form.pinCode} onChange={(e) => setField('pinCode', e.target.value)} />
+                                            <Label>Pin Code</Label>
+                                            <ReadOnlyField value={form.pinCode} placeholder="110001" />
                                         </div>
                                     </div>
                                     <div>
                                         <Label>GSTIN No. / PAN No.</Label>
-                                        <Input placeholder="Enter GSTIN / PAN No." value={form.gstin} onChange={(e) => setField('gstin', e.target.value)} />
+                                        <ReadOnlyField value={form.gstin} placeholder="GSTIN / PAN No." />
                                     </div>
                                 </div>
                             </div>
@@ -1781,7 +1873,15 @@ export const PerformaInvoices = () => {
                                     <div className="grid grid-cols-5 gap-2 mt-1">
                                         <div>
                                             <p className="text-[10px] text-slate-500">%</p>
-                                            <p className="text-[13px] font-semibold text-[#1a2b4b]">{plcPct}%</p>
+                                            <input
+                                                type="number"
+                                                min={0}
+                                                max={100}
+                                                step="0.01"
+                                                value={plcPct}
+                                                onChange={(e) => setPlcPctOverride(e.target.value === '' ? 0 : Number(e.target.value))}
+                                                className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[13px] font-semibold text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all"
+                                            />
                                         </div>
                                         <div>
                                             <p className="text-[10px] text-slate-500">Amount</p>
@@ -1870,13 +1970,29 @@ export const PerformaInvoices = () => {
                                     <div>
                                         <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Payment Terms</h4>
                                         <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 space-y-2">
-                                            <p className="text-[12px] text-[#1a2b4b]">
-                                                <span className="font-semibold">Advance Payment – 100%:</span> Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.
-                                            </p>
+                                            {fullPaymentConditions.map((t, i) => (
+                                                <p key={i} className="text-[12px] text-[#1a2b4b]">{i + 1}. {t}</p>
+                                            ))}
                                             {tdsApplicable && tdsFullPaymentLines.map((line, i) => (
-                                                <p key={i} className="text-[12px] text-[#1a2b4b]">{line}</p>
+                                                <p key={`tds-${i}`} className="text-[12px] text-[#1a2b4b]">{fullPaymentConditions.length + i + 1}. {line}</p>
                                             ))}
                                         </div>
+                                    </div>
+                                )}
+                                {isInstalmentPlanSelected && allInstalmentPhases.length > 0 && (
+                                    <div className="mb-3 flex flex-wrap items-center gap-3">
+                                        <span className="text-[12px] font-medium text-[#1a2b4b]">Phases used for this deal:</span>
+                                        {allInstalmentPhases.map((p) => (
+                                            <label key={p.id} className="flex items-center gap-1.5 text-[12px] font-medium text-[#1a2b4b] cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={effectiveSelectedPhaseIds.has(p.id)}
+                                                    onChange={() => togglePhase(p.id)}
+                                                    className="accent-[#3b82f6]"
+                                                />
+                                                {p.label} ({p.percentage}%)
+                                            </label>
+                                        ))}
                                     </div>
                                 )}
                                 {isInstalmentPlanSelected && instalmentRowsWithRemark.length > 0 && (

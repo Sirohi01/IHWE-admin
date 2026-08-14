@@ -49,6 +49,13 @@ const formatDate = (value) => {
     return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+const formatTime = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+};
+
 const formatSize = (value) => {
     if (!value && value !== 0) return '—';
     return `${String(value).replace(/\s*[xX*]\s*/g, ' × ').trim()} m`;
@@ -153,11 +160,6 @@ const joinAddressParts = (parts) => {
 
 const getFirstAddressValue = (...values) => values.find((value) => cleanAddressPart(value)) || '';
 const getFirstCleanValue = (...values) => values.find((value) => String(value ?? '').trim()) || '';
-const isDisplayValue = (value) => {
-    const text = String(value ?? '').trim();
-    if (!text) return false;
-    return !['po no', 'po no.', 'po number', 'purchase order no', 'purchase order no.'].includes(text.toLowerCase());
-};
 
 const getCompanyIdFromEstimate = (estimate) => {
     const value =
@@ -284,7 +286,6 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     const [settings, setSettings] = useState(null);
     const [estimateTerms, setEstimateTerms] = useState(null);
     const [relatedInvoiceStatus, setRelatedInvoiceStatus] = useState({ hasCancelled: false, hasActive: false });
-    const [relatedInvoicePoNo, setRelatedInvoicePoNo] = useState('');
     const [stallInventoryMap, setStallInventoryMap] = useState({});
 
     const { companies, loading: companiesLoading } = useSelector((state) => state.companies);
@@ -337,7 +338,6 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         const fetchEstimateData = async () => {
             if (!id) {
                 setMatchedEstimate(null);
-                setRelatedInvoicePoNo('');
                 setFetchingEstimate(false);
                 return;
             }
@@ -378,40 +378,15 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                             hasCancelled: relatedInvoices.some((inv) => String(inv?.status || '').toLowerCase() === 'cancelled'),
                             hasActive: relatedInvoices.some((inv) => String(inv?.status || '').toLowerCase() !== 'cancelled'),
                         });
-                        const invoiceWithPo = relatedInvoices.find((inv) => getFirstCleanValue(
-                            inv?.po_no,
-                            inv?.poNo,
-                            inv?.po_number,
-                            inv?.poNumber,
-                            inv?.purchase_order_no,
-                            inv?.purchaseOrderNo,
-                            inv?.purchase_order_number,
-                            inv?.purchaseOrderNumber,
-                            inv?.po
-                        ));
-                        setRelatedInvoicePoNo(getFirstCleanValue(
-                            invoiceWithPo?.po_no,
-                            invoiceWithPo?.poNo,
-                            invoiceWithPo?.po_number,
-                            invoiceWithPo?.poNumber,
-                            invoiceWithPo?.purchase_order_no,
-                            invoiceWithPo?.purchaseOrderNo,
-                            invoiceWithPo?.purchase_order_number,
-                            invoiceWithPo?.purchaseOrderNumber,
-                            invoiceWithPo?.po
-                        ));
                     } catch (invoiceErr) {
                         setRelatedInvoiceStatus({ hasCancelled: false, hasActive: false });
-                        setRelatedInvoicePoNo('');
                     }
                 } else {
                     setRelatedInvoiceStatus({ hasCancelled: false, hasActive: false });
-                    setRelatedInvoicePoNo('');
                 }
             } catch (error) {
                 setMatchedEstimate(null);
                 setRelatedInvoiceStatus({ hasCancelled: false, hasActive: false });
-                setRelatedInvoicePoNo('');
             } finally {
                 setFetchingEstimate(false);
             }
@@ -646,6 +621,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     );
 
     const createdDateTime = formatDate(matchedEstimate?.added) || formatDate(new Date());
+    const createdTime = formatTime(matchedEstimate?.added) || formatTime(new Date());
 
     const supplyDateTime = formatDate(
         matchedEstimate?.supply_date ||
@@ -783,29 +759,21 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         || forceDelhiGstin(PROFORMA_EVENT_GST_NO);
 
     // "Payment & Term Conditions" mirrors the PI's own Charges & Payment Plan
-    // section — only estimates saved through that flow (paymentPlanType set)
-    // carry this data; older ones fall back to the generic terms config below.
-    const hasSavedPaymentPlan = Boolean(matchedEstimate?.paymentPlanType);
+    // section when instalments were actually saved; a "Full Payment" plan (or
+    // any estimate without itemized instalments) falls back to whatever
+    // Payment Terms text was snapshotted onto the PI at save time (so it
+    // stays accurate even if the global terms config changes later), and
+    // only falls back further to the live config for older PIs saved before
+    // that snapshot existed.
     const paymentPlanInstalments = matchedEstimate?.instalments || [];
     const tdsApplicableOnEstimate = matchedEstimate?.tdsApplicable !== false;
     const tdsLines = matchedEstimate?.tdsLines || [];
+    const savedPaymentConditions = matchedEstimate?.paymentConditions?.length
+        ? matchedEstimate.paymentConditions
+        : ['Advance Payment – 100%: Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.'];
 
     const stateValue = PROFORMA_EVENT_STATE;
     const placeOfSupply = PROFORMA_PLACE_OF_SUPPLY_WITH_CODE;
-    const poNumber = getFirstCleanValue(
-        ...[
-            matchedEstimate?.po_no,
-            matchedEstimate?.poNo,
-            matchedEstimate?.po_number,
-            matchedEstimate?.poNumber,
-            matchedEstimate?.purchase_order_no,
-            matchedEstimate?.purchaseOrderNo,
-            matchedEstimate?.purchase_order_number,
-            matchedEstimate?.purchaseOrderNumber,
-            matchedEstimate?.po,
-            relatedInvoicePoNo
-        ].filter(isDisplayValue)
-    );
 
     const currentInvoiceType =
         matchedEstimate?.invoiceType ||
@@ -932,11 +900,6 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>PO No.</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{poNumber || '—'}</td>
-                                    </tr>
-                                    <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Supply Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right' }}>{supplyDateTime || '—'}</td>
@@ -945,6 +908,11 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Time</td>
+                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdTime}</td>
                                     </tr>
                                     <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created By</td>
@@ -1508,31 +1476,25 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                             <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 11, background: '#fff' }}>
                                                 <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment &amp; Term Conditions:</div>
                                                 <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                    {hasSavedPaymentPlan ? (
-                                                        paymentPlanInstalments.length > 0 ? (
-                                                            <>
-                                                                {paymentPlanInstalments.map((inst, i) => (
-                                                                    <div key={i}>
-                                                                        {i + 1}. {inst.label} – {inst.percentage}%: ₹{fmtNum(inst.amount)}
-                                                                        {inst.remarks ? ` — ${inst.remarks}` : ''}
-                                                                    </div>
-                                                                ))}
-                                                                {tdsApplicableOnEstimate && tdsLines.map((line, i) => (
-                                                                    <div key={`tds-${i}`}>{paymentPlanInstalments.length + i + 1}. {line}</div>
-                                                                ))}
-                                                            </>
-                                                        ) : (
-                                                            <>
-                                                                <div>1. Advance Payment – 100%: Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.</div>
-                                                                {tdsApplicableOnEstimate && tdsLines.map((line, i) => (
-                                                                    <div key={i}>{i + 2}. {line}</div>
-                                                                ))}
-                                                            </>
-                                                        )
-                                                    ) : estimateTerms?.paymentConditions?.length ? (
-                                                        estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
+                                                    {paymentPlanInstalments.length > 0 ? (
+                                                        <>
+                                                            {paymentPlanInstalments.map((inst, i) => (
+                                                                <div key={i}>
+                                                                    {i + 1}. {inst.label} – {inst.percentage}%: ₹{fmtNum(inst.amount)}
+                                                                    {inst.remarks ? ` — ${inst.remarks}` : ''}
+                                                                </div>
+                                                            ))}
+                                                            {tdsApplicableOnEstimate && tdsLines.map((line, i) => (
+                                                                <div key={`tds-${i}`}>{paymentPlanInstalments.length + i + 1}. {line}</div>
+                                                            ))}
+                                                        </>
                                                     ) : (
-                                                        <div>1. 100% Advance Payment.</div>
+                                                        <>
+                                                            {savedPaymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)}
+                                                            {tdsApplicableOnEstimate && tdsLines.map((line, i) => (
+                                                                <div key={`tds-${i}`}>{savedPaymentConditions.length + i + 1}. {line}</div>
+                                                            ))}
+                                                        </>
                                                     )}
                                                 </div>
                                             </td>
