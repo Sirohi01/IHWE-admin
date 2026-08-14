@@ -174,10 +174,16 @@ const getCompanyIdFromEstimate = (estimate) => {
     return value;
 };
 
+// Contact names are often saved ALL CAPS (or all lowercase) — normalize to
+// Title Case rather than relying on CSS text-transform, which can't lowercase
+// the rest of an already-uppercase word.
+const toTitleCase = (value) =>
+    value.toLowerCase().replace(/(^|[\s.'-])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
+
 const normalizeContactName = (name, titledName) => {
     const clean = (value) => String(value || '').replace(/\s+/g, ' ').trim();
     const value = clean(name) || clean(titledName);
-    return value ? value.replace(/^(mr|mrs|ms|miss|dr|prof)\.?\s+/i, '').trim() : '—';
+    return value ? toTitleCase(value.replace(/^(mr|mrs|ms|miss|dr|prof)\.?\s+/i, '').trim()) : '—';
 };
 
 const getItemAmount = (item) => {
@@ -752,7 +758,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     // "Consignee Details" card from the PI creation form exactly — Contact
     // Person/Mobile/Email are whoever created the PI, not the client's own
     // contact, and GSTIN shows exactly what was entered (no state-code coercion).
-    const consigneeContactPerson = getFirstCleanValue(matchedEstimate?.consignee_person) || '—';
+    const consigneeContactPerson = normalizeContactName(matchedEstimate?.consignee_person);
     const consigneeContactNo = getFirstCleanValue(matchedEstimate?.consignee_phone) || '—';
     const consigneeEmail = getFirstCleanValue(matchedEstimate?.consignee_email) || '—';
     const eventGstNo = getFirstCleanValue(matchedEstimate?.event_gst_no, matchedEstimate?.consignee_gst_no)

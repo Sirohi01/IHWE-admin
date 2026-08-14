@@ -25,6 +25,9 @@ import { getCurrentUserMobile } from '../utils/currentUser';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 const roundAmount = (value) => Math.round(Number(value || 0));
+// Contact names are often saved ALL CAPS — normalize to Title Case.
+const toTitleCase = (value) =>
+    String(value || '').toLowerCase().replace(/(^|[\s.'-])([a-z])/g, (_, sep, ch) => sep + ch.toUpperCase());
 
 // ── amount-in-words (Indian numbering: Crore/Lakh/Thousand) ───────────────────
 const WORD_ONES = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -857,7 +860,7 @@ export const PerformaInvoices = () => {
     const companyContactOptions = companyData?.contacts?.length
         ? companyData.contacts.map((c, i) => ({
             key: c._id || `c-${i}`,
-            label: [c.firstName, c.surname].filter(Boolean).join(' ') || c.name || `Contact ${i + 1}`,
+            label: toTitleCase([c.firstName, c.surname].filter(Boolean).join(' ') || c.name) || `Contact ${i + 1}`,
             mobile: c.mobile || '',
             email: c.email || '',
         }))
@@ -865,7 +868,7 @@ export const PerformaInvoices = () => {
             .filter(Boolean)
             .map((c, i) => ({
                 key: `c-${i}`,
-                label: [c.firstName, c.lastName].filter(Boolean).join(' ') || `Contact ${i + 1}`,
+                label: toTitleCase([c.firstName, c.lastName].filter(Boolean).join(' ')) || `Contact ${i + 1}`,
                 mobile: c.mobile || '',
                 email: c.email || '',
             }));
