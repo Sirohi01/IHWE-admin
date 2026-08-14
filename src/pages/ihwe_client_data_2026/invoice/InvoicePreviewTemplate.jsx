@@ -56,7 +56,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         };
         const fetchEstimateTerms = async () => {
             try {
-                const res = await api.get('/api/estimate-terms-config/tax-invoice');
+                const res = await api.get('/api/estimate-terms-config/performa');
                 if (res.data?.success && res.data?.data) {
                     setEstimateTerms(res.data.data);
                 }
@@ -341,6 +341,15 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
             category: 'PLC Charges', plScheme: stall.plScheme || '', stallType: stall.stallType || '',
         });
     }
+    activeItems.forEach((item) => {
+        if (item?.category !== 'PLC Charges') return;
+        const plcPct = parseNum(matchedEstimate?.plcPct)
+            || parseNum(String(item.description || '').match(/@\s*([\d.]+)%/)?.[1]);
+        const scheme = item.plScheme || matchedEstimate?.items?.find((sourceItem) => sourceItem?.category !== 'Addon Product')?.plScheme || '';
+        const firstLine = `Preferred Location Charges (PLC)${plcPct ? ` @ ${plcPct}%` : ''}`;
+        const secondLine = scheme ? `${scheme} Stall: ${plcPct || 0}% of the Basic Stall Price` : '';
+        item.description = [firstLine, secondLine].filter(Boolean).join('\n');
+    });
     const invoiceNo = matchedInvoice ? matchedInvoice.invoice_no : (form?.invoiceNo || '');
     const dateVal = matchedInvoice ? (matchedInvoice.invoice_date || matchedInvoice.supply_date) : form?.invoiceDate;
     const invoiceDate = dateVal ? new Date(dateVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
@@ -523,6 +532,12 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
     ) || 'â€”';
 
     const termsCondition = matchedInvoice ? matchedInvoice.terms : form?.terms;
+    const paymentPlanInstalments = matchedEstimate?.instalments || [];
+    const tdsApplicableOnEstimate = matchedEstimate?.tdsApplicable !== false;
+    const tdsLines = matchedEstimate?.tdsLines || [];
+    const savedPaymentConditions = matchedEstimate?.paymentConditions?.length
+        ? matchedEstimate.paymentConditions
+        : ['Advance Payment – 100%: Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.'];
 
     const currentInvoiceType = form?.invoiceType || matchedInvoice?.type_of_invoice || matchedInvoice?.est_type;
     const isIgst = currentInvoiceType
@@ -813,7 +828,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                     const isStallItem = !isPlcItem && item?.category !== 'Addon Product';
                     return (
                         <tr key={`${startIndex}-${index}`}>
-                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{startIndex + index + 1}</td>
+                            <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{isPlcItem ? '' : startIndex + index + 1}</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                                     {!isPlcItem && (
@@ -951,16 +966,12 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                     <tr>
                         <td style={{ width: '60%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
                             <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Terms and Conditions:</div>
-                            <div>1. Payment must be made in favor of Namo Gange Wellness Pvt. Ltd. via Cheque / DD / RTGS / NEFT / UPI only.</div>
-                            <div>2. Full payment is due within the stipulated invoice period.</div>
-                            <div>3. Delay in payment shall attract interest @24% per annum.</div>
-                            <div>4. Booking / services shall be confirmed only after receipt of payment.</div>
-                            <div>5. Cancellation or amendments shall be subject to company policy and management approval.</div>
-                            <div>6. All disputes are subject to Delhi Jurisdiction only.</div>
+                            {estimateTerms?.termsAndConditions?.map((term, index) => <div key={index}>{index + 1}. {term}</div>)}
                         </td>
                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
                             <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
-                            <div>1. 100% Advance Payment.</div>
+                            {paymentPlanInstalments.length > 0 ? paymentPlanInstalments.map((instalment, index) => <div key={index}>{index + 1}. {instalment.label} – {instalment.percentage}%: ₹{fmtNum(instalment.amount)}{instalment.remarks ? ` — ${instalment.remarks}` : ''}</div>) : savedPaymentConditions.map((term, index) => <div key={index}>{index + 1}. {term}</div>)}
+                            {tdsApplicableOnEstimate && tdsLines.map((line, index) => <div key={`tds-${index}`}>{(paymentPlanInstalments.length || savedPaymentConditions.length) + index + 1}. {line}</div>)}
                         </td>
                     </tr>
                 </tbody>
@@ -1465,7 +1476,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                         const isStallItem = !isPlcItem && item?.category !== 'Addon Product';
                                         return (
                                             <tr key={index}>
-                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{index + 1}</td>
+                                                <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{isPlcItem ? '' : index + 1}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                                                         {!isPlcItem && (
@@ -1632,14 +1643,10 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
                                             <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                {estimateTerms?.paymentConditions?.length ? (
-                                                    estimateTerms.paymentConditions.map((t, i) => <div key={i}>{i + 1}. {t}</div>)
-                                                ) : (
-                                                    <>
-                                                        <div>1. 100% Advance Payment.</div>
-                                                        <div>2. Applicable TDS, if deducted, must be supported with TDS certificate / Form 16A.</div>
-                                                    </>
-                                                )}
+                                                {paymentPlanInstalments.length > 0
+                                                    ? paymentPlanInstalments.map((instalment, index) => <div key={index}>{index + 1}. {instalment.label} – {instalment.percentage}%: ₹{fmtNum(instalment.amount)}{instalment.remarks ? ` — ${instalment.remarks}` : ''}</div>)
+                                                    : savedPaymentConditions.map((term, index) => <div key={index}>{index + 1}. {term}</div>)}
+                                                {tdsApplicableOnEstimate && tdsLines.map((line, index) => <div key={`tds-${index}`}>{(paymentPlanInstalments.length || savedPaymentConditions.length) + index + 1}. {line}</div>)}
                                             </div>
                                         </td>
                                     </tr>
