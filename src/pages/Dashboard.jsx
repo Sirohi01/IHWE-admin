@@ -267,9 +267,7 @@ export default function Dashboard() {
   ];
 
   const isAccountRole = currentUser?.role?.toLowerCase() === "ihwe-account manager" || currentUser?.role?.toLowerCase() === "ihwe-accounts executive";
-  if (isAccountRole) {
-    return <AccountDashboard currentUser={currentUser} loading={loading} />;
-  }
+ 
 
   return (
     <div className="w-full bg-white px-3 sm:px-6 py-2 font-sans">

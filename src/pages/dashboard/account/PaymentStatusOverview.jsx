@@ -1,10 +1,24 @@
 import { ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 
-export default function PaymentStatusOverview() {
+const formatCurrency = (val) => `₹ ${Math.round(val || 0).toLocaleString("en-IN")}`;
+const formatCompact = (val) => {
+  const n = Math.round(val || 0);
+  if (n >= 10000000) return `₹ ${(n / 10000000).toFixed(2)} Cr`;
+  if (n >= 100000) return `₹ ${(n / 100000).toFixed(2)} L`;
+  return formatCurrency(n);
+};
+
+export default function PaymentStatusOverview({ stats, loading }) {
+  const total = stats?.totalInvoiceValue || 0;
+  const received = stats?.totalReceived || 0;
+  const pending = stats?.pendingAmount || 0;
+  const overdue = stats?.overdueAmount || 0;
+  const pct = (val) => (total > 0 ? Math.round((val / total) * 100) : 0);
+
   const data = [
-    { name: "Paid", value: 59, amount: "₹ 97,55,000", color: "#10b981" },
-    { name: "Pending", value: 24, amount: "₹ 39,60,000", color: "#f59e0b" },
-    { name: "Overdue", value: 17, amount: "₹ 28,40,000", color: "#ef4444" }
+    { name: "Paid", value: pct(received), amount: formatCurrency(received), color: "#10b981" },
+    { name: "Pending", value: pct(pending), amount: formatCurrency(pending), color: "#f59e0b" },
+    { name: "Overdue", value: pct(overdue), amount: formatCurrency(overdue), color: "#ef4444" }
   ];
 
   return (
@@ -45,7 +59,7 @@ export default function PaymentStatusOverview() {
           {/* Absolute centered values inside Donut hole */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
             <span className="text-[9.5px] font-black text-slate-800 tracking-tight leading-none">
-              ₹ 1.65 Cr
+              {loading ? "…" : formatCompact(total)}
             </span>
             <span className="text-[6.5px] text-slate-400 font-black uppercase tracking-wider mt-0.5 leading-none">
               Total

@@ -247,10 +247,30 @@ const ClientPicker = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Client Ledger</h1>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Overdue Payments</h1>
                     <div className="text-[11px] text-slate-500 font-medium mt-0.5">
-                        Accounts Receivable (AR) &gt; <span className="text-blue-600 font-bold">Client Ledger</span>
+                        Accounts Receivable (AR) &gt; <span className="text-blue-600 font-bold">Overdue Payments</span>
                     </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate('/accounts/payments')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Payment Collection
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/receipts')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Payment Receipts
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/ar')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Outstanding Payments
+                    </button>
                 </div>
             </div>
 

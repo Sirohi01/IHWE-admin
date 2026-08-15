@@ -1,5 +1,6 @@
 import React, { lazy, Suspense } from 'react';
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { X } from "lucide-react";
 
 import LoginPage from "../layout/LoginPage";
 import AdminLayout from "../layout/AdminLayout";
@@ -326,6 +327,9 @@ const CreateAccountDebitNote = lazy(() => import("../pages/CreateAccountDebitNot
 const AccountsReceivableView = lazy(() => import("../pages/accounts/AccountsReceivableView"));
 const PaymentsSummaryReport = lazy(() => import("../pages/accounts/PaymentsSummaryReport"));
 const InvoicesView = lazy(() => import("../pages/accounts/InvoicesView"));
+const ProformaInvoicesView = lazy(() => import("../pages/accounts/ProformaInvoicesView"));
+const AccountDashboardPage = lazy(() => import("../pages/accounts/AccountDashboardPage"));
+const DeliveryChallansView = lazy(() => import("../pages/accounts/DeliveryChallansView"));
 const CreditNotesView = lazy(() => import("../pages/accounts/CreditNotesView"));
 const CreateCreditNote = lazy(() => import("../pages/accounts/CreateCreditNote"));
 const CreditNoteView = lazy(() => import("../pages/accounts/CreditNoteView"));
@@ -350,10 +354,36 @@ const MarketingManagement = lazy(() => import("../pages/admin_management/Marketi
 const CertificatesGenerator = lazy(() => import("../pages/CertificatesGenerator"));
 const Certificate = lazy(() => import("../pages/Certificate"));
 
+function CreateInvoiceModal() {
+  const navigate = useNavigate();
+  const close = () => navigate(-1);
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto"
+      onClick={(e) => { if (e.target === e.currentTarget) close(); }}
+    >
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-[900px] my-10 relative max-h-[85vh] overflow-y-auto">
+        <button
+          type="button"
+          onClick={close}
+          className="absolute top-3 right-3 z-20 bg-white/90 hover:bg-gray-100 border border-gray-200 rounded-full p-1.5 shadow-sm"
+          title="Close"
+        >
+          <X className="w-4 h-4 text-gray-600" />
+        </button>
+        <CreateInvoicePage hideReadonlyFields compactMode />
+      </div>
+    </div>
+  );
+}
+
 export default function AppRoutes() {
+  const location = useLocation();
+  const backgroundLocation = location.state?.backgroundLocation;
+
   return (
     <Suspense fallback={<div className="h-screen w-full flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#23471d] border-t-transparent rounded-full animate-spin"></div></div>}>
-      <Routes>
+      <Routes location={backgroundLocation || location}>
         <Route path="/login" element={<LoginPage />} />
 
         <Route element={<ProtectedRoute />}>
@@ -842,6 +872,9 @@ export default function AppRoutes() {
             <Route path="accounts/ar" element={<AccountsReceivableView />} />
             <Route path="accounts/summary-report" element={<PaymentsSummaryReport />} />
             <Route path="accounts/invoices" element={<InvoicesView />} />
+            <Route path="accounts/proforma-invoices" element={<ProformaInvoicesView />} />
+            <Route path="accounts/dashboard" element={<AccountDashboardPage />} />
+            <Route path="accounts/delivery-challans" element={<DeliveryChallansView />} />
             <Route path="accounts/credit-notes" element={<CreditNotesView />} />
             <Route path="accounts/imprest" element={<ImprestView />} />
             <Route path="accounts/imprest/create" element={<CreateImprestRequest />} />
@@ -957,6 +990,12 @@ export default function AppRoutes() {
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
+      {backgroundLocation && (
+        <Routes>
+          <Route path="/page-create-invoice/:id" element={<CreateInvoiceModal />} />
+          <Route path="/page-create-invoice/:id/:piNo" element={<CreateInvoiceModal />} />
+        </Routes>
+      )}
     </Suspense>
   );
 }

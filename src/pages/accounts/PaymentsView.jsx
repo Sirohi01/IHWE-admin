@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, Link, useParams } from 'react-router-dom';
-import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2, Search, Plus, CalendarDays, ChevronDown, Building2, Settings, CheckCircle2, Filter, Download, AlertTriangle, Clock, MoreVertical } from 'lucide-react';
+import { ChevronRight, MessageCircleMore, Mail, FileText, Users, DollarSign, CreditCard, Loader2, Search, CalendarDays, ChevronDown, CheckCircle2, Filter, Download, AlertTriangle, Clock, MoreVertical, User } from 'lucide-react';
 import api from '../../lib/api';
 import Swal from 'sweetalert2';
 import toast from 'react-hot-toast';
 import ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
 import AccountNavigation from '../../components/AccountNavigation';
-import Select from 'react-select';
 import { useDispatch, useSelector } from 'react-redux';
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import { getCurrentUserName } from '../../utils/currentUser';
@@ -97,59 +96,9 @@ const PaymentList = () => {
 
     // Filter states
     const [filterDate, setFilterDate] = useState('all');
-    const [filterBank, setFilterBank] = useState('');
-    const [filterMode, setFilterMode] = useState('');
     const [filterStatus, setFilterStatus] = useState('');
-    const [events, setEvents] = useState([]);
-    const [filterEvent, setFilterEvent] = useState('all');
-
-    // Add Payment Modal states
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [modalCompanies, setModalCompanies] = useState([]);
-    const [selectedCompanyId, setSelectedCompanyId] = useState('');
-    const [loadingCompanies, setLoadingCompanies] = useState(false);
-
-    const handleOpenAddPayment = async () => {
-        if (id !== 'all') {
-            navigate(`/dashboard/account/AddPayment/${id}`);
-        } else {
-            setIsAddModalOpen(true);
-            setLoadingCompanies(true);
-            try {
-                const res = await api.get('/api/companies');
-                const compData = res.data?.data || res.data || [];
-                const options = compData.map(c => ({ value: c._id, label: c.companyName || c.name || 'Unknown Company' }));
-                setModalCompanies(options);
-            } catch (error) {
-                toast.error('Failed to load clients');
-            } finally {
-                setLoadingCompanies(false);
-            }
-        }
-    };
-
-    const handleProceedAddPayment = () => {
-        if (!selectedCompanyId) {
-            toast.error('Please select a client first');
-            return;
-        }
-        navigate(`/dashboard/account/AddPayment/${selectedCompanyId}`);
-    };
-
-    useEffect(() => {
-        const fetchEvents = async () => {
-            try {
-                const eventsRes = await api.get('/api/events').catch(() => ({ data: { data: [] } }));
-                const eventsData = (eventsRes.data?.data || eventsRes.data || [])
-                    .filter((event) => event.showInPaymentsFilter && String(event.paymentFilterName || '').trim());
-                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
-                setEvents(eventsData);
-            } catch (err) {
-                console.error("Failed to fetch events", err);
-            }
-        };
-        fetchEvents();
-    }, []);
+    const [filterPymtType, setFilterPymtType] = useState('');
+    const [filterHandledBy, setFilterHandledBy] = useState('');
 
     useEffect(() => {
         let cancelled = false;
@@ -395,13 +344,20 @@ const PaymentList = () => {
         dispatch(createActivityLogThunk(logPayload));
     };
 
+    const getPaymentTypeLabel = (row) => {
+        const received = parseFloat(row.received || 0);
+        const receivedPct = parseFloat(row.receivedPct || 0);
+        const outstanding = parseFloat(row.outstanding || 0);
+
+        if (received <= 0) return 'Advance Req';
+        if (receivedPct >= 100 || outstanding <= 0) return 'Full';
+        return 'Running';
+    };
+
     const filteredPayments = payments.filter(pmt => {
         // Only exhibitors who've actually booked a stand belong on this list —
         // a lead with no booking has nothing to collect payment against yet.
         if (!pmt.hasBookedStand) return false;
-
-        // Event filter
-        if (filterEvent !== 'all' && String(pmt.eventId || pmt.crmEventId || '') !== String(filterEvent)) return false;
 
         // filter by company if not all list
         if (!isAllList && String(pmt.companyId || '') !== String(id)) return false;
@@ -409,9 +365,15 @@ const PaymentList = () => {
         // Status filter
         if (filterStatus && pmt.status !== filterStatus) return false;
 
+        // PYMT Type filter
+        if (filterPymtType && (pmt.lastPymtType || pmt.pymtType || getPaymentTypeLabel(pmt)) !== filterPymtType) return false;
+
+        // Handled By filter
+        if (filterHandledBy && (toTitleCase(pmt.handledBy || pmt.addedBy || '') || '—') !== filterHandledBy) return false;
+
         // Date filter
         if (filterDate !== 'all') {
-            const pmtDate = new Date(pmt.dueDate || pmt.invDate);
+            const pmtDate = new Date(pmt.dueDate || pmt.installmentDueDate || pmt.invDate);
             if (!isNaN(pmtDate.getTime())) {
                 const now = new Date();
                 if (filterDate === 'this_month') {
@@ -429,18 +391,8 @@ const PaymentList = () => {
         return true;
     });
 
-    const uniqueBanks = [];
-    const uniqueModes = [];
-
-    const getPaymentTypeLabel = (row) => {
-        const received = parseFloat(row.received || 0);
-        const receivedPct = parseFloat(row.receivedPct || 0);
-        const outstanding = parseFloat(row.outstanding || 0);
-
-        if (received <= 0) return 'Advance Req';
-        if (receivedPct >= 100 || outstanding <= 0) return 'Full';
-        return 'Running';
-    };
+    const uniquePymtTypes = [...new Set(payments.map(pmt => pmt.lastPymtType || pmt.pymtType || getPaymentTypeLabel(pmt)).filter(Boolean))].sort();
+    const uniqueHandledBy = [...new Set(payments.map(pmt => toTitleCase(pmt.handledBy || pmt.addedBy || '') || '—').filter(Boolean))].sort();
 
     const getOverdueDays = (row, dueDateValue) => {
         if (row.status === 'Overdue' && Number(row.overdueDays || 0) > 0) {
@@ -473,6 +425,7 @@ const PaymentList = () => {
             clientName: getClientCompanyName(row),
             hasBookedStand: Boolean(row.hasBookedStand),
             isFullyPaid,
+            received: Number(row.received || 0),
             pymtReq: (row.outstanding ?? row.invValue) || 0,
             // The actual type of the last payment recorded against this
             // document — falls back to the derived progress label only when
@@ -542,7 +495,7 @@ const PaymentList = () => {
 
     const statCards = (
         <div className="flex flex-col gap-2.5 mb-3 mt-1">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2.5">
                 <AnimatedStatCard
                     icon={<CreditCard className="w-5 h-5 text-blue-600" strokeWidth={2.5} />}
                     gradientTo="to-blue-50" iconBg="bg-blue-100"
@@ -575,8 +528,6 @@ const PaymentList = () => {
                     label="Client"
                     subLabel="Paid" subColor="#e11d48"
                 />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                 <AnimatedStatCard
                     icon={<DollarSign className="w-5 h-5 text-indigo-600" strokeWidth={2.5} />}
                     gradientTo="to-indigo-50" iconBg="bg-indigo-100"
@@ -610,25 +561,33 @@ const PaymentList = () => {
             {!isAllList && <AccountNavigation id={id} accountName={accountName} pageName="Payments" />}
 
             {/* -- Header -- */}
-            <div className="w-full flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 mb-3 p-3 bg-white rounded-lg border border-slate-100" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
-                <div className="flex flex-col justify-center">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Accounts Receivable (AR)</p>
-                    <div className="flex items-center gap-2 mb-1">
-                        <h2 className="text-lg font-bold text-[#124170] leading-tight">Payments</h2>
-                    </div>
-                    <div className="flex items-center gap-2.5 mt-0.5 flex-wrap">
-                        <p className="text-xs font-medium text-slate-500 leading-relaxed max-w-2xl">
-                            Internal transaction log — every payment recorded against PI and invoice documents, who recorded it and when. For the receipt document to send a client, see Receipts.
-                        </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Payment Collection</h1>
+                    <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
+                        <span>Accounts Receivable (AR)</span>
+                        <ChevronRight className="w-3 h-3" />
+                        <span className="text-blue-600 font-bold">Payment Collection</span>
                     </div>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <div className="flex items-center gap-2">
                     <button
-                        onClick={handleOpenAddPayment}
-                        className="flex items-center justify-center gap-1.5 bg-[#124170] hover:bg-[#0c2b4a] text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors w-full sm:w-auto whitespace-nowrap"
+                        onClick={() => navigate('/accounts/receipts')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
                     >
-                        <Plus className="w-4 h-4" />
-                        Add Payment
+                        Payment Receipts
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/ar')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Outstanding Payments
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/client-ledger')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Overdue Payments
                     </button>
                 </div>
             </div>
@@ -638,6 +597,33 @@ const PaymentList = () => {
             {/* -- Filters -- */}
             <div className="flex items-center justify-between bg-white border border-slate-200 rounded-xl p-3 shadow-sm mb-2 overflow-x-auto">
                 <div className="flex items-center gap-3">
+                    {/* Client / Company Name */}
+                    <div className="relative">
+                        <input
+                            type="text"
+                            placeholder="Client / Company Name"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            className="bg-white border border-slate-200 text-slate-700 pl-3 pr-9 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 placeholder:text-slate-400"
+                        />
+                        <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+
+                    {/* PYMT Type */}
+                    <div className="relative">
+                        <CreditCard className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <select
+                            value={filterPymtType}
+                            onChange={(e) => setFilterPymtType(e.target.value)}
+                            className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[130px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                        >
+                            <option value="">All PYMT Types</option>
+                            {uniquePymtTypes.map(type => <option key={type} value={type}>{type}</option>)}
+                        </select>
+                        <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+
+                    {/* Due Date */}
                     <div className="relative">
                         <CalendarDays className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <select
@@ -653,45 +639,21 @@ const PaymentList = () => {
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
 
+                    {/* Handled By */}
                     <div className="relative">
-                        <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <User className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <select
-                            value={filterEvent}
-                            onChange={(e) => setFilterEvent(e.target.value)}
-                            className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] max-w-[150px] truncate focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
+                            value={filterHandledBy}
+                            onChange={(e) => setFilterHandledBy(e.target.value)}
+                            className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[130px] max-w-[150px] truncate focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
                         >
-                            <option value="all">All Events</option>
-                            {events.map(event => <option key={event._id} value={event._id}>{event.paymentFilterName || event.name}</option>)}
+                            <option value="">All Handlers</option>
+                            {uniqueHandledBy.map(name => <option key={name} value={name}>{name}</option>)}
                         </select>
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
 
-                    <div className="relative">
-                        <Building2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <select
-                            value={filterBank}
-                            onChange={(e) => setFilterBank(e.target.value)}
-                            className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
-                        >
-                            <option value="">All Banks</option>
-                            {uniqueBanks.map(bank => <option key={bank} value={bank}>{bank}</option>)}
-                        </select>
-                        <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-
-                    <div className="relative">
-                        <Settings className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <select
-                            value={filterMode}
-                            onChange={(e) => setFilterMode(e.target.value)}
-                            className="appearance-none bg-white border border-slate-200 text-slate-700 pl-9 pr-8 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[120px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 cursor-pointer"
-                        >
-                            <option value="">All Modes</option>
-                            {uniqueModes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
-                        </select>
-                        <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-
+                    {/* Status */}
                     <div className="relative">
                         <CheckCircle2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                         <select
@@ -704,17 +666,6 @@ const PaymentList = () => {
                             <option value="Overdue">Overdue</option>
                         </select>
                         <ChevronDown className="w-3 h-3 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    </div>
-
-                    <div className="relative">
-                        <input
-                            type="text"
-                            placeholder="Client / Company Name"
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            className="bg-white border border-slate-200 text-slate-700 pl-3 pr-9 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 min-w-[220px] focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 placeholder:text-slate-400"
-                        />
-                        <Search className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
                 </div>
                 <div className="shrink-0 pl-3 border-l border-slate-200 ml-3 flex gap-2">
@@ -773,14 +724,25 @@ const PaymentList = () => {
                                         <td className="px-3 py-2.5 align-top">
                                             {group.invoiceNo ? (
                                                 <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.invoiceNo}</div>
+                                            ) : group.received > 0 ? (
+                                                <div className="inline-flex rounded bg-red-50 px-2 py-1 text-[11px] font-bold text-red-700 border border-red-100">
+                                                    Invoice Due
+                                                </div>
                                             ) : (
                                                 <div className="inline-flex rounded bg-amber-50 px-2 py-1 text-[11px] font-bold text-amber-700 border border-amber-100">
-                                                    Not yet generated
+                                                    PI Under Approval
                                                 </div>
                                             )}
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
-                                            <div className="font-bold text-[11px]" style={{ color: '#093C5D' }}>{group.clientName}</div>
+                                            <div
+                                                onClick={() => navigate(`/dashboard/account/${group.companyId}`)}
+                                                className="font-bold text-[11px] cursor-pointer hover:underline"
+                                                style={{ color: '#093C5D' }}
+                                                title="View client overview"
+                                            >
+                                                {group.clientName}
+                                            </div>
                                         </td>
                                         <td className="px-3 py-2.5 align-top">
                                             <div className="font-bold text-[11px]" style={{ color: '#064232' }}>{formatCurrency(group.pymtReq)}</div>
@@ -817,9 +779,9 @@ const PaymentList = () => {
                                                     }}
                                                     disabled={!group.hasBookedStand}
                                                     title={!group.hasBookedStand ? 'Book a stand required' : 'Book payment'}
-                                                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${group.hasBookedStand ? 'bg-[#124170] text-white hover:bg-[#0c2b4a]' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
+                                                    className={`px-2.5 py-1 rounded text-[11px] font-bold transition-colors ${group.hasBookedStand ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'}`}
                                                 >
-                                                    Book payment
+                                                    Book Pmt.
                                                 </button>
                                             )}
                                         </td>
@@ -936,47 +898,6 @@ const PaymentList = () => {
                 </div>
             )}
 
-            {/* Add Payment Modal */}
-            {isAddModalOpen && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-                    <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-                        <div className="flex justify-between items-center p-4 border-b border-slate-100">
-                            <h3 className="font-bold text-slate-800 text-lg">Select Client</h3>
-                            <button onClick={() => setIsAddModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6L6 18M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-                        <div className="p-4">
-                            <label className="block text-sm font-semibold text-slate-700 mb-2">Search & Select Company</label>
-                            <Select
-                                options={modalCompanies}
-                                isLoading={loadingCompanies}
-                                onChange={(selected) => setSelectedCompanyId(selected ? selected.value : '')}
-                                placeholder="Select client..."
-                                className="text-sm"
-                                isClearable
-                                menuPortalTarget={document.body}
-                                styles={{ menuPortal: base => ({ ...base, zIndex: 9999 }) }}
-                            />
-                        </div>
-                        <div className="p-4 border-t border-slate-100 flex justify-end gap-2 bg-slate-50">
-                            <button
-                                onClick={() => setIsAddModalOpen(false)}
-                                className="px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                            >
-                                Cancel
-                            </button>
-                            <button
-                                onClick={handleProceedAddPayment}
-                                className="px-4 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-                                disabled={!selectedCompanyId}
-                            >
-                                Proceed
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
         </div >
     );
 };

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchEstimates, fetchAllGlobalEstimates } from "../../features/estimates/estimateSlice";
 import {
@@ -118,6 +118,7 @@ const getEstimateStatus = (estimate) => {
 
 const EstimateTable = ({ clientId }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
   const { id } = useParams();
 
@@ -593,7 +594,7 @@ const EstimateTable = ({ clientId }) => {
                     ) : null}
                     {!invoiceData && !isPiCreating && rowType !== "cancelled" && !isCancelled(estimate) && (
                       <div className="flex items-center justify-center mt-1">
-                        <button className="rounded border border-[#194090] px-2 py-0.5 text-[10px] font-bold text-[#194090] hover:bg-[#194090] hover:text-white transition-colors" onClick={() => navigate(`/page-create-invoice/${estimate.companyId}/${encodeURIComponent(displayEstNo || estimate.est_no)}`, { state: { sourceEstimateId: estimate._id, sourceEstimateNo: estimate.est_no, selectedPiNo: displayEstNo || estimate.est_no, returnTo: `/payments/estimateDetails/${estimate._id}` } })} disabled={isPiCreating}>Create Invoice</button>
+                        <button className="rounded border border-[#194090] px-2 py-0.5 text-[10px] font-bold text-[#194090] hover:bg-[#194090] hover:text-white transition-colors" onClick={() => navigate(`/page-create-invoice/${estimate.companyId}/${encodeURIComponent(displayEstNo || estimate.est_no)}`, { state: { sourceEstimateId: estimate._id, sourceEstimateNo: estimate.est_no, selectedPiNo: displayEstNo || estimate.est_no, returnTo: `/payments/estimateDetails/${estimate._id}`, backgroundLocation: location } })} disabled={isPiCreating}>Create Invoice</button>
                       </div>
                     )}
                     {isPiCreating && <span className="text-[#194090] font-bold text-center block mt-1">Creating...</span>}

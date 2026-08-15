@@ -421,16 +421,63 @@ import { useParams } from "react-router-dom";
 import { fetchInvoices } from "../../../features/invoice/invoiceSlice";
 import { fetchEstimates } from "../../../features/estimates/estimateSlice";
 import { fetchCompanies } from "../../../features/company/companySlice";
+import { fetchPayments } from "../../../features/payment/paymentSlice";
 import { useSelector, useDispatch } from "react-redux";
 import { FaPrint } from "react-icons/fa";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Download, Paperclip, Pencil } from "lucide-react";
 import Swal from "sweetalert2";
-import api from "../../../lib/api";
+import api, { SERVER_URL } from "../../../lib/api";
 import InvoicePreviewTemplate from "./InvoicePreviewTemplate";
+import * as pdfjsLib from "pdfjs-dist";
+import pdfjsWorker from "pdfjs-dist/build/pdf.worker.min.mjs?url";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 const escapeHtml = (value) => String(value ?? "")
   .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
   .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+
+// Renders PDF pages as images so they show inline and print reliably (embedded PDF viewers don't print).
+const PdfAttachmentPages = ({ url }) => {
+  const [pageImages, setPageImages] = useState([]);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const renderPdf = async () => {
+      try {
+        const pdf = await pdfjsLib.getDocument(url).promise;
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          const viewport = page.getViewport({ scale: 1.5 });
+          const canvas = document.createElement("canvas");
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          await page.render({ canvasContext: canvas.getContext("2d"), viewport }).promise;
+          if (cancelled) return;
+          const dataUrl = canvas.toDataURL("image/png");
+          setPageImages((current) => [...current, dataUrl]);
+        }
+      } catch (_error) {
+        if (!cancelled) setFailed(true);
+      }
+    };
+    renderPdf();
+
+    return () => { cancelled = true; };
+  }, [url]);
+
+  if (failed) {
+    return <p className="text-xs text-red-500">Unable to preview this file.</p>;
+  }
+  if (!pageImages.length) {
+    return <p className="text-xs text-gray-400">Loading preview…</p>;
+  }
+  return pageImages.map((src, index) => (
+    <img key={index} src={src} alt={`Page ${index + 1}`} className="w-full rounded-md border border-gray-100 mb-2 last:mb-0" />
+  ));
+};
 
 const InvoiceNumberDetails = () => {
   const { id } = useParams();
@@ -451,6 +498,7 @@ const InvoiceNumberDetails = () => {
   const { invoices } = useSelector((state) => state.invoice);
   const { companies } = useSelector((state) => state.companies);
   const { estimates, loading } = useSelector((state) => state.estimates);
+  const { payments } = useSelector((state) => state.payment);
 
   //   console.log("id", id);
   //   console.log("invoices", invoices);
@@ -462,7 +510,16 @@ const InvoiceNumberDetails = () => {
   React.useEffect(() => {
     dispatch(fetchInvoices());
     dispatch(fetchCompanies());
+    dispatch(fetchPayments());
   }, [dispatch]);
+
+  const invoicePayments = (payments || [])
+    .filter((payment) => (
+      payment.invoice_id === id ||
+      (matchedInvoice?.source_estimate_id && payment.invoice_id === matchedInvoice.source_estimate_id)
+    ))
+    .slice()
+    .sort((a, b) => new Date(a.payment_date) - new Date(b.payment_date));
 
   const totalAmount =
     matchedInvoice?.items?.reduce(
@@ -816,6 +873,17 @@ const InvoiceNumberDetails = () => {
           <ArrowLeft size={18} />
         </button>
         <button
+          onClick={() => navigate(
+            `/page-create-invoice/${matchedInvoice._id}`,
+            { state: { backgroundLocation: location, returnTo: `/payments/invoiceDetails/${matchedInvoice._id}` } }
+          )}
+          disabled={String(matchedInvoice.status || "").toLowerCase() === "cancelled"}
+          className="ml-2 rounded p-2 shadow-sm border transition flex items-center justify-center bg-white text-gray-500 hover:text-blue-500 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
+          title={String(matchedInvoice.status || "").toLowerCase() === "cancelled" ? "Cancelled invoices cannot be edited" : "Edit Invoice"}
+        >
+          <Pencil size={18} />
+        </button>
+        <button
           onClick={handlePrint}
           disabled={hasChanges}
           className={`ml-2 rounded p-2 shadow-sm border transition flex items-center justify-center ${hasChanges ? "bg-gray-200 text-gray-400 cursor-not-allowed" : "bg-white text-gray-500 hover:text-blue-500"
@@ -825,6 +893,7 @@ const InvoiceNumberDetails = () => {
           <FaPrint size={18} />
         </button>
       </div>
+
       <div ref={sameRef}>
         {invoiceCopies.map((copyLabel, index) => (
           <div
@@ -840,10 +909,41 @@ const InvoiceNumberDetails = () => {
               matchedEstimate={matchedEstimate}
               heading={heading}
               invoiceCopy={copyLabel}
+              payments={invoicePayments}
             />
             <div className="print-copy-page-label" style={{ display: "none" }}>1/1</div>
           </div>
         ))}
+
+        {matchedInvoice.attachments?.length > 0 && (
+          <div className="max-w-[1000px] mx-auto mt-4 space-y-4">
+            {matchedInvoice.attachments.map((file, index) => {
+              const fileUrl = `${SERVER_URL}${file.url}`;
+              const isImage = file.mimeType?.startsWith('image/');
+              return (
+                <div key={`${file.url}-${index}`} className="bg-white rounded-lg border border-gray-200 shadow-sm p-4" style={{ breakInside: 'avoid', pageBreakInside: 'avoid' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Paperclip size={14} className="text-gray-500 shrink-0" />
+                    <span className="flex-1 min-w-0 truncate text-sm font-bold text-gray-800">{file.originalName}</span>
+                    <a
+                      href={fileUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="print:hidden shrink-0 flex items-center gap-1 text-[11px] font-bold text-indigo-600 hover:text-indigo-800"
+                    >
+                      Open <Download size={12} />
+                    </a>
+                  </div>
+                  {isImage ? (
+                    <img src={fileUrl} alt={file.originalName} className="w-full max-h-[800px] object-contain rounded-md border border-gray-100" />
+                  ) : (
+                    <PdfAttachmentPages key={fileUrl} url={fileUrl} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

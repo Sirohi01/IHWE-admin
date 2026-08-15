@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
     ChevronRight, FileText, CheckCircle2, AlertCircle, Clock,
     Calendar, Eye, BookOpen, Target,
@@ -111,10 +111,8 @@ const PAYMENT_TYPE_STYLES = {
     'Pending': 'border-blue-200 text-blue-600 bg-blue-50',
 };
 
-const InvoicesView = () => {
+const ProformaInvoicesView = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const scopedEventId = searchParams.get('eventId') || '';
 
     const [rows, setRows] = useState([]);
     const [stats, setStats] = useState(null);
@@ -135,26 +133,25 @@ const InvoicesView = () => {
         const fetchInvoices = async () => {
             try {
                 setLoading(true);
-                // This page only lists generated Tax Invoices — Proforma Invoices
-                // that haven't been converted yet don't belong here, even though
-                // the shared accounts-receivable feed covers both doc types.
+                // includeAllProformas keeps PIs that have already been converted into a Tax
+                // Invoice, or cancelled, in this list too — instead of dropping them silently.
                 const arRes = await api.get('/api/accounts-receivable', {
-                    params: { docType: 'Invoice', ...(scopedEventId ? { eventId: scopedEventId } : {}) },
+                    params: { docType: 'Proforma Invoice', includeAllProformas: 'true' },
                 });
 
                 setRows(arRes.data?.data?.rows || []);
                 setStats(arRes.data?.data?.stats || null);
                 setError(null);
             } catch (err) {
-                console.error('Failed to fetch invoices', err);
-                setError('Failed to load invoices.');
-                toast.error('Failed to load invoices.');
+                console.error('Failed to fetch proforma invoices', err);
+                setError('Failed to load proforma invoices.');
+                toast.error('Failed to load proforma invoices.');
             } finally {
                 setLoading(false);
             }
         };
         fetchInvoices();
-    }, [scopedEventId]);
+    }, []);
 
     // Pagination & Filtering Logic
     const filteredInvoices = rows.filter((row) => {
@@ -184,6 +181,11 @@ const InvoicesView = () => {
             (row.client || '').toLowerCase().includes(q) ||
             (row.stallNo || '').toLowerCase().includes(q)
         );
+    }).sort((a, b) => {
+        // Sort by the numeric PI suffix (e.g. ".../PI/009") ascending, not by date.
+        const numA = parseInt(String(a.invNo || '').match(/(\d+)\s*$/)?.[1] || '0', 10);
+        const numB = parseInt(String(b.invNo || '').match(/(\d+)\s*$/)?.[1] || '0', 10);
+        return numA - numB;
     });
 
     const totalPages = Math.ceil(filteredInvoices.length / itemsPerPage);
@@ -196,7 +198,7 @@ const InvoicesView = () => {
         rows.forEach((r) => {
             // Fully/Partially Paid are payment-progress buckets (paymentType), valued by what's
             // actually been received; Unpaid/Overdue are due-date buckets (status), valued by
-            // the invoice's full face value since little/nothing has come in yet.
+            // the PI's full face value since little/nothing has come in yet.
             if (r.paymentType === 'Full Payment') sums.Paid += r.received;
             else if (r.paymentType === 'Partial Payment') sums['Partially Paid'] += r.received;
             if (r.status === 'Unpaid' || r.status === 'Overdue') sums[r.status] += r.invValue;
@@ -209,21 +211,21 @@ const InvoicesView = () => {
             {/* Header */}
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-1 gap-4">
                 <div>
-                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Tax Invoice</h1>
+                    <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">Proforma Invoice</h1>
                     <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
                         <span>Accounts Management</span>
                         <ChevronRight className="w-3 h-3" />
                         <span>Billing & Invoices</span>
                         <ChevronRight className="w-3 h-3" />
-                        <span className="text-blue-600 font-bold">Tax Invoice</span>
+                        <span className="text-blue-600 font-bold">Proforma Invoice</span>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
                     <button
-                        onClick={() => navigate('/accounts/proforma-invoices')}
+                        onClick={() => navigate('/accounts/invoices')}
                         className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
                     >
-                        Proforma Invoices
+                        Tax Invoices
                     </button>
                     <button
                         onClick={() => navigate('/accounts/credit-notes')}
@@ -248,7 +250,7 @@ const InvoicesView = () => {
 
             {loading ? (
                 <div className="flex items-center justify-center py-24 text-slate-400 gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Loading invoices...
+                    <Loader2 className="w-5 h-5 animate-spin" /> Loading proforma invoices...
                 </div>
             ) : (
                 <>
@@ -264,32 +266,32 @@ const InvoicesView = () => {
                                 <StatCard
                                     icon={<FileText className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
                                     rawValue={stats?.totalInvoiceValue || 0} displayValue={formatCurrency(stats?.totalInvoiceValue)} isCurrency={true}
-                                    label="Total Invoices Value" subLabel={`No of Invoice: ${stats?.totalInvoices || 0}`}
+                                    label="Total PI Value" subLabel={`No of PI: ${stats?.totalInvoices || 0}`}
                                 />
                                 <StatCard
                                     icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} iconBg="bg-emerald-100"
                                     rawValue={perStatusValue.Paid || 0} displayValue={formatCurrency(perStatusValue.Paid)} isCurrency={true}
-                                    label="Total Fully Paid Value" subLabel={`No of Invoice: ${stats?.fullyPaidCount || 0}`}
+                                    label="Total Fully Paid Value" subLabel={`No of PI: ${stats?.fullyPaidCount || 0}`}
                                 />
                                 <StatCard
                                     icon={<PieChart className="w-4 h-4 text-amber-600" />} iconBg="bg-amber-100"
                                     rawValue={perStatusValue['Partially Paid'] || 0} displayValue={formatCurrency(perStatusValue['Partially Paid'])} isCurrency={true}
-                                    label="Total Partially Paid Value" subLabel={`No of Invoice: ${stats?.partiallyPaidCount || 0}`}
+                                    label="Total Partially Paid Value" subLabel={`No of PI: ${stats?.partiallyPaidCount || 0}`}
                                 />
                                 <StatCard
                                     icon={<AlertCircle className="w-4 h-4 text-rose-600" />} iconBg="bg-rose-100"
                                     rawValue={perStatusValue.Unpaid || 0} displayValue={formatCurrency(perStatusValue.Unpaid)} isCurrency={true}
-                                    label="Total Unpaid Value" subLabel={`No of Invoice: ${stats?.unpaidCount || 0}`}
+                                    label="Total Unpaid Value" subLabel={`No of PI: ${stats?.unpaidCount || 0}`}
                                 />
                                 <StatCard
                                     icon={<Clock className="w-4 h-4 text-orange-600" />} iconBg="bg-orange-100"
                                     rawValue={perStatusValue.Overdue || 0} displayValue={formatCurrency(perStatusValue.Overdue)} isCurrency={true}
-                                    label="Total Overdue Value" subLabel={`No of Invoice: ${stats?.overdueCount || 0}`}
+                                    label="Total Overdue Value" subLabel={`No of PI: ${stats?.overdueCount || 0}`}
                                 />
                                 <StatCard
                                     icon={<BarChart2 className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
                                     rawValue={stats?.avgInvoiceValue || 0} displayValue={formatCurrency(stats?.avgInvoiceValue)} isCurrency={true}
-                                    label="Avg Invoice Value" subLabel={`No of Invoice: ${stats?.totalInvoices || 0}`}
+                                    label="Avg PI Value" subLabel={`No of PI: ${stats?.totalInvoices || 0}`}
                                 />
                             </div>
 
@@ -301,7 +303,7 @@ const InvoicesView = () => {
                                         <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                         <input
                                             type="text"
-                                            placeholder="Search by invoice no., client name, stall no..."
+                                            placeholder="Search by PI no., client name, stall no..."
                                             className="pl-9 pr-3 py-1.5 border border-slate-300 rounded-md text-[11px] w-[260px] focus:outline-none focus:ring-1 focus:ring-blue-500"
                                             value={searchQuery}
                                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -322,7 +324,7 @@ const InvoicesView = () => {
                                         onChange={(e) => setInlineInvoiceStatus(e.target.value)}
                                         className="border border-slate-300 rounded-md px-3 py-1.5 text-[11px] font-medium text-slate-700 focus:outline-none shrink-0 bg-white"
                                     >
-                                        <option value="">Invoice Status</option>
+                                        <option value="">PI Status</option>
                                         <option value="Paid">Paid</option>
                                         <option value="Partially Paid">Partially Paid</option>
                                         <option value="Unpaid">Unpaid</option>
@@ -359,10 +361,10 @@ const InvoicesView = () => {
                                     <thead className="sticky top-0 z-10">
                                         <tr className="bg-white text-[8px] font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
                                             <th className="px-2 py-1 text-center">S.No.</th>
-                                            <th className="px-2 py-1">Invoice Details</th>
+                                            <th className="px-2 py-1">Proforma No.</th>
                                             <th className="px-2 py-1">Client & Stall</th>
-                                            <th className="px-2 py-1 text-center">Invoice Value</th>
-                                            <th className="px-2 py-1 text-center">Invoice Date</th>
+                                            <th className="px-2 py-1 text-center">PI Value</th>
+                                            <th className="px-2 py-1 text-center">PI Date</th>
                                             <th className="px-2 py-1 text-center">Due Date</th>
                                             <th className="px-2 py-1 text-center">Payment Status</th>
                                             <th className="px-2 py-1 text-center">Received</th>
@@ -375,7 +377,7 @@ const InvoicesView = () => {
                                     </thead>
                                     <tbody className="text-[11px] whitespace-nowrap">
                                         {paginatedInvoices.length === 0 && (
-                                            <tr className="border-b border-slate-100"><td colSpan={13} className="py-8 text-center text-slate-400 h-[33px]">No invoices found.</td></tr>
+                                            <tr className="border-b border-slate-100"><td colSpan={13} className="py-8 text-center text-slate-400 h-[33px]">No proforma invoices found.</td></tr>
                                         )}
                                         {paginatedInvoices.map((row, idx) => {
                                             const dueNote = dueDateNote(row);
@@ -428,7 +430,7 @@ const InvoicesView = () => {
                                                     </td>
                                                     <td className="px-2 py-1">
                                                         <div className="flex items-center justify-center gap-1.5">
-                                                            <button onClick={() => navigate(`/payments/invoiceDetails/${row.id}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View invoice"><Eye className="w-3.5 h-3.5" /></button>
+                                                            <button onClick={() => navigate(`/payments/performanceInvoiceDetails/${row.id}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View proforma invoice"><Eye className="w-3.5 h-3.5" /></button>
                                                             <button onClick={() => navigate(`/dashboard/account/client-ledger/${row.companyId}`)} className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50/50 border border-blue-100 rounded hover:bg-blue-100 transition-colors" title="View client ledger"><BookOpen className="w-3.5 h-3.5" /></button>
                                                         </div>
                                                     </td>
@@ -515,7 +517,7 @@ const InvoicesView = () => {
                             {/* Horizontal Financial Summary Bar */}
                             <div className="bg-white border border-slate-200 rounded-xl shadow-sm mt-2 px-6 py-4 flex items-center justify-between">
                                 <div className="flex flex-col">
-                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Invoice Value</span>
+                                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total PI Value</span>
                                     <span className="text-sm font-black text-slate-800">{formatCurrency(stats?.totalInvoiceValue || 0)}</span>
                                 </div>
                                 <div className="w-px h-10 bg-slate-200 mx-2"></div>
@@ -551,44 +553,10 @@ const InvoicesView = () => {
                             </div>
                         </div>
                     </div>
-
-                    {/* Bottom Totals Outside Table (Full Width) */}
-                    {/* <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 px-3 flex items-center justify-between overflow-x-auto mt-2">
-                        <div className="flex items-center flex-1 divide-x divide-slate-200 min-w-max">
-                            <div className="pr-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Invoice Value</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{formatCurrency(stats?.totalInvoiceValue)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Collections</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{formatCurrency(stats?.totalCollections)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Outstanding</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{formatCurrency(stats?.totalOutstanding)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Overdue</div>
-                                <div className="font-bold text-red-500 mt-0.5 text-[11px]">{formatCurrency(stats?.overdueAmount)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total TDS Deducted</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{formatCurrency(stats?.tdsDeducted)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Total Credit Notes</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{formatCurrency(stats?.totalCreditNotes)}</div>
-                            </div>
-                            <div className="pl-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider">Net Amount Received</div>
-                                <div className="font-bold text-slate-800 mt-0.5 text-[11px]">{formatCurrency(stats?.netAmountReceived)} <span className="text-[9px] text-slate-500 font-medium ml-1">(After TDS)</span></div>
-                            </div>
-                        </div>
-                    </div> */}
                 </>
             )}
         </div>
     );
 };
 
-export default InvoicesView;
+export default ProformaInvoicesView;

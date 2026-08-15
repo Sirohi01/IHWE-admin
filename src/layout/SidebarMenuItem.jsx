@@ -12,6 +12,28 @@ export default function SidebarMenuItem({
   setOpenNestedDropdown,
   setMobileMenuOpen
 }) {
+  if (item.type === "item" && item.disabled) {
+    const Icon = item.icon;
+    return (
+      <div
+        className={`sb-item flex items-center gap-3 px-3 py-1.5 rounded-md border border-transparent opacity-45 cursor-not-allowed select-none ${
+          !sidebarOpen && "justify-center"
+        }`}
+        title="Coming soon"
+      >
+        <Icon size={16} className="sb-icon shrink-0" />
+        {sidebarOpen && (
+          <span className="sb-label whitespace-nowrap flex items-center gap-2 flex-1 min-w-0">
+            <span className="truncate">{item.label}</span>
+            <span className="shrink-0 text-[8px] font-bold uppercase tracking-wider bg-white/10 text-white/60 px-1.5 py-0.5 rounded">
+              Soon
+            </span>
+          </span>
+        )}
+      </div>
+    );
+  }
+
   if (item.type === "item") {
     const Icon = item.icon;
     return (
@@ -148,6 +170,21 @@ export default function SidebarMenuItem({
                           </motion.div>
                         )}
                       </AnimatePresence>
+                    </div>
+                  );
+                }
+
+                if (sub.disabled) {
+                  return (
+                    <div
+                      key={`disabled-${idx}`}
+                      className="sb-sub-item flex items-center justify-between gap-2 px-3 py-1.5 rounded-md sb-label opacity-45 cursor-not-allowed select-none"
+                      title="Coming soon"
+                    >
+                      <span className="truncate">{sub.label}</span>
+                      <span className="shrink-0 text-[8px] font-bold uppercase tracking-wider bg-white/10 text-white/60 px-1.5 py-0.5 rounded">
+                        Soon
+                      </span>
                     </div>
                   );
                 }

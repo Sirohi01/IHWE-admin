@@ -25,7 +25,7 @@ function toWords(n) {
     return 'Rupees ' + words + ' Only.';
 }
 
-const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, heading, invoiceCopy = 'ORIGINAL INVOICE' }) => {
+const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, heading, invoiceCopy = 'ORIGINAL INVOICE', payments = [] }) => {
     const dispatch = useDispatch();
     const invoiceCopyType = String(invoiceCopy || '')
         .replace(/\s*INVOICE\s*/gi, '')
@@ -567,26 +567,6 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
     const deliveryChallans = matchedInvoice?.delivery_challans || form?.delivery_challans || [];
     const activeItemList = activeItems || [];
     const displayChallanNo = getDeliveryChallanNo(activeItemList?.[0]);
-    const ewayChallan = deliveryChallans.find((challan) => getFirstCleanValue(
-        challan?.eway_bill_no,
-        challan?.ewayBillNo,
-        challan?.eway_bill,
-        challan?.ewayBill
-    ));
-    const ewayBillNo = getFirstCleanValue(
-        matchedInvoice?.eway_bill_no,
-        matchedInvoice?.ewayBillNo,
-        matchedInvoice?.eway_bill,
-        matchedInvoice?.ewayBill,
-        form?.eway_bill_no,
-        form?.ewayBillNo,
-        form?.eway_bill,
-        form?.ewayBill,
-        ewayChallan?.eway_bill_no,
-        ewayChallan?.ewayBillNo,
-        ewayChallan?.eway_bill,
-        ewayChallan?.ewayBill
-    );
 
     const renderInvoiceHeader = () => (
         <>
@@ -728,11 +708,6 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{supplyDateTime || '—'}</td>
                                     </tr>
                                     <tr>
-                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>E-way Bill No.</td>
-                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{ewayBillNo || '—'}</td>
-                                    </tr>
-                                    <tr>
                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
@@ -769,7 +744,6 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                             <tr>
                                 <td style={{ padding: '2px 5px' }}><b>Transporter:</b> {challan.transporter_name || '—'}</td>
                                 <td style={{ padding: '2px 5px' }}><b>Vehicle:</b> {challan.vehicle_no || '—'}</td>
-                                <td style={{ padding: '2px 5px' }}><b>E-way Bill:</b> {challan.eway_bill || '—'}</td>
                                 <td style={{ padding: '2px 5px' }}><b>Bilty No.:</b> {challan.bilty_no || '—'}</td>
                             </tr>
                         </tbody>
@@ -1417,11 +1391,6 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{supplyDateTime || '—'}</td>
                                                     </tr>
                                                     <tr>
-                                                        <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>E-way Bill No.</td>
-                                                        <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                                                        <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{ewayBillNo || '—'}</td>
-                                                    </tr>
-                                                    <tr>
                                                         <td style={{ fontWeight: 'bold', whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Created Date</td>
                                                         <td style={{ fontWeight: 'bold', border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                                         <td style={{ border: 'none', padding: '1px 0', textAlign: 'right', whiteSpace: 'nowrap' }}>{createdDateTime}</td>
@@ -1603,8 +1572,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                         );
                                     })}
                                     <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
-                                        <td colSpan={4} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>GST Amount in Words ({currAbbr})</td>
-                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(totalGstAmount))}</td>
+                                        <td colSpan={4} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'left', background: 'rgb(241, 245, 249)' }}>GST Amount in Words ({currAbbr})</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'left', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(totalGstAmount))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Total GST Amount</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{fmtNum(totalGstAmount)}</td>
                                     </tr>
@@ -1612,8 +1581,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                         {Array(12).fill(0).map((_, j) => <td key={j} style={{ border: 'none', padding: 0 }}></td>)}
                                     </tr>
                                     <tr style={{ background: 'rgb(241, 245, 249)', textTransform: 'uppercase' }}>
-                                        <td colSpan={4} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Amount in Words ({currAbbr})</td>
-                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'center', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
+                                        <td colSpan={4} style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'left', background: 'rgb(241, 245, 249)' }}>Amount in Words ({currAbbr})</td>
+                                        <td colSpan={6} style={{ border: '1px solid #ccc', padding: '4px 6px', textTransform: 'capitalize', textAlign: 'left', background: 'rgb(241, 245, 249)' }}>{toWords(Math.round(grandTotal))}</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', background: 'rgb(241, 245, 249)' }}>Grand Total</td>
                                         <td style={{ border: '1px solid #ccc', padding: '4px 6px', fontWeight: 700, textAlign: 'center', fontSize: 10, color: '#000', background: 'rgb(241, 245, 249)' }}>{fmtNum(grandTotal)}</td>
                                     </tr>
@@ -1641,12 +1610,55 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                             </div>
                                         </td>
                                         <td className="invoice-payment-conditions" style={{ width: '40%', border: '1px solid #ccc', padding: '6px 8px', verticalAlign: 'top', fontSize: 10, background: '#fff' }}>
-                                            <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Conditions:</div>
+                                            <div style={{ fontWeight: 700, marginBottom: 4, background: 'rgb(241, 245, 249)', borderBottom: '1px solid #ccc', padding: '4px 8px', margin: '-6px -8px 6px' }}>Payment Details / Receipt:</div>
                                             <div style={{ whiteSpace: 'pre-wrap' }}>
-                                                {paymentPlanInstalments.length > 0
-                                                    ? paymentPlanInstalments.map((instalment, index) => <div key={index}>{index + 1}. {instalment.label} – {instalment.percentage}%: ₹{fmtNum(instalment.amount)}{instalment.remarks ? ` — ${instalment.remarks}` : ''}</div>)
-                                                    : savedPaymentConditions.map((term, index) => <div key={index}>{index + 1}. {term}</div>)}
-                                                {tdsApplicableOnEstimate && tdsLines.map((line, index) => <div key={`tds-${index}`}>{(paymentPlanInstalments.length || savedPaymentConditions.length) + index + 1}. {line}</div>)}
+                                                {matchedInvoice?.show_payment_details !== false && payments.length > 0 && (
+                                                    <div style={{ fontWeight: 700 }}>Payment Received Details</div>
+                                                )}
+                                                {matchedInvoice?.show_payment_details !== false && payments.length > 0 && payments.map((payment, index) => {
+                                                    const reference = payment.utr_no || payment.cash_receipt_no || payment.cheque_no || payment.card_transaction_no || payment.wallet_transaction_no || '';
+                                                    const paidOn = payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+                                                    return (
+                                                        <div key={payment._id || index}>
+                                                            {index + 1}. {payment.receipt_no || 'Receipt'} – {paidOn} – ₹{fmtNum(payment.amount_text)} via {payment.payment_mode || '-'}{reference ? ` (Ref: ${reference})` : ''}
+                                                        </div>
+                                                    );
+                                                })}
+                                                {(() => {
+                                                    const storedStatus = matchedInvoice?.payment_status;
+                                                    const storedTerms = matchedInvoice?.payment_terms;
+                                                    let paymentStatus;
+                                                    let paymentTermsText;
+
+                                                    if (storedStatus) {
+                                                        // Match the exact wording shown in the Create Tax Invoice modal at creation time.
+                                                        const storedDays = (String(storedTerms || '').match(/\d+/) || [])[0];
+                                                        paymentStatus = storedStatus === 'paid' ? 'Paid in Full' : storedStatus === 'partial' ? 'Partially Paid' : 'Pending';
+                                                        paymentTermsText = storedStatus === 'paid'
+                                                            ? 'Payment received as per agreed installment plan.'
+                                                            : storedStatus === 'partial'
+                                                                ? `Balance payment due within ${storedDays || 0} days from the Invoice Date.`
+                                                                : `Payment due within ${storedDays || 0} days from the Invoice Date.`;
+                                                    } else {
+                                                        // Fallback for invoices created before payment status/terms were captured at creation time.
+                                                        const totalReceived = payments.reduce((sum, payment) => sum + (parseFloat(payment.amount_text) || 0), 0);
+                                                        const paymentPlanName = (matchedEstimate?.paymentPlanLabel || '').trim() || matchedEstimate?.paymentPlanType || 'Payment Plan';
+                                                        paymentStatus = totalReceived <= 0
+                                                            ? 'Pending'
+                                                            : (totalReceived >= grandTotal - 1 ? 'Paid in Full' : 'Partially Paid');
+                                                        paymentTermsText = `Payment received as per agreed ${paymentPlanName}.`;
+                                                    }
+
+                                                    return (
+                                                        <div style={{ marginTop: 6, paddingTop: 4, borderTop: '1px dashed #ccc' }}>
+                                                            <div>Payment Terms: {paymentTermsText}</div>
+                                                            <div>Payment Status: <span style={{ fontSize: 12, fontWeight: 700 }}>{paymentStatus}</span></div>
+                                                            <div style={{ marginTop: 4, fontSize: 9, color: '#666' }}>
+                                                                TDS, if applicable, shall be deducted on the taxable/basic value (excluding GST) at the applicable rate under the Income Tax Act, 1961.
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })()}
                                             </div>
                                         </td>
                                     </tr>

@@ -195,12 +195,30 @@ const AccountsReceivableView = () => {
             {/* Header */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
                 <div>
-                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Accounts Receivable (AR)</h1>
+                    <h1 className="text-2xl font-black text-slate-900 tracking-tight">Outstanding Payments</h1>
                     <div className="text-[11px] text-slate-500 font-medium mt-0.5">
                         Track all payments received against invoices, outstanding amounts and collection status.
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => navigate('/accounts/payments')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Payment Collection
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/receipts')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Payment Receipts
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/client-ledger')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Overdue Payments
+                    </button>
                     <button className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-[11px] font-bold shadow-sm transition-colors" onClick={handleOpenAddPayment}>
                         <Plus className="w-3.5 h-3.5" /> Add Payment
                     </button>

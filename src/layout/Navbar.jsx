@@ -202,28 +202,37 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
     let foundLabel = null;
     let foundParentLabel = null;
+    let foundHeadingLabel = null;
     let bestMatchLength = 0;
 
-    const searchMenu = (items, parentLabel = null) => {
+    const searchMenu = (items, parentLabel = null, headingLabel = null) => {
+      let currentHeadingLabel = headingLabel;
       for (const item of items) {
+        if (item.type === 'heading') {
+          currentHeadingLabel = item.label;
+          continue;
+        }
         if (item.path) {
           if (pathname === item.path || pathname.startsWith(item.path + '/')) {
             if (item.path.length > bestMatchLength) {
               bestMatchLength = item.path.length;
               foundLabel = item.label;
               foundParentLabel = parentLabel;
+              // Only surface the heading as a third breadcrumb level when there's
+              // also a dropdown parent — keeps existing two-level/one-level pages unchanged.
+              foundHeadingLabel = parentLabel ? currentHeadingLabel : null;
             }
           }
         }
         if (item.children) {
-          searchMenu(item.children, item.label);
+          searchMenu(item.children, item.label, currentHeadingLabel);
         }
       }
     };
 
     searchMenu(menuItems);
 
-    if (foundLabel) return { page: foundLabel, section: foundParentLabel };
+    if (foundLabel) return { page: foundLabel, section: foundParentLabel, heading: foundHeadingLabel };
 
     const pathSegments = pathname.split('/').filter(Boolean);
     const pageNameRaw = pathSegments.length > 0 ? pathSegments[0] : 'Dashboard';
@@ -231,7 +240,7 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     return { page: formattedPageName.replace(/Debit/gi, 'Credit'), section: null };
   };
 
-  const { page: pageName, section: sectionName } = getPageNameFromMenu(location.pathname);
+  const { page: pageName, section: sectionName, heading: headingName } = getPageNameFromMenu(location.pathname);
 
   const [profileOpen, setProfileOpen] = useState(false);
   const [chatUnread, setChatUnread] = useState(0);
@@ -476,6 +485,12 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
             ))
           ) : (
             <div className="flex items-center gap-2">
+              {headingName && (
+                <>
+                  <span className="text-white font-bold uppercase tracking-tight text-[14px]">{headingName}</span>
+                  <span className="text-white/60 text-[13px] font-semibold">/</span>
+                </>
+              )}
               {sectionName && (
                 <>
                   <span className="text-white font-bold uppercase tracking-tight text-[14px]">{sectionName}</span>

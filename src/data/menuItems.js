@@ -42,6 +42,8 @@ import {
   File,
   FileType,
   LibraryBig,
+  Wallet,
+  ShoppingBag,
 } from "lucide-react";
 
 
@@ -297,32 +299,76 @@ export const menuItems = [
   /* ================= FINANCE ================= */
   {
     type: "heading",
-    label: "Finance & Accounts",
+    label: "Accounts Management",
+  },
+  {
+    type: "item",
+    label: "Accounts Dashboard",
+    icon: LayoutDashboard,
+    path: "/accounts/dashboard",
   },
   {
     type: "dropdown",
-    label: "Accounts",
+    label: "Billing & Invoices",
     icon: FileText,
     children: [
-      { label: "Payment Collection", path: "/accounts/payments" },
-      { label: "Receipts", path: "/accounts/receipts" },
-      { label: "Accounts Receivable", path: "/accounts/ar" },
-      { label: "Client Ledger", path: "/accounts/client-ledger" },
-      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
-      { label: "Invoices", path: "/accounts/invoices" },
+      { label: "Proforma Invoices", path: "/accounts/proforma-invoices" },
+      { label: "Tax Invoices", path: "/accounts/invoices" },
       { label: "Credit Notes", path: "/accounts/credit-notes" },
       { label: "Debit Notes", path: "/account-debit-notes" },
-      { label: "Bank Details", path: "/accounts/bank-details" },
     ],
   },
   {
     type: "dropdown",
-    label: "Finance Reports",
+    label: "Payments & Collections",
+    icon: Wallet,
+    children: [
+      { label: "Payment Collection", path: "/accounts/payments" },
+      { label: "Payment Receipts", path: "/accounts/receipts" },
+      { label: "Outstanding Payments", path: "/accounts/ar" },
+      { label: "Overdue Payments", path: "/accounts/client-ledger" },
+      { label: "Payment Adjustments", disabled: true },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Delivery & Documents",
+    icon: ClipboardList,
+    children: [
+      { label: "Delivery Challans", path: "/accounts/delivery-challans" },
+      { label: "E-Way Bills", disabled: true },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Purchases & Expenses",
+    icon: ShoppingBag,
+    children: [
+      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
+    ],
+  },
+  {
+    type: "item",
+    label: "Tax & Compliance",
+    icon: ShieldCheck,
+    disabled: true,
+  },
+  {
+    type: "dropdown",
+    label: "Accounts Reports",
     icon: TrendingUp,
     children: [
       { label: "Sales Report", path: "/accounts/salesreport" },
-      { label: "Credit Note Register", path: "/debit-note-list/all" },
       { label: "Invoice Register", path: "/invoice-list" },
+      { label: "Credit/Debit Note Register", path: "/debit-note-list/all" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Accounts Settings",
+    icon: Settings,
+    children: [
+      { label: "Bank Accounts", path: "/accounts/bank-details" },
     ],
   },
 

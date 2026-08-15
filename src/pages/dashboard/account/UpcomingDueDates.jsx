@@ -1,36 +1,34 @@
 import { ArrowRight } from "lucide-react";
-import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 
-export default function UpcomingDueDates() {
-  const dueDates = [
-    {
-      day: "05",
-      month: "MAY",
-      company: "Nature's Harmony Pvt. Ltd.",
-      invoice: "INV-2026-1521",
-      amount: "₹ 4,20,000",
-      badge: "Overdue",
-      badgeClass: "bg-rose-50 border-rose-200 text-rose-700"
-    },
-    {
-      day: "10",
-      month: "MAY",
-      company: "GreenLife Ayurveda",
-      invoice: "INV-2026-1520",
-      amount: "₹ 2,50,000",
-      badge: "Due Today",
-      badgeClass: "bg-amber-50 border-amber-200 text-amber-700"
-    },
-    {
-      day: "15",
-      month: "MAY",
-      company: "Wellness World",
-      invoice: "INV-2026-1519",
-      amount: "₹ 1,75,000",
-      badge: "5 Days Left",
-      badgeClass: "bg-blue-50 border-blue-200 text-blue-700"
-    }
-  ];
+const formatCurrency = (val) => `₹ ${Math.round(val || 0).toLocaleString("en-IN")}`;
+
+const getBadge = (row) => {
+  if (row.isOverdue) return { text: "Overdue", cls: "bg-rose-50 border-rose-200 text-rose-700" };
+  if (row.dueDaysDiff === 0) return { text: "Due Today", cls: "bg-amber-50 border-amber-200 text-amber-700" };
+  if (row.dueDaysDiff > 0) return { text: `${row.dueDaysDiff} Days Left`, cls: "bg-blue-50 border-blue-200 text-blue-700" };
+  return { text: "Due", cls: "bg-slate-50 border-slate-200 text-slate-600" };
+};
+
+export default function UpcomingDueDates({ rows = [], loading }) {
+  const navigate = useNavigate();
+
+  const dueDates = rows
+    .filter((r) => r.outstanding > 0 && r.dueDate)
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+    .slice(0, 3)
+    .map((r) => {
+      const d = new Date(r.dueDate);
+      return {
+        day: String(d.getDate()).padStart(2, "0"),
+        month: d.toLocaleDateString("en-GB", { month: "short" }).toUpperCase(),
+        company: r.client,
+        invoice: r.invNo,
+        amount: formatCurrency(r.outstanding),
+        companyId: r.companyId,
+        badge: getBadge(r),
+      };
+    });
 
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-2 shadow-sm h-full flex flex-col justify-between">
@@ -45,7 +43,7 @@ export default function UpcomingDueDates() {
           </p>
         </div>
         <button
-          onClick={() => Swal.fire({ title: "Collections Calendar", text: "Redirecting to all coming schedules.", icon: "info", confirmButtonColor: "#095b55" })}
+          onClick={() => navigate("/accounts/invoices")}
           className="text-emerald-600 hover:text-emerald-700 text-[9px] font-black uppercase tracking-wider flex items-center gap-0.5 hover:underline"
         >
           View All <ArrowRight size={9} strokeWidth={2.5} />
@@ -54,10 +52,14 @@ export default function UpcomingDueDates() {
 
       {/* List Feed */}
       <div className="flex flex-col gap-1 flex-1 justify-center">
+        {!loading && dueDates.length === 0 && (
+          <div className="text-center text-[10px] text-slate-400 py-3">Nothing due right now.</div>
+        )}
         {dueDates.map((item, idx) => (
           <div
             key={idx}
-            className="flex items-center gap-1.5 hover:bg-slate-50/50 p-0.5 rounded-lg transition-all"
+            onClick={() => navigate(`/dashboard/account/${item.companyId}`)}
+            className="flex items-center gap-1.5 hover:bg-slate-50/50 p-0.5 rounded-lg transition-all cursor-pointer"
           >
             {/* Custom Styled Calendar Date Block */}
             <div className="w-8 h-8 flex flex-col items-center justify-center border border-slate-200 rounded-lg bg-slate-50/50 text-center shrink-0 shadow-sm">
@@ -84,8 +86,8 @@ export default function UpcomingDueDates() {
               <span className="text-[10.5px] font-bold text-slate-800 block leading-none">
                 {item.amount}
               </span>
-              <span className={`inline-flex px-1 py-0.2 rounded text-[7px] font-black border uppercase tracking-wider mt-0.5 ${item.badgeClass}`}>
-                {item.badge}
+              <span className={`inline-flex px-1 py-0.2 rounded text-[7px] font-black border uppercase tracking-wider mt-0.5 ${item.badge.cls}`}>
+                {item.badge.text}
               </span>
             </div>
           </div>

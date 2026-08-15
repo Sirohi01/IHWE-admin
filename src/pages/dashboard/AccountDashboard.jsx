@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { CalendarRange, ChevronDown, Plus, Download } from "lucide-react";
 import { motion } from "framer-motion";
 import Swal from "sweetalert2";
+import api from "../../lib/api";
 
 // ─── Subcomponents ───────────────────────────────────────────────────────────
 import AccountStatsRow from "./account/AccountStatsRow";
@@ -14,19 +15,38 @@ import RecentTransactionsTable from "./account/RecentTransactionsTable";
 import UpcomingDueDates from "./account/UpcomingDueDates";
 import GstSummary from "./account/GstSummary";
 
-export default function AccountDashboard({ currentUser, loading }) {
+export default function AccountDashboard({ currentUser }) {
   const navigate = useNavigate();
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedRange, setSelectedRange] = useState("This Month (01 May - 31 May 2026)");
+  const [selectedRange, setSelectedRange] = useState("This Month");
 
-  const ranges = [
-    "Today",
-    "Yesterday",
-    "This Week",
-    "This Month (01 May - 31 May 2026)",
-    "Last Month",
-    "Custom Range"
-  ];
+  // Real data, fetched once here and handed down to every widget below —
+  // avoids each card independently re-fetching the same accounts-receivable feed.
+  const [arRows, setArRows] = useState([]);
+  const [arStats, setArStats] = useState(null);
+  const [payments, setPayments] = useState([]);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        const [arRes, paymentsRes] = await Promise.all([
+          api.get("/api/accounts-receivable", { params: { docType: "Invoice" } }),
+          api.get("/api/payments").catch(() => ({ data: [] })),
+        ]);
+        setArRows(arRes.data?.data?.rows || []);
+        setArStats(arRes.data?.data?.stats || null);
+        setPayments(paymentsRes.data?.data || paymentsRes.data || []);
+      } catch (e) {
+        console.error("Failed to load account dashboard data", e);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+    fetchDashboardData();
+  }, []);
+
+  const ranges = ["Today", "This Week", "This Month", "Last Month"];
 
   const handleRangeSelect = (range) => {
     setSelectedRange(range);
@@ -119,36 +139,36 @@ export default function AccountDashboard({ currentUser, loading }) {
       </div>
 
       {/* ─── ROW 1: 5 STAT CARDS ─── */}
-      <AccountStatsRow />
+      <AccountStatsRow rows={arRows} stats={arStats} payments={payments} loading={dataLoading} />
 
       {/* ─── TWO COLUMN DUAL GRID LAYOUT ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 items-start">
         {/* Left Spans (Area Trend & Wide Tables) */}
         <div className="lg:col-span-8 flex flex-col gap-2">
           <div className="w-full">
-            <RevenueTrendChart />
+            <RevenueTrendChart comingSoon />
           </div>
           <div className="w-full">
-            <PendingPaymentsTable />
+            <PendingPaymentsTable rows={arRows} loading={dataLoading} />
           </div>
           <div className="w-full">
-            <RecentTransactionsTable />
+            <RecentTransactionsTable payments={payments} loading={dataLoading} />
           </div>
         </div>
 
         {/* Right Spans (Overview Ring, Actions, Due Timeline, GST blocks) */}
         <div className="lg:col-span-4 flex flex-col gap-2">
           <div className="w-full">
-            <PaymentStatusOverview />
+            <PaymentStatusOverview stats={arStats} loading={dataLoading} />
           </div>
           <div className="w-full">
             <AccountQuickActions />
           </div>
           <div className="w-full">
-            <UpcomingDueDates />
+            <UpcomingDueDates rows={arRows} loading={dataLoading} />
           </div>
           <div className="w-full">
-            <GstSummary />
+            <GstSummary comingSoon />
           </div>
         </div>
       </div>

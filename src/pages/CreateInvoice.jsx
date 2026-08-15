@@ -10,7 +10,15 @@ import {
     Package,
     Truck,
     Percent,
-    Wallet
+    Wallet,
+    Paperclip,
+    CheckCircle2,
+    IndianRupee,
+    Info,
+    ClipboardList,
+    Receipt,
+    CreditCard,
+    Calculator
 } from 'lucide-react';
 import SearchableDropdown from '../components/SearchableDropdown';
 import InvoicePreviewTemplate from './ihwe_client_data_2026/invoice/InvoicePreviewTemplate';
@@ -196,7 +204,7 @@ const QuickAction = ({ icon: Icon, label, colorClass = "text-[#3b82f6]", onClick
 );
 
 // ══════════════════════════════════════════════════════════════════════════════
-const CreateInvoice = () => {
+const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {}) => {
     const navigate = useNavigate();
     const location = useLocation();
     const { id, piNo } = useParams();
@@ -214,11 +222,24 @@ const CreateInvoice = () => {
     const [editingInvoiceId, setEditingInvoiceId] = useState('');
     const [isProformaEditMode, setIsProformaEditMode] = useState(false);
     const [editingProformaId, setEditingProformaId] = useState('');
-    const [includeDeliveryChallans, setIncludeDeliveryChallans] = useState(false);
+    const [includeDeliveryChallans, setIncludeDeliveryChallans] = useState(compactMode);
     const [deliveryChallans, setDeliveryChallans] = useState([]);
     const [selectedChallanIds, setSelectedChallanIds] = useState([]);
     const [challansLoading, setChallansLoading] = useState(false);
     const [challansError, setChallansError] = useState('');
+
+    // Compact "Create Tax Invoice from PI" fields (used when compactMode is on)
+    const [poAvailable, setPoAvailable] = useState(true);
+    const [poDate, setPoDate] = useState('');
+    const [poAttachmentFile, setPoAttachmentFile] = useState(null);
+    const poFileInputRef = useRef(null);
+    const [pendingDueDays, setPendingDueDays] = useState(7);
+    const [partialDueDays, setPartialDueDays] = useState(7);
+    const [paymentStatusOption, setPaymentStatusOption] = useState('pending');
+    const activeDueDays = paymentStatusOption === 'partial' ? partialDueDays : pendingDueDays;
+    const paymentTerms = `Net ${activeDueDays || 0} Days`;
+    const [amountReceived, setAmountReceived] = useState('');
+    const [showPaymentReceivedDetails, setShowPaymentReceivedDetails] = useState(true);
 
     const addEstimateOption = (estimate) => {
         if (!estimate?.est_no) return;
@@ -272,6 +293,14 @@ const CreateInvoice = () => {
                         : [];
                     setSelectedChallanIds(linkedChallanIds);
                     setIncludeDeliveryChallans(linkedChallanIds.length > 0);
+                    setPoAvailable(!!inv.po_no);
+                    setPoDate(inv.po_date ? new Date(inv.po_date).toISOString().split('T')[0] : '');
+                    setShowPaymentReceivedDetails(inv.show_payment_details !== false);
+                    const storedDays = (String(inv.payment_terms || '').match(/\d+/) || [])[0];
+                    if (storedDays) {
+                        setPendingDueDays(Number(storedDays));
+                        setPartialDueDays(Number(storedDays));
+                    }
                     setForm(f => ({
                         ...f,
                         companyId: inv.companyId || f.companyId,
@@ -485,6 +514,13 @@ const CreateInvoice = () => {
             cancelled = true;
         };
     }, [includeDeliveryChallans, form.companyId, resolvedSourceEstimateId]);
+
+    // Compact mode: default to all delivery challans included rather than requiring manual selection
+    useEffect(() => {
+        if (compactMode && deliveryChallans.length) {
+            setSelectedChallanIds(deliveryChallans.map((challan) => String(challan._id)));
+        }
+    }, [compactMode, deliveryChallans]);
 
     const returnListId = form.companyId || (!isEditMode && !isProformaEditMode ? id : '');
     const listRoute = isProformaEditMode
@@ -791,6 +827,12 @@ const CreateInvoice = () => {
         // from server-side). Only sent on create; edit mode must not touch it.
         const crmEventId = new URLSearchParams(location.search).get('crmEventId') || '';
 
+        const computedDueDate = (() => {
+            const base = form.invoiceDate ? new Date(form.invoiceDate) : new Date();
+            base.setDate(base.getDate() + (Number(activeDueDays) || 0));
+            return base.toISOString().split('T')[0];
+        })();
+
         const payload = {
             companyId: form.companyId || id,
             ...(!isEditMode && (crmEventId || form.crmEventId) ? { crmEventId: crmEventId || form.crmEventId } : {}),
@@ -801,7 +843,14 @@ const CreateInvoice = () => {
             type_of_invoice: form.invoiceType,
             invoice_date: form.invoiceDate,
             eway_bill_no: form.ewayBillNo,
-            po_no: form.poNo,
+            po_no: poAvailable ? form.poNo : '',
+            ...(compactMode ? {
+                po_date: poAvailable ? poDate : null,
+                payment_terms: paymentTerms,
+                payment_status: paymentStatusOption === 'received' ? 'paid' : paymentStatusOption === 'partial' ? 'partial' : 'pending',
+                payment_due_date: paymentStatusOption !== 'received' ? computedDueDate : null,
+                show_payment_details: showPaymentReceivedDetails,
+            } : {}),
             currency: form.currency,
             gst_no: form.gstin,
             company_name: form.company_name || form.clientName,
@@ -843,11 +892,36 @@ const CreateInvoice = () => {
             updated_by: getCurrentUserName(),
         };
 
+        // Issued invoices can only have these administrative fields corrected —
+        // everything else (items, amounts, GST, company/consignee details) is
+        // locked server-side once an invoice exists. Keep this in sync with
+        // ADMIN_EDITABLE_INVOICE_FIELDS in invoiceController.js.
+        const editPayload = {
+            po_no: poAvailable ? form.poNo : '',
+            po_date: poAvailable ? poDate : null,
+            payment_terms: paymentTerms,
+            payment_status: paymentStatusOption === 'received' ? 'paid' : paymentStatusOption === 'partial' ? 'partial' : 'pending',
+            payment_due_date: paymentStatusOption !== 'received' ? computedDueDate : null,
+            show_payment_details: showPaymentReceivedDetails,
+            delivery_challan_ids: includeDeliveryChallans ? selectedChallanIds : [],
+        };
+
         try {
             let res;
             if (isEditMode) {
-                res = await api.put(`/api/invoices/${editingInvoiceId || id}`, payload);
+                res = await api.put(`/api/invoices/${editingInvoiceId || id}`, editPayload);
                 if (res.status === 200 || res.status === 201) {
+                    if (poAvailable && poAttachmentFile) {
+                        const poAttachmentData = new FormData();
+                        poAttachmentData.append('po_attachment', poAttachmentFile);
+                        try {
+                            await api.post(`/api/invoices/${editingInvoiceId || id}/po-attachment`, poAttachmentData, {
+                                headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                        } catch (poAttachmentError) {
+                            console.error('Failed to upload PO attachment while editing', poAttachmentError);
+                        }
+                    }
                     await Swal.fire({
                         icon: 'success',
                         title: 'Updated!',
@@ -870,6 +944,32 @@ const CreateInvoice = () => {
                             });
                         } catch (attachmentError) {
                             attachmentWarning = attachmentError.response?.data?.message || 'Invoice was created, but attachments could not be uploaded.';
+                        }
+                    }
+                    if (createdInvoiceId && compactMode && poAvailable && poAttachmentFile) {
+                        const poAttachmentData = new FormData();
+                        poAttachmentData.append('po_attachment', poAttachmentFile);
+                        try {
+                            await api.post(`/api/invoices/${createdInvoiceId}/po-attachment`, poAttachmentData, {
+                                headers: { 'Content-Type': 'multipart/form-data' },
+                            });
+                        } catch (poAttachmentError) {
+                            attachmentWarning = attachmentWarning || poAttachmentError.response?.data?.message || 'Invoice was created, but the PO file could not be uploaded.';
+                        }
+                    }
+                    if (createdInvoiceId && compactMode && (paymentStatusOption === 'received' || paymentStatusOption === 'partial') && Number(amountReceived) > 0) {
+                        try {
+                            await api.post('/api/payments', {
+                                invoice_id: createdInvoiceId,
+                                companyId: form.companyId || id,
+                                f_amount: String(finalAmount),
+                                amount_text: String(amountReceived),
+                                payment_date: new Date().toISOString().split('T')[0],
+                                payment_mode: 'Manual Entry',
+                                received_by: getCurrentUserName(),
+                            });
+                        } catch (paymentError) {
+                            attachmentWarning = attachmentWarning || paymentError.response?.data?.message || 'Invoice was created, but the payment receipt could not be recorded.';
                         }
                     }
                     await Swal.fire({
@@ -965,6 +1065,407 @@ const CreateInvoice = () => {
     const sumDiscount = sumSubTotal - sumTaxable;
     const sumGst = items.reduce((acc, i) => acc + (Number(i.gstAmount) || 0), 0);
     const sumTotal = items.reduce((acc, i) => acc + (Number(i.total) || 0), 0);
+
+    // Compact mode: auto-select the Payment Status based on payments already recorded against this PI
+    useEffect(() => {
+        if (!compactMode || !resolvedSourceEstimateId) return;
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await api.get('/api/payments');
+                const payments = Array.isArray(res.data) ? res.data : (res.data?.data || []);
+                const totalReceived = payments
+                    .filter((payment) => String(payment.invoice_id || '') === String(resolvedSourceEstimateId))
+                    .reduce((sum, payment) => sum + (parseFloat(payment.amount_text) || 0), 0);
+                if (cancelled) return;
+                if (totalReceived <= 0) {
+                    setPaymentStatusOption('pending');
+                } else if (sumTotal > 0 && totalReceived >= sumTotal - 1) {
+                    setPaymentStatusOption('received');
+                } else {
+                    setPaymentStatusOption('partial');
+                    setAmountReceived(String(totalReceived));
+                }
+            } catch (error) {
+                console.error('Failed to load existing payments for this PI', error);
+            }
+        })();
+        return () => { cancelled = true; };
+    }, [compactMode, resolvedSourceEstimateId, sumTotal]);
+
+    const refreshChallans = async () => {
+        if (!form.companyId || !resolvedSourceEstimateId) return;
+        setChallansLoading(true);
+        setChallansError('');
+        try {
+            const response = await api.get('/api/delivery-challans', {
+                params: { companyId: form.companyId, estimateId: resolvedSourceEstimateId },
+            });
+            const eligible = (Array.isArray(response.data) ? response.data : []).filter((challan) => !isCancelledDoc(challan));
+            setDeliveryChallans(eligible);
+        } catch (error) {
+            setChallansError(error.response?.data?.message || 'Unable to load delivery challans.');
+        } finally {
+            setChallansLoading(false);
+        }
+    };
+
+    const amountReceivedValue = paymentStatusOption === 'received'
+        ? sumTotal
+        : paymentStatusOption === 'partial'
+            ? (Number(amountReceived) || 0)
+            : 0;
+    const outstandingAmountValue = Math.max(sumTotal - amountReceivedValue, 0);
+
+    if (compactMode) {
+        return (
+            <div className="bg-white">
+                <style>
+                    {`
+                    input[type="number"]::-webkit-inner-spin-button,
+                    input[type="number"]::-webkit-outer-spin-button {
+                        -webkit-appearance: none;
+                        margin: 0;
+                    }
+                    `}
+                </style>
+                <div className="px-6 pt-6 pb-4 pr-14 border-b border-gray-100">
+                    <div className="flex items-start justify-between gap-4 flex-wrap">
+                        <div className="flex items-start gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-blue-50 text-[#194090] flex items-center justify-center shrink-0">
+                                <IndianRupee className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h1 className="text-lg font-bold text-gray-900 leading-tight">Create Tax Invoice from Proforma Invoice</h1>
+                                <p className="text-xs text-gray-500 mt-0.5">Please provide the additional details to generate the Tax Invoice.</p>
+                            </div>
+                        </div>
+                        <div className="w-[220px] shrink-0 hidden">
+                            <Label required>Select Proforma Invoice</Label>
+                            <SearchableDropdown
+                                compact
+                                value={selectedPi}
+                                onChange={(e) => handlePiSelect(e.target.value)}
+                                options={[
+                                    { label: 'Select Proforma Invoice', value: '' },
+                                    ...dropdownEstimates.map(e => ({ label: e.est_no, value: e.est_no }))
+                                ]}
+                            />
+                        </div>
+                    </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+                    {!selectedPi && (
+                        <div className="rounded-xl border border-dashed border-gray-200 bg-gray-50/60 p-10 text-center">
+                            <p className="text-sm font-semibold text-gray-600">Select a Proforma Invoice above to continue</p>
+                            <p className="mt-1 text-xs text-gray-400">Purchase order, delivery challan, and payment details will appear once a PI is selected.</p>
+                        </div>
+                    )}
+
+                    {selectedPi && (
+                    <>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* 1. Purchase Order */}
+                        <div className="border border-gray-200 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-md bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                                    <ClipboardList size={14} />
+                                </div>
+                                <h3 className="text-[13px] font-bold text-emerald-700">1. Purchase Order</h3>
+                            </div>
+                            <Label>PO Available?</Label>
+                            <div className="flex items-center gap-4 mb-3">
+                                <label className="flex items-center gap-1.5 text-[12px] cursor-pointer">
+                                    <input type="radio" checked={poAvailable} onChange={() => setPoAvailable(true)} /> Yes
+                                </label>
+                                <label className="flex items-center gap-1.5 text-[12px] cursor-pointer">
+                                    <input type="radio" checked={!poAvailable} onChange={() => setPoAvailable(false)} /> No
+                                </label>
+                            </div>
+                            {poAvailable && (
+                                <>
+                                    <div className="grid grid-cols-2 gap-3 mb-3">
+                                        <div>
+                                            <Label>PO Number</Label>
+                                            <input
+                                                className="w-full appearance-none border border-gray-200 rounded-lg px-2.5 py-1.5 text-[12px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[34px]"
+                                                placeholder="Enter PO Number"
+                                                value={form.poNo}
+                                                onChange={(e) => setField('poNo', e.target.value)}
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>PO Date</Label>
+                                            <input
+                                                type="date"
+                                                className="w-full appearance-none border border-gray-200 rounded-lg px-2.5 py-1.5 text-[12px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[34px]"
+                                                value={poDate}
+                                                onChange={(e) => setPoDate(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <Label>Attach PO (Optional)</Label>
+                                    <input type="file" ref={poFileInputRef} className="hidden" accept=".pdf,.jpg,.jpeg,.png" onChange={(e) => setPoAttachmentFile(e.target.files?.[0] || null)} />
+                                    <div className="flex items-center gap-2">
+                                        <button type="button" onClick={() => poFileInputRef.current?.click()} className="flex items-center gap-1.5 border border-gray-200 rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#194090] bg-white shadow-sm hover:bg-gray-50">
+                                            <Upload size={13} /> Upload File
+                                        </button>
+                                        <span className="text-[10px] text-gray-400">{poAttachmentFile ? poAttachmentFile.name : '(PDF, JPG, PNG)'}</span>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+
+                        {/* 2. Delivery Challans */}
+                        <div className="border border-gray-200 rounded-xl p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                                <div className="w-7 h-7 rounded-md bg-purple-50 text-purple-600 flex items-center justify-center">
+                                    <Truck size={14} />
+                                </div>
+                                <h3 className="text-[13px] font-bold text-purple-700">2. Delivery Challans</h3>
+                            </div>
+                            <Label>Delivery Challan Applicable?</Label>
+                            <div className="flex items-center gap-4 mb-3">
+                                <label className="flex items-center gap-1.5 text-[12px] cursor-pointer">
+                                    <input type="radio" checked={includeDeliveryChallans} onChange={() => setIncludeDeliveryChallans(true)} /> Yes
+                                </label>
+                                <label className="flex items-center gap-1.5 text-[12px] cursor-pointer">
+                                    <input type="radio" checked={!includeDeliveryChallans} onChange={() => { setIncludeDeliveryChallans(false); setSelectedChallanIds([]); }} /> No
+                                </label>
+                            </div>
+                            {includeDeliveryChallans && (
+                                !resolvedSourceEstimateId ? (
+                                    <p className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-[11px] text-amber-700">Select a Proforma Invoice first.</p>
+                                ) : challansLoading ? (
+                                    <p className="p-3 text-center text-[11px] text-slate-500">Loading delivery challans...</p>
+                                ) : challansError ? (
+                                    <p className="rounded-lg border border-red-200 bg-red-50 p-2.5 text-[11px] text-red-700">{challansError}</p>
+                                ) : deliveryChallans.filter((c) => selectedChallanIds.includes(String(c._id))).length === 0 ? (
+                                    <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-center text-[11px] text-slate-500">No delivery challans linked yet.</p>
+                                ) : (
+                                    <div className="overflow-x-auto -mx-1">
+                                        <table className="w-full text-[11px]">
+                                            <thead>
+                                                <tr className="text-slate-500 border-b border-gray-100">
+                                                    <th className="text-left font-semibold px-1 py-1.5">Challan No.</th>
+                                                    <th className="text-left font-semibold px-1 py-1.5">Date</th>
+                                                    <th className="text-left font-semibold px-1 py-1.5">E-Way Bill No.</th>
+                                                    <th className="text-left font-semibold px-1 py-1.5">File</th>
+                                                    <th className="text-center font-semibold px-1 py-1.5">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {deliveryChallans.filter((c) => selectedChallanIds.includes(String(c._id))).map((challan) => (
+                                                    <tr key={challan._id} className="border-b border-gray-50 last:border-0">
+                                                        <td className="px-1 py-1.5 font-semibold text-[#194090]">{challan.challan_no}</td>
+                                                        <td className="px-1 py-1.5 text-slate-600">{challan.challan_date ? new Date(challan.challan_date).toLocaleDateString('en-GB') : '—'}</td>
+                                                        <td className="px-1 py-1.5 text-slate-600">{challan.eway_bill || '—'}</td>
+                                                        <td className="px-1 py-1.5">
+                                                            {challan.attachment?.url ? (
+                                                                <a href={`${api.defaults.baseURL || ''}${challan.attachment.url}`} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-[#194090] font-semibold hover:underline">
+                                                                    <Paperclip size={11} /> {challan.attachment.originalName?.slice(0, 12) || 'File'}
+                                                                </a>
+                                                            ) : <span className="text-slate-300">—</span>}
+                                                        </td>
+                                                        <td className="px-1 py-1.5 text-center">
+                                                            <button type="button" onClick={() => toggleDeliveryChallan(challan._id)} className="text-red-500 hover:text-red-700" title="Remove from this invoice">
+                                                                <Trash2 size={13} />
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )
+                            )}
+                            {includeDeliveryChallans && (
+                                <p className="mt-3 flex items-start gap-1.5 text-[10px] text-slate-400">
+                                    <Info size={12} className="shrink-0 mt-0.5" /> Delivery challans linked to this Proforma Invoice are listed here automatically.
+                                </p>
+                            )}
+                            {includeDeliveryChallans && resolvedSourceEstimateId && (
+                                <button type="button" onClick={refreshChallans} className="mt-2 text-[10px] font-bold text-[#194090] hover:underline">
+                                    Refresh challan list
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        {/* 4. Payment Details / Receipts */}
+                        <div className="border border-gray-200 rounded-xl p-4">
+                            <div className="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                                <div>
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-7 h-7 rounded-md bg-blue-50 text-blue-600 flex items-center justify-center">
+                                            <CreditCard size={14} />
+                                        </div>
+                                        <h3 className="text-[13px] font-bold text-blue-700">4. Payment Details / Receipts</h3>
+                                    </div>
+                                    <Label>Select Payment Status</Label>
+                                    <label className="mt-1 flex items-center gap-1.5 cursor-pointer select-none w-fit">
+                                        <span className={`relative inline-flex h-4 w-8 items-center rounded-full transition ${showPaymentReceivedDetails ? 'bg-[#194090]' : 'bg-gray-300'}`}>
+                                            <input
+                                                type="checkbox"
+                                                checked={showPaymentReceivedDetails}
+                                                onChange={(e) => setShowPaymentReceivedDetails(e.target.checked)}
+                                                className="peer sr-only"
+                                            />
+                                            <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition ${showPaymentReceivedDetails ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                                        </span>
+                                        <span className="text-[12px] font-bold text-slate-700">Show Payment Received Details on Invoice</span>
+                                    </label>
+                                </div>
+                                <div className="rounded-lg border border-gray-200 bg-gray-50 p-2.5 max-w-[420px]">
+                                    <p className="text-[10px] text-slate-500">
+                                        TDS, if applicable, shall be deducted on the taxable/basic value (excluding GST) at the applicable rate under the Income Tax Act, 1961.
+                                    </p>
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-stretch">
+                                <label className={`block h-full rounded-lg border p-2.5 transition ${paymentStatusOption === 'received' ? 'border-emerald-400 bg-emerald-50' : 'border-slate-200 bg-white'}`}>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <input type="radio" checked={paymentStatusOption === 'received'} disabled readOnly />
+                                        <CheckCircle2 size={14} className="text-emerald-600" />
+                                        <span className="text-[12px] font-bold text-[#1a2b4b]">Payment Received</span>
+                                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9px] font-bold text-emerald-700">Paid in Full</span>
+                                    </div>
+                                    <p className="mt-1.5 pl-6 text-[10px] text-slate-500">
+                                        Payment Terms: Payment received as per agreed installment plan.<br />
+                                        Payment Status: Paid in Full.
+                                    </p>
+                                </label>
+                                <label className={`block h-full rounded-lg border p-2.5 transition ${paymentStatusOption === 'pending' ? 'border-orange-400 bg-orange-50' : 'border-slate-200 bg-white'}`}>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <input type="radio" checked={paymentStatusOption === 'pending'} disabled readOnly />
+                                        <span className="text-[12px] font-bold text-[#1a2b4b]">Full Payment Pending</span>
+                                        <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[9px] font-bold text-orange-700">Payment Pending</span>
+                                    </div>
+                                    <p className="mt-1.5 pl-6 text-[10px] text-slate-500 flex items-center flex-wrap gap-1">
+                                        Payment Terms: Payment due within
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={pendingDueDays}
+                                            disabled={paymentStatusOption !== 'pending'}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={(e) => setPendingDueDays(e.target.value)}
+                                            className="w-10 border border-amber-300 bg-amber-50 text-amber-900 font-bold rounded px-1 py-0.5 text-[10px] text-center focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:border-gray-200 disabled:text-gray-400"
+                                        />
+                                        days from the Invoice Date.
+                                    </p>
+                                    <div className="mt-2 pl-6">
+                                        <Label>Outstanding Amount</Label>
+                                        <input readOnly onClick={(e) => e.stopPropagation()} className="w-full border border-gray-200 rounded-lg px-2 py-1 text-[11px] h-[30px] bg-gray-50 text-gray-500" value={Math.round(sumTotal).toLocaleString('en-IN')} />
+                                    </div>
+                                </label>
+                                <label className={`block h-full rounded-lg border p-2.5 transition ${paymentStatusOption === 'partial' ? 'border-blue-400 bg-blue-50' : 'border-slate-200 bg-white'}`}>
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        <input type="radio" checked={paymentStatusOption === 'partial'} disabled readOnly />
+                                        <span className="text-[12px] font-bold text-[#1a2b4b]">Partially Paid</span>
+                                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold text-blue-700">Partially Paid</span>
+                                    </div>
+                                    <p className="mt-1.5 pl-6 text-[10px] text-slate-500 flex items-center flex-wrap gap-1">
+                                        Payment Terms: Balance payment due within
+                                        <input
+                                            type="number"
+                                            min={0}
+                                            value={partialDueDays}
+                                            disabled={paymentStatusOption !== 'partial'}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={(e) => setPartialDueDays(e.target.value)}
+                                            className="w-10 border border-amber-300 bg-amber-50 text-amber-900 font-bold rounded px-1 py-0.5 text-[10px] text-center focus:outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:border-gray-200 disabled:text-gray-400"
+                                        />
+                                        days from the Invoice Date.
+                                    </p>
+                                    <div className="mt-2 pl-6 grid grid-cols-2 gap-2">
+                                        <div>
+                                            <Label>Amt. Received</Label>
+                                            <input type="number" min={0} max={sumTotal} disabled={paymentStatusOption !== 'partial'} onClick={(e) => e.stopPropagation()} className="w-full border border-gray-200 rounded-lg px-2 py-1 text-[11px] h-[30px] disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100 disabled:text-gray-400" placeholder="Enter Amount" value={amountReceived} onChange={(e) => setAmountReceived(e.target.value)} />
+                                        </div>
+                                        <div>
+                                            <Label>Outstanding Amt.</Label>
+                                            <input readOnly onClick={(e) => e.stopPropagation()} className="w-full border border-gray-200 rounded-lg px-2 py-1 text-[11px] h-[30px] bg-gray-50 text-gray-500" value={Math.round(outstandingAmountValue).toLocaleString('en-IN')} />
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Summary bar */}
+                    <div className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-y sm:divide-y-0 divide-gray-100 rounded-xl border border-gray-200 bg-gray-50/60">
+                        <div className="flex items-center gap-2 px-4 py-3">
+                            <Calculator size={16} className="text-slate-500" />
+                            <div>
+                                <p className="text-[10px] text-slate-500">Taxable Amount</p>
+                                <p className="text-[13px] font-bold text-slate-700">{Math.round(sumTaxable).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-3">
+                            <Receipt size={16} className="text-slate-500" />
+                            <div>
+                                <p className="text-[10px] text-slate-500">GST Amount</p>
+                                <p className="text-[13px] font-bold text-slate-700">{Math.round(sumGst).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-3">
+                            <ClipboardList size={16} className="text-[#194090]" />
+                            <div>
+                                <p className="text-[10px] text-slate-500">Invoice Amount</p>
+                                <p className="text-[13px] font-bold text-[#194090]">{Math.round(sumTotal).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-3">
+                            <CheckCircle2 size={16} className="text-emerald-600" />
+                            <div>
+                                <p className="text-[10px] text-slate-500">Amount Received</p>
+                                <p className="text-[13px] font-bold text-emerald-600">{Math.round(amountReceivedValue).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2 px-4 py-3">
+                            <Wallet size={16} className="text-red-500" />
+                            <div>
+                                <p className="text-[10px] text-slate-500">Outstanding Amount</p>
+                                <p className="text-[13px] font-bold text-red-500">{Math.round(outstandingAmountValue).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                        <button type="button" onClick={() => navigate(-1)} className="border border-gray-300 rounded-lg px-5 py-2 text-[12px] font-bold text-gray-700 hover:bg-gray-50 transition bg-white shadow-sm">
+                            Cancel
+                        </button>
+                        <div className="flex gap-2">
+                            <button type="button" onClick={() => setShowPreview(true)} className="flex items-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-700 rounded-lg px-4 py-2 text-[12px] font-bold hover:bg-blue-100 transition shadow-sm">
+                                <Eye size={14} /> Preview Invoice
+                            </button>
+                            <button type="submit" className="flex items-center gap-1.5 bg-[#194090] hover:bg-[#112f6b] text-white rounded-lg px-5 py-2 text-[12px] font-bold transition shadow-sm">
+                                <FileText size={14} /> Create Tax Invoice
+                            </button>
+                        </div>
+                    </div>
+                    </>
+                    )}
+                </form>
+
+                {showPreview && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 overflow-y-auto">
+                        <div className="bg-white rounded-xl shadow-2xl w-full max-w-[1050px] max-h-[90vh] overflow-y-auto mt-10 p-6 relative">
+                            <button onClick={() => setShowPreview(false)} className="absolute top-4 right-4 z-50 bg-white rounded-full p-1 text-gray-500 hover:text-red-500 shadow-sm border">
+                                <XIcon size={24} />
+                            </button>
+                            <div className="pt-8">
+                                <InvoicePreviewTemplate form={{ ...form, delivery_challans: previewDeliveryChallans }} items={items} />
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50/50 pb-4 mt-0">
@@ -1065,10 +1566,6 @@ const CreateInvoice = () => {
                                 <div className="relative">
                                     <Input required disabled type="date" value={form.invoiceDate} className="py-2.5" />
                                 </div>
-                            </div>
-                            <div>
-                                <Label>E-way Bill Number</Label>
-                                <Input placeholder="Enter E-way Bill No. (Optional)" value={form.ewayBillNo} onChange={(e) => setField('ewayBillNo', e.target.value)} className="py-2.5" />
                             </div>
                             <div>
                                 <Label>Purchase Order No.</Label>
@@ -1198,9 +1695,9 @@ const CreateInvoice = () => {
                             <table className="w-full table-fixed text-[8px] border-collapse [&_th]:min-w-0 [&_th]:px-0.5 [&_td]:min-w-0 [&_td]:px-0.5 [&_input]:min-w-0 [&_input]:w-full [&_select]:min-w-0 [&_select]:w-full">
                                 <colgroup>
                                     <col className="w-[2%]" />
-                                    <col className="w-[11%]" />
+                                    {!hideReadonlyFields && <col className="w-[11%]" />}
                                     <col className="w-[13%]" />
-                                    <col className="w-[10%]" />
+                                    {!hideReadonlyFields && <col className="w-[10%]" />}
                                     <col className="w-[8%]" />
                                     <col className="w-[4%]" />
                                     <col className="w-[7%]" />
@@ -1217,9 +1714,9 @@ const CreateInvoice = () => {
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-200 whitespace-nowrap">
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] w-8">#</th>
-                                        <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[105px]">Item Category <span className="text-red-500">*</span></th>
+                                        {!hideReadonlyFields && <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[105px]">Item Category <span className="text-red-500">*</span></th>}
                                         <th className="px-1 py-2 text-left font-medium text-[#1a2b4b] min-w-[110px]">Item Description <span className="text-red-500">*</span></th>
-                                        <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[80px]">Stall Type</th>
+                                        {!hideReadonlyFields && <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[80px]">Stall Type</th>}
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[65px]">HSN No. <span className="text-red-500">*</span></th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[30px]">Qty <span className="text-red-500">*</span></th>
                                         <th className="px-1 py-2 text-center font-medium text-[#1a2b4b] min-w-[40px]">Area</th>
@@ -1238,7 +1735,7 @@ const CreateInvoice = () => {
                                     {items.filter((item) => item.category !== 'PLC Charges').map((item, idx) => (
                                         <tr key={item.id} className="border-b border-gray-50 last:border-0 hover:bg-gray-50/50">
                                             <td className="px-1 py-1.5 text-center text-slate-400 font-medium text-[11px]">{idx + 1}</td>
-                                            <td className="px-1 py-1.5"><input className="w-full border border-gray-200 rounded-md px-1.5 h-[26px] text-[11px]" value={item.category || ''} readOnly /></td>
+                                            {!hideReadonlyFields && <td className="px-1 py-1.5"><input className="w-full border border-gray-200 rounded-md px-1.5 h-[26px] text-[11px]" value={item.category || ''} readOnly /></td>}
                                             <td className="px-1 py-1.5">
                                                 <input
                                                     required
@@ -1247,7 +1744,7 @@ const CreateInvoice = () => {
                                                     onChange={(e) => updateItem(item.id, 'description', e.target.value)}
                                                 />
                                             </td>
-                                            <td className="px-1 py-1.5"><input className="w-full border border-gray-200 rounded-md px-1.5 h-[26px] text-[11px] text-center" value={item.stallType || ''} readOnly /></td>
+                                            {!hideReadonlyFields && <td className="px-1 py-1.5"><input className="w-full border border-gray-200 rounded-md px-1.5 h-[26px] text-[11px] text-center" value={item.stallType || ''} readOnly /></td>}
                                             <td className="px-1 py-1.5">
                                                 <input className="w-full appearance-none border border-gray-200 rounded-md px-1.5 py-1 text-[11px] text-[#1a2b4b] bg-white shadow-sm hover:border-gray-300 focus:outline-none focus:border-[#3b82f6] focus:ring-1 focus:ring-[#3b82f6]/20 transition-all h-[26px] text-center" value={item.hsn} onChange={(e) => updateItem(item.id, 'hsn', e.target.value)} />
                                             </td>
@@ -1347,15 +1844,19 @@ const CreateInvoice = () => {
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2">For: {selectedPrimaryStall?.plScheme || '—'}</p>
                                 </div>
-                                <div className="mt-3 flex items-center gap-4">
-                                    <span className="text-[12px] font-medium text-[#1a2b4b]">TDS Applicable<span className="text-red-500">*</span></span>
-                                    <label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={selectedTdsApplicable} readOnly /> Yes</label>
-                                    <label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={!selectedTdsApplicable} readOnly /> No</label>
-                                </div>
+                                {!hideReadonlyFields && (
+                                    <div className="mt-3 flex items-center gap-4">
+                                        <span className="text-[12px] font-medium text-[#1a2b4b]">TDS Applicable<span className="text-red-500">*</span></span>
+                                        <label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={selectedTdsApplicable} readOnly /> Yes</label>
+                                        <label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={!selectedTdsApplicable} readOnly /> No</label>
+                                    </div>
+                                )}
                                 {selectedTdsApplicable && <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5"><p className="text-[12px] font-semibold text-amber-800">TDS Deduction (Section 194C)</p><p className="text-[11px] text-amber-700 mt-0.5">TDS shall be deducted on the basic value only (excluding GST). Applicable rate: <strong>2%</strong> for Companies/Firms/other entities and <strong>1%</strong> for Individual/HUF.</p></div>}
                             </div>
                             <div className="lg:col-span-3">
-                                <div className="flex items-center gap-4 mb-3"><span className="text-[13px] font-semibold text-[#1a2b4b]">Payment Plan<span className="text-red-500">*</span></span><label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={!selectedIsInstalmentPlan} readOnly /> Full Payment</label><label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={selectedIsInstalmentPlan} readOnly /> Instalment Plan</label></div>
+                                {!hideReadonlyFields && (
+                                    <div className="flex items-center gap-4 mb-3"><span className="text-[13px] font-semibold text-[#1a2b4b]">Payment Plan<span className="text-red-500">*</span></span><label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={!selectedIsInstalmentPlan} readOnly /> Full Payment</label><label className="flex items-center gap-1.5 text-[12px]"><input type="radio" checked={selectedIsInstalmentPlan} readOnly /> Instalment Plan</label></div>
+                                )}
                                 {!selectedIsInstalmentPlan ? <div><h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Payment Terms</h4><div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2.5 space-y-2"><p className="text-[12px] text-[#1a2b4b]"><strong>Advance Payment – 100%:</strong> Full payment is payable in advance on the same day of Proforma Invoice (PI) generation.</p>{selectedTdsApplicable && (selectedTdsLines.length ? selectedTdsLines : ['TDS under Section 194C shall be deducted on the basic value only (excluding GST). Applicable rate: 2% for Companies/Firms/other entities and 1% for Individual/HUF.', 'Please share the applicable TDS Certificate (Form 16A) after deduction.']).map((line, index) => <p key={index} className="text-[12px] text-[#1a2b4b]">{line}</p>)}</div></div> : <div><h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Instalment Plan Details</h4><div className="overflow-x-auto"><table className="w-full text-[11px]"><thead><tr className="bg-gray-50">{['#', 'Instalment Name', '%', 'Amt', 'Due Date', 'Remarks'].map((heading) => <th key={heading} className="text-left px-2 py-2">{heading}</th>)}</tr></thead><tbody>{selectedInstalments.map((row, index) => <tr key={row.id || index} className="border-b"><td className="px-2 py-2">{index + 1}</td><td className="px-2 py-2">{row.label}</td><td className="px-2 py-2">{Number(row.percentage || 0)}%</td><td className="px-2 py-2">{Number(row.amount || 0).toLocaleString('en-IN')}</td><td className="px-2 py-2">{row.dueDate ? new Date(row.dueDate).toLocaleDateString('en-GB') : '—'}</td><td className="px-2 py-2">{row.remarks || '—'}</td></tr>)}</tbody></table></div>{selectedTdsApplicable && <div className="mt-3 bg-gray-50 rounded-lg px-3 py-2.5 space-y-2">{selectedTdsLines.map((line, index) => <p key={index} className="text-[12px]">{line}</p>)}</div>}</div>}
                             </div>
                         </fieldset>

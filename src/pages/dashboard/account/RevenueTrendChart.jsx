@@ -31,10 +31,28 @@ const dailyData = [
   { name: "Sun", revenue: 520000, target: 400000 }
 ];
 
-export default function RevenueTrendChart() {
+export default function RevenueTrendChart({ comingSoon }) {
   const [timeframe, setTimeframe] = useState("Monthly"); // 'Daily' | 'Weekly' | 'Monthly'
   const [showRevenue, setShowRevenue] = useState(true);
   const [showTarget, setShowTarget] = useState(true);
+
+  if (comingSoon) {
+    return (
+      <div className="bg-white rounded-xl border border-slate-200 p-2.5 shadow-sm flex flex-col justify-between h-full">
+        <div className="shrink-0 mb-1.5 pb-1 border-b border-slate-100">
+          <h3 className="text-[12.5px] font-md text-slate-800 tracking-tight">
+            Revenue Collection Trend
+          </h3>
+          <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">
+            Comparison vs monthly targets
+          </p>
+        </div>
+        <div className="flex-1 flex items-center justify-center min-h-[110px]">
+          <span className="text-[11px] font-black text-slate-400 uppercase tracking-wider">Coming Soon</span>
+        </div>
+      </div>
+    );
+  }
 
   const activeData = timeframe === "Monthly"
     ? monthlyData

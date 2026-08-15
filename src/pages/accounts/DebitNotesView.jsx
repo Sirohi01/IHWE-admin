@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
     ChevronRight, FileText, CheckCircle2, AlertTriangle, Clock, Calendar,
-    Download, Eye, Filter, Search, Plus, CalendarDays, RefreshCw, BarChart2, Building2,
-    Wallet, ClipboardList, Send, Target, FileSpreadsheet, MoreVertical, Loader2, ChevronDown
+    Download, Eye, Search, RefreshCw, BarChart2,
+    Wallet, FilePlus, MoreVertical, Loader2
 } from 'lucide-react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import api, { SERVER_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
 import Swal from 'sweetalert2';
@@ -47,29 +46,20 @@ function useCountUp(target, duration = 1200) {
     return { ref, count };
 }
 
-function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, bottomLabel, bottomValue, isCurrency }) {
+function StatCard({ icon, iconBg, rawValue, displayValue, label, subLabel, isCurrency }) {
     const { ref, count } = useCountUp(rawValue);
     return (
-        <div ref={ref} className="bg-white p-1 border border-slate-200 rounded-xl shadow-sm flex items-center h-full cursor-pointer hover:shadow-md transition-shadow">
-            <div className={`w-10 h-10 xl:w-11 xl:h-11 ${iconBg} rounded-full flex items-center justify-center shrink-0 mr-1`}>
-                {React.cloneElement(icon, { className: "w-5 h-5 xl:w-5 xl:h-5" })}
-            </div>
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <div className="text-slate-700 font-semibold text-[10px] mb-0.5 whitespace-nowrap overflow-hidden text-ellipsis">{label}</div>
-                <div className={`text-[12px] font-semibold leading-tight text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis`}>
-                    {isCurrency && displayValue.startsWith('₹') ? '₹ ' : ''}
-                    {isCurrency
-                        ? new Intl.NumberFormat('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(count)
-                        : Math.round(count).toLocaleString('en-IN')}
-                    {!isCurrency && displayValue.includes('%') ? '%' : ''}
+        <div ref={ref} className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full">
+            <div className="flex items-start gap-2.5">
+                <div className={`w-8 h-8 ${iconBg} rounded-full flex items-center justify-center shrink-0 mt-0.5`}>
+                    {icon}
                 </div>
-                <div className="flex items-center gap-1.5 mt-0.5 xl:mt-1 flex-wrap">
-                    {bottomValue && bottomValue.includes('↑') || bottomValue.includes('↓') ? (
-                        <span className="text-[10px] font-bold text-emerald-600 leading-none">{bottomValue}</span>
-                    ) : null}
-                    <div className="text-slate-500 font-medium text-[9px] xl:text-[10px] whitespace-nowrap overflow-hidden text-ellipsis">
-                        {subLabel} {bottomValue && !bottomValue.includes('↑') && !bottomValue.includes('↓') ? `• ${bottomValue}` : ''}
+                <div className="flex-1 min-w-0">
+                    <h3 className="text-slate-700 font-bold text-[10px] uppercase tracking-wider leading-tight whitespace-nowrap truncate">{label}</h3>
+                    <div className="text-2xl font-semibold text-slate-800 leading-none mt-1">
+                        {isCurrency ? displayValue : Math.round(count).toLocaleString('en-IN')}
                     </div>
+                    <div className="text-slate-400 text-[11px] font-semibold mt-0.5">{subLabel}</div>
                 </div>
             </div>
         </div>
@@ -94,8 +84,6 @@ const STATUS_DOT = {
     'Partially Adjusted': 'bg-amber-500',
     Adjusted: 'bg-emerald-500',
 };
-const PIE_COLORS = { Adjusted: '#059669', 'Partially Adjusted': '#f59e0b', Outstanding: '#e11d48' };
-
 const DOC_STATUS_LABELS = { draft: 'Draft', active: 'Active', cancelled: 'Cancelled' };
 const DOC_STATUS_STYLES = {
     draft: 'bg-blue-50 text-blue-600',
@@ -120,22 +108,14 @@ const DebitNotesView = () => {
 
     const [loading, setLoading] = useState(true);
     const [debitNotes, setDebitNotes] = useState([]);
-    const [payments, setPayments] = useState([]);
     const [searchInput, setSearchInput] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(12);
 
     const [dateFilter, setDateFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
     const [createdByFilter, setCreatedByFilter] = useState('');
-    const [events, setEvents] = useState([]);
-    const [filterEvent, setFilterEvent] = useState(scopedEventId || 'all');
-
-    const [dateRangeOpen, setDateRangeOpen] = useState(false);
-    const [filtersOpen, setFiltersOpen] = useState(false);
-    const [fromDate, setFromDate] = useState('');
-    const [toDate, setToDate] = useState('');
 
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [modalCompanies, setModalCompanies] = useState([]);
@@ -147,26 +127,14 @@ const DebitNotesView = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [notesRes, paymentsRes, eventsRes] = await Promise.all([
-                    api.get('/api/account-debit-notes', {
-                        params: {
-                            ...(isAllList ? {} : { companyId: id }),
-                            ...(scopedEventId ? { eventId: scopedEventId } : {}),
-                        }
-                    }),
-                    api.get('/api/payments').catch(() => ({ data: [] })),
-                    api.get('/api/events').catch(() => ({ data: { data: [] } }))
-                ]);
-
-                const eventsData = eventsRes.data?.data || eventsRes.data || [];
-                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
-                setEvents(eventsData);
-                if (!scopedEventId && eventsData.length > 0) {
-                    setFilterEvent(eventsData[0]._id);
-                }
+                const notesRes = await api.get('/api/account-debit-notes', {
+                    params: {
+                        ...(isAllList ? {} : { companyId: id }),
+                        ...(scopedEventId ? { eventId: scopedEventId } : {}),
+                    }
+                });
 
                 setDebitNotes(notesRes.data?.data || []);
-                setPayments(paymentsRes.data?.data || paymentsRes.data || []);
             } catch {
                 toast.error('Failed to load debit notes');
             } finally {
@@ -288,7 +256,6 @@ const DebitNotesView = () => {
     const uniqueCreators = [...new Set(debitNotes.map((n) => n.added_by).filter(Boolean))];
 
     const filteredNotes = debitNotes.filter((n) => {
-        if (filterEvent !== 'all' && String(n.eventId || '') !== String(filterEvent)) return false;
         if (statusFilter && n.settlementStatus !== statusFilter) return false;
         if (typeFilter && n.debitNoteType !== typeFilter) return false;
         if (createdByFilter && n.added_by !== createdByFilter) return false;
@@ -348,18 +315,6 @@ const DebitNotesView = () => {
         }, 0) / totalNotes)
         : 0;
 
-    const statusCounts = { Adjusted: 0, 'Partially Adjusted': 0, Outstanding: 0 };
-    filteredNotes.forEach((n) => { if (statusCounts[n.settlementStatus] !== undefined) statusCounts[n.settlementStatus]++; });
-    const totalStatusCount = totalNotes || 1;
-    const pieData = Object.entries(statusCounts).map(([name, value]) => ({ name, value, color: PIE_COLORS[name] }));
-
-    // Collection summary (real, computed from Payment records — same pattern as ReceiptsView)
-    const scopedPayments = isAllList ? payments : payments.filter((p) => String(p.companyId) === String(id));
-    const todayCollection = scopedPayments.filter((p) => new Date(p.payment_date || p.added).toDateString() === now.toDateString()).reduce((s, p) => s + (parseFloat(p.amount_text) || 0), 0);
-    const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay()); startOfWeek.setHours(0, 0, 0, 0);
-    const weekCollection = scopedPayments.filter((p) => new Date(p.payment_date || p.added) >= startOfWeek).reduce((s, p) => s + (parseFloat(p.amount_text) || 0), 0);
-    const monthCollection = scopedPayments.filter((p) => { const d = new Date(p.payment_date || p.added); return !isNaN(d.getTime()) && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear(); }).reduce((s, p) => s + (parseFloat(p.amount_text) || 0), 0);
-
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredNotes.slice(indexOfFirstItem, indexOfLastItem);
@@ -378,153 +333,64 @@ const DebitNotesView = () => {
                     </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                    <div className="relative">
-                        <button
-                            onClick={() => setDateRangeOpen(!dateRangeOpen)}
-                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
-                        >
-                            <CalendarDays className="w-4 h-4 text-slate-500" />
-                            {fromDate && toDate ? `${new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} - ${new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : 'Date Range'}
-                            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-                        </button>
-
-                        {dateRangeOpen && (
-                            <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-64">
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">From Date</label>
-                                        <input
-                                            type="date"
-                                            value={fromDate}
-                                            onChange={(e) => setFromDate(e.target.value)}
-                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">To Date</label>
-                                        <input
-                                            type="date"
-                                            value={toDate}
-                                            onChange={(e) => setToDate(e.target.value)}
-                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                        />
-                                    </div>
-                                    <button
-                                        onClick={() => setDateRangeOpen(false)}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
-                                    >
-                                        Apply Range
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                    <div className="relative">
-                        <button
-                            className="flex items-center gap-2 bg-white border border-slate-300 text-slate-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50 cursor-pointer pointer-events-none"
-                        >
-                            <Building2 className="w-4 h-4 text-slate-500" />
-                            <select
-                                value={filterEvent}
-                                onChange={(e) => setFilterEvent(e.target.value)}
-                                className="appearance-none bg-transparent border-none text-slate-700 focus:outline-none focus:ring-0 cursor-pointer pointer-events-auto pr-2 max-w-[150px] truncate"
-                            >
-                                <option value="all">All Events</option>
-                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
-                            </select>
-                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 -ml-1" />
-                        </button>
-                    </div>
-                    <div className="relative">
-                        <button
-                            onClick={() => setFiltersOpen(!filtersOpen)}
-                            className="flex items-center gap-2 bg-white border border-slate-300 text-blue-600 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-slate-50"
-                        >
-                            <Filter className="w-4 h-4 text-blue-600" /> Filters
-                        </button>
-
-                        {filtersOpen && (
-                            <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 rounded-lg shadow-lg p-3 z-50 w-56">
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Status</label>
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value)}
-                                            className="w-full text-xs border border-slate-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-                                        >
-                                            <option value="">All Statuses</option>
-                                            <option value="draft">Draft</option>
-                                            <option value="active">Active</option>
-                                            <option value="cancelled">Cancelled</option>
-                                        </select>
-                                    </div>
-                                    <button
-                                        onClick={() => setFiltersOpen(false)}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 rounded transition-colors mt-2"
-                                    >
-                                        Apply Filters
-                                    </button>
-                                </div>
-                            </div>
-                        )}
-                    </div>
                     <button
-                        onClick={handleOpenCreate}
-                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                        onClick={() => navigate('/accounts/proforma-invoices')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
                     >
-                        <Plus className="w-4 h-4" /> Create Debit Note
+                        Proforma Invoices
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/invoices')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Tax Invoices
+                    </button>
+                    <button
+                        onClick={() => navigate('/accounts/credit-notes')}
+                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
+                    >
+                        Credit Notes
                     </button>
                 </div>
             </div>
 
-            <div className="flex flex-col lg:flex-row gap-2 mt-2">
-                {/* Left */}
-                <div className="w-full lg:w-[80%] space-y-2">
+            {/* Stat Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-2 mb-2">
+                <StatCard
+                    icon={<FileText className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
+                    rawValue={totalNotes} displayValue={totalNotes.toString()}
+                    label="Total Debit Notes" subLabel={`Against ${uniqueInvoices} Invoices`}
+                />
+                <StatCard
+                    icon={<Wallet className="w-4 h-4 text-indigo-600" />} iconBg="bg-indigo-100"
+                    rawValue={thisMonthRaised} displayValue={formatCurrency(thisMonthRaised)} isCurrency
+                    label="Total Raised" subLabel={monthGrowthPct !== null ? `${monthGrowthPct >= 0 ? '↑' : '↓'} ${Math.abs(monthGrowthPct)}% vs Last Month` : 'This Month'}
+                />
+                <StatCard
+                    icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} iconBg="bg-emerald-100"
+                    rawValue={totalAdjusted} displayValue={formatCurrency(totalAdjusted)} isCurrency
+                    label="Total Adjusted" subLabel={`${adjustedPct}% of Value`}
+                />
+                <StatCard
+                    icon={<Clock className="w-4 h-4 text-amber-600" />} iconBg="bg-amber-100"
+                    rawValue={totalOutstanding} displayValue={formatCurrency(totalOutstanding)} isCurrency
+                    label="Total Outstanding" subLabel={`${outstandingPct}% of Value`}
+                />
+                <StatCard
+                    icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} iconBg="bg-rose-100"
+                    rawValue={overdueNotes.length} displayValue={overdueNotes.length.toString()}
+                    label="Overdue Debit Notes" subLabel={`Value: ${formatCurrency(overdueValue)}`}
+                />
+                <StatCard
+                    icon={<BarChart2 className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
+                    rawValue={avgValueThisMonth} displayValue={formatCurrency(avgValueThisMonth)} isCurrency
+                    label="Avg Debit Note Value" subLabel={`Avg. Age: ${avgAgeDays} Days`}
+                />
+            </div>
 
-                    {/* Stat Cards */}
-                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-                        <StatCard
-                            icon={<FileText className="w-4 h-4 text-blue-600" />} iconBg="bg-blue-100"
-                            rawValue={totalNotes} displayValue={totalNotes.toString()}
-                            label="Total Debit Notes" subLabel={`Against ${uniqueInvoices} Invoices`}
-                            bottomLabel="Total Value" bottomValue={`₹ ${formatCurrency(totalValue)}`}
-                        />
-                        <StatCard
-                            icon={<Wallet className="w-4 h-4 text-indigo-600" />} iconBg="bg-indigo-100"
-                            rawValue={thisMonthRaised} displayValue={`₹ ${formatCurrency(thisMonthRaised)}`} isCurrency
-                            label="Total Raised" subLabel="This Month"
-                            bottomLabel={monthGrowthPct !== null ? 'vs Last Month' : 'Overall'} bottomValue={monthGrowthPct !== null ? `${monthGrowthPct >= 0 ? '↑' : '↓'} ${Math.abs(monthGrowthPct)}%` : `₹ ${formatCurrency(totalValue)}`}
-                        />
-                        <StatCard
-                            icon={<CheckCircle2 className="w-4 h-4 text-emerald-600" />} iconBg="bg-emerald-100"
-                            rawValue={totalAdjusted} displayValue={`₹ ${formatCurrency(totalAdjusted)}`} isCurrency
-                            label="Total Adjusted" subLabel="Already Adjusted"
-                            bottomLabel="% of Value" bottomValue={`${adjustedPct}%`}
-                        />
-                        <StatCard
-                            icon={<Clock className="w-4 h-4 text-amber-600" />} iconBg="bg-amber-100"
-                            rawValue={totalOutstanding} displayValue={`₹ ${formatCurrency(totalOutstanding)}`} isCurrency
-                            label="Total Outstanding" subLabel="Yet to be Adjusted"
-                            bottomLabel="% of Value" bottomValue={`${outstandingPct}%`}
-                        />
-                        <StatCard
-                            icon={<AlertTriangle className="w-4 h-4 text-rose-600" />} iconBg="bg-rose-100"
-                            rawValue={overdueNotes.length} displayValue={overdueNotes.length.toString()}
-                            label="Overdue Debit Notes" subLabel="Outstanding > 30 Days"
-                            bottomLabel="Overdue Value" bottomValue={`₹ ${formatCurrency(overdueValue)}`}
-                        />
-                        <StatCard
-                            icon={<BarChart2 className="w-4 h-4 text-purple-600" />} iconBg="bg-purple-100"
-                            rawValue={avgValueThisMonth} displayValue={`₹ ${formatCurrency(avgValueThisMonth)}`} isCurrency
-                            label="Avg Debit Note Value" subLabel="This Month"
-                            bottomLabel="Avg. Age" bottomValue={`${avgAgeDays} Days`}
-                        />
-                    </div>
-
-                    {/* Filters */}
-                    <div className="bg-white p-3 py-2 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-2">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide w-full">
+            {/* Filters */}
+            <div className="bg-white p-3 py-1 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-3 mb-2">
+                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide w-full">
                             <div className="relative shrink-0">
                                 <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                                 <input
@@ -561,47 +427,55 @@ const DebitNotesView = () => {
                             >
                                 <RefreshCw className="w-3 h-3" /> Reset
                             </button>
-                        </div>
-                        <div className="flex items-center justify-end gap-2 border-t border-slate-100 pt-2">
-                            <button
-                                disabled={exporting}
-                                onClick={() => exportToExcel(filteredNotes)}
-                                className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50"
-                            >
-                                {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Export Excel
-                            </button>
-                            <button onClick={() => navigate('/accounts/summary-report')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors">
-                                <BarChart2 className="w-3.5 h-3.5" /> Debit Note Report
-                            </button>
-                        </div>
-                    </div>
+                    <div className="flex-1" />
+                    <button
+                        disabled={exporting}
+                        onClick={() => exportToExcel(filteredNotes)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors disabled:opacity-50 shrink-0 whitespace-nowrap"
+                    >
+                        {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Export Excel
+                    </button>
+                    <button onClick={() => navigate('/accounts/summary-report')} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors shrink-0 whitespace-nowrap">
+                        <BarChart2 className="w-3.5 h-3.5" /> Debit Note Report
+                    </button>
+                    <button onClick={() => navigate(isAllList ? '/accounts/client-ledger' : `/dashboard/account/client-ledger/${id}`)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors shrink-0 whitespace-nowrap">
+                        <Eye className="w-3.5 h-3.5" /> View Client Ledger
+                    </button>
+                    <button
+                        onClick={handleOpenCreate}
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-md text-[11px] font-bold hover:bg-blue-700 transition-colors shrink-0 whitespace-nowrap"
+                    >
+                        <FilePlus className="w-3.5 h-3.5" /> Create Debit Note
+                    </button>
+                </div>
+            </div>
 
-                    {/* Table */}
-                    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-x-auto">
-                        <table className="w-full min-w-[1200px] text-left border-collapse">
-                            <thead>
-                                <tr className="bg-white text-[8px] font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
-                                    <th className="px-2 py-2 text-center">S.No.</th>
-                                    <th className="px-2 py-2">Debit Note Details</th>
-                                    <th className="px-2 py-2">Invoice Details</th>
-                                    <th className="px-2 py-2">Client &amp; Stall</th>
-                                    <th className="px-2 py-2">Debit Note Type &amp; Reason</th>
-                                    <th className="px-2 py-2 text-center">Debit Note Date</th>
-                                    <th className="px-2 py-2 text-right">Debit Note Value</th>
-                                    <th className="px-2 py-2 text-right">Adjusted Amount</th>
-                                    <th className="px-2 py-2 text-right">Outstanding Amount</th>
-                                    <th className="px-2 py-2 text-center">Status</th>
-                                    <th className="px-2 py-2 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-[11px]">
-                                {loading ? (
-                                    <tr><td colSpan="11" className="py-6 text-center text-slate-500">
-                                        <div className="flex justify-center items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading debit notes...</div>
-                                    </td></tr>
-                                ) : currentItems.length === 0 ? (
-                                    <tr><td colSpan="11" className="py-6 text-center text-slate-500">No debit notes found.</td></tr>
-                                ) : currentItems.map((note, idx) => {
+            {/* Table */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-auto max-h-[460px]">
+                <table className="w-full min-w-[1300px] text-left border-collapse">
+                    <thead className="sticky top-0 z-10">
+                        <tr className="bg-white text-[8px] font-bold uppercase tracking-wider text-slate-700 border-b border-slate-200 whitespace-nowrap">
+                            <th className="px-2 py-1 text-center">S.No.</th>
+                            <th className="px-2 py-1">Debit Note Details</th>
+                            <th className="px-2 py-1">Invoice Details</th>
+                            <th className="px-2 py-1">Client &amp; Stall</th>
+                            <th className="px-2 py-1">Type &amp; Reason</th>
+                            <th className="px-2 py-1 text-center">Date</th>
+                            <th className="px-2 py-1 text-right">Value</th>
+                            <th className="px-2 py-1 text-right">Adjusted</th>
+                            <th className="px-2 py-1 text-right">Outstanding</th>
+                            <th className="px-2 py-1 text-center">Status</th>
+                            <th className="px-2 py-1 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody className="text-[11px]">
+                        {loading ? (
+                            <tr><td colSpan="11" className="py-6 text-center text-slate-500 h-[33px]">
+                                <div className="flex justify-center items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading debit notes...</div>
+                            </td></tr>
+                        ) : currentItems.length === 0 ? (
+                            <tr className="border-b border-slate-100"><td colSpan="11" className="py-6 text-center text-slate-500 h-[33px]">No debit notes found.</td></tr>
+                        ) : currentItems.map((note, idx) => {
                                     const primaryAlloc = (note.allocations || [])[0];
                                     const extraAllocs = (note.allocations || []).length - 1;
                                     const adjustedPctRow = note.totalAmount > 0 ? Math.round(((note.settledAmount || 0) / note.totalAmount) * 100) : 0;
@@ -683,155 +557,78 @@ const DebitNotesView = () => {
                                         </tr>
                                     );
                                 })}
-                            </tbody>
-                        </table>
+                        {!loading && currentItems.length < itemsPerPage &&
+                            Array.from({ length: itemsPerPage - (currentItems.length === 0 ? 1 : currentItems.length) }).map((_, idx) => (
+                                <tr key={`filler-${idx}`} className="border-b border-slate-100">
+                                    <td colSpan={11} className="px-2 py-1 h-[33px]">&nbsp;</td>
+                                </tr>
+                            ))
+                        }
+                    </tbody>
+                </table>
+            </div>
 
-                        {/* Pagination */}
-                        <div className="bg-white border-t border-slate-200 p-4">
-                            <div className="flex justify-between items-center text-[11px] text-slate-500">
-                                <div>Showing {totalNotes === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalNotes)} of {totalNotes} entries</div>
-                                <div className="flex items-center gap-1">
-                                    <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
-                                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                        let pageNum = i + 1;
-                                        if (totalPages > 5 && currentPage > 3) pageNum = currentPage - 2 + i;
-                                        if (pageNum > totalPages) return null;
-                                        return (
-                                            <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`w-6 h-6 flex items-center justify-center rounded font-bold ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'border border-slate-300 hover:bg-slate-50'}`}>{pageNum}</button>
-                                        );
-                                    })}
-                                    <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span>Rows per page</span>
-                                    <select
-                                        value={itemsPerPage}
-                                        onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
-                                        className="border border-slate-300 rounded px-2 py-1 focus:outline-none"
-                                    >
-                                        <option value={10}>10</option>
-                                        <option value={20}>20</option>
-                                        <option value={50}>50</option>
-                                        <option value={100}>100</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer Totals */}
-                    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-2 px-3 flex items-center justify-between overflow-x-auto mt-2">
-                        <div className="flex items-center flex-1 divide-x divide-slate-200 min-w-max justify-between">
-                            <div className="pr-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Total Debit Note Value</div>
-                                <div className="text-[11px] font-bold text-slate-800">₹ {formatCurrency(totalValue)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Total Raised</div>
-                                <div className="text-[11px] font-bold text-slate-800">₹ {formatCurrency(totalValue)}</div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Total Adjusted</div>
-                                <div className="text-[11px] font-bold text-emerald-600 flex items-center justify-center gap-1">
-                                    ₹ {formatCurrency(totalAdjusted)} <span className="text-[9px] text-slate-500 font-medium">({adjustedPct}%)</span>
-                                </div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Total Outstanding</div>
-                                <div className="text-[11px] font-bold text-rose-500 flex flex-col items-center">
-                                    ₹ {formatCurrency(totalOutstanding)}
-                                    <span className="text-[9px] text-slate-500 font-medium mt-0.5">{filteredNotes.filter(n => n.outstandingAmount > 0).length} Debit Notes</span>
-                                </div>
-                            </div>
-                            <div className="px-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Total Invoices Affected</div>
-                                <div className="text-[11px] font-bold text-slate-800">{uniqueInvoices}</div>
-                            </div>
-                            <div className="pl-3 text-center">
-                                <div className="text-[9px] font-semibold text-slate-500 uppercase tracking-wider mb-0.5">Average Debit Note Age</div>
-                                <div className="text-[11px] font-bold text-slate-800">{avgAgeDays} Days</div>
-                            </div>
-                        </div>
-                    </div>
+            {/* Pagination */}
+            <div className="mt-3 flex justify-between items-center text-[11px] text-slate-500 px-1">
+                <div>Showing {totalNotes === 0 ? 0 : indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalNotes)} of {totalNotes} entries</div>
+                <div className="flex items-center gap-1">
+                    <button onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1} className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">&lt;</button>
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum = i + 1;
+                        if (totalPages > 5 && currentPage > 3) pageNum = currentPage - 2 + i;
+                        if (pageNum > totalPages) return null;
+                        return (
+                            <button key={pageNum} onClick={() => setCurrentPage(pageNum)} className={`w-6 h-6 flex items-center justify-center rounded font-bold ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'border border-slate-300 hover:bg-slate-50'}`}>{pageNum}</button>
+                        );
+                    })}
+                    <button onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages || totalPages === 0} className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">&gt;</button>
                 </div>
+                <div className="flex items-center gap-2">
+                    <span>Rows per page</span>
+                    <select
+                        value={itemsPerPage}
+                        onChange={(e) => { setItemsPerPage(Number(e.target.value)); setCurrentPage(1); }}
+                        className="border border-slate-300 rounded px-2 py-1 focus:outline-none"
+                    >
+                        <option value={10}>10</option>
+                        <option value={12}>12</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                    </select>
+                </div>
+            </div>
 
-                {/* Right Sidebar */}
-                <div className="w-full lg:w-[20%] flex flex-col gap-2">
-                    <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                        <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Collection Summary</h2>
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-md bg-blue-50 flex items-center justify-center text-blue-600 shrink-0"><ClipboardList className="w-3.5 h-3.5" /></div>
-                                <div><div className="text-[10px] font-semibold text-slate-600">Today's Collection</div><div className="font-bold text-slate-800 text-xs">₹ {formatCurrency(todayCollection)}</div></div>
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-md bg-emerald-50 flex items-center justify-center text-emerald-600 shrink-0"><Calendar className="w-3.5 h-3.5" /></div>
-                                <div><div className="text-[10px] font-semibold text-slate-600">This Week Collection</div><div className="font-bold text-slate-800 text-xs">₹ {formatCurrency(weekCollection)}</div></div>
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-md bg-orange-50 flex items-center justify-center text-orange-600 shrink-0"><Wallet className="w-3.5 h-3.5" /></div>
-                                <div><div className="text-[10px] font-semibold text-slate-600">This Month Collection</div><div className="font-bold text-slate-800 text-xs">₹ {formatCurrency(monthCollection)}</div></div>
-                            </div>
-                            <div className="h-[1px] bg-slate-100 my-1.5"></div>
-                            <div className="flex items-center gap-2.5">
-                                <div className="w-7 h-7 rounded-md bg-red-50 flex items-center justify-center text-red-500 shrink-0"><Target className="w-3.5 h-3.5" /></div>
-                                <div><div className="text-[10px] font-semibold text-slate-600">Overdue Recovery Target</div><div className="font-bold text-slate-800 text-xs">₹ {formatCurrency(overdueValue)}</div></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                        <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Quick Actions</h2>
-                        <div className="space-y-2">
-                            {[
-                                { icon: <FileText className="w-3.5 h-3.5 text-blue-500" />, title: 'Create Debit Note', sub: 'Raise a new debit note', onClick: handleOpenCreate },
-                                { icon: <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />, title: 'View Client Ledger', sub: 'Detailed ledger history', onClick: () => navigate(isAllList ? '/accounts/client-ledger' : `/dashboard/account/client-ledger/${id}`) },
-                                { icon: <Download className="w-3.5 h-3.5 text-blue-500" />, title: 'Download Debit Note Report', sub: 'Get detailed report', onClick: () => exportToExcel(filteredNotes, 'Debit_Notes_Export.xlsx') },
-                            ].map((item, i) => (
-                                <div key={i} onClick={item.onClick} className="flex items-center justify-between p-1.5 hover:bg-slate-50 rounded-lg cursor-pointer transition-colors group">
-                                    <div className="flex items-center gap-2.5">
-                                        <div className="w-7 h-7 rounded bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0">{item.icon}</div>
-                                        <div><div className="text-[11px] font-semibold text-slate-800 leading-tight">{item.title}</div><div className="text-[9px] font-medium text-slate-500 leading-tight mt-0.5">{item.sub}</div></div>
-                                    </div>
-                                    <ChevronRight className="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-500 transition-colors" />
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
-                        <h2 className="text-sm font-semibold text-slate-800 mb-3 tracking-wide">Debit Note Status Overview</h2>
-                        <div className="flex items-center justify-between h-[100px]">
-                            <div className="w-[100px] h-full shrink-0 -ml-2">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <PieChart>
-                                        <Pie data={pieData} cx="50%" cy="50%" innerRadius={30} outerRadius={45} paddingAngle={2} dataKey="value" stroke="none">
-                                            {pieData.map((entry, index) => <Cell key={`cell-${index}`} fill={entry.color} />)}
-                                        </Pie>
-                                        <RechartsTooltip />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            </div>
-                            <div className="flex flex-col gap-1 shrink-0">
-                                {pieData.map((item, i) => (
-                                    <div key={i} className="flex flex-col items-center justify-between">
-                                        <div className="flex items-center gap-1">
-                                            <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }}></div>
-                                            <span className="text-[10px] font-semibold text-slate-600">{item.name}</span>
-                                        </div>
-                                        <div className="text-[10px] font-bold text-slate-800 text-right">
-                                            {item.value} <span className="font-medium text-slate-500 ml-0.5">({totalStatusCount > 0 ? ((item.value / totalStatusCount) * 100).toFixed(0) : 0}%)</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="mt-2 text-center">
-                            <button onClick={() => navigate('/accounts/summary-report')} className="text-blue-600 hover:text-blue-700 text-[11px] font-bold tracking-wide transition-colors">
-                                View All Reports →
-                            </button>
-                        </div>
-                    </div>
+            {/* Financial Summary Bar */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-sm mt-2 px-6 py-4 flex items-center justify-between overflow-x-auto">
+                <div className="flex flex-col shrink-0">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Debit Note Value</span>
+                    <span className="text-sm font-black text-slate-800">{formatCurrency(totalValue)}</span>
+                </div>
+                <div className="w-px h-10 bg-slate-200 mx-2 shrink-0"></div>
+                <div className="flex flex-col shrink-0">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Adjusted</span>
+                    <span className="text-sm font-black text-emerald-600">{formatCurrency(totalAdjusted)} <span className="text-[10px] font-medium text-slate-500 normal-case">({adjustedPct}%)</span></span>
+                </div>
+                <div className="w-px h-10 bg-slate-200 mx-2 shrink-0"></div>
+                <div className="flex flex-col shrink-0">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Outstanding</span>
+                    <span className="text-sm font-black text-rose-600">{formatCurrency(totalOutstanding)} <span className="text-[10px] font-medium text-slate-500 normal-case">({filteredNotes.filter(n => n.outstandingAmount > 0).length} Notes)</span></span>
+                </div>
+                <div className="w-px h-10 bg-slate-200 mx-2 shrink-0"></div>
+                <div className="flex flex-col shrink-0">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Overdue Value</span>
+                    <span className="text-sm font-black text-rose-600">{formatCurrency(overdueValue)}</span>
+                </div>
+                <div className="w-px h-10 bg-slate-200 mx-2 shrink-0"></div>
+                <div className="flex flex-col shrink-0">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Total Invoices Affected</span>
+                    <span className="text-sm font-black text-slate-800">{uniqueInvoices}</span>
+                </div>
+                <div className="w-px h-10 bg-slate-200 mx-2 shrink-0"></div>
+                <div className="flex flex-col shrink-0">
+                    <span className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Average Debit Note Age</span>
+                    <span className="text-sm font-black text-slate-800">{avgAgeDays} Days</span>
                 </div>
             </div>
 

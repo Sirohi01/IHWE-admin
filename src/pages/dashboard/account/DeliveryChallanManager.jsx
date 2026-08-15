@@ -1042,7 +1042,6 @@ const DeliveryChallanPrint = ({ challan, settings, bankDetails, estimateTerms, c
                         ["PO No.", challan.po_no || "-"],
                         ["Bilty No.", challan.bilty_no || "-"],
                         ["Vehicle No.", challan.vehicle_no || "-"],
-                        ["E-Way Bill No.", challan.eway_bill || "-"],
                       ].map(([label, value]) => {
                         const keepInOneLine = label === "DC No.";
                         return (
@@ -2146,7 +2145,6 @@ const DeliveryChallanManager = () => {
               <div className="md:col-span-3"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Purpose</label><select className={inputClass} value={form.purpose} onChange={(event) => setForm({ ...form, purpose: event.target.value })}>{["Event/Stall Material", "Job Work", "Returnable Material", "Non-returnable Material", "Other"].map((value) => <option key={value}>{value}</option>)}</select></div>
               <div className="md:col-span-3"><label className={labelClass}><Truck size={14} className="text-blue-500" /> Vehicle No.</label><input className={inputClass} value={form.vehicle_no} onChange={(event) => setForm({ ...form, vehicle_no: event.target.value })} placeholder="Enter vehicle number" /></div>
               <div className="md:col-span-3"><label className={labelClass}><User size={14} className="text-blue-500" /> Transporter</label><input className={inputClass} value={form.transporter_name} onChange={(event) => setForm({ ...form, transporter_name: event.target.value })} placeholder="Transporter name" /></div>
-              <div className="md:col-span-3"><label className={labelClass}><FileText size={14} className="text-blue-500" /> E-way Bill No.</label><input className={inputClass} value={form.eway_bill || ""} onChange={(event) => setForm({ ...form, eway_bill: event.target.value })} placeholder="Enter E-way Bill No." /></div>
               <div className="md:col-span-3"><label className={labelClass}><Calendar size={14} className="text-blue-500" /> Event Name</label><input className={inputClass} value={form.event_name} onChange={(event) => setForm({ ...form, event_name: event.target.value })} placeholder="Enter event name" /></div>
               <div className="md:col-span-3"><label className={labelClass}><FileBadge size={14} className="text-blue-500" /> PO / Reference No.</label><input className={inputClass} value={form.po_no} onChange={(event) => setForm({ ...form, po_no: event.target.value })} placeholder="Enter reference number" /></div>
               <div className="md:col-span-3"><label className={labelClass}><Tag size={14} className="text-blue-500" /> Type of Sale</label><select className={inputClass} value={form.type_of_sale || ""} onChange={(event) => setForm({ ...form, type_of_sale: event.target.value })}><option value="">Select Type</option>{["Local", "Inter-State", "Export", "Import", "Other"].map((v) => <option key={v}>{v}</option>)}</select></div>

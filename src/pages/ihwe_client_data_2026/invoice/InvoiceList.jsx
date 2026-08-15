@@ -242,14 +242,6 @@ const InvoiceList = () => {
                         }}
                         className="border border-gray-300 rounded-md px-3 py-1.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-[#3598dc]"
                     />
-                    <button
-                        onClick={() => navigate(
-                            `${isAllList ? '/page-create-invoice' : `/page-create-invoice/${id}`}${crmEventId ? `?crmEventId=${crmEventId}` : ''}`
-                        )}
-                        className="flex items-center gap-1.5 bg-[#194090] hover:bg-[#112f6b] text-white px-3 py-1.5 rounded-md font-bold transition text-[13px]"
-                    >
-                        Create Invoice
-                    </button>
                     {/* <button
 	                        onClick={() => navigate(-1)}
                         className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md font-semibold transition text-sm"
