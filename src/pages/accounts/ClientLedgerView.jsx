@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useMemo, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     ChevronRight, Calendar, Download, FileSpreadsheet, Search, Filter, Building2,
     Phone, Mail, BadgeCheck, MapPin, Wallet, TrendingUp, AlertTriangle, Clock,
-    Plus, FileText, FileMinus, Send, BarChart2, ArrowRightCircle, Loader2, X, ChevronDown
+    Plus, FileText, FileMinus, Send, BarChart2, ArrowRightCircle, Loader2, X, ChevronDown,
+    CreditCard, FileSearch, FileWarning, CalendarClock, SlidersHorizontal, ArrowUpDown,
+    ChevronLeft, ChevronsLeft, ChevronsRight
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
 import toast from 'react-hot-toast';
@@ -96,14 +98,6 @@ function StatCard({ icon, iconBg, accent, rawValue, displayValue, label, subLabe
     );
 }
 
-const statusBadgeStyle = (status) => {
-    const s = (status || '').toLowerCase();
-    if (s.includes('won') || s.includes('active') || s.includes('confirmed') || s.includes('paid')) return 'bg-emerald-50 text-emerald-600';
-    if (s.includes('lost') || s.includes('rejected') || s.includes('fail')) return 'bg-rose-50 text-rose-600';
-    if (s.includes('pending') || s.includes('lead')) return 'bg-amber-50 text-amber-600';
-    return 'bg-slate-100 text-slate-500';
-};
-
 function MiniStatCard({ icon, iconBg, iconColor, title, value, subLabel }) {
     return (
         <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-sm flex flex-col justify-between h-full hover:shadow-md transition-shadow">
@@ -125,76 +119,75 @@ function MiniStatCard({ icon, iconBg, iconColor, title, value, subLabel }) {
     );
 }
 
-// Client picker shown when no specific company id is provided (entry point from the sidebar)
+const formatAmount = (value) => Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+
+const OVERDUE_BUCKET_STYLES = {
+    '1-15 Days': { text: 'text-amber-600', badge: 'bg-amber-50 text-amber-600 border-amber-200', label: 'Overdue 1-15' },
+    '16-30 Days': { text: 'text-orange-600', badge: 'bg-orange-50 text-orange-600 border-orange-200', label: 'Overdue 16-30' },
+    '30+ Days': { text: 'text-rose-600', badge: 'bg-rose-50 text-rose-600 border-rose-200', label: 'Overdue 30+' },
+};
+
+const getOverdueBucket = (overdueDays) => {
+    const days = Number(overdueDays) || 0;
+    if (days <= 15) return '1-15 Days';
+    if (days <= 30) return '16-30 Days';
+    return '30+ Days';
+};
+
+const OVERDUE_TABS = [
+    { key: 'all', label: 'All Overdue' },
+    { key: '1-15 Days', label: '1-15 Days' },
+    { key: '16-30 Days', label: '16-30 Days' },
+    { key: '30+ Days', label: '30+ Days' },
+];
+
+function OverdueStatCard({ icon, iconBg, iconColor, label, value, count }) {
+    return (
+        <div className="bg-white p-4 border border-slate-200 rounded-xl shadow-sm flex items-center gap-3 hover:shadow-md transition-shadow">
+            <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${iconBg} ${iconColor}`}>
+                {icon}
+            </div>
+            <div className="min-w-0">
+                <div className="text-slate-700 font-bold text-[11px] whitespace-nowrap">{label}</div>
+                <div className={`text-xl font-black mt-0.5 truncate ${iconColor}`}>{value}</div>
+                <div className="text-slate-400 text-[10px] font-semibold mt-0.5">{count}</div>
+            </div>
+        </div>
+    );
+}
+
+// Overdue Payments list shown when no specific company id is provided (entry point from the sidebar)
 const ClientPicker = () => {
     const navigate = useNavigate();
-    const [companies, setCompanies] = useState([]);
+    const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [exporting, setExporting] = useState(false);
+
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('All Statuses');
-    const [events, setEvents] = useState([]);
-    const [filterEvent, setFilterEvent] = useState('all');
+    const [handledByFilter, setHandledByFilter] = useState('all');
+    const [paymentTermsFilter, setPaymentTermsFilter] = useState('all');
+    const [dueDateFrom, setDueDateFrom] = useState('');
+    const [dueDateTo, setDueDateTo] = useState('');
+    const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
+
+    const [activeTab, setActiveTab] = useState('all');
+    const [sortBy, setSortBy] = useState('overdueDesc');
+
     const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const [itemsPerPage, setItemsPerPage] = useState(15);
+    const [selectedIds, setSelectedIds] = useState([]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [compRes, arRes, eventsRes] = await Promise.all([
-                    api.get('/api/companies'),
-                    api.get('/api/accounts-receivable').catch(() => ({ data: { data: { rows: [] } } })),
-                    api.get('/api/events').catch(() => ({ data: { data: [] } }))
-                ]);
-
-                const eventsData = eventsRes.data?.data || eventsRes.data || [];
-                eventsData.sort((a, b) => (a.order || 0) - (b.order || 0));
-                setEvents(eventsData);
-                if (eventsData.length > 0) {
-                    setFilterEvent(eventsData[0]._id);
-                }
-
-                const compData = compRes.data?.data || compRes.data || [];
-                const arRows = arRes.data?.data?.rows || [];
-
-                const clientFinancials = {};
-                arRows.forEach(row => {
-                    const cid = String(row.companyId);
-                    if (!clientFinancials[cid]) {
-                        clientFinancials[cid] = { invoiced: 0, received: 0, outstanding: 0, stallNo: row.stallNo, sqMtr: row.sqMtr, eventId: row.eventId };
-                    }
-                    clientFinancials[cid].invoiced += (row.invValue || 0);
-                    clientFinancials[cid].received += (row.received || 0);
-                    clientFinancials[cid].outstanding += (row.outstanding || 0);
-                    if (row.stallNo && !clientFinancials[cid].stallNo) clientFinancials[cid].stallNo = row.stallNo;
-                    if (row.sqMtr && !clientFinancials[cid].sqMtr) clientFinancials[cid].sqMtr = row.sqMtr;
-                    if (row.eventId && !clientFinancials[cid].eventId) clientFinancials[cid].eventId = row.eventId;
-                });
-
-                let merged = compData.map(c => {
-                    let status = c.companyStatus || 'N/A';
-                    if (status === 'Closed - Won') status = 'Converted Client';
-
-                    const fin = clientFinancials[String(c._id)] || { invoiced: 0, received: 0, outstanding: 0, stallNo: null, sqMtr: null, eventId: null };
-                    fin.receivedPct = fin.invoiced > 0 ? Math.min(100, Math.round((fin.received / fin.invoiced) * 100)) : 0;
-
-                    return {
-                        ...c,
-                        companyStatus: status,
-                        eventId: fin.eventId || c.eventId,
-                        financials: fin
-                    };
-                });
-
-                // Sort: Converted Client at the top
-                merged.sort((a, b) => {
-                    if (a.companyStatus === 'Converted Client' && b.companyStatus !== 'Converted Client') return -1;
-                    if (b.companyStatus === 'Converted Client' && a.companyStatus !== 'Converted Client') return 1;
-                    return 0;
-                });
-
-                setCompanies(merged);
-            } catch {
-                toast.error('Failed to load clients data');
+                setLoading(true);
+                const res = await api.get('/api/accounts-receivable');
+                setRows(res.data?.data?.rows || []);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching accounts receivable data:', err);
+                setError('Failed to load overdue payments.');
             } finally {
                 setLoading(false);
             }
@@ -202,45 +195,143 @@ const ClientPicker = () => {
         fetchData();
     }, []);
 
-    const statusOptions = [...new Set(companies.map((c) => c.companyStatus).filter(Boolean))];
+    const overdueRows = useMemo(
+        () => rows.filter((row) => row.isOverdue && Number(row.outstanding) > 0).map((row) => ({ ...row, bucket: getOverdueBucket(row.overdueDays) })),
+        [rows]
+    );
 
-    const filtered = companies.filter((c) => {
-        if (filterEvent !== 'all' && String(c.eventId || '') !== String(filterEvent)) return false;
-        if (statusFilter && statusFilter !== 'All Statuses' && c.companyStatus !== statusFilter) return false;
-        if (!search) return true;
-        const q = search.trim().toLowerCase();
-        return (
-            (c.companyName || c.name || '').toLowerCase().includes(q) ||
-            (c.email || '').toLowerCase().includes(q) ||
-            (c.city || '').toLowerCase().includes(q)
-        );
-    });
+    const handledByOptions = useMemo(() => Array.from(new Set(overdueRows.map((row) => row.handledBy).filter(Boolean))), [overdueRows]);
+    const paymentTermsOptions = useMemo(() => Array.from(new Set(overdueRows.map((row) => row.pymtType).filter(Boolean))), [overdueRows]);
+
+    const searchedRows = useMemo(() => {
+        const s = search.trim().toLowerCase();
+        return overdueRows.filter((row) => {
+            const matchesSearch = !s || [row.invNo, row.client, row.stallNo].some((field) => String(field || '').toLowerCase().includes(s));
+            const matchesHandledBy = handledByFilter === 'all' || row.handledBy === handledByFilter;
+            const matchesPaymentTerms = paymentTermsFilter === 'all' || row.pymtType === paymentTermsFilter;
+            const matchesFrom = !dueDateFrom || (row.dueDate && new Date(row.dueDate) >= new Date(dueDateFrom));
+            const matchesTo = !dueDateTo || (row.dueDate && new Date(row.dueDate) <= new Date(dueDateTo));
+            return matchesSearch && matchesHandledBy && matchesPaymentTerms && matchesFrom && matchesTo;
+        });
+    }, [overdueRows, search, handledByFilter, paymentTermsFilter, dueDateFrom, dueDateTo]);
+
+    const tabCounts = useMemo(() => ({
+        all: searchedRows.length,
+        '1-15 Days': searchedRows.filter((r) => r.bucket === '1-15 Days').length,
+        '16-30 Days': searchedRows.filter((r) => r.bucket === '16-30 Days').length,
+        '30+ Days': searchedRows.filter((r) => r.bucket === '30+ Days').length,
+    }), [searchedRows]);
+
+    const tabFilteredRows = useMemo(
+        () => searchedRows.filter((row) => activeTab === 'all' || row.bucket === activeTab),
+        [searchedRows, activeTab]
+    );
+
+    const sortedRows = useMemo(() => {
+        const list = [...tabFilteredRows];
+        switch (sortBy) {
+            case 'overdueAsc':
+                return list.sort((a, b) => (a.overdueDays || 0) - (b.overdueDays || 0));
+            case 'dueDateAsc':
+                return list.sort((a, b) => new Date(a.dueDate || 0) - new Date(b.dueDate || 0));
+            case 'dueDateDesc':
+                return list.sort((a, b) => new Date(b.dueDate || 0) - new Date(a.dueDate || 0));
+            case 'amountDesc':
+                return list.sort((a, b) => Number(b.outstanding || 0) - Number(a.outstanding || 0));
+            case 'amountAsc':
+                return list.sort((a, b) => Number(a.outstanding || 0) - Number(b.outstanding || 0));
+            case 'overdueDesc':
+            default:
+                return list.sort((a, b) => (b.overdueDays || 0) - (a.overdueDays || 0));
+        }
+    }, [tabFilteredRows, sortBy]);
 
     useEffect(() => {
         setCurrentPage(1);
-    }, [search, statusFilter, filterEvent]);
+    }, [search, handledByFilter, paymentTermsFilter, dueDateFrom, dueDateTo, activeTab]);
 
-    const totalPages = Math.ceil(filtered.length / itemsPerPage);
-    const paginated = filtered.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const stats = useMemo(() => {
+        const build = (list) => ({
+            amount: list.reduce((sum, r) => sum + Number(r.outstanding || 0), 0),
+            count: list.length,
+        });
+        return {
+            total: build(searchedRows),
+            b1to15: build(searchedRows.filter((r) => r.bucket === '1-15 Days')),
+            b16to30: build(searchedRows.filter((r) => r.bucket === '16-30 Days')),
+            b30plus: build(searchedRows.filter((r) => r.bucket === '30+ Days')),
+        };
+    }, [searchedRows]);
 
-    const stats = {
-        total: companies.length,
-        converted: companies.filter(c => c.companyStatus === 'Converted Client').length,
-        lead: companies.filter(c => c.companyStatus === 'New Lead').length,
-        warm: companies.filter(c => c.companyStatus === 'Warm client').length,
-        followUp: companies.filter(c => c.companyStatus === 'Follow-Up Call' || c.companyStatus === 'Follow Up').length,
+    const totalPages = Math.ceil(sortedRows.length / itemsPerPage);
+    const paginatedRows = sortedRows.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    const clearFilters = () => {
+        setSearch('');
+        setHandledByFilter('all');
+        setPaymentTermsFilter('all');
+        setDueDateFrom('');
+        setDueDateTo('');
+        setActiveTab('all');
     };
 
-    // Ledger-level financial roll-up across every client — this page is Client Ledger,
-    // so its headline stats should be money-in/money-out, not the CRM pipeline funnel.
-    const finTotals = companies.reduce((acc, c) => {
-        acc.invoiced += c.financials.invoiced || 0;
-        acc.received += c.financials.received || 0;
-        acc.outstanding += c.financials.outstanding || 0;
-        if ((c.financials.outstanding || 0) > 0) acc.clientsWithDues += 1;
-        return acc;
-    }, { invoiced: 0, received: 0, outstanding: 0, clientsWithDues: 0 });
-    const collectionRatePct = finTotals.invoiced > 0 ? Math.round((finTotals.received / finTotals.invoiced) * 100) : 0;
+    const toggleSelectAll = () => {
+        if (selectedIds.length === paginatedRows.length) setSelectedIds([]);
+        else setSelectedIds(paginatedRows.map((r) => r.id));
+    };
+
+    const toggleSelectRow = (id) => {
+        setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+    };
+
+    const handleExport = async () => {
+        setExporting(true);
+        try {
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Overdue Payments');
+            worksheet.columns = [
+                { header: 'S.No.', key: 'sno', width: 8 },
+                { header: 'Invoice No', key: 'invNo', width: 22 },
+                { header: 'Client / Company', key: 'client', width: 28 },
+                { header: 'Handled By', key: 'handledBy', width: 18 },
+                { header: 'Invoice Date', key: 'invDate', width: 16 },
+                { header: 'Due Date', key: 'dueDate', width: 16 },
+                { header: 'Total Amount', key: 'total', width: 16 },
+                { header: 'Outstanding Amount', key: 'outstanding', width: 18 },
+                { header: 'Days Overdue', key: 'days', width: 14 },
+                { header: 'Status', key: 'status', width: 16 },
+            ];
+            const headerRow = worksheet.getRow(1);
+            headerRow.font = { name: 'Arial', family: 4, size: 11, bold: true, color: { argb: 'FFFFFFFF' } };
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF4F46E5' } };
+            headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+            headerRow.height = 25;
+
+            sortedRows.forEach((row, index) => {
+                const excelRow = worksheet.addRow({
+                    sno: index + 1,
+                    invNo: row.invNo,
+                    client: row.client,
+                    handledBy: row.handledBy,
+                    invDate: formatDate(row.invDate),
+                    dueDate: formatDate(row.dueDate),
+                    total: Number(row.invValue) || 0,
+                    outstanding: Number(row.outstanding) || 0,
+                    days: `${row.overdueDays || 0} Days`,
+                    status: OVERDUE_BUCKET_STYLES[row.bucket]?.label || row.bucket,
+                });
+                excelRow.getCell('total').numFmt = '₹#,##0.00';
+                excelRow.getCell('outstanding').numFmt = '₹#,##0.00';
+                excelRow.height = 20;
+            });
+
+            const buffer = await workbook.xlsx.writeBuffer();
+            const formattedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long' }).replace(/ /g, '');
+            saveAs(new Blob([buffer]), `overduePaymentsExport_${formattedDate}.xlsx`);
+        } finally {
+            setExporting(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-slate-50 p-4 font-sans text-slate-800">
@@ -249,224 +340,309 @@ const ClientPicker = () => {
                 <div>
                     <h1 className="text-2xl font-black text-slate-900 tracking-tight">Overdue Payments</h1>
                     <div className="text-[11px] text-slate-500 font-medium mt-0.5">
-                        Accounts Receivable (AR) &gt; <span className="text-blue-600 font-bold">Overdue Payments</span>
+                        List of invoices with payments that are overdue.
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => navigate('/accounts/payments')}
-                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
-                    >
-                        Payment Collection
-                    </button>
-                    <button
-                        onClick={() => navigate('/accounts/receipts')}
-                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
-                    >
-                        Payment Receipts
-                    </button>
-                    <button
-                        onClick={() => navigate('/accounts/ar')}
-                        className="px-3 py-1.5 rounded text-xs font-bold border border-blue-600 bg-blue-600 text-white hover:bg-blue-700 transition-colors whitespace-nowrap"
-                    >
-                        Outstanding Payments
-                    </button>
-                </div>
+                <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-white text-slate-700 rounded-md text-[11px] font-bold border border-slate-300 hover:bg-slate-50 transition-colors shrink-0 whitespace-nowrap disabled:opacity-60"
+                >
+                    {exporting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} Export
+                </button>
             </div>
+
+            {error && (
+                <div className="mb-3 px-3 py-2 bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-semibold rounded-md">
+                    {error}
+                </div>
+            )}
 
             {loading ? (
                 <div className="flex items-center justify-center py-24 text-slate-400 gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" /> Loading clients...
+                    <Loader2 className="w-5 h-5 animate-spin" /> Loading overdue payments...
                 </div>
             ) : (
                 <>
-                    {/* Stat Cards — ledger roll-up: money in, money out, money still owed */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
-                        <StatCard
-                            icon={<Building2 className="w-5 h-5 text-blue-600" />} iconBg="bg-blue-50" accent="bg-blue-500"
-                            rawValue={stats.total} displayValue={stats.total}
-                            label="Total Clients" subLabel="All registered profiles"
-                            bottomLabel="Converted" bottomValue={stats.converted}
+                    {/* Stat Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                        <OverdueStatCard
+                            icon={<FileWarning className="w-5 h-5" />} iconBg="bg-rose-100" iconColor="text-rose-600"
+                            label="Total Overdue (₹)" value={formatAmount(stats.total.amount)} count={`${stats.total.count} Invoices`}
                         />
-                        <StatCard
-                            icon={<FileText className="w-5 h-5 text-indigo-600" />} iconBg="bg-indigo-50" accent="bg-indigo-500"
-                            rawValue={finTotals.invoiced} displayValue={`₹ ${formatCurrency(finTotals.invoiced)}`} isCurrency
-                            label="Total Invoiced" subLabel="Across all clients"
-                            bottomLabel="Clients Billed" bottomValue={companies.filter(c => c.financials.invoiced > 0).length}
+                        <OverdueStatCard
+                            icon={<CalendarClock className="w-5 h-5" />} iconBg="bg-amber-100" iconColor="text-amber-600"
+                            label="Overdue 1-15 Days (₹)" value={formatAmount(stats.b1to15.amount)} count={`${stats.b1to15.count} Invoices`}
                         />
-                        <StatCard
-                            icon={<TrendingUp className="w-5 h-5 text-emerald-600" />} iconBg="bg-emerald-50" accent="bg-emerald-500"
-                            rawValue={finTotals.received} displayValue={`₹ ${formatCurrency(finTotals.received)}`} isCurrency
-                            label="Total Collected" subLabel={`${collectionRatePct}% of invoiced value`}
-                            bottomLabel="Collection Rate" bottomValue={`${collectionRatePct}%`}
+                        <OverdueStatCard
+                            icon={<CalendarClock className="w-5 h-5" />} iconBg="bg-orange-100" iconColor="text-orange-600"
+                            label="Overdue 16-30 Days (₹)" value={formatAmount(stats.b16to30.amount)} count={`${stats.b16to30.count} Invoices`}
                         />
-                        <StatCard
-                            icon={<Wallet className="w-5 h-5 text-rose-600" />} iconBg="bg-rose-50" accent="bg-rose-500"
-                            rawValue={finTotals.outstanding} displayValue={`₹ ${formatCurrency(finTotals.outstanding)}`} isCurrency
-                            label="Total Outstanding" subLabel="Pending recovery"
-                            bottomLabel="Clients w/ Dues" bottomValue={finTotals.clientsWithDues}
-                        />
-                        <StatCard
-                            icon={<AlertTriangle className="w-5 h-5 text-amber-600" />} iconBg="bg-amber-50" accent="bg-amber-500"
-                            rawValue={finTotals.clientsWithDues} displayValue={finTotals.clientsWithDues}
-                            label="Clients with Dues" subLabel="Need follow-up"
-                            bottomLabel="Follow-Ups" bottomValue={stats.followUp}
+                        <OverdueStatCard
+                            icon={<CalendarClock className="w-5 h-5" />} iconBg="bg-rose-100" iconColor="text-rose-600"
+                            label="Overdue 30+ Days (₹)" value={formatAmount(stats.b30plus.amount)} count={`${stats.b30plus.count} Invoices`}
                         />
                     </div>
 
-                    {/* Filters Row */}
-                    <div className="bg-white p-3 rounded-t-xl border border-slate-200 border-b-0 shadow-sm flex flex-col md:flex-row items-center gap-2.5">
-                        <div className="relative">
-                            <select
-                                value={filterEvent}
-                                onChange={(e) => setFilterEvent(e.target.value)}
-                                className="w-full sm:w-auto appearance-none bg-white border border-slate-200 text-slate-700 pl-3 pr-8 py-2 rounded-lg text-[12px] font-bold shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-100 cursor-pointer max-w-[150px] truncate"
-                            >
-                                <option value="all">All Events</option>
-                                {events.map(event => <option key={event._id} value={event._id}>{event.name}</option>)}
-                            </select>
-                            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        </div>
-                        <div className="relative flex-1 min-w-[200px] w-full">
-                            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                            <input
-                                type="text"
-                                value={search}
-                                onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by client name, email, or city..."
-                                className="pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-[12px] w-full focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-shadow"
-                            />
-                        </div>
-                        <div className="flex items-center gap-2 overflow-x-auto w-full md:w-auto scrollbar-hide">
-                            <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="border border-slate-200 rounded-lg px-2.5 py-2 text-[11px] font-bold text-slate-700 focus:outline-none bg-slate-50 min-w-[130px] shrink-0"
-                            >
-                                <option value="All Statuses">All Statuses</option>
-                                {statusOptions.map((s) => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                            <span className="text-[10px] font-semibold text-slate-400 shrink-0 whitespace-nowrap pl-1">{filtered.length} of {companies.length} clients</span>
-                        </div>
-                    </div>
-
-                    {/* Table */}
-                    <div className="bg-white border border-slate-200 rounded-b-xl shadow-sm overflow-x-auto">
-                        <table className="w-full text-left border-collapse min-w-[1050px]">
-                            <thead>
-                                <tr className="bg-slate-50 text-[10px] font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200 whitespace-nowrap">
-                                    <th className="px-3 py-3 text-center w-10">S.No.</th>
-                                    <th className="px-3 py-3">Client Profile</th>
-                                    <th className="px-3 py-3">Contact & Location</th>
-                                    <th className="px-3 py-3 text-center">Status</th>
-                                    <th className="px-3 py-3 text-right">Invoiced (₹)</th>
-                                    <th className="px-3 py-3 text-right">Collections</th>
-                                    <th className="px-3 py-3 text-right">Outstanding (₹)</th>
-                                    <th className="px-3 py-3 text-center">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="text-[11px] whitespace-nowrap">
-                                {paginated.length === 0 && (
-                                    <tr>
-                                        <td colSpan={8} className="py-12 text-center text-slate-400 font-medium">
-                                            <Building2 className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-                                            No clients found.
-                                        </td>
-                                    </tr>
+                    {/* Filters */}
+                    <div className="bg-white p-3 border border-slate-200 rounded-xl shadow-sm mb-4">
+                        <div className="flex flex-wrap items-end gap-3">
+                            <div className="flex-1 min-w-[160px]">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Search</label>
+                                <div className="relative">
+                                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                                    <input
+                                        type="text"
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        placeholder="Search by Invoice No., Client, GSTIN..."
+                                        className="pl-8 pr-3 py-1.5 border border-slate-200 rounded-md text-[11px] w-full focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                                    />
+                                </div>
+                            </div>
+                            <div className="w-[110px] shrink-0">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Handled By</label>
+                                <div className="relative">
+                                    <select
+                                        value={handledByFilter}
+                                        onChange={(e) => setHandledByFilter(e.target.value)}
+                                        className="appearance-none w-full bg-white border border-slate-200 text-slate-700 pl-2 pr-6 py-1.5 rounded-md text-[10px] font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                    >
+                                        <option value="all">All Users</option>
+                                        {handledByOptions.map((opt) => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div className="w-[130px] shrink-0">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Payment Terms</label>
+                                <div className="relative">
+                                    <select
+                                        value={paymentTermsFilter}
+                                        onChange={(e) => setPaymentTermsFilter(e.target.value)}
+                                        className="appearance-none w-full bg-white border border-slate-200 text-slate-700 pl-2 pr-6 py-1.5 rounded-md text-[10px] font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                    >
+                                        <option value="all">All Payment Terms</option>
+                                        {paymentTermsOptions.map((opt) => (
+                                            <option key={opt} value={opt}>{opt}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div className="w-[110px] shrink-0">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Overdue Days</label>
+                                <div className="relative">
+                                    <select
+                                        value={activeTab}
+                                        onChange={(e) => setActiveTab(e.target.value)}
+                                        className="appearance-none w-full bg-white border border-slate-200 text-slate-700 pl-2 pr-6 py-1.5 rounded-md text-[10px] font-bold focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                                    >
+                                        <option value="all">All</option>
+                                        <option value="1-15 Days">1-15 Days</option>
+                                        <option value="16-30 Days">16-30 Days</option>
+                                        <option value="30+ Days">30+ Days</option>
+                                    </select>
+                                    <ChevronDown className="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                </div>
+                            </div>
+                            <div className="w-[170px] shrink-0 relative">
+                                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Due Date</label>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsDateRangeOpen((v) => !v)}
+                                    className="w-full flex items-center justify-between gap-2 border border-slate-200 rounded-md px-3 py-1.5 text-[11px] font-bold text-slate-600 bg-white hover:bg-slate-50"
+                                >
+                                    <span className="truncate">
+                                        {dueDateFrom || dueDateTo
+                                            ? `${dueDateFrom ? formatDate(dueDateFrom) : '...'} - ${dueDateTo ? formatDate(dueDateTo) : '...'}`
+                                            : 'Select Date Range'}
+                                    </span>
+                                    <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                </button>
+                                {isDateRangeOpen && (
+                                    <div className="absolute z-20 mt-1 right-0 bg-white border border-slate-200 rounded-md shadow-lg p-3 w-64">
+                                        <div className="mb-2">
+                                            <label className="block text-[9px] font-bold text-slate-500 mb-1">From</label>
+                                            <input type="date" value={dueDateFrom} onChange={(e) => setDueDateFrom(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1 text-[11px]" />
+                                        </div>
+                                        <div className="mb-2">
+                                            <label className="block text-[9px] font-bold text-slate-500 mb-1">To</label>
+                                            <input type="date" value={dueDateTo} onChange={(e) => setDueDateTo(e.target.value)} className="w-full border border-slate-200 rounded-md px-2 py-1 text-[11px]" />
+                                        </div>
+                                        <button
+                                            onClick={() => setIsDateRangeOpen(false)}
+                                            className="w-full mt-1 px-3 py-1.5 bg-blue-600 text-white rounded-md text-[11px] font-bold hover:bg-blue-700"
+                                        >
+                                            Done
+                                        </button>
+                                    </div>
                                 )}
-                                {paginated.map((c, idx) => {
-                                    const fin = c.financials;
-                                    const stallInfo = c.stallNo || fin.stallNo;
-                                    const sqMtrInfo = c.stallSize || fin.sqMtr;
+                            </div>
+                            <div className="flex items-center gap-3 shrink-0">
+                                <button onClick={clearFilters} className="text-blue-600 text-[11px] font-bold whitespace-nowrap hover:underline">
+                                    Clear Filters
+                                </button>
+                                <button
+                                    onClick={() => setCurrentPage(1)}
+                                    className="px-4 py-1.5 bg-blue-600 text-white rounded-md text-[11px] font-bold hover:bg-blue-700 transition-colors whitespace-nowrap"
+                                >
+                                    Apply Filters
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
-                                    const primaryContact = c.contacts?.find(contact => contact.isPrimary) || c.contacts?.[0];
-                                    const mobile = primaryContact?.mobile || c.landline || 'N/A';
-                                    const email = c.email || primaryContact?.email || 'N/A';
-                                    const clientName = c.companyName || c.name || 'Unknown Client';
-                                    const initial = clientName.charAt(0).toUpperCase();
+                    {/* Tabs + Sort + Table (unified card so there's no visible seam) */}
+                    <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                        <div className="border-b border-slate-200 px-4 pt-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div className="flex items-center gap-5 overflow-x-auto scrollbar-hide">
+                                {OVERDUE_TABS.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        onClick={() => setActiveTab(tab.key)}
+                                        className={`pb-2.5 text-[12px] font-bold whitespace-nowrap border-b-2 transition-colors ${activeTab === tab.key ? 'text-blue-600 border-blue-600' : 'text-slate-500 border-transparent hover:text-slate-700'
+                                            }`}
+                                    >
+                                        {tab.label} <span className={activeTab === tab.key ? 'text-blue-500' : 'text-slate-400'}>({tabCounts[tab.key] ?? 0})</span>
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex items-center gap-2 pb-2 shrink-0">
+                                <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap">Sort by</span>
+                                <div className="relative">
+                                    <select
+                                        value={sortBy}
+                                        onChange={(e) => setSortBy(e.target.value)}
+                                        className="appearance-none border border-slate-200 rounded-md pl-2.5 pr-7 py-1.5 text-[11px] font-bold text-slate-700 focus:outline-none bg-white cursor-pointer"
+                                    >
+                                        <option value="overdueDesc">Days Overdue (High to Low)</option>
+                                        <option value="overdueAsc">Days Overdue (Low to High)</option>
+                                        <option value="dueDateAsc">Due Date (Oldest)</option>
+                                        <option value="dueDateDesc">Due Date (Newest)</option>
+                                        <option value="amountDesc">Amount (High to Low)</option>
+                                        <option value="amountAsc">Amount (Low to High)</option>
+                                    </select>
+                                    <ChevronDown className="w-3 h-3 text-slate-400 absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                </div>
+                                <button className="w-7 h-7 flex items-center justify-center border border-slate-200 rounded-md text-slate-500 hover:bg-slate-50 transition-colors">
+                                    <SlidersHorizontal className="w-3.5 h-3.5" />
+                                </button>
+                            </div>
+                        </div>
 
-                                    return (
-                                        <tr key={c._id} className="border-b border-slate-100 even:bg-slate-50/40 hover:bg-blue-50/40 transition-colors">
-                                            <td className="px-3 py-3 font-bold text-slate-400 text-center tabular-nums">{(currentPage - 1) * itemsPerPage + idx + 1}</td>
-                                            <td className="px-3 py-3">
-                                                <div className="flex items-center gap-2.5">
-                                                    <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold text-[12px] shrink-0">
-                                                        {initial}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <div className="font-bold text-slate-800 text-[12px] truncate max-w-[180px]">{clientName}</div>
-                                                        <div className="flex items-center gap-1.5 mt-0.5">
-                                                            <span className="text-slate-400 font-medium text-[10px]">{c.category || 'Standard'}</span>
-                                                            {(stallInfo && stallInfo !== 'N/A') && (
-                                                                <span className="bg-amber-50 text-amber-700 border border-amber-100 px-1.5 py-0.5 rounded text-[9px] font-bold">
-                                                                    Stall {stallInfo}{sqMtrInfo && sqMtrInfo !== 'N/A' ? ` · ${sqMtrInfo}` : ''}
-                                                                </span>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-3">
-                                                <div className="font-semibold text-slate-700 text-[11px] truncate max-w-[150px] flex items-center gap-1.5">
-                                                    <Mail className="w-3 h-3 text-slate-400 shrink-0" /> {email}
-                                                </div>
-                                                <div className="text-slate-500 font-medium mt-1 text-[10px] truncate max-w-[150px] flex items-center gap-1.5">
-                                                    <Phone className="w-3 h-3 text-slate-400 shrink-0" /> {mobile}
-                                                    {c.city && <span className="ml-0.5 px-1.5 py-0.5 bg-slate-100 rounded text-slate-500 font-semibold">{c.city}</span>}
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-3 text-center">
-                                                <span className={`inline-block px-2 py-1 rounded-full text-[9px] font-bold ${statusBadgeStyle(c.companyStatus)}`}>
-                                                    {c.companyStatus || 'N/A'}
-                                                </span>
-                                            </td>
-                                            <td className="px-3 py-3 text-right">
-                                                <div className="font-bold text-slate-700 text-[11px] tabular-nums">{fin.invoiced > 0 ? `₹ ${formatCurrency(fin.invoiced)}` : '—'}</div>
-                                            </td>
-                                            <td className="px-3 py-3 text-right">
-                                                <div className="font-bold text-emerald-600 text-[11px] mb-1.5 tabular-nums">{fin.received > 0 ? `₹ ${formatCurrency(fin.received)}` : '—'}</div>
-                                                {fin.invoiced > 0 && (
-                                                    <div className="w-24 h-1.5 bg-emerald-50 rounded-full ml-auto overflow-hidden" title={`${fin.receivedPct}% collected`}>
-                                                        <div
-                                                            className={`h-full rounded-full transition-all duration-500 ${fin.receivedPct === 100 ? 'bg-emerald-500' : 'bg-blue-500'}`}
-                                                            style={{ width: `${fin.receivedPct}%` }}
-                                                        />
-                                                    </div>
-                                                )}
-                                            </td>
-                                            <td className="px-3 py-3 text-right">
-                                                <div className={`font-bold text-[12px] tabular-nums ${fin.outstanding > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                                    {fin.outstanding > 0 ? `₹ ${formatCurrency(fin.outstanding)}` : 'Settled'}
-                                                </div>
-                                            </td>
-                                            <td className="px-3 py-3">
-                                                <div className="flex items-center justify-center">
-                                                    <button
-                                                        className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-[10px] font-bold hover:bg-blue-600 hover:text-white hover:shadow-sm transition-all flex items-center gap-1"
-                                                        onClick={() => navigate(`/dashboard/account/client-ledger/${c._id}`)}
-                                                    >
-                                                        View Ledger <ChevronRight className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                        {/* Table — capped to ~15 rows tall, scrolls internally beyond that */}
+                        <div className="overflow-auto max-h-[640px]">
+                            <table className="w-full min-w-[1250px] text-left border-collapse">
+                                <thead className="sticky top-0 z-10">
+                                    <tr className="bg-white text-[9px] font-black uppercase tracking-wider text-slate-700 border-b border-slate-200 shadow-sm whitespace-nowrap">
+                                        <th className="px-3 py-2.5 w-10">
+                                            <input
+                                                type="checkbox"
+                                                checked={paginatedRows.length > 0 && selectedIds.length === paginatedRows.length}
+                                                onChange={toggleSelectAll}
+                                                className="rounded border-slate-300"
+                                            />
+                                        </th>
+                                        <th className="px-3 py-2.5">Invoice Details</th>
+                                        <th className="px-3 py-2.5">Client / Company</th>
+                                        <th className="px-3 py-2.5">Handled By</th>
+                                        <th className="px-3 py-2.5">Invoice Date</th>
+                                        <th className="px-3 py-2.5">
+                                            <button onClick={() => setSortBy(sortBy === 'dueDateAsc' ? 'dueDateDesc' : 'dueDateAsc')} className="flex items-center gap-1 hover:text-blue-600">
+                                                Due Date <ArrowUpDown className="w-2.5 h-2.5" />
+                                            </button>
+                                        </th>
+                                        <th className="px-3 py-2.5 text-right">Total Amount (₹)</th>
+                                        <th className="px-3 py-2.5 text-right">Outstanding Amount (₹)</th>
+                                        <th className="px-3 py-2.5 text-center">
+                                            <button onClick={() => setSortBy(sortBy === 'overdueDesc' ? 'overdueAsc' : 'overdueDesc')} className="flex items-center gap-1 hover:text-blue-600 mx-auto">
+                                                Days Overdue <ArrowUpDown className="w-2.5 h-2.5" />
+                                            </button>
+                                        </th>
+                                        <th className="px-3 py-2.5 text-center">Status</th>
+                                        <th className="px-3 py-2.5 text-center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-[11px] whitespace-nowrap">
+                                    {paginatedRows.length === 0 && (
+                                        <tr>
+                                            <td colSpan={11} className="py-8 text-center text-slate-400">No overdue payments found.</td>
                                         </tr>
-                                    )
-                                })}
-                            </tbody>
-                        </table>
+                                    )}
+                                    {paginatedRows.map((row) => {
+                                        const style = OVERDUE_BUCKET_STYLES[row.bucket];
+                                        return (
+                                            <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors">
+                                                <td className="px-3 py-2.5">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={selectedIds.includes(row.id)}
+                                                        onChange={() => toggleSelectRow(row.id)}
+                                                        className="rounded border-slate-300"
+                                                    />
+                                                </td>
+                                                <td className="px-3 py-2.5">
+                                                    <button
+                                                        onClick={() => navigate(row.docType === 'Invoice' ? `/payments/invoiceDetails/${row.id}` : `/payments/estimateDetails/${row.id}`)}
+                                                        className="font-bold text-blue-600 hover:underline text-[11px]"
+                                                    >
+                                                        {row.invNo}
+                                                    </button>
+                                                </td>
+                                                <td className="px-3 py-2.5 font-semibold text-slate-700">{row.client}</td>
+                                                <td className="px-3 py-2.5 text-slate-600">{row.handledBy || '-'}</td>
+                                                <td className="px-3 py-2.5 text-slate-600">{formatDate(row.invDate)}</td>
+                                                <td className={`px-3 py-2.5 font-bold ${style.text}`}>{formatDate(row.dueDate)}</td>
+                                                <td className="px-3 py-2.5 text-right font-semibold text-slate-700">{formatAmount(row.invValue)}</td>
+                                                <td className="px-3 py-2.5 text-right font-black text-slate-900">{formatAmount(row.outstanding)}</td>
+                                                <td className={`px-3 py-2.5 text-center font-bold ${style.text}`}>{row.overdueDays || 0} Days</td>
+                                                <td className="px-3 py-2.5 text-center">
+                                                    <span className={`inline-block px-2 py-0.5 rounded text-[9px] font-bold border ${style.badge}`}>
+                                                        {style.label}
+                                                    </span>
+                                                </td>
+                                                <td className="px-3 py-2.5">
+                                                    <div className="flex items-center justify-center gap-1.5">
+                                                        <button
+                                                            onClick={() => navigate(`/dashboard/account/AddPayment/${row.companyId}`)}
+                                                            className="flex items-center gap-1 px-2 py-1 border border-blue-200 bg-blue-50 text-blue-600 rounded text-[10px] font-bold hover:bg-blue-100 transition-colors"
+                                                        >
+                                                            <CreditCard className="w-3 h-3" /> Book PMT
+                                                        </button>
+                                                        <button
+                                                            onClick={() => navigate(row.docType === 'Invoice' ? `/payments/invoiceDetails/${row.id}` : `/payments/estimateDetails/${row.id}`)}
+                                                            className="flex items-center gap-1 px-2 py-1 border border-slate-200 text-slate-600 rounded text-[10px] font-bold hover:bg-slate-50 transition-colors"
+                                                        >
+                                                            <FileSearch className="w-3 h-3" /> Invoice Details
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
 
                         {/* Pagination */}
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 border-t border-slate-200 bg-slate-50 rounded-b-xl">
-                            <div className="text-[11px] text-slate-500 font-medium">
-                                Showing {filtered.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filtered.length)} of {filtered.length} entries
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-2 p-3 border-t border-slate-200">
+                            <div className="text-[11px] text-slate-500">
+                                Showing {sortedRows.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, sortedRows.length)} of {sortedRows.length} entries
                             </div>
                             <div className="flex items-center gap-1">
                                 <button
+                                    onClick={() => setCurrentPage(1)}
+                                    disabled={currentPage === 1}
+                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                ><ChevronsLeft className="w-3.5 h-3.5" /></button>
+                                <button
                                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                                     disabled={currentPage === 1}
-                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-[11px] bg-white"
-                                >&lt;</button>
+                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                ><ChevronLeft className="w-3.5 h-3.5" /></button>
 
                                 {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                                     let pageNum = i + 1;
@@ -478,7 +654,7 @@ const ClientPicker = () => {
                                         <button
                                             key={pageNum}
                                             onClick={() => setCurrentPage(pageNum)}
-                                            className={`w-6 h-6 flex items-center justify-center rounded text-[11px] font-bold shadow-sm ${currentPage === pageNum ? 'bg-blue-600 text-white border-blue-600' : 'border border-slate-300 hover:bg-slate-50 bg-white'}`}
+                                            className={`w-6 h-6 flex items-center justify-center rounded text-[11px] font-bold ${currentPage === pageNum ? 'bg-blue-600 text-white' : 'border border-slate-300 hover:bg-slate-50'}`}
                                         >
                                             {pageNum}
                                         </button>
@@ -487,10 +663,10 @@ const ClientPicker = () => {
 
                                 {totalPages > 5 && currentPage < totalPages - 2 && (
                                     <>
-                                        <span className="px-1 text-slate-400 font-bold">...</span>
+                                        <span className="px-1">...</span>
                                         <button
                                             onClick={() => setCurrentPage(totalPages)}
-                                            className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 font-bold text-[11px] bg-white shadow-sm"
+                                            className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 font-bold text-[11px]"
                                         >
                                             {totalPages}
                                         </button>
@@ -500,24 +676,30 @@ const ClientPicker = () => {
                                 <button
                                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                                     disabled={currentPage === totalPages || totalPages === 0}
-                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed text-[11px] bg-white"
-                                >&gt;</button>
+                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                ><ChevronRight className="w-3.5 h-3.5" /></button>
+                                <button
+                                    onClick={() => setCurrentPage(totalPages)}
+                                    disabled={currentPage === totalPages || totalPages === 0}
+                                    className="w-6 h-6 flex items-center justify-center border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                ><ChevronsRight className="w-3.5 h-3.5" /></button>
                             </div>
-                            <div className="flex items-center gap-2 text-[11px] text-slate-600 font-medium">
-                                <span>Rows per page</span>
+                            <div className="flex items-center gap-2 text-[11px] text-slate-600">
+                                <span>Show</span>
                                 <select
                                     value={itemsPerPage}
                                     onChange={(e) => {
                                         setItemsPerPage(Number(e.target.value));
                                         setCurrentPage(1);
                                     }}
-                                    className="border border-slate-300 rounded px-2 py-1 focus:outline-none font-bold bg-white shadow-sm"
+                                    className="border border-slate-300 rounded px-2 py-1 focus:outline-none"
                                 >
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
+                                    <option value={15}>15</option>
+                                    <option value={25}>25</option>
                                     <option value={50}>50</option>
                                     <option value={100}>100</option>
                                 </select>
+                                <span>per page</span>
                             </div>
                         </div>
                     </div>

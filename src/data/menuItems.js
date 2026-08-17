@@ -309,11 +309,12 @@ export const menuItems = [
   },
   {
     type: "dropdown",
-    label: "Billing & Invoices",
+    label: "Sales & Billing",
     icon: FileText,
     children: [
       { label: "Proforma Invoices", path: "/accounts/proforma-invoices" },
       { label: "Tax Invoices", path: "/accounts/invoices" },
+      { label: "Delivery Challans", path: "/accounts/delivery-challans" },
       { label: "Credit Notes", path: "/accounts/credit-notes" },
       { label: "Debit Notes", path: "/account-debit-notes" },
     ],
@@ -327,16 +328,8 @@ export const menuItems = [
       { label: "Payment Receipts", path: "/accounts/receipts" },
       { label: "Outstanding Payments", path: "/accounts/ar" },
       { label: "Overdue Payments", path: "/accounts/client-ledger" },
-      { label: "Payment Adjustments", disabled: true },
-    ],
-  },
-  {
-    type: "dropdown",
-    label: "Delivery & Documents",
-    icon: ClipboardList,
-    children: [
-      { label: "Delivery Challans", path: "/accounts/delivery-challans" },
-      { label: "E-Way Bills", disabled: true },
+      { label: "Payment Adjustments", path: "/accounts/payment-adjustments" },
+      { label: "Collection & Ageing Reports", path: "/accounts/collection-ageing-reports" },
     ],
   },
   {
@@ -344,23 +337,20 @@ export const menuItems = [
     label: "Purchases & Expenses",
     icon: ShoppingBag,
     children: [
-      { label: "Imprest / Reimbursement", path: "/accounts/imprest" },
+      { label: "Vendor Bills", disabled: true },
+      { label: "Expenses", path: "/accounts/imprest" },
+      { label: "Vendor Payments", disabled: true },
+      { label: "Purchase & Expense Reports", disabled: true },
     ],
   },
   {
-    type: "item",
+    type: "dropdown",
     label: "Tax & Compliance",
     icon: ShieldCheck,
-    disabled: true,
-  },
-  {
-    type: "dropdown",
-    label: "Accounts Reports",
-    icon: TrendingUp,
     children: [
-      { label: "Sales Report", path: "/accounts/salesreport" },
-      { label: "Invoice Register", path: "/invoice-list" },
-      { label: "Credit/Debit Note Register", path: "/debit-note-list/all" },
+      { label: "GST", disabled: true },
+      { label: "TDS", disabled: true },
+      { label: "TDS Certificates", disabled: true },
     ],
   },
   {
@@ -369,6 +359,10 @@ export const menuItems = [
     icon: Settings,
     children: [
       { label: "Bank Accounts", path: "/accounts/bank-details" },
+      { label: "Payment Terms", disabled: true },
+      { label: "Tax Settings", disabled: true },
+      { label: "Invoice Settings", disabled: true },
+      { label: "Numbering Series", disabled: true },
     ],
   },
 

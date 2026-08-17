@@ -325,6 +325,8 @@ const ClientLedgerView = lazy(() => import("../pages/accounts/ClientLedgerView")
 const DebitNotesView = lazy(() => import("../pages/accounts/DebitNotesView"));
 const CreateAccountDebitNote = lazy(() => import("../pages/CreateAccountDebitNote"));
 const AccountsReceivableView = lazy(() => import("../pages/accounts/AccountsReceivableView"));
+const PaymentAdjustmentsView = lazy(() => import("../pages/accounts/PaymentAdjustmentsView"));
+const CollectionAgeingReportsView = lazy(() => import("../pages/accounts/CollectionAgeingReportsView"));
 const PaymentsSummaryReport = lazy(() => import("../pages/accounts/PaymentsSummaryReport"));
 const InvoicesView = lazy(() => import("../pages/accounts/InvoicesView"));
 const ProformaInvoicesView = lazy(() => import("../pages/accounts/ProformaInvoicesView"));
@@ -870,6 +872,8 @@ export default function AppRoutes() {
             <Route path="create-account-debit-note/:id" element={<CreateAccountDebitNote />} />
             <Route path="debit-note-view-account/:id" element={<DebitNoteViewAccount />} />
             <Route path="accounts/ar" element={<AccountsReceivableView />} />
+            <Route path="accounts/payment-adjustments" element={<PaymentAdjustmentsView />} />
+            <Route path="accounts/collection-ageing-reports" element={<CollectionAgeingReportsView />} />
             <Route path="accounts/summary-report" element={<PaymentsSummaryReport />} />
             <Route path="accounts/invoices" element={<InvoicesView />} />
             <Route path="accounts/proforma-invoices" element={<ProformaInvoicesView />} />

@@ -19,6 +19,8 @@ const EMPTY_EVENT = {
     name: '',
     startDate: '',
     endDate: '',
+    setupDate: '',
+    dismantlingDate: '',
     location: '',
     status: 'active',
     ticketsStatus: 'Few Remaining',
@@ -459,6 +461,16 @@ const ManageEvents = () => {
                                 <div>
                                     <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">End Date *</label>
                                     <input type="date" required value={eventForm.endDate ? new Date(eventForm.endDate).toISOString().split('T')[0] : ''} onChange={(e) => setEventForm({ ...eventForm, endDate: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Setup Date</label>
+                                    <input type="date" value={eventForm.setupDate ? new Date(eventForm.setupDate).toISOString().split('T')[0] : ''} onChange={(e) => setEventForm({ ...eventForm, setupDate: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
+                                </div>
+                                <div>
+                                    <label className="block text-[11px] font-medium text-black mb-1 uppercase tracking-tight">Dismantling Date</label>
+                                    <input type="date" value={eventForm.dismantlingDate ? new Date(eventForm.dismantlingDate).toISOString().split('T')[0] : ''} onChange={(e) => setEventForm({ ...eventForm, dismantlingDate: e.target.value })} className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-xs font-bold rounded-[2px]" />
                                 </div>
                             </div>
                             <div className="mb-3">

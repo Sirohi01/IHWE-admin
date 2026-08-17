@@ -215,7 +215,7 @@ const ProformaInvoicesView = () => {
                     <div className="flex items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
                         <span>Accounts Management</span>
                         <ChevronRight className="w-3 h-3" />
-                        <span>Billing & Invoices</span>
+                        <span>Sales & Billing</span>
                         <ChevronRight className="w-3 h-3" />
                         <span className="text-blue-600 font-bold">Proforma Invoice</span>
                     </div>

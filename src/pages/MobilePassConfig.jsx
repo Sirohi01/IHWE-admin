@@ -1,9 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Car,
   Bike,
-  CheckCircle2,
+  Calendar,
+  ChevronDown,
   IndianRupee,
+  Info,
+  Lightbulb,
+  LifeBuoy,
+  Minus,
+  Plus,
+  Ruler,
   Sparkles,
   RefreshCw,
   Save,
@@ -11,10 +19,8 @@ import {
   UserCheck,
   Users,
   Wrench,
-  ShieldCheck,
-  TrendingUp,
-  Activity,
-  AlertCircle
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
 import api from "../lib/api";
 
@@ -32,64 +38,97 @@ const VEHICLE_SUB_TYPES = [
 ];
 
 const colorClass = {
-  orange: "from-orange-500 to-amber-500 shadow-orange-500/20",
-  emerald: "from-emerald-500 to-teal-500 shadow-emerald-500/20",
-  purple: "from-purple-500 to-indigo-500 shadow-purple-500/20",
-  blue: "from-blue-500 to-cyan-500 shadow-blue-500/20",
-  pink: "from-pink-500 to-rose-500 shadow-pink-500/20",
-  teal: "from-teal-500 to-emerald-500 shadow-teal-500/20",
-  cyan: "from-cyan-500 to-sky-500 shadow-cyan-500/20",
+  orange: "from-orange-500 to-amber-500",
+  emerald: "from-emerald-500 to-teal-500",
+  purple: "from-purple-500 to-indigo-500",
+  blue: "from-blue-500 to-cyan-500",
+  pink: "from-pink-500 to-rose-500",
+  teal: "from-teal-500 to-emerald-500",
+  cyan: "from-cyan-500 to-sky-500",
 };
 
-const PREVIEW_STALL_SIZES = [9, 12, 15, 18, 20, 24, 27, 28, 32, 36];
-const ROUND_FN = { floor: Math.floor, round: Math.round, ceil: Math.ceil };
-const computeEntitlementPreview = (item, stallArea) => {
-  const ratioArea = Number(item.ratioArea);
-  if (!stallArea || !ratioArea) return 0;
-  const roundFn = ROUND_FN[item.roundingMode] || Math.floor;
-  return roundFn(stallArea / ratioArea) * (Number(item.ratioQty) || 0);
+const tintClass = {
+  orange: "from-orange-50/70",
+  emerald: "from-emerald-50/70",
+  purple: "from-purple-50/70",
+  blue: "from-blue-50/70",
+  pink: "from-pink-50/70",
+};
+
+const ringClass = {
+  orange: "ring-orange-100",
+  emerald: "ring-emerald-100",
+  purple: "ring-purple-100",
+  blue: "ring-blue-100",
+  pink: "ring-pink-100",
+};
+
+const textTint = {
+  orange: "text-orange-600",
+  emerald: "text-emerald-600",
+  purple: "text-purple-600",
+  blue: "text-blue-600",
+  pink: "text-pink-600",
+};
+
+const footerTint = {
+  orange: "bg-orange-50 text-orange-700 ring-orange-100",
+  emerald: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+  purple: "bg-purple-50 text-purple-700 ring-purple-100",
+  blue: "bg-blue-50 text-blue-700 ring-blue-100",
+  pink: "bg-pink-50 text-pink-700 ring-pink-100",
+};
+
+const getEventBadge = (event) => {
+  const now = new Date();
+  const start = event.startDate ? new Date(event.startDate) : null;
+  const end = event.endDate ? new Date(event.endDate) : null;
+  if (start && now < start) return { label: "Upcoming", className: "bg-blue-50 text-blue-700" };
+  if (end && now > end) return { label: "Completed", className: "bg-slate-100 text-slate-500" };
+  return { label: "Ongoing", className: "bg-emerald-50 text-emerald-700" };
 };
 
 export default function MobilePassConfig() {
+  const navigate = useNavigate();
+  const [events, setEvents] = useState([]);
+  const [eventId, setEventId] = useState("");
+  const [eventDropdownOpen, setEventDropdownOpen] = useState(false);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState("");
   const [error, setError] = useState("");
 
-  const load = async () => {
+  const loadEvents = async () => {
+    try {
+      const res = await api.get("/api/events");
+      const list = res.data?.data || [];
+      setEvents(list);
+      if (list.length) setEventId((prev) => prev || list[0]._id);
+    } catch {
+      setEvents([]);
+    }
+  };
+
+  const loadPasses = async (id) => {
+    if (!id) return;
     setLoading(true);
     setError("");
     try {
-      const res = await api.get("/api/exhibitor-pass-config/admin/all");
+      const res = await api.get("/api/exhibitor-pass-config/admin/all", { params: { eventId: id } });
       setItems(res.data.data || []);
     } catch (err) {
       const message = err?.response?.data?.message || err?.message || "Failed to load pass configuration";
       setError(message);
-
-      try {
-        const fallbackRes = await api.get("/api/exhibitor-pass-config/active");
-        setItems(fallbackRes.data.data || []);
-      } catch {
-        setItems([]);
-      }
+      setItems([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => { loadEvents(); }, []);
+  useEffect(() => { if (eventId) loadPasses(eventId); }, [eventId]);
 
-  const stats = useMemo(() => ({
-    total: items.length,
-    active: items.filter(item => item.isActive !== false).length,
-    complimentary: items.reduce((sum, item) => {
-      if (item.passType === "vehicle") {
-        return sum + Number(item.vehicleTypeConfig?.twoWheeler?.complimentaryQuota || 0) + Number(item.vehicleTypeConfig?.fourWheeler?.complimentaryQuota || 0);
-      }
-      return sum + Number(item.complimentaryQuota || 0);
-    }, 0),
-    totalQuota: items.reduce((sum, item) => sum + Number(item.totalQuota || 0), 0),
-  }), [items]);
+  const selectedEvent = events.find((e) => e._id === eventId) || null;
 
   const updateItem = (id, key, value) => {
     setItems(prev => prev.map(item => item._id === id ? { ...item, [key]: value } : item));
@@ -106,21 +145,13 @@ export default function MobilePassConfig() {
     }));
   };
   const subValue = (item, subKey, field, fallback = 0) => item.vehicleTypeConfig?.[subKey]?.[field] ?? fallback;
-  const computeSubPreview = (item, subKey, stallArea) => {
-    const sub = item.vehicleTypeConfig?.[subKey] || {};
-    if (sub.allocationMode !== "perArea") return Number(sub.complimentaryQuota) || 0;
-    const ratioArea = Number(sub.ratioArea);
-    if (!stallArea || !ratioArea) return 0;
-    const roundFn = ROUND_FN[sub.roundingMode] || Math.floor;
-    return roundFn(stallArea / ratioArea) * (Number(sub.ratioQty) || 0);
-  };
 
   const save = async (item) => {
     setSavingId(item._id);
     setError("");
     try {
-      await api.put(`/api/exhibitor-pass-config/admin/${item.passType}`, item);
-      load();
+      await api.put(`/api/exhibitor-pass-config/admin/${item.passType}`, item, { params: { eventId } });
+      loadPasses(eventId);
     } catch (err) {
       setError(err?.response?.data?.message || err?.message || "Failed to save pass configuration");
     } finally {
@@ -128,174 +159,176 @@ export default function MobilePassConfig() {
     }
   };
 
-  const numberInput = (item, key, label, icon, step) => {
-    const Icon = icon;
-    return (
-      <label className="block group">
-        <span className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-500 transition-colors group-focus-within:text-[#23471d]">
-          <Icon size={14} className="text-slate-400 transition-colors group-focus-within:text-[#23471d]" /> {label}
-        </span>
-        <div className="relative">
-          <input
-            type="number"
-            min="0"
-            step={step || 1}
-            value={item[key] || 0}
-            onChange={e => updateItem(item._id, key, e.target.value)}
-            className="w-full rounded-xl border border-slate-200 bg-slate-50/50 px-4 py-3 text-base font-bold text-slate-800 outline-none transition-all hover:border-slate-300 focus:border-[#23471d] focus:bg-white focus:ring-4 focus:ring-[#23471d]/10"
-          />
-        </div>
-      </label>
-    );
-  };
-
-  const segmentedControl = (item, key, options, gradient, size = "md") => {
-    const current = item[key] || options[0].value;
-    const pad = size === "sm" ? "px-2.5 py-1.5 text-[10px]" : "px-4 py-2 text-xs";
-    return (
-      <div className="inline-flex flex-wrap gap-1 rounded-xl bg-slate-100 p-1">
-        {options.map(opt => {
-          const active = current === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => updateItem(item._id, key, opt.value)}
-              className={`rounded-lg font-black uppercase tracking-wide transition-all ${pad} ${active
-                ? `bg-gradient-to-br ${gradient} text-white shadow-md`
-                : "text-slate-400 hover:text-slate-600"
-                }`}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
-
-  const inlineNumber = (item, key, width = "w-16") => (
-    <input
-      type="number"
-      min="0"
-      step="0.5"
-      value={item[key] || 0}
-      onChange={e => updateItem(item._id, key, e.target.value)}
-      className={`${width} rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-center text-sm font-black text-slate-800 outline-none transition-all focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10`}
-    />
+  // A plain-language "same for everyone" vs "more for bigger stalls" choice,
+  // instead of the technical "Fixed" / "Per Stall Area" allocation-mode terms.
+  const AllocationChoice = ({ current, onChange, gradient }) => (
+    <div className="inline-flex flex-wrap gap-1 rounded-xl bg-slate-100/80 p-1">
+      {[
+        { value: "fixed", label: "Same for everyone", icon: Users },
+        { value: "perArea", label: "More for bigger stalls", icon: Ruler },
+      ].map(opt => {
+        const active = (current || "fixed") === opt.value;
+        const OptIcon = opt.icon;
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(opt.value)}
+            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${active
+              ? `bg-gradient-to-br ${gradient} text-white shadow-sm`
+              : "text-slate-500 hover:bg-white hover:text-slate-700"
+              }`}
+          >
+            <OptIcon size={12} strokeWidth={2.5} />
+            {opt.label}
+          </button>
+        );
+      })}
+    </div>
   );
 
-  // Vehicle-sub-config variants of the same controls above, scoped to
-  // item.vehicleTypeConfig[subKey] instead of the flat item fields.
-  const subNumberInput = (item, subKey, field, label, icon) => {
-    const Icon = icon;
-    return (
-      <label className="block group">
-        <span className="mb-1.5 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500 transition-colors group-focus-within:text-[#23471d]">
-          <Icon size={12} className="text-slate-400" /> {label}
-        </span>
-        <input
-          type="number"
-          min="0"
-          step="0.5"
-          value={subValue(item, subKey, field)}
-          onChange={e => updateVehicleSub(item._id, subKey, field, e.target.value)}
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-black text-slate-800 outline-none transition-all focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10"
-        />
-      </label>
-    );
-  };
+  const Stepper = ({ value, onChange, width = "w-24" }) => (
+    <div className={`inline-flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${width}`}>
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(0, Number(value || 0) - 1))}
+        className="flex h-7 w-6 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
+      >
+        <Minus size={11} strokeWidth={2.5} />
+      </button>
+      <input
+        type="number"
+        min="0"
+        value={value || 0}
+        onChange={e => onChange(e.target.value)}
+        className="w-full border-x border-slate-100 bg-transparent py-1 text-center text-xs font-normal text-slate-800 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+      />
+      <button
+        type="button"
+        onClick={() => onChange(Number(value || 0) + 1)}
+        className="flex h-7 w-6 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
+      >
+        <Plus size={11} strokeWidth={2.5} />
+      </button>
+    </div>
+  );
 
-  const subSegmented = (item, subKey, field, options, gradient) => {
-    const current = subValue(item, subKey, field, options[0].value);
-    return (
-      <div className="inline-flex gap-1 rounded-lg bg-slate-100 p-1">
-        {options.map(opt => {
-          const active = current === opt.value;
-          return (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => updateVehicleSub(item._id, subKey, field, opt.value)}
-              className={`rounded px-2 py-1 text-[9px] font-black uppercase tracking-wide transition-all ${active ? `bg-gradient-to-br ${gradient} text-white shadow-sm` : "text-slate-400 hover:text-slate-600"}`}
-            >
-              {opt.label}
-            </button>
-          );
-        })}
+  const SectionLabel = ({ children, gradient }) => (
+    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-slate-500">
+      <span className={`h-1.5 w-4 rounded-full bg-gradient-to-r ${gradient}`} />
+      {children}
+    </p>
+  );
+
+  const StatField = ({ gradient, label, noBullet, prefixIcon: PrefixIcon, suffix, value, onChange }) => (
+    <div>
+      {noBullet ? (
+        <p className="mb-1 text-[11px] font-semibold tracking-wide text-slate-500">{label}</p>
+      ) : (
+        <SectionLabel gradient={gradient}>{label}</SectionLabel>
+      )}
+      <div className="flex items-center gap-1.5">
+        {PrefixIcon && <PrefixIcon size={13} className="shrink-0 text-slate-400" />}
+        <Stepper value={value} onChange={onChange} />
+        {suffix && <span className="text-[10px] font-bold text-slate-500">{suffix}</span>}
       </div>
-    );
-  };
-
-  const subInlineNumber = (item, subKey, field, width = "w-14") => (
-    <input
-      type="number"
-      min="0"
-      step="0.5"
-      value={subValue(item, subKey, field)}
-      onChange={e => updateVehicleSub(item._id, subKey, field, e.target.value)}
-      className={`${width} rounded-lg border border-slate-200 bg-white px-1.5 py-1 text-center text-xs font-black text-slate-800 outline-none focus:border-[#23471d] focus:ring-2 focus:ring-[#23471d]/10`}
-    />
+    </div>
   );
 
   return (
     <div className="relative min-h-screen bg-slate-50 pb-20">
-      {/* Decorative Top Gradient Background */}
       <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-slate-200/50 to-transparent pointer-events-none" />
 
-      <div className="relative p-6 lg:p-8">
+      <div className="relative px-6 pb-6 pt-4 lg:px-8 lg:pb-8 lg:pt-5">
 
         {/* Header Section */}
-        <div className="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-4 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-4xl font-black tracking-tight text-slate-900">Pass & Hospitality</h1>
-            <p className="mt-2 text-base font-medium text-slate-500 max-w-2xl">
-              Control the pricing, complimentary limits, and request quotas for all passes available inside the Exhibitor Mobile App.
+            <h1 className="text-3xl font-normal tracking-tight text-slate-900">
+              Pass Configuration
+            </h1>
+            <p className="mt-0.5 text-sm font-medium text-slate-500 max-w-2xl">
+              Configure pass categories, set free quota, and manage pricing for your exhibitors and visitors.
             </p>
           </div>
 
           <button
-            onClick={load}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-black text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 transition-all hover:bg-slate-50 hover:shadow-md active:scale-95"
+            onClick={() => loadPasses(eventId)}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-normal text-slate-700 shadow-sm ring-1 ring-inset ring-slate-200 transition-all hover:bg-slate-50 hover:shadow-md active:scale-95"
           >
             <RefreshCw size={16} className={loading ? "animate-spin text-[#23471d]" : "text-slate-400"} /> Refresh Data
           </button>
         </div>
 
-        {/* Stats Section */}
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { label: "Pass Types", value: stats.total, sub: "Configured Types", icon: Ticket, color: "text-blue-600", bg: "bg-blue-50" },
-            { label: "Active Types", value: stats.active, sub: "Visible to Exhibitors", icon: Activity, color: "text-emerald-600", bg: "bg-emerald-50" },
-            { label: "Complimentary", value: stats.complimentary, sub: "Total Free Passes", icon: ShieldCheck, color: "text-purple-600", bg: "bg-purple-50" },
-            { label: "Total Quota", value: stats.totalQuota, sub: "Overall Pass Limit", icon: TrendingUp, color: "text-orange-600", bg: "bg-orange-50" },
-          ].map((stat, i) => {
-            const Icon = stat.icon;
-            return (
-              <div key={i} className="group relative overflow-hidden rounded-2xl border border-slate-200/60 bg-white p-5 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-wider text-slate-400">{stat.label}</p>
-                    <p className="mt-1 flex items-baseline gap-2 text-3xl font-black text-slate-900">
-                      {stat.value}
-                    </p>
-                    <p className="mt-1 text-xs font-semibold text-slate-500">{stat.sub}</p>
+        {/* Event Selector */}
+        <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-start">
+          <div className="relative w-full max-w-lg">
+            <p className="mb-1 text-[11px] font-semibold tracking-wide text-slate-500">Select Event for Pass Configuration</p>
+            <button
+              type="button"
+              onClick={() => setEventDropdownOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-left shadow-sm transition-all hover:border-slate-300"
+            >
+              <span className="flex items-center gap-2 min-w-0">
+                <Calendar size={14} className="shrink-0 text-slate-400" />
+                <span className="truncate text-xs font-normal text-slate-800">{selectedEvent?.name || "Select an event"}</span>
+                {selectedEvent && (
+                  <span className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-normal tracking-wide ${getEventBadge(selectedEvent).className}`}>
+                    {getEventBadge(selectedEvent).label}
+                  </span>
+                )}
+              </span>
+              <ChevronDown size={14} className={`shrink-0 text-slate-400 transition-transform ${eventDropdownOpen ? "rotate-180" : ""}`} />
+            </button>
+
+            {eventDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-10" onClick={() => setEventDropdownOpen(false)} />
+                <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                  <div className="max-h-72 overflow-y-auto py-1">
+                    {events.map((ev) => {
+                      const badge = getEventBadge(ev);
+                      const active = ev._id === eventId;
+                      return (
+                        <button
+                          key={ev._id}
+                          type="button"
+                          onClick={() => { setEventId(ev._id); setEventDropdownOpen(false); }}
+                          className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-sm font-bold transition-colors ${active ? "bg-[#23471d]/5 text-[#23471d]" : "text-slate-700 hover:bg-slate-50"}`}
+                        >
+                          <span className="truncate">{ev.name}</span>
+                          <span className={`shrink-0 rounded-full px-2 py-0.5 text-[9px] font-normal tracking-wide ${badge.className}`}>{badge.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div className={`rounded-full p-3 ${stat.bg} ${stat.color} transition-transform group-hover:scale-110`}>
-                    <Icon size={24} strokeWidth={2.5} />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/events")}
+                    className="flex w-full items-center gap-1.5 border-t border-slate-100 px-4 py-2.5 text-left text-xs font-normal text-[#23471d] hover:bg-slate-50"
+                  >
+                    <Plus size={14} /> Manage Events
+                  </button>
                 </div>
-              </div>
-            );
-          })}
+              </>
+            )}
+          </div>
+
+          <div className="flex flex-1 items-start gap-3 rounded-xl border border-indigo-100 bg-indigo-50/60 p-3">
+            <Info size={16} className="mt-0.5 shrink-0 text-indigo-500" />
+            <div>
+              <p className="text-xs font-normal text-indigo-900">Why select an event?</p>
+              <p className="mt-0.5 text-[11px] font-medium text-indigo-700">Pass configuration will be saved and applied only for the selected event.</p>
+            </div>
+          </div>
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="mb-8 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-red-800 shadow-sm">
             <AlertCircle className="mt-0.5 shrink-0 text-red-500" size={20} />
             <div>
-              <h3 className="text-sm font-black">Sync Error</h3>
+              <h3 className="text-sm font-normal">Sync Error</h3>
               <p className="mt-1 text-sm font-medium">{error}. Showing available configuration if possible.</p>
             </div>
           </div>
@@ -305,58 +338,42 @@ export default function MobilePassConfig() {
         {loading ? (
           <div className="flex h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50/50">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#23471d] border-t-transparent" />
-            <p className="mt-4 text-sm font-black text-slate-400">Loading Configuration...</p>
+            <p className="mt-4 text-sm font-normal text-slate-400">Loading Configuration...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6">
-            {items.map((item, index) => {
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {items.map((item) => {
               const meta = passMeta[item.passType] || { icon: Ticket, color: "blue", label: item.passType };
               const Icon = meta.icon;
+              const gradient = colorClass[meta.color];
+              const tint = tintClass[meta.color];
+              const ring = ringClass[meta.color];
+              const isPerArea = item.allocationMode === "perArea";
 
               return (
                 <div
                   key={item._id}
-                  className="group relative flex flex-col overflow-hidden rounded-3xl border border-slate-200/80 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:shadow-slate-200/50"
-                  style={{ animationDelay: `${index * 50}ms` }}
+                  className={`flex flex-col overflow-hidden rounded-3xl border border-slate-200/70 bg-gradient-to-b ${tint} to-white shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/60`}
                 >
-                  <div className={`h-1.5 w-full bg-gradient-to-r ${colorClass[meta.color]}`} />
-
                   {/* Card Header */}
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-100 p-4">
-                    <div className="flex items-start gap-4">
-                      <div className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br shadow-lg ${colorClass[meta.color]}`}>
-                        <Icon size={26} className="text-white" strokeWidth={2.5} />
+                  <div className="flex items-center justify-between gap-3 p-3">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br shadow-md ring-2 ${ring} ${gradient}`}>
+                        <Icon size={18} className="text-white" strokeWidth={2.5} />
                       </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-black uppercase tracking-widest text-slate-400">{meta.label} Category</p>
-                          {item.isActive !== false && (
-                            <span className="flex h-2 w-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                          )}
-                        </div>
-                        <input
-                          value={item.title || ""}
-                          onChange={e => updateItem(item._id, "title", e.target.value)}
-                          placeholder="Pass Title"
-                          className="mt-1.5 w-full rounded-lg border border-transparent bg-transparent px-0 text-xl font-black text-slate-900 outline-none transition-all placeholder:text-slate-300 focus:border-slate-200 focus:bg-slate-50 focus:px-3 focus:py-1"
-                        />
-                        <input
-                          value={item.subtitle || ""}
-                          onChange={e => updateItem(item._id, "subtitle", e.target.value)}
-                          placeholder="Pass subtitle description"
-                          className="mt-1 w-full rounded-lg border border-transparent bg-transparent px-0 text-sm font-semibold text-slate-500 outline-none transition-all placeholder:text-slate-300 focus:border-slate-200 focus:bg-slate-50 focus:px-3 focus:py-1"
-                        />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-normal leading-tight tracking-tight text-slate-900">{item.title || meta.label}</p>
+                        <p className="text-[10px] font-bold tracking-wide text-slate-400">{meta.label} Pass</p>
                       </div>
                     </div>
 
-                    {/* Custom Toggle Switch */}
-                    <label className="flex cursor-pointer items-center gap-3 shrink-0">
-                      <span className="hidden sm:block text-xs font-black uppercase tracking-wider text-slate-500">
-                        {item.isActive !== false ? 'Active' : 'Hidden'}
+                    <label className="flex cursor-pointer flex-col items-center gap-1 shrink-0">
+                      <span className={`text-[9px] font-semibold tracking-wider ${item.isActive !== false ? textTint[meta.color] : "text-slate-400"}`}>
+                        {item.isActive !== false ? "Active" : "Hidden"}
                       </span>
                       <div
-                        className="relative inline-flex h-7 w-12 items-center rounded-full shadow-inner transition-colors duration-300 ease-in-out"
-                        style={{ backgroundColor: item.isActive !== false ? '#10b981' : '#cbd5e1' }}
+                        className="relative inline-flex h-6 w-11 items-center rounded-full shadow-inner transition-colors"
+                        style={{ backgroundColor: item.isActive !== false ? "#10b981" : "#cbd5e1" }}
                       >
                         <input
                           type="checkbox"
@@ -365,170 +382,150 @@ export default function MobilePassConfig() {
                           onChange={e => updateItem(item._id, "isActive", e.target.checked)}
                         />
                         <span
-                          className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform duration-300 ease-in-out ${item.isActive !== false ? 'translate-x-6' : 'translate-x-1'}`}
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${item.isActive !== false ? "translate-x-6" : "translate-x-1"}`}
                         />
                       </div>
                     </label>
                   </div>
 
                   {/* Card Body */}
-                  <div className="flex-1 space-y-4 p-4">
-
-                    {/* Free Allocation */}
-                    <div>
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-2">
-                          <span className={`h-1.5 w-5 rounded-full bg-gradient-to-r ${colorClass[meta.color]}`} />
-                          <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-                            {item.passType === "vehicle" ? "Free Allocation — By Vehicle Type" : "Free Allocation"}
-                          </p>
-                        </div>
-                        {item.passType !== "vehicle" && segmentedControl(item, "allocationMode", [
-                          { value: "fixed", label: "Fixed" },
-                          { value: "perArea", label: "Per Stall Area" },
-                        ], colorClass[meta.color])}
-                      </div>
-
-                      {item.passType === "vehicle" ? (
-                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="flex-1 space-y-2 rounded-t-3xl bg-white/80 p-3 backdrop-blur-sm">
+                    {item.passType === "vehicle" ? (
+                      <>
+                        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
                           {VEHICLE_SUB_TYPES.map(sub => {
-                            const gradient = colorClass[sub.color];
                             const SubIcon = sub.icon;
+                            const subGradient = colorClass[sub.color];
                             const subMode = subValue(item, sub.key, "allocationMode", "fixed");
+                            const subRatioArea = subValue(item, sub.key, "ratioArea", 9);
                             return (
-                              <div key={sub.key} className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                                <div className="mb-3 flex items-center justify-between gap-2">
-                                  <span className="flex items-center gap-1.5 text-xs font-black text-slate-700">
-                                    <SubIcon size={14} className="text-slate-500" /> {sub.label}
+                              <div key={sub.key} className="rounded-xl border border-slate-200 bg-slate-50/70 p-2 transition-colors hover:bg-slate-50">
+                                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+                                  <span className={`flex h-5 w-5 items-center justify-center rounded-lg bg-gradient-to-br shadow-sm ${subGradient}`}>
+                                    <SubIcon size={11} className="text-white" strokeWidth={2.5} />
                                   </span>
-                                  {subSegmented(item, sub.key, "allocationMode", [
-                                    { value: "fixed", label: "Fixed" },
-                                    { value: "perArea", label: "Per Area" },
-                                  ], gradient)}
-                                </div>
+                                  {sub.label}
+                                </p>
 
-                                {subMode === "perArea" ? (
-                                  <div className="space-y-2">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                      <span className="text-[10px] font-bold text-slate-500">Give</span>
-                                      {subInlineNumber(item, sub.key, "ratioQty")}
-                                      <span className="text-[10px] font-bold text-slate-500">per</span>
-                                      {subInlineNumber(item, sub.key, "ratioArea")}
-                                      <span className="text-[10px] font-bold text-slate-500">sqm</span>
-                                      <div className="ml-auto">
-                                        {subSegmented(item, sub.key, "roundingMode", [
-                                          { value: "floor", label: "Floor" },
-                                          { value: "round", label: "Round" },
-                                          { value: "ceil", label: "Ceil" },
-                                        ], gradient)}
-                                      </div>
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                      {PREVIEW_STALL_SIZES.map(size => (
-                                        <div key={size} className={`flex items-center gap-1 rounded bg-gradient-to-br ${gradient} px-2 py-0.5 shadow-sm`}>
-                                          <span className="text-[9px] font-bold text-white/75">{size}sqm</span>
-                                          <span className="text-[10px] font-black text-white">{computeSubPreview(item, sub.key, size)}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  </div>
-                                ) : (
-                                  <div className="max-w-[140px]">
-                                    {subNumberInput(item, sub.key, "complimentaryQuota", "Free Qty", CheckCircle2)}
-                                  </div>
-                                )}
+                                <AllocationChoice
+                                  current={subMode}
+                                  gradient={subGradient}
+                                  onChange={(v) => updateVehicleSub(item._id, sub.key, "allocationMode", v)}
+                                />
 
-                                <div className="mt-3 border-t border-slate-200/80 pt-3">
-                                  {subNumberInput(item, sub.key, "price", "Price (₹) / Extra", IndianRupee)}
+                                <div className="mt-1.5 space-y-1">
+                                  <StatField
+                                    gradient={subGradient}
+                                    noBullet
+                                    label={subMode === "perArea" ? `Free Passes (Per ${subRatioArea || 0} sqm)` : "Free Passes"}
+                                    suffix="Passes are free"
+                                    value={subMode === "perArea" ? subValue(item, sub.key, "ratioQty") : subValue(item, sub.key, "complimentaryQuota")}
+                                    onChange={(v) => updateVehicleSub(item._id, sub.key, subMode === "perArea" ? "ratioQty" : "complimentaryQuota", v)}
+                                  />
+                                  <StatField
+                                    gradient={subGradient}
+                                    noBullet
+                                    label="After Free Quota"
+                                    prefixIcon={IndianRupee}
+                                    value={subValue(item, sub.key, "price")}
+                                    onChange={(v) => updateVehicleSub(item._id, sub.key, "price", v)}
+                                  />
                                 </div>
                               </div>
                             );
                           })}
                         </div>
-                      ) : item.allocationMode === "perArea" ? (
-                        <div className="space-y-3 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
-                          <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="text-xs font-bold text-slate-500">Give</span>
-                            {inlineNumber(item, "ratioQty")}
-                            <span className="text-xs font-bold text-slate-500">free per</span>
-                            {inlineNumber(item, "ratioArea")}
-                            <span className="text-xs font-bold text-slate-500">sqm of stall</span>
-                            <div className="ml-auto">
-                              {segmentedControl(item, "roundingMode", [
-                                { value: "floor", label: "Floor" },
-                                { value: "round", label: "Round" },
-                                { value: "ceil", label: "Ceil" },
-                              ], colorClass[meta.color], "sm")}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-wrap items-center gap-2 border-t border-slate-200/80 pt-3">
-                            <span className="mr-1 text-[10px] font-black uppercase tracking-widest text-slate-400">Preview</span>
-                            {PREVIEW_STALL_SIZES.map(size => (
-                              <div key={size} className={`flex items-center gap-1.5 rounded-lg bg-gradient-to-br ${colorClass[meta.color]} px-2.5 py-1 shadow-sm`}>
-                                <span className="text-[10px] font-bold text-white/75">{size}sqm</span>
-                                <span className="text-xs font-black text-white">{computeEntitlementPreview(item, size)}</span>
-                              </div>
-                            ))}
-                          </div>
+                      </>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="mb-0.5 text-[11px] font-semibold tracking-wide text-slate-500">Who can use?</p>
+                          <AllocationChoice
+                            current={item.allocationMode}
+                            gradient={gradient}
+                            onChange={(v) => updateItem(item._id, "allocationMode", v)}
+                          />
                         </div>
-                      ) : (
-                        <div className="max-w-[200px]">
-                          {numberInput(item, "complimentaryQuota", "Free Quota", CheckCircle2)}
-                        </div>
-                      )}
-                    </div>
 
-                    {/* Pricing & Limits */}
-                    <div>
-                      <div className="mb-3 flex items-center gap-2">
-                        <span className="h-1.5 w-5 rounded-full bg-slate-200" />
-                        <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Pricing & Limits</p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-                        {numberInput(item, "totalQuota", "Total Quota", Ticket)}
-                        {item.passType !== "vehicle" && numberInput(item, "price", "Price (₹)", IndianRupee)}
-                        {numberInput(item, "gstPercentage", "GST (%)", Activity)}
-                        {numberInput(item, "maxPerRequest", "Max/Req", Users)}
-                        {numberInput(item, "validityDays", "Valid Days", ShieldCheck)}
-                      </div>
-                    </div>
+                        <div className="grid grid-cols-2 gap-2.5">
+                          <StatField
+                            gradient={gradient}
+                            noBullet
+                            label={isPerArea ? `Free Passes (Per ${item.ratioArea || 0} sqm)` : "Free Passes"}
+                            suffix="Passes are free"
+                            value={isPerArea ? item.ratioQty : item.complimentaryQuota}
+                            onChange={(v) => updateItem(item._id, isPerArea ? "ratioQty" : "complimentaryQuota", v)}
+                          />
+                          {isPerArea && (
+                            <StatField
+                              gradient={gradient}
+                              noBullet
+                              label="Stall Area Step"
+                              suffix="sqm"
+                              value={item.ratioArea}
+                              onChange={(v) => updateItem(item._id, "ratioArea", v)}
+                            />
+                          )}
+                          <StatField gradient={gradient} noBullet label="Price After Free Quota" prefixIcon={IndianRupee} value={item.price} onChange={(v) => updateItem(item._id, "price", v)} />
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Card Footer */}
-                  <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/80 px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
-                        <IndianRupee size={14} className="text-slate-400" />
-                      </div>
-                      <p className="text-xs font-bold text-slate-500">
-                        {item.passType === "vehicle" ? (
-                          <span className="text-slate-700">
-                            2-Wheeler ₹{Number(subValue(item, "twoWheeler", "price")).toLocaleString("en-IN")} · Car ₹{Number(subValue(item, "fourWheeler", "price")).toLocaleString("en-IN")} (after free quota)
-                          </span>
-                        ) : item.allocationMode === "perArea" ? (
-                          <span className="text-slate-700">{item.ratioQty || 0} free per {item.ratioArea || 0} sqm, then ₹{Number(item.price || 0).toLocaleString("en-IN")}/pass</span>
-                        ) : (
-                          <span className="text-slate-700">First {item.complimentaryQuota || 0} Free, then ₹{Number(item.price || 0).toLocaleString("en-IN")}/pass</span>
-                        )}
-                      </p>
-                    </div>
+                  <div className="flex flex-col items-start justify-between gap-2 border-t border-slate-100 bg-white/80 px-3 py-2 sm:flex-row sm:items-center">
+                    <p className={`rounded-full px-2.5 py-1 text-[10px] font-bold ring-1 ring-inset ${footerTint[meta.color]}`}>
+                      {item.passType === "vehicle" ? (
+                        <>2-Wheeler ₹{Number(subValue(item, "twoWheeler", "price")).toLocaleString("en-IN")} · Car ₹{Number(subValue(item, "fourWheeler", "price")).toLocaleString("en-IN")} after free quota</>
+                      ) : isPerArea ? (
+                        <>{item.ratioQty || 0} free per {item.ratioArea || 0} sqm, then ₹{Number(item.price || 0).toLocaleString("en-IN")}/pass</>
+                      ) : (
+                        <>First {item.complimentaryQuota || 0} free, then ₹{Number(item.price || 0).toLocaleString("en-IN")}/pass</>
+                      )}
+                    </p>
                     <button
                       onClick={() => save(item)}
                       disabled={savingId === item._id}
-                      className="group/btn relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-[#23471d] px-5 py-2.5 text-xs font-black uppercase tracking-wider text-white shadow-md transition-all hover:bg-[#1a3515] hover:shadow-lg active:scale-95 disabled:opacity-70 disabled:active:scale-100"
+                      className={`inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-br px-3.5 py-1.5 text-[11px] font-normal tracking-wider text-white shadow-md transition-all hover:shadow-lg active:scale-95 disabled:opacity-70 ${gradient}`}
                     >
                       {savingId === item._id ? (
                         <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                       ) : (
-                        <Save size={16} className="transition-transform group-hover/btn:-translate-y-0.5 group-hover/btn:scale-110" />
+                        <Save size={16} />
                       )}
-                      <span>{savingId === item._id ? "Saving..." : "Save Config"}</span>
+                      <span>{savingId === item._id ? "Saving..." : "Save Changes"}</span>
                     </button>
                   </div>
                 </div>
               );
             })}
+
+            {/* Quick Tips */}
+            <div className="flex flex-col justify-between rounded-3xl border border-slate-200/70 bg-white p-3.5 shadow-sm">
+              <div>
+                <p className="mb-2 flex items-center gap-2 text-sm font-normal text-slate-800">
+                  <Lightbulb size={16} className="text-amber-500" /> Quick Tips
+                </p>
+                <ul className="space-y-1.5">
+                  {[
+                    'Use "More for bigger stalls" to give higher free quota for larger exhibitors.',
+                    "Price after free quota will be applicable once free limit is exhausted.",
+                    "Don't forget to Save Changes after updating any section.",
+                  ].map((tip, i) => (
+                    <li key={i} className="flex items-start gap-2 text-[11px] font-medium text-slate-600">
+                      <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-emerald-500" />
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="mt-3 flex items-center gap-2 rounded-xl bg-slate-50 p-2.5">
+                <LifeBuoy size={15} className="shrink-0 text-slate-400" />
+                <p className="text-[11px] font-bold text-slate-600">
+                  Need help configuring passes? <span className="text-[#23471d]">Contact your support team →</span>
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
