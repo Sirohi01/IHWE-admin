@@ -302,7 +302,7 @@ const BookAStand = () => {
     const [isStallDropdownOpen, setIsStallDropdownOpen] = useState(false);
     const [stallSearchQuery, setStallSearchQuery] = useState("");
     const stallDropdownRef = useRef(null);
-    // Udyam certificate upload for "Under MSME PSM Scheme" bookings — verified
+    // Udyam certificate upload for "Under MSME PMS Scheme" bookings — verified
     // and field-extracted via AI before the exhibitor registration exists, so
     // the result is held here and folded into formData.msme on success rather
     // than being persisted immediately.
@@ -668,7 +668,7 @@ const BookAStand = () => {
         ) {
             return Swal.fire("Required", "Please select the Previous Exhibition and Exhibition Year.", "warning");
         }
-        if (formData.participation?.stallCategory === 'Under MSME PSM Scheme' && udyamUpload.result?.enterpriseName) {
+        if (formData.participation?.stallCategory === 'Under MSME PMS Scheme' && udyamUpload.result?.enterpriseName) {
             const normalizedCompanyName = normalizeCompanyName(formData.exhibitorName);
             const normalizedEnterpriseName = normalizeCompanyName(udyamUpload.result.enterpriseName);
             if (normalizedCompanyName && normalizedEnterpriseName && normalizedCompanyName !== normalizedEnterpriseName) {
@@ -679,7 +679,7 @@ const BookAStand = () => {
                 });
             }
         }
-        if (formData.participation?.stallCategory === 'Under MSME PSM Scheme' && /trad(ing|er|e)/i.test(udyamUpload.result?.majorActivity || '')) {
+        if (formData.participation?.stallCategory === 'Under MSME PMS Scheme' && /trad(ing|er|e)/i.test(udyamUpload.result?.majorActivity || '')) {
             return Swal.fire({
                 icon: 'error',
                 title: 'Not Eligible for MSME PMS Scheme',
@@ -919,7 +919,7 @@ const BookAStand = () => {
     const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
     const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
 
-    const isMsmePmsScheme = formData.participation?.stallCategory === 'Under MSME PSM Scheme';
+    const isMsmePmsScheme = formData.participation?.stallCategory === 'Under MSME PMS Scheme';
     const companyNameMismatch = Boolean(
         udyamUpload.result?.enterpriseName
         && normalizeCompanyName(formData.exhibitorName) !== normalizeCompanyName(udyamUpload.result.enterpriseName)
@@ -1498,13 +1498,13 @@ const BookAStand = () => {
                                         <label className={labelClasses}>Stall Category</label>
                                         <select value={formData.participation.stallCategory} onChange={(e) => handleSelectChange('participation.stallCategory', e.target.value)} className={inputClasses}>
                                             <option value="" className="text-red-500 font-medium">Select Category</option>
-                                            <option value="Under MSME PSM Scheme">Under MSME PMS Scheme</option>
+                                            <option value="Under MSME PMS Scheme">Under MSME PMS Scheme</option>
                                             <option value="Under General Category">Under General Category</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                {formData.participation.stallCategory === 'Under MSME PSM Scheme' && (
+                                {formData.participation.stallCategory === 'Under MSME PMS Scheme' && (
                                     <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
                                         <label className={`${labelClasses} flex items-center gap-1.5`}>
                                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -1543,7 +1543,7 @@ const BookAStand = () => {
 
                             {/* Middle Side: Certificate result (MSME) */}
                             <div className="w-full lg:w-[28%]">
-                                {formData.participation.stallCategory === 'Under MSME PSM Scheme' && udyamUpload.result ? (
+                                {formData.participation.stallCategory === 'Under MSME PMS Scheme' && udyamUpload.result ? (
                                     <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 h-full">
                                         <p className={`${labelClasses} flex items-center gap-1.5`}>
                                             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
@@ -1607,7 +1607,7 @@ const BookAStand = () => {
 
                             {/* Right Side: MSME PMS Screening Summary (when available) or Image Banner */}
                             <div className="w-full lg:w-[32%]">
-                                {formData.participation.stallCategory === 'Under MSME PSM Scheme' && udyamUpload.result?.screening ? (
+                                {formData.participation.stallCategory === 'Under MSME PMS Scheme' && udyamUpload.result?.screening ? (
                                     <MsmeScreeningSummaryCard screening={udyamUpload.result.screening} />
                                 ) : (
                                     <div className="relative rounded-lg overflow-hidden border border-slate-200 shadow-sm hidden lg:block h-full min-h-[200px]">

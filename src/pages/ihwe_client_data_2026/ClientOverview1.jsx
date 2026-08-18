@@ -1765,7 +1765,7 @@ const ClientOverview1 = () => {
                   className="w-full h-9 px-3 rounded-lg border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white"
                 >
                   <option value="">Select Category</option>
-                  <option value="Under PSM Scheme">Under MSME PSM Scheme</option>
+                  <option value="Under MSME PMS Scheme">Under MSME PMS Scheme</option>
                   <option value="Under General Category">Under General Category</option>
                 </select>
               </div>
