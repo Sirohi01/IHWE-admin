@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
     AlertTriangle,
-    Award,
     Building2,
     Calendar,
     Check,
@@ -14,23 +13,19 @@ import {
     FileText,
     Landmark,
     Loader2,
-    Mail,
     MessageSquare,
-    Phone,
     RefreshCw,
     ShieldAlert,
     ShieldCheck,
     Upload,
-    User,
     X,
 } from 'lucide-react';
-import { Card, Field, InlineField } from './msmePmsShared';
-import { fmtDate, fmtDateTime, resolveImageUrl, safe, toSentenceCase } from './msmePmsUtils';
+import { Card, ContactDetailsCard, Field, InlineField, RelationshipManagerCard } from './msmePmsShared';
+import { fmtDate, fmtDateTime, safe } from './msmePmsUtils';
 
 const RISK_TONE = { Low: 'text-emerald-600', Medium: 'text-amber-600', High: 'text-red-600' };
 
 export default function MsmePmsStage1Overview({ data, handlers }) {
-    const [showContactModal, setShowContactModal] = useState(false);
     const [showUdyamModal, setShowUdyamModal] = useState(false);
     const [showOtpModal, setShowOtpModal] = useState(false);
     const [showQueryModal, setShowQueryModal] = useState(false);
@@ -43,7 +38,6 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
     const portal = data?.msmePortal || {};
     const otp = data?.portalOtpContact || {};
     const rm = data?.pmsCoordinator;
-    const rmPhotoUrl = resolveImageUrl(rm?.photo);
     const documents = (Array.isArray(data?.documents) ? data.documents : []).filter((d) => d.path);
     const claimDocLabel = new Map((data?.pmsClaimDocuments || []).map((d) => [d.type, d.label]));
     const actionRequired = data?.actionRequired;
@@ -83,27 +77,14 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
                     )}
                 </Card>
 
-                <Card icon={User} title="Client (Exhibitor) Contact Details" tone="blue" action={
-                    <button type="button" onClick={() => setShowContactModal(true)} className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:underline">
-                        <FileEdit size={11} /> Edit
-                    </button>
-                }>
-                    <div>
-                        <InlineField label="Contact Person" value={safe(contact.contactPerson)} />
-                        <InlineField label="Designation" value={safe(contact.designation)} />
-                        <InlineField label="Mobile Number" value={safe(contact.mobileNumber)} children={contact.mobileNumber ? <a href={`tel:${contact.mobileNumber}`} className="flex items-center gap-1 text-[11.5px] font-bold text-slate-800 hover:text-blue-600"><Phone size={11} />{contact.mobileNumber}</a> : undefined} />
-                        <InlineField label="Email ID" value={safe(contact.emailId)} children={contact.emailId ? <a href={`mailto:${contact.emailId}`} className="flex items-center gap-1 text-[11.5px] font-bold text-slate-800 hover:text-blue-600"><Mail size={11} />{contact.emailId}</a> : undefined} />
-                        <InlineField label="Office Landline" value={safe(contact.landlineNo)} />
-                        <InlineField label="Company Address" value={safe(toSentenceCase(contact.address))} />
-                    </div>
-                </Card>
+                <ContactDetailsCard contact={contact} saving={handlers.savingContact} onSave={handlers.onSaveContact} />
             </div>
 
             {/* ROW 2: AI SCREENING + UDYAM + PORTAL + RM/OTP */}
             <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_1fr_1fr_1fr] gap-2 items-stretch">
                 <Card icon={ShieldCheck} title="AI Screening (Detailed) – Recommendation" tone="emerald" action={
                     screening.screenedAt && (
-                        <span className={`rounded-full text-[9.5px] font-bold px-2.5 py-0.5 ${overallEligible ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <span className={`rounded-full text-[9.5px] font-bold px-2.5 py-0.5 whitespace-nowrap ${overallEligible ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
                             {overallEligible ? 'ELIGIBLE / RECOMMENDED' : screening.recommendation === 'NOT_RECOMMENDED' ? 'NOT ELIGIBLE' : 'REVIEW NEEDED'}
                         </span>
                     )
@@ -122,43 +103,45 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
                             </button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div className="space-y-1.5">
-                                <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />PMS Eligibility</span><strong className="font-bold text-slate-800">{overallEligible ? 'Eligible' : 'Not Eligible'}</strong></div>
-                                <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />IHWE Category Match</span><strong className="font-bold text-slate-800">{screening.categoryMatch === true ? 'Strong Match' : screening.categoryMatch === false ? 'No Match' : 'Unclear'}</strong></div>
-                                <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />Best Matching Category</span><strong className="font-bold text-slate-800 text-right">{safe(screening.bestMatchingCategory)}</strong></div>
-                                <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />NIC Match</span><strong className="font-bold text-slate-800">{safe(screening.nicCodeMatch)}</strong></div>
-                                <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><ShieldAlert size={11} className="text-amber-500" />Risk Level</span><strong className={`font-bold ${RISK_TONE[screening.riskLevel] || 'text-slate-800'}`}>{safe(screening.riskLevel)}</strong></div>
-                            </div>
-                            <div className="rounded-lg bg-slate-50 p-2.5">
-                                <strong className="text-[10.5px] font-bold text-slate-700">AI Recommendation Summary</strong>
-                                <p className="text-[10px] text-slate-500 mt-1">
-                                    {screening.categoryMatch ? 'Based on Udyam category, NIC activities and exhibited product category, this exhibitor is aligned with the PMS scheme.' : 'Review the certificate and declared activities against the PMS scheme category before proceeding.'}
-                                </p>
-                                <div className="grid grid-cols-2 gap-1.5 mt-2">
-                                    <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1">{overallEligible ? 'ELIGIBLE' : 'REVIEW'}</span>
-                                    <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1">{screening.categoryMatch ? 'STRONG MATCH' : 'CHECK MATCH'}</span>
-                                    <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1 truncate">{safe(screening.nicCodeMatch, 'NIC N/A')}</span>
-                                    <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1">{safe(screening.riskLevel, 'N/A')}</span>
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div className="space-y-1.5">
+                                    <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />PMS Eligibility</span><strong className="font-bold text-slate-800">{overallEligible ? 'Eligible' : 'Not Eligible'}</strong></div>
+                                    <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />IHWE Category Match</span><strong className="font-bold text-slate-800">{screening.categoryMatch === true ? 'Strong Match' : screening.categoryMatch === false ? 'No Match' : 'Unclear'}</strong></div>
+                                    <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />Best Matching Category</span><strong className="font-bold text-slate-800 text-right">{safe(screening.bestMatchingCategory)}</strong></div>
+                                    <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><Check size={11} className="text-emerald-600" />NIC Match</span><strong className="font-bold text-slate-800">{safe(screening.nicCodeMatch)}</strong></div>
+                                    <div className="flex items-center justify-between text-[10.5px]"><span className="flex items-center gap-1 text-slate-500 font-semibold"><ShieldAlert size={11} className="text-amber-500" />Risk Level</span><strong className={`font-bold ${RISK_TONE[screening.riskLevel] || 'text-slate-800'}`}>{safe(screening.riskLevel)}</strong></div>
                                 </div>
-                                {screening.comments?.length > 0 && (
-                                    <ul className="mt-2 space-y-1">
-                                        {screening.comments.map((c, i) => (
-                                            <li key={i} className="flex items-start gap-1 text-[9.5px] text-slate-600"><Check size={10} className="text-emerald-600 shrink-0 mt-0.5" />{c}</li>
-                                        ))}
-                                    </ul>
-                                )}
-                                <button
-                                    type="button"
-                                    disabled={handlers.runningScreening}
-                                    onClick={handlers.onRunAiScreening}
-                                    className="mt-2 flex items-center justify-center gap-1.5 w-full rounded-md border border-emerald-200 bg-white px-3 py-1.5 text-[10px] font-bold text-emerald-700 disabled:opacity-40"
-                                >
-                                    {handlers.runningScreening ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
-                                    {handlers.runningScreening ? 'Refreshing...' : 'Refresh AI Screening'}
-                                </button>
+                                <div className="rounded-lg bg-slate-50 p-2.5">
+                                    <strong className="text-[10.5px] font-bold text-slate-700">AI Recommendation Summary</strong>
+                                    <p className="text-[10px] text-slate-500 mt-1">
+                                        {screening.categoryMatch ? 'Based on Udyam category, NIC activities and exhibited product category, this exhibitor is aligned with the PMS scheme.' : 'Review the certificate and declared activities against the PMS scheme category before proceeding.'}
+                                    </p>
+                                    <div className="grid grid-cols-2 gap-1.5 mt-2">
+                                        <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1">{overallEligible ? 'ELIGIBLE' : 'REVIEW'}</span>
+                                        <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1">{screening.categoryMatch ? 'STRONG MATCH' : 'CHECK MATCH'}</span>
+                                        <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1 truncate">{safe(screening.nicCodeMatch, 'NIC N/A')}</span>
+                                        <span className="rounded-md bg-emerald-100 text-emerald-700 text-[9px] font-bold text-center py-1">{safe(screening.riskLevel, 'N/A')}</span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        disabled={handlers.runningScreening}
+                                        onClick={handlers.onRunAiScreening}
+                                        className="mt-2 flex items-center justify-center gap-1.5 w-full rounded-md border border-emerald-200 bg-white px-3 py-1.5 text-[10px] font-bold text-emerald-700 disabled:opacity-40"
+                                    >
+                                        {handlers.runningScreening ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                                        {handlers.runningScreening ? 'Refreshing...' : 'Refresh AI Screening'}
+                                    </button>
+                                </div>
                             </div>
-                        </div>
+                            {screening.comments?.length > 0 && (
+                                <ul className="mt-1 space-y-1 rounded-lg bg-slate-50 px-2.5 py-1.5">
+                                    {screening.comments.map((c, i) => (
+                                        <li key={i} className="flex items-start gap-1 text-[9.5px] text-slate-600"><Check size={10} className="text-emerald-600 shrink-0 mt-0.5" />{c}</li>
+                                    ))}
+                                </ul>
+                            )}
+                        </>
                     )}
                 </Card>
 
@@ -215,29 +198,31 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
                                 />
                             </div>
                         </div>
-                        <div>
-                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Last Status Checked On</label>
-                            <input
-                                readOnly
-                                value={fmtDateTime(portal.lastStatusChecked)}
-                                className="mt-0.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-500"
-                            />
-                        </div>
-                        <div>
-                            <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">MSME Portal Status</label>
-                            <select
-                                key={`status-${portal.currentStatus || ''}`}
-                                defaultValue={portal.currentStatus || ''}
-                                onChange={(e) => handlers.onSavePortal({ currentStatus: e.target.value })}
-                                className="mt-0.5 w-full rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-[10.5px] font-bold text-orange-600"
-                            >
-                                <option value="">— Not set —</option>
-                                <option value="Under Scrutiny">Under Scrutiny</option>
-                                <option value="Under Review">Under Review</option>
-                                <option value="Query Raised">Query Raised</option>
-                                <option value="Approved">Approved</option>
-                                <option value="Rejected">Rejected</option>
-                            </select>
+                        <div className="grid grid-cols-2 gap-2">
+                            <div>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Last Status Checked</label>
+                                <input
+                                    readOnly
+                                    value={fmtDateTime(portal.lastStatusChecked)}
+                                    className="mt-0.5 w-full rounded-md border border-slate-200 bg-slate-50 px-2 py-1 text-[11px] text-slate-500"
+                                />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">MSME Portal Status</label>
+                                <select
+                                    key={`status-${portal.currentStatus || ''}`}
+                                    defaultValue={portal.currentStatus || ''}
+                                    onChange={(e) => handlers.onSavePortal({ currentStatus: e.target.value })}
+                                    className="mt-0.5 w-full rounded-md border border-orange-200 bg-orange-50 px-2 py-1 text-[10.5px] font-bold text-orange-600"
+                                >
+                                    <option value="">— Not set —</option>
+                                    <option value="Under Scrutiny">Under Scrutiny</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Query Raised">Query Raised</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Rejected">Rejected</option>
+                                </select>
+                            </div>
                         </div>
                         <div>
                             <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Remarks / Query from MSME Portal</label>
@@ -272,39 +257,23 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
                 </Card>
 
                 <div className="flex flex-col gap-2">
-                    {rm && (
-                        <Card icon={Award} title="Relationship Manager (Organiser)" tone="orange">
-                            <div className="flex items-center gap-2">
-                                {rmPhotoUrl ? <img src={rmPhotoUrl} alt={rm.name} className="h-10 w-10 rounded-full object-cover" /> : (
-                                    <span className="grid h-10 w-10 place-items-center rounded-full bg-blue-50 text-blue-600 text-[11px] font-bold">{rm.initials || <User size={16} />}</span>
-                                )}
-                                <div>
-                                    <strong className="block text-[12px] font-bold text-slate-800">{rm.name}</strong>
-                                    <span className="text-[9.5px] text-slate-500">{rm.designation}</span>
-                                </div>
-                            </div>
-                            <div className="mt-2 space-y-1">
-                                {rm.phone && <a href={`tel:${rm.phone}`} className="flex items-center gap-1.5 text-[10px] text-slate-600 hover:text-blue-600"><Phone size={11} /> {rm.phone}</a>}
-                                {rm.email && <a href={`mailto:${rm.email}`} className="flex items-center gap-1.5 text-[10px] text-slate-600 hover:text-blue-600"><Mail size={11} /> {rm.email}</a>}
-                            </div>
-                        </Card>
-                    )}
+                    <RelationshipManagerCard rm={rm} />
 
                     <Card icon={ShieldCheck} title="MSME Portal Login (OTP Contact)" tone="teal" action={
                         <button type="button" onClick={() => setShowOtpModal(true)} className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:underline"><FileEdit size={11} /> Edit</button>
                     }>
                         <p className="text-[9.5px] text-slate-500 mb-1.5">OTP is sent on the below mobile number and email ID registered on MSME portal.</p>
-                        <Field label="Contact Person (Portal)" value={safe(otp.contactPerson)} />
+                        <Field label="Contact Person (Portal)" value={safe(otp.contactPerson || udyamExtracted['Contact Person Name'])} />
                         <div className="mt-1.5 flex items-center justify-between">
                             <span className="text-[10px] font-semibold text-slate-500">Mobile Number (OTP)</span>
                             <span className="flex items-center gap-1 text-[10.5px] font-bold text-slate-800">
-                                {safe(otp.mobile)} {otp.mobileVerified && <span className="rounded-full bg-emerald-50 text-emerald-600 text-[8.5px] font-bold px-1.5 py-0.5">Verified</span>}
+                                {safe(otp.mobile || udyamExtracted['Mobile Number'])} {otp.mobileVerified && <span className="rounded-full bg-emerald-50 text-emerald-600 text-[8.5px] font-bold px-1.5 py-0.5">Verified</span>}
                             </span>
                         </div>
                         <div className="mt-1 flex items-center justify-between">
                             <span className="text-[10px] font-semibold text-slate-500">Email ID (OTP)</span>
                             <span className="flex items-center gap-1 text-[10.5px] font-bold text-slate-800">
-                                {safe(otp.email)} {otp.emailVerified && <span className="rounded-full bg-emerald-50 text-emerald-600 text-[8.5px] font-bold px-1.5 py-0.5">Verified</span>}
+                                {safe(otp.email || udyamExtracted['Email ID'])} {otp.emailVerified && <span className="rounded-full bg-emerald-50 text-emerald-600 text-[8.5px] font-bold px-1.5 py-0.5">Verified</span>}
                             </span>
                         </div>
                     </Card>
@@ -395,9 +364,6 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
             )}
             </div>
 
-            {showContactModal && (
-                <ContactDetailsModal initial={contact} saving={handlers.savingContact} onClose={() => setShowContactModal(false)} onSave={async (v) => { await handlers.onSaveContact(v); setShowContactModal(false); }} />
-            )}
             {showUdyamModal && (
                 <UdyamDetailsModal initial={udyam} saving={handlers.savingUdyam} onClose={() => setShowUdyamModal(false)} onSave={async (v) => { await handlers.onSaveUdyamDetails(v); setShowUdyamModal(false); }} />
             )}
@@ -420,47 +386,6 @@ export default function MsmePmsStage1Overview({ data, handlers }) {
             {showRaiseModal && (
                 <RaiseActionModal saving={handlers.savingAction} onClose={() => setShowRaiseModal(false)} onSave={async (v) => { await handlers.onRaiseAction(v); setShowRaiseModal(false); }} />
             )}
-        </div>
-    );
-}
-
-function ContactDetailsModal({ initial, saving, onClose, onSave }) {
-    const [values, setValues] = useState({
-        contactPerson: initial?.contactPerson || '',
-        designation: initial?.designation || '',
-        mobileNumber: initial?.mobileNumber || '',
-        emailId: initial?.emailId || '',
-        landlineNo: initial?.landlineNo || '',
-        address: initial?.address || '',
-    });
-    const set = (k, v) => setValues((prev) => ({ ...prev, [k]: v }));
-    return (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <div className="w-full max-w-sm rounded-xl bg-white p-4 shadow-xl max-h-[90vh] overflow-y-auto">
-                <div className="mb-3 flex items-center justify-between">
-                    <strong className="text-[13px] font-bold text-slate-800">Edit Contact Details</strong>
-                    <button type="button" onClick={onClose}><X size={16} className="text-slate-400" /></button>
-                </div>
-                <div className="space-y-2.5">
-                    {[
-                        ['contactPerson', 'Contact Person'], ['designation', 'Designation'], ['mobileNumber', 'Mobile Number'],
-                        ['emailId', 'Email ID'], ['landlineNo', 'Office Landline'],
-                    ].map(([key, label]) => (
-                        <div key={key}>
-                            <label className="text-[10px] font-semibold text-slate-500">{label}</label>
-                            <input value={values[key]} onChange={(e) => set(key, e.target.value)} className="mt-1 w-full rounded-md border border-slate-200 px-2 py-1.5 text-[11px]" />
-                        </div>
-                    ))}
-                    <div>
-                        <label className="text-[10px] font-semibold text-slate-500">Company Address</label>
-                        <textarea value={values.address} onChange={(e) => set('address', e.target.value)} rows={2} className="mt-1 w-full resize-none rounded-md border border-slate-200 px-2 py-1.5 text-[11px]" />
-                    </div>
-                </div>
-                <div className="mt-4 flex justify-end gap-2">
-                    <button type="button" onClick={onClose} className="rounded-md border border-slate-200 px-3 py-1.5 text-[10.5px] font-semibold text-slate-600">Cancel</button>
-                    <button type="button" disabled={saving} onClick={() => onSave(values)} className="rounded-md bg-blue-600 px-3 py-1.5 text-[10.5px] font-semibold text-white disabled:opacity-50">{saving ? 'Saving...' : 'Save'}</button>
-                </div>
-            </div>
         </div>
     );
 }

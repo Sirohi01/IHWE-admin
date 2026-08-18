@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import {
     AlertTriangle,
     Building2,
+    Check,
     CheckCircle2,
     Clock,
     Eye,
@@ -14,6 +15,7 @@ import {
     MessageSquare,
     Upload,
     X,
+    XCircle,
 } from 'lucide-react';
 import { Card, Field } from './msmePmsShared';
 import { fmtDate, fmtDateTime, safe } from './msmePmsUtils';
@@ -61,6 +63,8 @@ function DonutChart({ uploaded, pending, notApplicable }) {
 
 export default function MsmePmsStage2Documents({ data, handlers }) {
     const [showQueryModal, setShowQueryModal] = useState(false);
+    const [declineTarget, setDeclineTarget] = useState(null);
+    const [declineRemark, setDeclineRemark] = useState('');
     const claimDocs = Array.isArray(data?.pmsClaimDocuments) && data.pmsClaimDocuments.length ? data.pmsClaimDocuments : [];
     const documents = Array.isArray(data?.documents) ? data.documents : [];
     const docByType = new Map(documents.map((d) => [d.documentType, d]));
@@ -123,12 +127,22 @@ export default function MsmePmsStage2Documents({ data, handlers }) {
                             const uploaded = !!doc?.path;
                             const notApplicable = !!doc?.notApplicable && !uploaded;
                             const uploading = handlers.uploadingDocType === cd.type;
+                            const needsReview = uploaded && doc.status !== 'Verified';
+                            const settingStatus = handlers.settingDocStatusId === doc?._id;
                             return (
                                 <div key={cd.type} className="rounded-lg border border-slate-200 p-2.5 flex flex-col gap-1.5">
                                     <div className="flex items-center justify-between">
                                         <span className="grid h-8 w-8 place-items-center rounded-md bg-blue-50 text-blue-600 text-[10px] font-bold">{i + 1}</span>
-                                        <span className={`rounded-full px-2 py-0.5 text-[8.5px] font-bold ${uploaded ? 'bg-emerald-50 text-emerald-700' : notApplicable ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600'}`}>
-                                            {uploaded ? 'Uploaded' : notApplicable ? 'Not Applicable' : 'Pending'}
+                                        <span className={`rounded-full px-2 py-0.5 text-[8.5px] font-bold ${
+                                            !uploaded ? (notApplicable ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600')
+                                                : doc.status === 'Rejected' ? 'bg-red-50 text-red-700'
+                                                    : needsReview ? 'bg-blue-50 text-blue-700'
+                                                        : 'bg-emerald-50 text-emerald-700'
+                                        }`}>
+                                            {!uploaded ? (notApplicable ? 'Not Applicable' : 'Pending')
+                                                : doc.status === 'Rejected' ? 'Declined'
+                                                    : needsReview ? 'Pending Review'
+                                                        : 'Accepted'}
                                         </span>
                                     </div>
                                     <strong className="text-[10.5px] font-bold text-slate-700 leading-tight min-h-[28px]">{cd.label}</strong>
@@ -136,9 +150,58 @@ export default function MsmePmsStage2Documents({ data, handlers }) {
                                         <>
                                             <span className="text-[9px] text-slate-400">Uploaded on {fmtDateTime(doc.uploadedAt)}</span>
                                             {doc.uploadedBy && <span className="text-[9px] text-slate-400">Uploaded by {doc.uploadedBy}</span>}
-                                            <a href={doc.path} target="_blank" rel="noreferrer" className="mt-1 flex items-center justify-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[9.5px] font-semibold text-slate-600 hover:bg-slate-50">
-                                                <Eye size={11} /> Upload / View
+                                            {doc.status === 'Rejected' && doc.reviewRemark && (
+                                                <p className="rounded-md bg-red-50 px-1.5 py-1 text-[9px] text-red-600">Reason: {doc.reviewRemark}</p>
+                                            )}
+                                            <a href={doc.path} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[9.5px] font-semibold text-slate-600 hover:bg-slate-50">
+                                                <Eye size={11} /> View
                                             </a>
+                                            {needsReview ? (
+                                                <div className="flex gap-1.5">
+                                                    <button
+                                                        type="button"
+                                                        disabled={settingStatus}
+                                                        onClick={() => handlers.onSetDocumentStatus(doc._id, { status: 'Verified' })}
+                                                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[9.5px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                                    >
+                                                        {settingStatus ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Accept
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={settingStatus}
+                                                        onClick={() => { setDeclineTarget({ documentId: doc._id, label: cd.label }); setDeclineRemark(''); }}
+                                                        className="flex flex-1 items-center justify-center gap-1 rounded-md border border-red-200 px-2 py-1 text-[9.5px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                                    >
+                                                        <XCircle size={11} /> Decline
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-1.5">
+                                                    <label className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-[9.5px] font-bold cursor-pointer ${uploading ? 'opacity-50 bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}>
+                                                        {uploading ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
+                                                        {uploading ? 'Uploading...' : 'Replace'}
+                                                        <input
+                                                            type="file"
+                                                            accept="application/pdf,image/jpeg,image/png"
+                                                            className="hidden"
+                                                            disabled={uploading}
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                e.target.value = '';
+                                                                if (file) handlers.onUploadDocument(cd.type, file);
+                                                            }}
+                                                        />
+                                                    </label>
+                                                    <button
+                                                        type="button"
+                                                        disabled={uploading}
+                                                        onClick={() => handlers.onDeleteDocument(cd.type)}
+                                                        className="flex-1 rounded-md border border-red-200 px-2 py-1 text-[9.5px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            )}
                                         </>
                                     ) : notApplicable ? (
                                         <span className="text-[9px] text-slate-400">Not applicable for this exhibitor.</span>
@@ -204,6 +267,39 @@ export default function MsmePmsStage2Documents({ data, handlers }) {
                     ) : null}
                 </div>
             </div>
+
+            {declineTarget && (
+                <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
+                    <div className="w-full max-w-sm rounded-xl bg-white p-4 shadow-xl">
+                        <div className="mb-2 flex items-center justify-between">
+                            <strong className="text-[12px] font-bold text-slate-800">Decline Document</strong>
+                            <button type="button" onClick={() => setDeclineTarget(null)}><X size={16} className="text-slate-400" /></button>
+                        </div>
+                        <p className="text-[11px] text-slate-600">Reason for declining "{declineTarget.label}" — shown back to the exhibitor.</p>
+                        <textarea
+                            value={declineRemark}
+                            onChange={(e) => setDeclineRemark(e.target.value)}
+                            rows={3}
+                            placeholder="e.g. Document is blurry, please re-upload a clearer copy."
+                            className="mt-2 w-full resize-none rounded-md border border-slate-200 px-2 py-1.5 text-[11px]"
+                        />
+                        <div className="mt-3 flex justify-end gap-2">
+                            <button type="button" onClick={() => setDeclineTarget(null)} className="rounded-md border border-slate-200 px-3 py-1.5 text-[10.5px] font-semibold text-slate-600">Cancel</button>
+                            <button
+                                type="button"
+                                disabled={!declineRemark.trim() || handlers.settingDocStatusId === declineTarget.documentId}
+                                onClick={async () => {
+                                    await handlers.onSetDocumentStatus(declineTarget.documentId, { status: 'Rejected', remark: declineRemark.trim() });
+                                    setDeclineTarget(null);
+                                }}
+                                className="rounded-md bg-red-600 px-3 py-1.5 text-[10.5px] font-semibold text-white disabled:opacity-50"
+                            >
+                                Decline
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {showQueryModal && actionRequired && (
                 <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">

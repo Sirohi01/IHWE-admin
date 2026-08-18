@@ -101,7 +101,7 @@ const InternationalVisitorsList = () => {
         });
         const data = await res.json();
         if (data.success) {
-          alert("WhatsApp messages sent successfully!");
+          alert(data.message || "WhatsApp messages are being sent in the background.");
           setSelectedRows([]);
         } else {
           alert(data.message || "Failed to send messages.");

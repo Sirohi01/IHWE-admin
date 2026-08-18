@@ -332,6 +332,18 @@ export const pmsApi = {
     }));
     return payload.success ? payload.data : null;
   },
+  updateClaimSubmission: async (id, data) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/claim-submission`, data));
+    return payload.success ? payload.data : null;
+  },
+  updateSanction: async (id, data) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/sanction`, data));
+    return payload.success ? payload.data : null;
+  },
+  updateReimbursement: async (id, data) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/reimbursement`, data));
+    return payload.success ? payload.data : null;
+  },
   updateDocumentStatus: async (id, documentId, fields) => {
     const body = typeof fields === 'string' ? { status: fields } : fields;
     const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/documents/${documentId}/status`, body));

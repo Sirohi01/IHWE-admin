@@ -10,12 +10,16 @@ export default function MsmePmsTrackingPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [savingPortal, setSavingPortal] = useState(false);
+    const [savingClaim, setSavingClaim] = useState(false);
+    const [savingSanction, setSavingSanction] = useState(false);
+    const [savingReimbursement, setSavingReimbursement] = useState(false);
     const [savingContact, setSavingContact] = useState(false);
     const [savingUdyam, setSavingUdyam] = useState(false);
     const [savingOtp, setSavingOtp] = useState(false);
     const [savingAction, setSavingAction] = useState(false);
     const [runningScreening, setRunningScreening] = useState(false);
     const [uploadingDocType, setUploadingDocType] = useState('');
+    const [settingDocStatusId, setSettingDocStatusId] = useState('');
 
     const fetchApplication = useCallback(async () => {
         setLoading(true);
@@ -50,11 +54,15 @@ export default function MsmePmsTrackingPage() {
     const handlers = {
         runningScreening,
         savingPortal,
+        savingClaim,
+        savingSanction,
+        savingReimbursement,
         savingContact,
         savingUdyam,
         savingOtp,
         savingAction,
         uploadingDocType,
+        settingDocStatusId,
 
         onSaveStage: async (stage) => {
             try {
@@ -130,6 +138,42 @@ export default function MsmePmsTrackingPage() {
             }
         },
 
+        onSaveClaimSubmission: async (values) => {
+            setSavingClaim(true);
+            try {
+                const next = await pmsApi.updateClaimSubmission(recordId, values);
+                if (next) setData(next);
+            } catch (err) {
+                console.error('Failed to save claim submission', err);
+            } finally {
+                setSavingClaim(false);
+            }
+        },
+
+        onSaveSanction: async (values) => {
+            setSavingSanction(true);
+            try {
+                const next = await pmsApi.updateSanction(recordId, values);
+                if (next) setData(next);
+            } catch (err) {
+                console.error('Failed to save sanction status', err);
+            } finally {
+                setSavingSanction(false);
+            }
+        },
+
+        onSaveReimbursement: async (values) => {
+            setSavingReimbursement(true);
+            try {
+                const next = await pmsApi.updateReimbursement(recordId, values);
+                if (next) setData(next);
+            } catch (err) {
+                console.error('Failed to save reimbursement status', err);
+            } finally {
+                setSavingReimbursement(false);
+            }
+        },
+
         onUploadAcknowledgement: async (file) => {
             try {
                 const next = await pmsApi.uploadPortalAcknowledgement(recordId, file);
@@ -153,11 +197,14 @@ export default function MsmePmsTrackingPage() {
         },
 
         onSetDocumentStatus: async (documentId, fields) => {
+            setSettingDocStatusId(documentId);
             try {
                 const next = await pmsApi.updateDocumentStatus(recordId, documentId, fields);
                 if (next) setData(next);
             } catch (err) {
                 console.error('Failed to update document status', err);
+            } finally {
+                setSettingDocStatusId('');
             }
         },
 
@@ -192,6 +239,18 @@ export default function MsmePmsTrackingPage() {
                 setData(await pmsApi.getById(recordId));
             } catch (err) {
                 console.error('Failed to upload document', err);
+            } finally {
+                setUploadingDocType('');
+            }
+        },
+
+        onDeleteDocument: async (documentType) => {
+            setUploadingDocType(documentType);
+            try {
+                await pmsApi.deleteDocumentById(recordId, documentType);
+                setData(await pmsApi.getById(recordId));
+            } catch (err) {
+                console.error('Failed to remove document', err);
             } finally {
                 setUploadingDocType('');
             }

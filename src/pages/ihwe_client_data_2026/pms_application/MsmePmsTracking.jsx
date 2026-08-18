@@ -16,6 +16,7 @@ import { StageStepper } from './msmePmsShared';
 import { safe } from './msmePmsUtils';
 import MsmePmsStage1Overview from './MsmePmsStage1Overview';
 import MsmePmsStage2Documents from './MsmePmsStage2Documents';
+import MsmePmsStage3Claim from './MsmePmsStage3Claim';
 
 const QUICK_ACTIONS = [
     { key: 'guidelines', label: 'Download PMS Guidelines', icon: Download },
@@ -30,10 +31,16 @@ export default function MsmePmsTracking({ data, handlers }) {
     const companyName = safe(data?.companyName || data?.exhibitorName);
     const stage = Number(data?.pmsStage) || 1;
     const stageLabels = data?.pmsStageLabels;
-    const title = stage === 2 ? 'MSME PMS Application – Claim Documents' : 'MSME PMS Application & Submission';
+    const title = stage === 2
+        ? 'MSME PMS Application – Claim Documents'
+        : stage === 3
+            ? 'MSME PMS Application – Claim & Reimbursement'
+            : 'MSME PMS Application & Submission';
     const subtitle = stage === 2
         ? 'Upload and manage documents required for PMS claim and reimbursement.'
-        : 'Apply on MSME portal and upload required documents to avail PMS reimbursement.';
+        : stage === 3
+            ? 'Track claim submission, sanction and reimbursement status on MSME portal.'
+            : 'Apply on MSME portal and upload required documents to avail PMS reimbursement.';
 
     const downloadChecklist = () => {
         const claimDocs = Array.isArray(data?.pmsClaimDocuments) ? data.pmsClaimDocuments : [];
@@ -63,7 +70,7 @@ export default function MsmePmsTracking({ data, handlers }) {
     };
 
     return (
-        <div className="w-full bg-[#f5f7fb] p-3 font-sans text-slate-800 antialiased">
+        <div className="w-full bg-[#f5f7fb] pt-1.5 px-3 pb-3 font-sans text-slate-800 antialiased">
             {/* BREADCRUMB */}
             <div className="mb-2 flex items-center gap-1.5 text-[10.5px] font-semibold text-slate-400">
                 <span>Exhibitor Management</span>
@@ -78,39 +85,34 @@ export default function MsmePmsTracking({ data, handlers }) {
             </div>
 
             {/* HEADER + STEPPER */}
-            <div className="mb-2 flex flex-wrap items-start justify-between gap-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-4">
                 <div>
                     <h1 className="text-[18px] font-bold text-slate-800 flex items-center gap-1.5">
                         {title} <CheckCircle2 size={16} className="text-emerald-500" />
                     </h1>
                     <p className="text-[11px] text-slate-500 mt-0.5">{subtitle}</p>
                 </div>
-                <div className="flex flex-col items-end gap-2">
-                    <StageStepper stage={stage} labels={stageLabels} />
-                    <div className="flex items-center gap-3">
-                        <button type="button" onClick={() => handlers.onSaveStage(Math.max(1, stage - 1))} disabled={stage <= 1} className="text-[10px] font-semibold text-slate-400 disabled:opacity-30 hover:text-slate-600">← Back</button>
-                        {stage < 3 && (
-                            <button type="button" onClick={() => handlers.onSaveStage(stage + 1)} className="flex items-center gap-1 rounded-md bg-[#0D530E] px-3 py-1 text-[10px] font-bold text-white hover:bg-[#093a0a]">
-                                Move to Stage {stage + 1} <ChevronRight size={12} />
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <StageStepper stage={stage} labels={stageLabels} />
             </div>
 
             {/* STAGE CONTENT */}
             {stage === 1 && <MsmePmsStage1Overview data={data} handlers={handlers} />}
             {stage === 2 && <MsmePmsStage2Documents data={data} handlers={handlers} />}
-            {stage === 3 && (
-                <div className="rounded-xl border border-slate-200 bg-white p-6 text-center">
-                    <Rocket size={28} className="mx-auto text-emerald-500 mb-2" />
-                    <strong className="text-[14px] font-bold text-slate-800">Claim & Reimbursement</strong>
-                    <p className="text-[11px] text-slate-500 mt-1">This claim has moved to the final reimbursement stage. Track status updates via MSME Portal Submission Details on Stage 1.</p>
-                    <button type="button" onClick={() => handlers.onSaveStage(1)} className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-[10.5px] font-semibold text-slate-600 hover:bg-slate-50">
-                        ← Back to Application & Submission
+            {stage === 3 && <MsmePmsStage3Claim data={data} handlers={handlers} />}
+
+            {/* STAGE NAVIGATION */}
+            <div className="mt-2 flex items-center justify-between rounded-xl border border-slate-200 bg-white p-2.5">
+                <button type="button" onClick={() => handlers.onSaveStage(Math.max(1, stage - 1))} disabled={stage <= 1} className="text-[10.5px] font-semibold text-slate-400 disabled:opacity-30 hover:text-slate-600">← Back</button>
+                {stage < 3 ? (
+                    <button type="button" onClick={() => handlers.onSaveStage(stage + 1)} className="flex items-center gap-1 rounded-md bg-[#0D530E] px-3.5 py-1.5 text-[10.5px] font-bold text-white hover:bg-[#093a0a]">
+                        Save &amp; Next <ChevronRight size={12} />
                     </button>
-                </div>
-            )}
+                ) : (
+                    <button type="button" onClick={() => handlers.onSaveStage(3)} className="rounded-md bg-[#0D530E] px-3.5 py-1.5 text-[10.5px] font-bold text-white hover:bg-[#093a0a]">
+                        Save
+                    </button>
+                )}
+            </div>
 
             {/* QUICK ACTIONS */}
             <div className="mt-2 rounded-xl border border-slate-200 bg-white p-2.5 flex flex-wrap items-center gap-2">

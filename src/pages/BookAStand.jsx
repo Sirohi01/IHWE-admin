@@ -121,6 +121,20 @@ const normalizeCompanyName = (name) => String(name || '')
     .join(' ')
     .trim();
 
+// AI-extracted Udyam certificate dates come back as "DD/MM/YYYY" (or with
+// "-" separators) — plain `new Date("25/05/2026")` misparses that as
+// MM/DD/YYYY (or fails outright once the day exceeds 12), which then throws
+// a Mongoose cast error on save. Parse the Indian day-first format
+// explicitly and fall back to null (left blank) rather than guessing.
+const parseIndianDate = (value) => {
+    const str = String(value || '').trim();
+    const match = str.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+    if (!match) return null;
+    const [, day, month, year] = match;
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+    return Number.isNaN(date.getTime()) ? null : date;
+};
+
 const RECOMMENDATION_LABELS = {
     PROCEED_WITH_PMS_APPLICATION: 'PROCEED WITH PMS APPLICATION',
     NEEDS_REVIEW: 'NEEDS MANUAL REVIEW',
@@ -814,17 +828,27 @@ const BookAStand = () => {
             fd.append('typeOfBusiness', formData.typeOfBusiness || '');
             const res = await api.post('/api/msme-pms-scheme/verify-udyam-certificate', fd, {
                 headers: { 'Content-Type': 'multipart/form-data' },
-                timeout: 45000,
+                timeout: 90000,
             });
             const data = res.data?.data || null;
             setUdyamUpload({ uploading: false, result: data, error: '', fileName: file.name });
             if (data) {
+                const extracted = data.extractedDetails || {};
                 setFormData(prev => ({
                     ...prev,
                     msme: {
                         ...(prev.msme || {}),
                         udyamRegNo: data.udyamRegNo || prev.msme?.udyamRegNo || '',
                         udyamCertificateUrl: data.fileUrl || prev.msme?.udyamCertificateUrl || '',
+                        udyamIssueDate: parseIndianDate(data.registrationDate) || prev.msme?.udyamIssueDate || null,
+                        udyamEnterpriseName: data.enterpriseName || prev.msme?.udyamEnterpriseName || '',
+                        udyamEnterpriseSize: data.category || prev.msme?.udyamEnterpriseSize || '',
+                        udyamMajorActivity: data.majorActivity || prev.msme?.udyamMajorActivity || '',
+                        udyamRegistrationType: extracted['Registration Type'] || prev.msme?.udyamRegistrationType || '',
+                        udyamSocialCategory: extracted['Social Category'] || prev.msme?.udyamSocialCategory || '',
+                        udyamConstitution: extracted['Constitution / Organisation Type'] || prev.msme?.udyamConstitution || '',
+                        udyamDateOfIncorporation: parseIndianDate(extracted['Date of Incorporation / Commencement']) || prev.msme?.udyamDateOfIncorporation || null,
+                        udyamExtractedDetails: extracted,
                     },
                 }));
             }
