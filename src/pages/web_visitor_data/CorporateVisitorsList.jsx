@@ -120,6 +120,7 @@ const CorporateVisitorsList = () => {
       "First Name": v.firstName || "-",
       "Last Name": v.lastName || "-",
       "Email": v.email || "-",
+      "Mobile No": v.mobile || "-",
       "Company Name": v.companyName || "-",
       "Status": v.status || "-",
       "B2B Meeting": v.b2bMeeting || "-",
@@ -152,6 +153,7 @@ const CorporateVisitorsList = () => {
       (v.lastName && v.lastName.toLowerCase().includes(term)) ||
       (v.companyName && v.companyName.toLowerCase().includes(term)) ||
       (v.email && v.email.toLowerCase().includes(term)) ||
+      (v.mobile && v.mobile.toLowerCase().includes(term)) ||
       (v.registrationId && v.registrationId.toLowerCase().includes(term)) ||
       (v.industrySector && v.industrySector.toLowerCase().includes(term))
     );
@@ -277,6 +279,7 @@ const CorporateVisitorsList = () => {
     <>
       <th className="px-2 py-2 font-medium">Registration ID</th>
       <th className="px-2 py-2 font-medium">Visitor Details</th>
+      <th className="px-2 py-2 font-medium">Mobile No</th>
       <th className="px-2 py-2 font-medium">Company Name</th>
       <th className="px-2 py-2 font-medium text-center">Status</th>
       <th className="px-2 py-2 font-medium">B2B Meeting</th>
@@ -295,6 +298,7 @@ const CorporateVisitorsList = () => {
             <td className="px-2 py-3 text-center"><div className="w-3 h-3 bg-slate-200 rounded-sm mx-auto"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-32 bg-slate-200 rounded mb-1"></div></td>
+            <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded mb-1"></div></td>
             <td className="px-2 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></td>
@@ -326,6 +330,9 @@ const CorporateVisitorsList = () => {
                   <Link to={`/webVisitorData/corporateVisitorDetails/${row._id}`}>{toTitleCase(`${row.firstName || ""} ${row.lastName || ""}`)}</Link>
                 </div>
                 <div className="text-[9px] text-slate-500">{row.email}</div>
+              </td>
+              <td className="px-2 py-2">
+                <div className="text-[10px] text-slate-700 font-semibold">{row.mobile || "-"}</div>
               </td>
               <td className="px-2 py-2">
                 <div className="text-[10px] text-slate-700 font-semibold">{toTitleCase(row.companyName) || "-"}</div>
