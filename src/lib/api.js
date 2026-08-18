@@ -316,5 +316,43 @@ export const pmsApi = {
     return payload.success ? payload.data : null;
   },
   submitById: async (id) => unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/submit`)),
+  updateStage: async (id, stage) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/stage`, { stage }));
+    return payload.success ? payload.data : null;
+  },
+  updatePortal: async (id, data) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/portal`, data));
+    return payload.success ? payload.data : null;
+  },
+  uploadPortalAcknowledgement: async (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const payload = unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/portal-acknowledgement`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }));
+    return payload.success ? payload.data : null;
+  },
+  updateDocumentStatus: async (id, documentId, fields) => {
+    const body = typeof fields === 'string' ? { status: fields } : fields;
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/documents/${documentId}/status`, body));
+    return payload.success ? payload.data : null;
+  },
+  markDocumentNotApplicable: async (id, documentType, notApplicable) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/documents/${documentType}/not-applicable`, { notApplicable }));
+    return payload.success ? payload.data : null;
+  },
+  updateUdyamDetails: async (id, data) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/udyam-details`, data));
+    return payload.success ? payload.data : null;
+  },
+  updatePortalOtpContact: async (id, data) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/portal-otp-contact`, data));
+    return payload.success ? payload.data : null;
+  },
+  runAiScreening: async (id) => unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/ai-screening`)),
+  setActionRequired: async (id, body) => {
+    const payload = unwrapApiResponse(await api.patch(`/api/msme-pms-scheme/${id}/action-required`, body));
+    return payload.success ? payload.data : null;
+  },
 };
 export default api;

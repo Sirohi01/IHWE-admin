@@ -1678,7 +1678,7 @@ function MSMETab({ reg, id, onRefresh }) {
                     <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest mb-3">No MSME details added yet</p>
                     <button onClick={() => setEditing(true)}
                         className="px-5 py-2 bg-[#23471d] text-white text-[10px] font-black uppercase tracking-widest hover:bg-[#1a3516]">
-                        Add MSME Details
+                        MSME PMS
                     </button>
                 </div>
             )}

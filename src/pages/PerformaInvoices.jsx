@@ -1205,7 +1205,11 @@ export const PerformaInvoices = () => {
                 return {
                     ...item,
                     description: productName,
-                    hsn: product.hsnCode || product.sacCode || item.hsn,
+                    // Falls back to the standard misc.-services SAC code when the
+                    // accessory catalog entry itself has no HSN/SAC filled in yet —
+                    // otherwise the row silently carries forward whatever (often
+                    // blank) HSN the row already had.
+                    hsn: product.hsnCode || product.sacCode || '998596',
                     qty,
                     area,
                     size,

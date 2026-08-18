@@ -19,7 +19,12 @@ import {
     Globe,
     Briefcase,
     Layout,
-    ChevronDown
+    ChevronDown,
+    Upload,
+    XCircle,
+    Loader2,
+    AlertTriangle,
+    ShieldAlert
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
 import Swal from 'sweetalert2';
@@ -107,6 +112,72 @@ const SearchableDropdown = ({
     );
 };
 
+const COMPANY_NAME_SUFFIX_WORDS = new Set(['PRIVATE', 'LIMITED', 'PVT', 'LTD', 'LLP', 'CO', 'COMPANY', 'CORPORATION', 'CORP', 'INC']);
+const normalizeCompanyName = (name) => String(name || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter((word) => word && !COMPANY_NAME_SUFFIX_WORDS.has(word))
+    .join(' ')
+    .trim();
+
+const RECOMMENDATION_LABELS = {
+    PROCEED_WITH_PMS_APPLICATION: 'PROCEED WITH PMS APPLICATION',
+    NEEDS_REVIEW: 'NEEDS MANUAL REVIEW',
+    NOT_RECOMMENDED: 'NOT RECOMMENDED',
+};
+
+const MsmeScreeningRow = ({ label, value, matched }) => (
+    <div className="flex items-start justify-between gap-2 py-1.5 border-b border-slate-100 last:border-b-0">
+        <span className="flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium">
+            {matched === true && <CheckCircle className="w-3 h-3 text-emerald-600 shrink-0" />}
+            {matched === false && <XCircle className="w-3 h-3 text-red-600 shrink-0" />}
+            {label}
+        </span>
+        <span className="text-[10.5px] font-bold text-slate-800 text-right">{value || '—'}</span>
+    </div>
+);
+
+const MsmeScreeningSummaryCard = ({ screening }) => {
+    const overallEligible = screening.recommendation === 'PROCEED_WITH_PMS_APPLICATION';
+    const overallTone = overallEligible ? 'emerald' : screening.recommendation === 'NOT_RECOMMENDED' ? 'red' : 'amber';
+    const toneClasses = {
+        emerald: { header: 'bg-[#0D530E]', badge: 'bg-emerald-400/20 text-emerald-50 border-emerald-300/40', banner: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+        amber: { header: 'bg-amber-700', badge: 'bg-amber-300/20 text-amber-50 border-amber-200/40', banner: 'bg-amber-50 border-amber-200 text-amber-700' },
+        red: { header: 'bg-red-700', badge: 'bg-red-300/20 text-red-50 border-red-200/40', banner: 'bg-red-50 border-red-200 text-red-700' },
+    }[overallTone];
+
+    return (
+        <div className="rounded-lg overflow-hidden border border-slate-200 shadow-sm h-full flex flex-col">
+            <div className={`${toneClasses.header} px-3 py-2 flex items-center justify-between`}>
+                <span className="text-white text-[10.5px] font-bold uppercase tracking-wide">MSME PMS Scheme – Screening Summary</span>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${toneClasses.badge}`}>
+                    {overallEligible ? '✓ ELIGIBLE' : screening.recommendation === 'NOT_RECOMMENDED' ? 'NOT ELIGIBLE' : 'REVIEW'}
+                </span>
+            </div>
+            <div className="p-3 bg-white flex-1">
+                <MsmeScreeningRow label="PMS Eligibility" value={overallEligible ? 'Eligible / Recommended' : screening.recommendation === 'NOT_RECOMMENDED' ? 'Not Recommended' : 'Needs Review'} matched={overallEligible ? true : screening.recommendation === 'NOT_RECOMMENDED' ? false : null} />
+                <MsmeScreeningRow label="IHWE Category Match" value={screening.categoryMatch === true ? 'Strong Match' : screening.categoryMatch === false ? 'No Match' : 'Unclear'} matched={screening.categoryMatch} />
+                <MsmeScreeningRow label="Best Matching Category" value={screening.bestMatchingCategory} matched={null} />
+                <MsmeScreeningRow label="NIC Match" value={screening.nicCodeMatch} matched={null} />
+                <div className="flex items-start justify-between gap-2 py-1.5">
+                    <span className="flex items-center gap-1.5 text-[10.5px] text-slate-500 font-medium">
+                        <ShieldAlert className="w-3 h-3 text-amber-500 shrink-0" /> Risk Level
+                    </span>
+                    <span className="text-[10.5px] font-bold text-slate-800 text-right">{screening.riskLevel || '—'}</span>
+                </div>
+                {screening.riskNote && <p className="text-[9.5px] text-slate-400 -mt-1 mb-1.5">{screening.riskNote}</p>}
+
+                <div className={`mt-1.5 flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[10px] font-bold ${toneClasses.banner}`}>
+                    {overallEligible ? <CheckCircle className="w-3.5 h-3.5 shrink-0" /> : <AlertTriangle className="w-3.5 h-3.5 shrink-0" />}
+                    RECOMMENDATION: {RECOMMENDATION_LABELS[screening.recommendation] || 'REVIEW REQUIRED'}
+                </div>
+                <p className="mt-1.5 text-[9px] text-slate-400">* Final reimbursement/approval subject to MSME-DFO scrutiny.</p>
+            </div>
+        </div>
+    );
+};
+
 const BookAStand = () => {
     const { id } = useParams();
     const [searchParams] = useSearchParams();
@@ -120,7 +191,6 @@ const BookAStand = () => {
     const [crmScopeError, setCrmScopeError] = useState('');
     const [availableStalls, setAvailableStalls] = useState([]);
     const [marketingStaff, setMarketingStaff] = useState([]);
-    const [allRates, setAllRates] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [countries, setCountries] = useState([]);
     const [states, setStates] = useState([]);
@@ -218,6 +288,11 @@ const BookAStand = () => {
     const [isStallDropdownOpen, setIsStallDropdownOpen] = useState(false);
     const [stallSearchQuery, setStallSearchQuery] = useState("");
     const stallDropdownRef = useRef(null);
+    // Udyam certificate upload for "Under MSME PSM Scheme" bookings — verified
+    // and field-extracted via AI before the exhibitor registration exists, so
+    // the result is held here and folded into formData.msme on success rather
+    // than being persisted immediately.
+    const [udyamUpload, setUdyamUpload] = useState({ uploading: false, result: null, error: '', fileName: '' });
     const [isPreviousExhibitionDropdownOpen, setIsPreviousExhibitionDropdownOpen] = useState(false);
     const [previousExhibitionSearchQuery, setPreviousExhibitionSearchQuery] = useState("");
     const previousExhibitionDropdownRef = useRef(null);
@@ -279,11 +354,6 @@ const BookAStand = () => {
                         });
                     }
                 }).catch(err => console.error("Error fetching events:", err));
-
-                // Fetch stall rates independently
-                api.get('/api/stall-rates').then(ratesRes => {
-                    if (ratesRes.data.success) setAllRates(ratesRes.data.data);
-                }).catch(err => console.error("Error fetching rates:", err));
 
                 api.get('/api/previous-exhibitions/public').then(previousRes => {
                     if (previousRes.data.success) setPreviousExhibitions(previousRes.data.data || []);
@@ -584,6 +654,24 @@ const BookAStand = () => {
         ) {
             return Swal.fire("Required", "Please select the Previous Exhibition and Exhibition Year.", "warning");
         }
+        if (formData.participation?.stallCategory === 'Under MSME PSM Scheme' && udyamUpload.result?.enterpriseName) {
+            const normalizedCompanyName = normalizeCompanyName(formData.exhibitorName);
+            const normalizedEnterpriseName = normalizeCompanyName(udyamUpload.result.enterpriseName);
+            if (normalizedCompanyName && normalizedEnterpriseName && normalizedCompanyName !== normalizedEnterpriseName) {
+                return Swal.fire({
+                    icon: 'error',
+                    title: 'Company Name Mismatch',
+                    html: `The Udyam Certificate's Enterprise Name doesn't match the Company Name entered — this registration cannot be submitted under the MSME PMS Scheme until they match.<br/><br/><b>Company Name:</b> ${formData.exhibitorName}<br/><b>Enterprise Name (Certificate):</b> ${udyamUpload.result.enterpriseName}<br/><br/>Please correct the Company Name or upload the correct certificate.`,
+                });
+            }
+        }
+        if (formData.participation?.stallCategory === 'Under MSME PSM Scheme' && /trad(ing|er|e)/i.test(udyamUpload.result?.majorActivity || '')) {
+            return Swal.fire({
+                icon: 'error',
+                title: 'Not Eligible for MSME PMS Scheme',
+                html: `This certificate's Major Activity is "${udyamUpload.result.majorActivity}" — the MSME PMS Scheme does not cover Trading activity, so this registration cannot be submitted under this category. Please change the Stall Category or verify with a certificate for a Manufacturing/Service enterprise.`,
+            });
+        }
         setIsLoading(true);
         try {
             let proformaAction = '';
@@ -712,6 +800,48 @@ const BookAStand = () => {
         }
     };
 
+    const handleUdyamFileChange = async (e) => {
+        const file = e.target.files?.[0];
+        e.target.value = '';
+        if (!file) return;
+
+        setUdyamUpload({ uploading: true, result: null, error: '', fileName: file.name });
+        try {
+            const fd = new FormData();
+            fd.append('file', file);
+            fd.append('industrySector', formData.industrySector || '');
+            fd.append('companyBrief', formData.aboutCompany || '');
+            fd.append('typeOfBusiness', formData.typeOfBusiness || '');
+            const res = await api.post('/api/msme-pms-scheme/verify-udyam-certificate', fd, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+                timeout: 45000,
+            });
+            const data = res.data?.data || null;
+            setUdyamUpload({ uploading: false, result: data, error: '', fileName: file.name });
+            if (data) {
+                setFormData(prev => ({
+                    ...prev,
+                    msme: {
+                        ...(prev.msme || {}),
+                        udyamRegNo: data.udyamRegNo || prev.msme?.udyamRegNo || '',
+                        udyamCertificateUrl: data.fileUrl || prev.msme?.udyamCertificateUrl || '',
+                    },
+                }));
+            }
+        } catch (err) {
+            // Distinguish *why* it failed instead of one generic message for
+            // every case — a real server rejection (bad doc, AI issue) vs. no
+            // response at all (backend down, timeout, CORS) look identical to
+            // "Verification failed" otherwise, and are fixed completely
+            // differently.
+            const message = err.response?.data?.message
+                || (err.code === 'ECONNABORTED' ? 'The verification is taking too long — please try a smaller/clearer file.'
+                    : !err.response ? `Could not reach the server (${err.message || 'network error'}). Check the backend is running.`
+                        : `Server error (${err.response.status}). Please try again.`);
+            setUdyamUpload({ uploading: false, result: null, error: message, fileName: file.name });
+        }
+    };
+
     const handleStallSelect = (stallId) => {
         const stall = availableStalls.find(s => s._id === stallId);
         if (stall) {
@@ -765,6 +895,19 @@ const BookAStand = () => {
     const sectionHeaderClasses = "text-[13px] font-semibold text-[#1a4d1a] capitalize tracking-wide pb-1.5 mb-2.5 flex items-center gap-2";
     const cardClasses = "bg-white border border-slate-200 rounded-xl p-3.5 shadow-[0_2px_10px_-3px_rgba(6,81,237,0.05)]";
 
+    const isMsmePmsScheme = formData.participation?.stallCategory === 'Under MSME PSM Scheme';
+    const companyNameMismatch = Boolean(
+        udyamUpload.result?.enterpriseName
+        && normalizeCompanyName(formData.exhibitorName) !== normalizeCompanyName(udyamUpload.result.enterpriseName)
+    );
+    const isTradingMajorActivity = Boolean(
+        isMsmePmsScheme && /trad(ing|er|e)/i.test(udyamUpload.result?.majorActivity || '')
+    );
+    const msmeSubmitBlockReason = companyNameMismatch
+        ? 'Wrong Certificate Uploaded — Enterprise Name does not match Company Name.'
+        : isTradingMajorActivity
+            ? 'Not eligible: MSME PMS Scheme does not cover Trading activity.'
+            : '';
 
     return (
         <div className="bg-[#f8fafc] shadow-md px-4 pt-4 pb-1 min-h-[calc(100vh-90px)] font-inter animate-fadeIn">
@@ -1331,62 +1474,127 @@ const BookAStand = () => {
                                         <label className={labelClasses}>Stall Category</label>
                                         <select value={formData.participation.stallCategory} onChange={(e) => handleSelectChange('participation.stallCategory', e.target.value)} className={inputClasses}>
                                             <option value="" className="text-red-500 font-medium">Select Category</option>
-                                            <option value="Under MSME PSM Scheme">Under MSME PSM Scheme</option>
+                                            <option value="Under MSME PSM Scheme">Under MSME PMS Scheme</option>
                                             <option value="Under General Category">Under General Category</option>
                                         </select>
                                     </div>
                                 </div>
+
+                                {formData.participation.stallCategory === 'Under MSME PSM Scheme' && (
+                                    <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/50 p-3">
+                                        <label className={`${labelClasses} flex items-center gap-1.5`}>
+                                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                            Udyam Registration Certificate
+                                        </label>
+                                        <p className="text-[11px] text-slate-500 mb-2">Upload the certificate — AI will verify it and check MSME PMS Scheme eligibility.</p>
+
+                                        <label className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-semibold cursor-pointer ${udyamUpload.uploading ? 'opacity-50 cursor-not-allowed border-slate-300 text-slate-400' : 'border-emerald-300 text-emerald-700 bg-white hover:bg-emerald-50'}`}>
+                                            {udyamUpload.uploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                                            {udyamUpload.uploading ? 'Verifying...' : udyamUpload.fileName ? 'Replace File' : 'Upload Certificate'}
+                                            <input type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" disabled={udyamUpload.uploading} onChange={handleUdyamFileChange} />
+                                        </label>
+                                        {udyamUpload.fileName && !udyamUpload.uploading && (
+                                            <span className="ml-2 text-[11px] text-slate-500">{udyamUpload.fileName}</span>
+                                        )}
+
+                                        {udyamUpload.error && (
+                                            <div className="mt-2 flex items-start gap-1.5 text-xs text-red-600 bg-red-50 border border-red-200 rounded-md px-2.5 py-1.5">
+                                                <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                                {udyamUpload.error}
+                                            </div>
+                                        )}
+
+                                        {udyamUpload.result?.enterpriseName
+                                            && normalizeCompanyName(formData.exhibitorName) !== normalizeCompanyName(udyamUpload.result.enterpriseName) && (
+                                            <div className="mt-2 flex items-start gap-1.5 text-xs text-red-700 bg-red-50 border border-red-300 rounded-md px-2.5 py-1.5 font-semibold">
+                                                <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                                <div>
+                                                    Wrong Certificate Uploaded — Enterprise Name on this certificate doesn't match the Company Name entered above. This registration cannot be submitted until they match.
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
                             </div>
 
-                            {/* Middle Side: LIVE RATES */}
-                            <div className="w-full lg:w-[32%]">
-                                {selectedEventId && (() => {
-                                    const currency = exhibitorType === 'domestic' ? 'INR' : 'USD';
-                                    const filtered = allRates.filter(r => (r.eventId?._id || r.eventId) === selectedEventId && r.currency === currency);
-                                    return filtered.length > 0 && (
-                                        <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm h-full">
-                                            <table className="w-full text-left border-collapse h-full">
-                                                <thead>
-                                                    <tr className="bg-[#0088cc] text-white">
-                                                        <th className="py-1.5 px-2 text-[9px] font-bold uppercase tracking-wider">Stand Type</th>
-                                                        <th className="py-1.5 px-2 text-[9px] font-bold uppercase tracking-wider">Cost ({currency} {currency === 'INR' ? '₹' : '$'})</th>
-                                                        <th className="py-1.5 px-2 text-[9px] font-bold uppercase tracking-wider text-center">GST</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="bg-white">
-                                                    {filtered.map((rate, index) => (
-                                                        <tr key={rate._id} className={index !== filtered.length - 1 ? 'border-b border-slate-100' : ''}>
-                                                            <td className="py-1.5 px-2 flex flex-col justify-center">
-                                                                <span className="text-[10px] font-bold text-slate-700 uppercase leading-none">{rate.stallType}</span>
-                                                                <span className="text-[8px] text-slate-400 font-medium mt-0.5">(Min. 9 sq m.)</span>
-                                                            </td>
-                                                            <td className="py-1.5 px-2 align-middle">
-                                                                <span className="text-[10px] font-semibold text-[#0088cc]">
-                                                                    {currency === 'INR' ? '₹' : '$'} {rate.ratePerSqm.toLocaleString()} / sq m.
-                                                                </span>
-                                                            </td>
-                                                            <td className="py-1.5 px-2 text-center align-middle">
-                                                                <span className="inline-block px-2 py-0.5 text-[8px] font-bold text-black bg-orange-50 border border-orange-200 rounded-full">
-                                                                    18% GST
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
+                            {/* Middle Side: Certificate result (MSME) */}
+                            <div className="w-full lg:w-[28%]">
+                                {formData.participation.stallCategory === 'Under MSME PSM Scheme' && udyamUpload.result ? (
+                                    <div className="rounded-lg border border-emerald-200 bg-emerald-50/50 p-3 h-full">
+                                        <p className={`${labelClasses} flex items-center gap-1.5`}>
+                                            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                                            According to Certificate
+                                        </p>
+                                        <div className={`mt-1.5 flex items-start gap-1.5 text-xs rounded-md px-2.5 py-1.5 border ${
+                                            udyamUpload.result.eligible === true ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                                                : udyamUpload.result.eligible === false ? 'text-red-600 bg-red-50 border-red-200'
+                                                : 'text-amber-700 bg-amber-50 border-amber-200'
+                                        }`}>
+                                            {udyamUpload.result.eligible === true ? <CheckCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                                : udyamUpload.result.eligible === false ? <XCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                                                : <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
+                                            <div>
+                                                <b>
+                                                    {udyamUpload.result.eligible === true ? 'Eligible for MSME PMS Scheme'
+                                                        : udyamUpload.result.eligible === false ? 'Not confirmed eligible for MSME PMS Scheme'
+                                                        : 'Eligibility could not be auto-verified'}
+                                                </b>
+                                                {udyamUpload.result.eligibilityReasons?.length > 0 && (
+                                                    <ul className="mt-1 list-disc pl-4 space-y-0.5">
+                                                        {udyamUpload.result.eligibilityReasons.map((reason, i) => <li key={i}>{reason}</li>)}
+                                                    </ul>
+                                                )}
+                                            </div>
                                         </div>
-                                    );
-                                })()}
+
+                                        <div className="mt-2 space-y-1.5 text-[11px]">
+                                            <div className="flex items-center justify-between gap-2 bg-white rounded-md border border-slate-200 px-2 py-1.5">
+                                                <span className="text-slate-400 font-medium shrink-0">Udyam Reg. No.</span>
+                                                <span className="font-semibold text-slate-800 text-right">{udyamUpload.result.udyamRegNo || '—'}</span>
+                                            </div>
+                                            <div className={`flex items-center justify-between gap-2 rounded-md border px-2 py-1.5 ${
+                                                udyamUpload.result.enterpriseName && normalizeCompanyName(formData.exhibitorName) !== normalizeCompanyName(udyamUpload.result.enterpriseName)
+                                                    ? 'bg-red-50 border-red-300'
+                                                    : 'bg-white border-slate-200'
+                                            }`}>
+                                                <span className="text-slate-400 font-medium shrink-0">Enterprise Name</span>
+                                                <span className={`font-semibold text-right ${
+                                                    udyamUpload.result.enterpriseName && normalizeCompanyName(formData.exhibitorName) !== normalizeCompanyName(udyamUpload.result.enterpriseName)
+                                                        ? 'text-red-700'
+                                                        : 'text-slate-800'
+                                                }`}>{udyamUpload.result.enterpriseName || '—'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2 bg-white rounded-md border border-slate-200 px-2 py-1.5">
+                                                <span className="text-slate-400 font-medium shrink-0">MSME Category</span>
+                                                <span className="font-semibold text-slate-800 text-right">{udyamUpload.result.category || '—'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2 bg-white rounded-md border border-slate-200 px-2 py-1.5">
+                                                <span className="text-slate-400 font-medium shrink-0">Major Activity</span>
+                                                <span className="font-semibold text-slate-800 text-right">{udyamUpload.result.majorActivity || '—'}</span>
+                                            </div>
+                                            <div className="flex items-center justify-between gap-2 bg-white rounded-md border border-slate-200 px-2 py-1.5">
+                                                <span className="text-slate-400 font-medium shrink-0">Reg. Date</span>
+                                                <span className="font-semibold text-slate-800 text-right">{udyamUpload.result.registrationDate || '—'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : null}
                             </div>
 
-                            {/* Right Side: Image Banner */}
-                            <div className="w-full lg:w-[28%] relative rounded-lg overflow-hidden border border-slate-200 shadow-sm hidden lg:block">
-                                <img loading="lazy" decoding="async" src={arenaImg} alt="Exhibition Arena" className="absolute inset-0 w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                                <div className="absolute bottom-3 left-3 right-3">
-                                    <h4 className="text-white font-bold text-[11px] uppercase tracking-wide">Exhibition Arena</h4>
-                                    <p className="text-white/80 text-[9px] mt-0.5 leading-snug">World-class stalls and networking spaces.</p>
-                                </div>
+                            {/* Right Side: MSME PMS Screening Summary (when available) or Image Banner */}
+                            <div className="w-full lg:w-[32%]">
+                                {formData.participation.stallCategory === 'Under MSME PSM Scheme' && udyamUpload.result?.screening ? (
+                                    <MsmeScreeningSummaryCard screening={udyamUpload.result.screening} />
+                                ) : (
+                                    <div className="relative rounded-lg overflow-hidden border border-slate-200 shadow-sm hidden lg:block h-full min-h-[200px]">
+                                        <img loading="lazy" decoding="async" src={arenaImg} alt="Exhibition Arena" className="absolute inset-0 w-full h-full object-cover" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+                                        <div className="absolute bottom-3 left-3 right-3">
+                                            <h4 className="text-white font-bold text-[11px] uppercase tracking-wide">Exhibition Arena</h4>
+                                            <p className="text-white/80 text-[9px] mt-0.5 leading-snug">World-class stalls and networking spaces.</p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -1804,18 +2012,25 @@ const BookAStand = () => {
                             <ShieldCheck size={14} className="text-[#23471d]" />
                             Secure Admin Manual Booking
                         </p>
-                        <div className="flex gap-3">
-                            <button type="button" onClick={() => window.location.reload()}
-                                className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-md">
-                                Reset
-                            </button>
-                            <button type="submit" disabled={isLoading}
-                                className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-md shadow-lg flex items-center gap-2 group">
-                                {isLoading
-                                    ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                    : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
-                                }
-                            </button>
+                        <div className="flex flex-col items-end gap-1.5">
+                            {msmeSubmitBlockReason && (
+                                <p className="text-[10px] font-semibold text-red-600 flex items-center gap-1">
+                                    <AlertTriangle size={12} /> {msmeSubmitBlockReason}
+                                </p>
+                            )}
+                            <div className="flex gap-3">
+                                <button type="button" onClick={() => window.location.reload()}
+                                    className="px-8 py-2 bg-slate-50 border border-slate-200 text-slate-400 text-[11px] font-bold uppercase tracking-widest hover:bg-slate-100 transition-all rounded-md">
+                                    Reset
+                                </button>
+                                <button type="submit" disabled={isLoading || Boolean(msmeSubmitBlockReason)}
+                                    className="px-10 py-2 bg-[#23471d] hover:bg-[#1a3516] text-white text-[11px] font-bold uppercase tracking-widest transition-all rounded-md shadow-lg flex items-center gap-2 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#23471d]">
+                                    {isLoading
+                                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                        : <><span>Proceed Registration</span><ChevronRight size={15} className="group-hover:translate-x-1 transition-transform" /></>
+                                    }
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>

@@ -262,6 +262,7 @@ import AddNextActionForm from "../pages/add_by_admin/AddNextActionForm";
 import MobileFeedbackDetailsNew from '../pages/MobileFeedbackDetailsNew';
 import ClientOverview2 from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2';
 import ClientOverview2Page from '../pages/ihwe_client_data_2026/pms_application/ClientOverview2Page';
+const MsmePmsTrackingPage = lazy(() => import("../pages/ihwe_client_data_2026/pms_application/MsmePmsTrackingPage"));
 import MSMEPMSApplicationPage from '../pages/ihwe_client_data_2026/pms_application/MSMEPMSApplicationPage';
 import MSMEPMSBankDetailsPage from '../pages/ihwe_client_data_2026/pms_application/MSMEPMSBankDetailsPage';
 import MSMEPMSDocumentsUploadPage from '../pages/ihwe_client_data_2026/pms_application/MSMEPMSDocumentsUploadPage';
@@ -887,6 +888,7 @@ export default function AppRoutes() {
             <Route path="credit-note-view/:id" element={<CreditNoteView />} />
             <Route path="/client-overview/:id" element={<ClientOverview1 />} />
             <Route path="/pms-application/:id" element={<ClientOverview2Page />} />
+            <Route path="/msme-pms-application/:id" element={<MsmePmsTrackingPage />} />
             <Route path="/pms-application/:id/edit" element={<MSMEPMSApplicationPage />} />
             <Route path="/pms-application/:id/edit/bank-details" element={<MSMEPMSBankDetailsPage />} />
             <Route path="/pms-application/:id/edit/documents" element={<MSMEPMSDocumentsUploadPage />} />

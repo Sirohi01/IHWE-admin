@@ -88,6 +88,97 @@ const getEventBadge = (event) => {
   return { label: "Ongoing", className: "bg-emerald-50 text-emerald-700" };
 };
 
+// Defined at module scope (not inside MobilePassConfig) so these keep a stable
+// component identity across re-renders — otherwise React remounts the <input>
+// on every keystroke (each render would create a brand-new function reference)
+// and the field loses focus after a single character.
+const AllocationChoice = ({ current, onChange, gradient }) => (
+  <div className="inline-flex flex-wrap gap-1 rounded-xl bg-slate-100/80 p-1">
+    {[
+      { value: "fixed", label: "Same for everyone", icon: Users },
+      { value: "perArea", label: "More for bigger stalls", icon: Ruler },
+    ].map(opt => {
+      const active = (current || "fixed") === opt.value;
+      const OptIcon = opt.icon;
+      return (
+        <button
+          key={opt.value}
+          type="button"
+          onClick={() => onChange(opt.value)}
+          className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${active
+            ? `bg-gradient-to-br ${gradient} text-white shadow-sm`
+            : "text-slate-500 hover:bg-white hover:text-slate-700"
+            }`}
+        >
+          <OptIcon size={12} strokeWidth={2.5} />
+          {opt.label}
+        </button>
+      );
+    })}
+  </div>
+);
+
+const Stepper = ({ value, onChange, width = "w-24" }) => (
+  <div className={`inline-flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${width}`}>
+    <button
+      type="button"
+      onClick={() => onChange(Math.max(0, Number(value || 0) - 1))}
+      className="flex h-7 w-6 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
+    >
+      <Minus size={11} strokeWidth={2.5} />
+    </button>
+    <input
+      type="number"
+      min="0"
+      value={value || 0}
+      onChange={e => onChange(e.target.value)}
+      className="w-full border-x border-slate-100 bg-transparent py-1 text-center text-xs font-normal text-slate-800 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+    />
+    <button
+      type="button"
+      onClick={() => onChange(Number(value || 0) + 1)}
+      className="flex h-7 w-6 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
+    >
+      <Plus size={11} strokeWidth={2.5} />
+    </button>
+  </div>
+);
+
+const SectionLabel = ({ children, gradient }) => (
+  <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-slate-500">
+    <span className={`h-1.5 w-4 rounded-full bg-gradient-to-r ${gradient}`} />
+    {children}
+  </p>
+);
+
+const TextField = ({ label, placeholder, value, onChange, width = "w-24" }) => (
+  <div>
+    <p className="mb-1 text-[11px] font-semibold tracking-wide text-slate-500">{label}</p>
+    <input
+      type="text"
+      value={value || ""}
+      placeholder={placeholder}
+      onChange={e => onChange(e.target.value)}
+      className={`rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-normal text-slate-800 shadow-sm outline-none focus:border-slate-400 ${width}`}
+    />
+  </div>
+);
+
+const StatField = ({ gradient, label, noBullet, prefixIcon: PrefixIcon, suffix, value, onChange }) => (
+  <div>
+    {noBullet ? (
+      <p className="mb-1 text-[11px] font-semibold tracking-wide text-slate-500">{label}</p>
+    ) : (
+      <SectionLabel gradient={gradient}>{label}</SectionLabel>
+    )}
+    <div className="flex items-center gap-1.5">
+      {PrefixIcon && <PrefixIcon size={13} className="shrink-0 text-slate-400" />}
+      <Stepper value={value} onChange={onChange} />
+      {suffix && <span className="text-[10px] font-bold text-slate-500">{suffix}</span>}
+    </div>
+  </div>
+);
+
 export default function MobilePassConfig() {
   const navigate = useNavigate();
   const [events, setEvents] = useState([]);
@@ -158,82 +249,6 @@ export default function MobilePassConfig() {
       setSavingId("");
     }
   };
-
-  // A plain-language "same for everyone" vs "more for bigger stalls" choice,
-  // instead of the technical "Fixed" / "Per Stall Area" allocation-mode terms.
-  const AllocationChoice = ({ current, onChange, gradient }) => (
-    <div className="inline-flex flex-wrap gap-1 rounded-xl bg-slate-100/80 p-1">
-      {[
-        { value: "fixed", label: "Same for everyone", icon: Users },
-        { value: "perArea", label: "More for bigger stalls", icon: Ruler },
-      ].map(opt => {
-        const active = (current || "fixed") === opt.value;
-        const OptIcon = opt.icon;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => onChange(opt.value)}
-            className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${active
-              ? `bg-gradient-to-br ${gradient} text-white shadow-sm`
-              : "text-slate-500 hover:bg-white hover:text-slate-700"
-              }`}
-          >
-            <OptIcon size={12} strokeWidth={2.5} />
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
-  );
-
-  const Stepper = ({ value, onChange, width = "w-24" }) => (
-    <div className={`inline-flex items-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${width}`}>
-      <button
-        type="button"
-        onClick={() => onChange(Math.max(0, Number(value || 0) - 1))}
-        className="flex h-7 w-6 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
-      >
-        <Minus size={11} strokeWidth={2.5} />
-      </button>
-      <input
-        type="number"
-        min="0"
-        value={value || 0}
-        onChange={e => onChange(e.target.value)}
-        className="w-full border-x border-slate-100 bg-transparent py-1 text-center text-xs font-normal text-slate-800 outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-      />
-      <button
-        type="button"
-        onClick={() => onChange(Number(value || 0) + 1)}
-        className="flex h-7 w-6 shrink-0 items-center justify-center text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-700"
-      >
-        <Plus size={11} strokeWidth={2.5} />
-      </button>
-    </div>
-  );
-
-  const SectionLabel = ({ children, gradient }) => (
-    <p className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold tracking-wide text-slate-500">
-      <span className={`h-1.5 w-4 rounded-full bg-gradient-to-r ${gradient}`} />
-      {children}
-    </p>
-  );
-
-  const StatField = ({ gradient, label, noBullet, prefixIcon: PrefixIcon, suffix, value, onChange }) => (
-    <div>
-      {noBullet ? (
-        <p className="mb-1 text-[11px] font-semibold tracking-wide text-slate-500">{label}</p>
-      ) : (
-        <SectionLabel gradient={gradient}>{label}</SectionLabel>
-      )}
-      <div className="flex items-center gap-1.5">
-        {PrefixIcon && <PrefixIcon size={13} className="shrink-0 text-slate-400" />}
-        <Stepper value={value} onChange={onChange} />
-        {suffix && <span className="text-[10px] font-bold text-slate-500">{suffix}</span>}
-      </div>
-    </div>
-  );
 
   return (
     <div className="relative min-h-screen bg-slate-50 pb-20">
@@ -430,6 +445,22 @@ export default function MobilePassConfig() {
                                     value={subValue(item, sub.key, "price")}
                                     onChange={(v) => updateVehicleSub(item._id, sub.key, "price", v)}
                                   />
+                                  <div className="flex items-end gap-2">
+                                    <TextField
+                                      label="HSN Code"
+                                      placeholder="e.g. 998596"
+                                      value={subValue(item, sub.key, "hsnCode", "")}
+                                      onChange={(v) => updateVehicleSub(item._id, sub.key, "hsnCode", v)}
+                                    />
+                                    <StatField
+                                      gradient={subGradient}
+                                      noBullet
+                                      label="GST %"
+                                      suffix="%"
+                                      value={subValue(item, sub.key, "gstPercentage", 18)}
+                                      onChange={(v) => updateVehicleSub(item._id, sub.key, "gstPercentage", v)}
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             );
@@ -467,6 +498,13 @@ export default function MobilePassConfig() {
                             />
                           )}
                           <StatField gradient={gradient} noBullet label="Price After Free Quota" prefixIcon={IndianRupee} value={item.price} onChange={(v) => updateItem(item._id, "price", v)} />
+                          <TextField
+                            label="HSN Code"
+                            placeholder="e.g. 998596"
+                            value={item.hsnCode}
+                            onChange={(v) => updateItem(item._id, "hsnCode", v)}
+                          />
+                          <StatField gradient={gradient} noBullet label="GST %" suffix="%" value={item.gstPercentage ?? 18} onChange={(v) => updateItem(item._id, "gstPercentage", v)} />
                         </div>
                       </>
                     )}

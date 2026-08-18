@@ -845,14 +845,14 @@ const ClientOverview1 = () => {
     e.preventDefault();
     setIsSavingMsme(true);
     try {
-      if (isExhibitor) {
-        await api.put(`/api/exhibitor-registration/${company._id}`, msmeData);
-        if (company.clientId) {
-          await dispatch(updateCompany({ id: company.clientId, data: msmeData })).unwrap();
-        }
-      } else {
-        await dispatch(updateCompany({ id: company._id, data: msmeData })).unwrap();
+      // exhibitorCategory only exists on the Company schema (not
+      // ExhibitorRegistration) — always save it there, using the linked
+      // Company id when viewing via an exhibitor registration.
+      const targetCompanyId = isExhibitor ? company.clientId : company._id;
+      if (!targetCompanyId) {
+        throw new Error('This exhibitor has no linked CRM company to save the category against yet.');
       }
+      await dispatch(updateCompany({ id: targetCompanyId, data: msmeData })).unwrap();
 
       const oldCategory = company.exhibitorCategory || "None";
       const newCategory = msmeData.exhibitorCategory || "None";
@@ -1033,8 +1033,8 @@ const ClientOverview1 = () => {
           <button onClick={() => navigate("/ihweClientData2026/masterData")} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
             Master List
           </button>
-          <button disabled className="px-2.5 py-1.5 bg-slate-100 text-slate-400 rounded-md text-[10px] font-bold cursor-not-allowed shadow-sm border border-slate-200">
-            Add MSME Details
+          <button onClick={() => navigate(`/msme-pms-application/${company?.clientId || company?._id || id}`)} className="px-2.5 py-1.5 bg-[#124170] text-white rounded-md text-[10px] font-bold hover:bg-[#0A2643] transition-all shadow-sm">
+            MSME PMS
           </button>
           {isExhibitor && (
             <button
