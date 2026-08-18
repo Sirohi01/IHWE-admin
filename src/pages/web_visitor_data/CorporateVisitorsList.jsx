@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 import { fetchCorporateVisitors } from "../../features/visitor/corporateVisitorSlice";
 import ClientOverview from "../../components/ClientOverview";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -110,6 +111,28 @@ const CorporateVisitorsList = () => {
         alert("An error occurred while sending messages.");
       }
     }
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredVisitors.map((v, i) => ({
+      "#": i + 1,
+      "Registration ID": v.registrationId || "-",
+      "First Name": v.firstName || "-",
+      "Last Name": v.lastName || "-",
+      "Email": v.email || "-",
+      "Company Name": v.companyName || "-",
+      "Status": v.status || "-",
+      "B2B Meeting": v.b2bMeeting || "-",
+      "Industry/Sector": v.industrySector || "-",
+      "City": v.city || "-",
+      "State": v.state || "-",
+      "Created At": formatDateTime(v.createdAt),
+      "Updated At": formatDateTime(v.updatedAt),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Corporate Visitors");
+    XLSX.writeFile(workbook, "CorporateVisitors.xlsx");
   };
 
   const toggleRowSelection = (id) => {
@@ -407,6 +430,7 @@ const CorporateVisitorsList = () => {
           statCards={statCards}
           headerActions={headerActions}
           filterBar={filterBar}
+          onExport={handleExport}
           tableHeaders={tableHeadersComponent}
           tableBody={tableBodyContent}
           pagination={paginationBar}

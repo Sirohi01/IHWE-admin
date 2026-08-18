@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 import { fetchHealthCampVisitors } from "../../features/visitor/freeHealthCampSlice";
 import ClientOverview from "../../components/ClientOverview";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -110,6 +111,28 @@ const HealthCampVisitorsList = () => {
         alert("An error occurred while sending messages.");
       }
     }
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredVisitors.map((v, i) => ({
+      "#": i + 1,
+      "Registration ID": v.registrationId || "-",
+      "First Name": v.firstName || "-",
+      "Last Name": v.lastName || "-",
+      "Mobile": v.mobile || "-",
+      "Email": v.email || "-",
+      "Status": v.status || "-",
+      "Preferred Date": v.preferredDate || "-",
+      "Preferred Time Slot": v.preferredTimeSlot || "-",
+      "City": v.city || "-",
+      "State": v.state || "-",
+      "Created At": formatDateTime(v.createdAt),
+      "Updated At": formatDateTime(v.updatedAt),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Health Camp Visitors");
+    XLSX.writeFile(workbook, "HealthCampVisitors.xlsx");
   };
 
   const toggleRowSelection = (id) => {
@@ -402,6 +425,7 @@ const HealthCampVisitorsList = () => {
           statCards={statCards}
           headerActions={headerActions}
           filterBar={filterBar}
+          onExport={handleExport}
           tableHeaders={tableHeadersComponent}
           tableBody={tableBodyContent}
           pagination={paginationBar}

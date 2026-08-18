@@ -28,6 +28,7 @@ const BaseLeadPage = ({
   tableBody,
   rightSidebar,
   onReset,
+  onExport,
   pagination,
   isAllSelected,
   onSelectAll
@@ -104,9 +105,11 @@ const BaseLeadPage = ({
                       <RefreshCw size={13} /> Reset
                     </button>
                   )}
-                  <button className="flex items-center gap-1.5 py-2 px-4 rounded-none text-xs font-semibold text-white transition-all duration-200 hover:opacity-90 shadow-2xs whitespace-nowrap cursor-pointer" style={{ backgroundColor: '#10B981', fontFamily: "'Inter', sans-serif" }}>
-                    <Download size={13} /> Export
-                  </button>
+                  {onExport && (
+                    <button onClick={onExport} className="flex items-center gap-1.5 py-2 px-4 rounded-none text-xs font-semibold text-white transition-all duration-200 hover:opacity-90 shadow-2xs whitespace-nowrap cursor-pointer" style={{ backgroundColor: '#10B981', fontFamily: "'Inter', sans-serif" }}>
+                      <Download size={13} /> Export
+                    </button>
+                  )}
                 </div>
               </div>
             )}

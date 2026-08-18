@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
+import * as XLSX from "xlsx";
 import { fetchGeneralVisitors } from "../../features/visitor/generalVisitorSlice";
 import ClientOverview from "../../components/ClientOverview";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -110,6 +111,25 @@ const GeneralVisitorsList = () => {
         alert("An error occurred while sending messages.");
       }
     }
+  };
+
+  const handleExport = () => {
+    const dataToExport = filteredVisitors.map((v, i) => ({
+      "#": i + 1,
+      "Registration ID": v.registrationId || "-",
+      "First Name": v.firstName || "-",
+      "Last Name": v.lastName || "-",
+      "Email": v.email || "-",
+      "Status": v.status || "-",
+      "Area of Interest": v.areaOfInterest?.length ? v.areaOfInterest.map(a => toTitleCase(a)).join(', ') : "-",
+      "Registration For": v.registrationFor || "-",
+      "Created At": formatDateTime(v.createdAt),
+      "Updated At": formatDateTime(v.updatedAt),
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "General Visitors");
+    XLSX.writeFile(workbook, "GeneralVisitors.xlsx");
   };
 
   const toggleRowSelection = (id) => {
@@ -397,6 +417,7 @@ const GeneralVisitorsList = () => {
           statCards={statCards}
           headerActions={headerActions}
           filterBar={filterBar}
+          onExport={handleExport}
           tableHeaders={tableHeadersComponent}
           tableBody={tableBodyContent}
           pagination={paginationBar}
