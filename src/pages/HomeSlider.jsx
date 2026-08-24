@@ -630,20 +630,7 @@ const HeroSlider = () => {
                   {editMode ? 'Edit Hero Slide' : 'Create New Hero Slide'}
                 </h2>
               </div>
-              <div className="flex items-center gap-2 border-2 border-[#d26019] rounded-lg px-2 py-1 bg-[#d26019]/5">
-                <span className="text-[10px] font-bold text-[#d26019] uppercase tracking-wider">Website:</span>
-                <select
-                  value={selectedWebsite}
-                  onChange={(e) => {
-                    setSelectedWebsite(e.target.value);
-                    handleReset();
-                  }}
-                  className="bg-transparent text-sm font-semibold text-gray-900 focus:outline-none cursor-pointer"
-                >
-                  <option value="9th IHWE">9th IHWE</option>
-                  <option value="organicexpo">organicexpo</option>
-                </select>
-              </div>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
