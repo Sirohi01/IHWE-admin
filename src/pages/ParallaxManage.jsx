@@ -5,9 +5,11 @@ import {
   FileText, AlignLeft, MousePointer2, Edit, BadgeHelp
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 
 const ParallaxManage = () => {
+  const { website, isOrganic } = useWebsite();
   const [formData, setFormData] = useState({
     subheading: "Join The Movement",
     heading: "Shaping the Future of Global Healthcare",
@@ -29,7 +31,7 @@ const ParallaxManage = () => {
   const fetchParallaxData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/parallax");
+      const response = await api.get(`/api/parallax?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setFormData(response.data.data);
         if (response.data.data.imageUrl) {
@@ -56,7 +58,7 @@ const ParallaxManage = () => {
 
     setUploading(true);
     try {
-      const response = await api.post("/api/parallax/upload", formDataUpload, {
+      const response = await api.post(`/api/parallax/upload?website=${encodeURIComponent(website)}`, formDataUpload, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       if (response.data.success) {
@@ -76,7 +78,7 @@ const ParallaxManage = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const response = await api.post("/api/parallax", formData);
+      const response = await api.post(`/api/parallax?website=${encodeURIComponent(website)}`, formData);
       if (response.data.success) {
         Swal.fire({
           icon: 'success',
@@ -154,8 +156,8 @@ const ParallaxManage = () => {
 
       <div className="bg-white shadow-md p-6 min-h-screen">
         {/* <PageHeader
-        title="PARALLAX SECTION MANAGEMENT"
-        description="Manage the dynamic parallax section: text content, button links, and background image"
+        title={isOrganic ? "ORGANIC CMS - PARALLAX SECTION" : "PARALLAX SECTION MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo section data` : "Manage the dynamic parallax section: text content, button links, and background image"}
       /> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">

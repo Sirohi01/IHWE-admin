@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
 import { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Plus, Trash2, Edit,
     ShieldCheck, Activity, Box, Monitor, Microscope, Leaf, Plane, Beaker,
@@ -11,6 +12,7 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const TargetAudience = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Target Audience',
         heading: 'Who Should Attend?',
@@ -31,7 +33,7 @@ const TargetAudience = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/who-should-attend');
+            const response = await api.get(`/api/who-should-attend?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
                 setPreviewUrl(response.data.data.image.startsWith('http') ? response.data.data.image : `${SERVER_URL}${response.data.data.image}`);
@@ -63,7 +65,7 @@ const TargetAudience = () => {
         }
 
         try {
-            const response = await api.post('/api/who-should-attend/headings', formData, {
+            const response = await api.post(`/api/who-should-attend/headings?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.data.success) {
@@ -81,7 +83,7 @@ const TargetAudience = () => {
         if (!newGroup.trim()) return;
         setIsLoading(true);
         try {
-            const response = await api.post('/api/who-should-attend/groups', { group: newGroup });
+            const response = await api.post(`/api/who-should-attend/groups?website=${encodeURIComponent(website)}`, { group: newGroup });
             if (response.data.success) {
                 setNewGroup('');
                 fetchData();
@@ -97,7 +99,7 @@ const TargetAudience = () => {
         if (!groupInput.trim()) return;
         setIsLoading(true);
         try {
-            const response = await api.put(`/api/who-should-attend/groups/${index}`, { group: groupInput });
+            const response = await api.put(`/api/who-should-attend/groups/${index}?website=${encodeURIComponent(website)}`, { group: groupInput });
             if (response.data.success) {
                 setEditingGroup(null);
                 setGroupInput('');
@@ -122,7 +124,7 @@ const TargetAudience = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/who-should-attend/groups/${index}`);
+            await api.delete(`/api/who-should-attend/groups/${index}?website=${encodeURIComponent(website)}`);
             fetchData();
         } catch (error) {
             Swal.fire('Error', 'Failed to delete group', 'error');
@@ -196,9 +198,17 @@ const TargetAudience = () => {
             </div>
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins">
                 {/* <PageHeader
-                title="TARGET AUDIENCE MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - TARGET AUDIENCE MANAGEMENT" : "TARGET AUDIENCE MANAGEMENT"}
                 description="Manage 'Who Should Attend' section headings, image, and groups"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                     {/* LEFT: Headings + Image Form */}

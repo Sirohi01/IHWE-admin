@@ -7,6 +7,7 @@ import {
   Users, Handshake, Package, Sparkles, Camera, ShieldCheck, UserCheck, Activity, Award, Briefcase
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
@@ -37,9 +38,12 @@ const IconComponent = ({ name, ...props }) => {
 };
 
 const Introduction = () => {
+  const { website, isOrganic } = useWebsite();
   const [data, setData] = useState({
     subtitle: "",
+    tagline: "",
     title: "",
+    highlightText: "",
     description: "",
     image: "",
     altText: "",
@@ -67,7 +71,7 @@ const Introduction = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/introduction");
+      const response = await api.get(`/api/introduction?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setData(response.data.data);
         if (response.data.data.image) {
@@ -94,7 +98,9 @@ const Introduction = () => {
     try {
       const formData = new FormData();
       formData.append('subtitle', data.subtitle);
+      formData.append('tagline', data.tagline);
       formData.append('title', data.title);
+      formData.append('highlightText', data.highlightText);
       formData.append('description', data.description);
       formData.append('altText', data.altText);
       formData.append('bgColor', data.bgColor);
@@ -102,7 +108,7 @@ const Introduction = () => {
         formData.append('image', imageFile);
       }
 
-      const response = await api.post("/api/introduction/settings", formData, {
+      const response = await api.post(`/api/introduction/settings?website=${encodeURIComponent(website)}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -126,9 +132,9 @@ const Introduction = () => {
     try {
       let response;
       if (isEditingFeature) {
-        response = await api.put(`/api/introduction/features/${editingFeatureId}`, featureForm);
+        response = await api.put(`/api/introduction/features/${editingFeatureId}?website=${encodeURIComponent(website)}`, featureForm);
       } else {
-        response = await api.post("/api/introduction/features", featureForm);
+        response = await api.post(`/api/introduction/features?website=${encodeURIComponent(website)}`, featureForm);
       }
 
       if (response.data.success) {
@@ -174,7 +180,7 @@ const Introduction = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await api.delete(`/api/introduction/features/${id}`);
+        const response = await api.delete(`/api/introduction/features/${id}?website=${encodeURIComponent(website)}`);
         if (response.data.success) {
           Swal.fire("Deleted!", "Feature removed.", "success");
           fetchData();
@@ -190,9 +196,18 @@ const Introduction = () => {
   return (
     <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
-        title="INTRODUCTION MANAGEMENT"
-        description="Manage the main introduction content, collage image, and statistics"
+        title={isOrganic ? "ORGANIC CMS - INTRODUCTION" : "INTRODUCTION MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo introduction content` : "Manage the main introduction content, collage image, and statistics"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
         {/* Left Column: Main Settings (subtitle, title, desc, image, bg) */}
@@ -227,11 +242,31 @@ const Introduction = () => {
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Tagline</label>
+                <input
+                  type="text"
+                  value={data.tagline}
+                  onChange={(e) => setData({ ...data, tagline: e.target.value })}
+                  className="w-full px-4 py-2 border-2 border-gray-200 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                  placeholder="Enter tagline..."
+                />
+              </div>
+
+              <div>
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Main Title</label>
                 <RichTextEditor
                   value={data.title}
                   onChange={(val) => setData({ ...data, title: val })}
                   minHeight="120px"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Highlight Text</label>
+                <RichTextEditor
+                  value={data.highlightText}
+                  onChange={(val) => setData({ ...data, highlightText: val })}
+                  minHeight="100px"
                 />
               </div>
 

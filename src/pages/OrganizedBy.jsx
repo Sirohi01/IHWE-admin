@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import { Type, Save, Image as ImageIcon, Building2, Quote } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
 const OrganizedBy = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'The Visionaries',
         heading: 'Organized By',
@@ -24,7 +26,7 @@ const OrganizedBy = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/organized-by');
+            const response = await api.get(`/api/organized-by?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
                 if (response.data.data.logo) {
@@ -57,7 +59,7 @@ const OrganizedBy = () => {
         }
 
         try {
-            const response = await api.post('/api/organized-by/update', formData, {
+            const response = await api.post(`/api/organized-by/update?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.data.success) {
@@ -131,9 +133,17 @@ const OrganizedBy = () => {
             </div>
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins">
                 {/* <PageHeader
-                title="ORGANIZED BY MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - ORGANIZED BY MANAGEMENT" : "ORGANIZED BY MANAGEMENT"}
                 description="Manage the organizer details, logo, and description"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
                     {/* LEFT: Text Details */}

@@ -557,28 +557,22 @@ const ConvertedList = () => {
               <span className="font-bold text-[10px]" style={{ color: '#064232' }}>{row.participation?.currency === 'USD' ? '$' : '₹'} {(row.amountPaid || row.financeBreakdown?.netPayable || row.participation?.total || 0).toLocaleString()}</span>
             </td>
             <td className="px-2 py-2 text-center">
-              {(() => {
-                // Every row here already has a real Payment record (that's the
-                // definition of "Converted" now — see getConvertedCompanies),
-                // so this can never be "Pending". row.status is always the
-                // literal string "Converted" (not an ExhibitorRegistration
-                // status), so the actual pipeline status — Payment Pending vs
-                // Completed — comes from row.eventLifecycle instead.
-                const lifecycleStatus = (row.eventLifecycle?.status || '').toLowerCase();
-                const isCompleted = lifecycleStatus.includes('completed');
-                const isPartial = lifecycleStatus.includes('payment pending');
-                const badgeClass = isCompleted
-                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  : isPartial
-                    ? 'bg-cyan-50 text-cyan-700 border border-cyan-200'
-                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-                const badgeLabel = isCompleted ? 'Paid (Full)' : isPartial ? 'Partial Payment' : 'Paid';
-                return (
-                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${badgeClass}`}>
-                    {badgeLabel}
-                  </span>
-                );
-              })()}
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[9px] font-bold whitespace-nowrap ${
+                row.status === 'paid' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                row.status === 'confirmed' ? 'bg-green-50 text-green-700 border border-green-200' :
+                row.status === 'approved' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
+                row.status === 'advance-paid' ? 'bg-cyan-50 text-cyan-700 border border-cyan-200' :
+                row.status === 'rejected' || row.status === 'payment-failed' ? 'bg-red-50 text-red-600 border border-red-200' :
+                'bg-amber-50 text-amber-600 border border-amber-200'
+              }`}>
+                {row.status === 'paid' ? 'Paid (Full)' :
+                 row.status === 'confirmed' ? 'Confirmed' :
+                 row.status === 'approved' ? 'Approved' :
+                 row.status === 'advance-paid' ? 'Installment' :
+                 row.status === 'rejected' ? 'Rejected' :
+                 row.status === 'payment-failed' ? 'Failed' :
+                 'Pending'}
+              </span>
             </td>
             <td className="px-2 py-2 text-center">
               <div className="flex flex-col items-center justify-center gap-0.5">

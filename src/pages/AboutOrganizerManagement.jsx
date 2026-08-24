@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type,
     Save,
@@ -16,6 +17,7 @@ import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
 const AboutOrganizerManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subtitle: 'ABOUT THE ORGANIZER',
         title: 'Namo Gange Wellness Pvt. Ltd.',
@@ -42,7 +44,7 @@ const AboutOrganizerManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/about-organizer');
+            const response = await api.get(`/api/about-organizer?website=${encodeURIComponent(website)}`);
             if (response.data.success && response.data.data) {
                 setData(response.data.data);
             }
@@ -85,7 +87,7 @@ const AboutOrganizerManagement = () => {
 
         try {
             setIsLoading(true);
-            const response = await api.post('/api/about-organizer/image', formData, {
+            const response = await api.post(`/api/about-organizer/image?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -103,7 +105,7 @@ const AboutOrganizerManagement = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/about-organizer/update', data);
+            const response = await api.post(`/api/about-organizer/update?website=${encodeURIComponent(website)}`, data);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -181,9 +183,17 @@ const AboutOrganizerManagement = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins text-[#1a2e1a]">
                 {/* <PageHeader
-                title="ABOUT ORGANIZER MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - ABOUT ORGANIZER MANAGEMENT" : "ABOUT ORGANIZER MANAGEMENT"}
                 description="Manage the information of the organizer on the About Us page"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
                     {/* Left Side: General Content */}

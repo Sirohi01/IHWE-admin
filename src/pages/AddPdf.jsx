@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Upload,
     Trash2,
@@ -19,6 +20,7 @@ import PageHeader from '../components/PageHeader';
 // import Table from '../components/table/Table';
 
 const AddPdf = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Resources',
         heading: 'Expand Your Business with Health & Wellness',
@@ -50,7 +52,7 @@ const AddPdf = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/download-pdf');
+            const response = await api.get(`/api/download-pdf?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -64,7 +66,7 @@ const AddPdf = () => {
     const handleHeadingSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/download-pdf/headings', {
+            const response = await api.post(`/api/download-pdf/headings?website=${encodeURIComponent(website)}`, {
                 subheading: data.subheading,
                 heading: data.heading,
                 highlightTitle: data.highlightTitle,
@@ -107,7 +109,7 @@ const AddPdf = () => {
 
         try {
             setIsUploadingImage(true);
-            const response = await api.post('/api/download-pdf/upload-image', formData, {
+            const response = await api.post(`/api/download-pdf/upload-image?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.data.success) {
@@ -143,7 +145,7 @@ const AddPdf = () => {
 
         try {
             setIsUploadingPdf(true);
-            const response = await api.post('/api/download-pdf/upload-pdf', formData, {
+            const response = await api.post(`/api/download-pdf/upload-pdf?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.data.success) {
@@ -171,9 +173,9 @@ const AddPdf = () => {
         try {
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/download-pdf/cards/${isEditingCard}`, finalCardData);
+                response = await api.put(`/api/download-pdf/cards/${isEditingCard}?website=${encodeURIComponent(website)}`, finalCardData);
             } else {
-                response = await api.post('/api/download-pdf/cards', finalCardData);
+                response = await api.post(`/api/download-pdf/cards?website=${encodeURIComponent(website)}`, finalCardData);
             }
 
             if (response.data.success) {
@@ -208,7 +210,7 @@ const AddPdf = () => {
         if (result.isConfirmed) {
             setIsLoading(true);
             try {
-                const response = await api.delete(`/api/download-pdf/cards/${id}`);
+                const response = await api.delete(`/api/download-pdf/cards/${id}?website=${encodeURIComponent(website)}`);
                 if (response.data.success) {
                     Swal.fire('Deleted!', 'PDF card has been deleted.', 'success');
                     fetchData();
@@ -311,8 +313,8 @@ const AddPdf = () => {
 
             <div className="bg-white shadow-md  p-6 min-h-screen">
                 {/* <PageHeader
-                    title="RESOURCES (PDF) MANAGEMENT"
-                    description="Manage the downloads section: header content and PDF resource cards"
+                    title={isOrganic ? "ORGANIC CMS - RESOURCES (PDF)" : "RESOURCES (PDF) MANAGEMENT"}
+                    description={isOrganic ? `Managing Organic Expo section data` : "Manage the downloads section: header content and PDF resource cards"}
                 /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

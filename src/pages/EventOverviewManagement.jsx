@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type,
     Save,
@@ -45,6 +46,7 @@ const AVAILABLE_ICONS = [
 ];
 
 const EventOverviewManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subtitle: 'Event Overview',
         title: 'A Global Platform Connecting Healthcare Wellness & Business Opportunities',
@@ -68,7 +70,7 @@ const EventOverviewManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/event-overview');
+            const response = await api.get(`/api/event-overview?website=${encodeURIComponent(website)}`);
             if (response.data.success && response.data.data) {
                 setData(response.data.data);
             }
@@ -92,7 +94,7 @@ const EventOverviewManagement = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/event-overview/update', data);
+            const response = await api.post(`/api/event-overview/update?website=${encodeURIComponent(website)}`, data);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -175,9 +177,17 @@ const EventOverviewManagement = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins text-[#1a2e1a]">
                 {/* <PageHeader
-                title="EVENT OVERVIEW MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - EVENT OVERVIEW MANAGEMENT" : "EVENT OVERVIEW MANAGEMENT"}
                 description="Manage the Event Overview and Key Sectors section of your About page"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
                     {/* Left Side: Text Inputs */}

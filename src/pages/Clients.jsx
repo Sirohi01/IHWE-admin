@@ -5,9 +5,11 @@ import {
   Type, Upload, FileDown, BadgeHelp, Edit
 } from "lucide-react";
 import api, { API_URL, SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 
 const Clients = () => {
+  const { website, isOrganic } = useWebsite();
   // Clients Data State
   const [clientData, setClientData] = useState({
     subheading: "Join the Leaders",
@@ -36,7 +38,7 @@ const Clients = () => {
   const fetchClientData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/client");
+      const response = await api.get(`/api/client?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setClientData(response.data.data);
       }
@@ -56,7 +58,7 @@ const Clients = () => {
   const saveHeadings = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post("/api/client/headings", {
+      const response = await api.post(`/api/client/headings?website=${encodeURIComponent(website)}`, {
         subheading: clientData.subheading,
         heading: clientData.heading,
         highlightText: clientData.highlightText
@@ -87,7 +89,7 @@ const Clients = () => {
 
     setUploading(true);
     try {
-      const response = await api.post("/api/client/upload", formData, {
+      const response = await api.post(`/api/client/upload?website=${encodeURIComponent(website)}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       if (response.data.success) {
@@ -119,9 +121,9 @@ const Clients = () => {
     try {
       let response;
       if (isEditing) {
-        response = await api.put(`/api/client/images/${editingImageId}`, imageForm);
+        response = await api.put(`/api/client/images/${editingImageId}?website=${encodeURIComponent(website)}`, imageForm);
       } else {
-        response = await api.post("/api/client/images", imageForm);
+        response = await api.post(`/api/client/images?website=${encodeURIComponent(website)}`, imageForm);
       }
 
       if (response.data.success) {
@@ -174,7 +176,7 @@ const Clients = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await api.delete(`/api/client/images/${imageId}`);
+        const response = await api.delete(`/api/client/images/${imageId}?website=${encodeURIComponent(website)}`);
         if (response.data.success) {
           Swal.fire("Deleted!", "Logo has been removed.", "success");
           fetchClientData();
@@ -248,8 +250,8 @@ const Clients = () => {
 
       <div className="bg-white shadow-md p-6 min-h-screen">
         {/* <PageHeader
-        title="EXHIBITORS & PARTNERS MANAGEMENT"
-        description="Manage the client logos section: header content and partner logos"
+        title={isOrganic ? "ORGANIC CMS - EXHIBITORS & PARTNERS" : "EXHIBITORS & PARTNERS MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo section data` : "Manage the client logos section: header content and partner logos"}
       /> */}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

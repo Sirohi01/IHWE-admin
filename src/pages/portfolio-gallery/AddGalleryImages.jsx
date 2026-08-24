@@ -3,9 +3,11 @@ import { UploadCloud, X, LayoutGrid, ChevronLeft, Camera } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import api from "../../lib/api";
+import { useWebsite } from "../../hooks/useWebsite";
 import PageHeader from "../../components/PageHeader";
 
 const AddGalleryImages = () => {
+    const { website, isOrganic } = useWebsite();
     const location = useLocation();
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
@@ -25,7 +27,7 @@ const AddGalleryImages = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await api.get("/api/gallery-category?type=gallery");
+                const res = await api.get(`/api/gallery-category?type=gallery&website=${encodeURIComponent(website)}`);
                 if (res.data.success) setCategories(res.data.data);
             } catch (err) {
                 console.error("Failed to fetch categories", err);
@@ -69,7 +71,7 @@ const AddGalleryImages = () => {
             const uploadPromises = images.map(async (file, idx) => {
                 const formData = new FormData();
                 formData.append("file", file);
-                const uploadRes = await api.post("/api/gallery/upload", formData, {
+                const uploadRes = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
                     headers: { "Content-Type": "multipart/form-data" }
                 });
                 return {
@@ -82,7 +84,7 @@ const AddGalleryImages = () => {
 
             // Now create gallery items for each uploaded image
             const createPromises = uploadedImages.map((imgData) =>
-                api.post("/api/gallery", {
+                api.post(`/api/gallery?website=${encodeURIComponent(website)}`, {
                     title: selectedCategory,
                     description: "",
                     category: "photo",
@@ -110,7 +112,7 @@ const AddGalleryImages = () => {
         <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
             <div className="flex items-center justify-between mb-6">
                 <PageHeader
-                    title="ADD GALLERY IMAGES"
+                    title={isOrganic ? "ORGANIC CMS - ADD GALLERY IMAGES" : "ADD GALLERY IMAGES"}
                     description="Upload images into a gallery event category"
                 />
                 <button
@@ -120,6 +122,15 @@ const AddGalleryImages = () => {
                     <ChevronLeft size={16} /> Back to Categories
                 </button>
             </div>
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="bg-white rounded-sm shadow-lg border-2 border-gray-200 p-6 md:p-8 space-y-8">
 

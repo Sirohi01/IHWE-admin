@@ -7,6 +7,7 @@ import {
   Users, Handshake, Package, Sparkles, Camera, ShieldCheck, UserCheck, Activity, Award, Briefcase
 } from "lucide-react";
 import api from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 
 const ICONS_LIST = [
@@ -36,6 +37,7 @@ const IconComponent = ({ name, ...props }) => {
 };
 
 const SupportedBy = () => {
+  const { website, isOrganic } = useWebsite();
   const [settings, setSettings] = useState({
     title: "Supported By",
     bgColor: "#23471d",
@@ -60,7 +62,7 @@ const SupportedBy = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/supported-by");
+      const response = await api.get(`/api/supported-by?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setSettings(response.data.data);
       }
@@ -74,7 +76,7 @@ const SupportedBy = () => {
   const handleSettingsSave = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post("/api/supported-by/settings", {
+      const response = await api.post(`/api/supported-by/settings?website=${encodeURIComponent(website)}`, {
         title: settings.title,
         bgColor: settings.bgColor
       });
@@ -97,9 +99,9 @@ const SupportedBy = () => {
     try {
       let response;
       if (isEditing) {
-        response = await api.put(`/api/supported-by/items/${editingId}`, itemForm);
+        response = await api.put(`/api/supported-by/items/${editingId}?website=${encodeURIComponent(website)}`, itemForm);
       } else {
-        response = await api.post("/api/supported-by/items", itemForm);
+        response = await api.post(`/api/supported-by/items?website=${encodeURIComponent(website)}`, itemForm);
       }
 
       if (response.data.success) {
@@ -145,7 +147,7 @@ const SupportedBy = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await api.delete(`/api/supported-by/items/${id}`);
+        const response = await api.delete(`/api/supported-by/items/${id}?website=${encodeURIComponent(website)}`);
         if (response.data.success) {
           Swal.fire("Deleted!", "Item removed.", "success");
           fetchData();
@@ -161,9 +163,18 @@ const SupportedBy = () => {
   return (
     <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
-        title="SUPPORTED BY MANAGEMENT"
-        description="Manage the supported-by icons and section headings"
+        title={isOrganic ? "ORGANIC CMS - SUPPORTED BY" : "SUPPORTED BY MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo supported-by data` : "Manage the supported-by icons and section headings"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
         {/* Left Column: Settings & Form */}

@@ -6,9 +6,11 @@ import {
     Video, Search, Filter, Plus
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
+import { useWebsite } from "../../hooks/useWebsite";
 import PageHeader from '../../components/PageHeader';
 
 const VideoList = () => {
+    const { website, isOrganic } = useWebsite();
     const location = useLocation();
     const navigate = useNavigate();
     const [videos, setVideos] = useState([]);
@@ -26,7 +28,7 @@ const VideoList = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await api.get('/api/gallery-category?type=video');
+            const res = await api.get(`/api/gallery-category?type=video&website=${encodeURIComponent(website)}`);
             if (res.data.success) setCategories(res.data.data);
         } catch (err) {
             console.error('Failed to fetch video categories', err);
@@ -36,7 +38,7 @@ const VideoList = () => {
     const fetchVideos = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/gallery?category=video');
+            const res = await api.get(`/api/gallery?category=video&website=${encodeURIComponent(website)}`);
             if (res.data.success) setVideos(res.data.data);
         } catch (err) {
             console.error('Failed to fetch videos', err);
@@ -56,7 +58,7 @@ const VideoList = () => {
         });
         if (!result.isConfirmed) return;
         try {
-            await api.delete(`/api/gallery/${id}`);
+            await api.delete(`/api/gallery/${id}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchVideos();
         } catch (err) {
@@ -100,9 +102,18 @@ const VideoList = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="VIDEO GALLERY LISTINGS"
+                title={isOrganic ? "ORGANIC CMS - VIDEO GALLERY LISTINGS" : "VIDEO GALLERY LISTINGS"}
                 description="View, filter and manage all uploaded videos across categories"
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             {/* Controls */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 mb-6">

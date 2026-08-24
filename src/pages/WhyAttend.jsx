@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Plus, Trash2, Edit,
     ShieldCheck, Activity, Box, Monitor, Microscope, Leaf, Plane, Beaker,
@@ -44,6 +45,7 @@ const EMPTY_CARD = {
 };
 
 const WhyAttend = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Why Attend?',
         heading: 'Expo Highlights',
@@ -59,7 +61,7 @@ const WhyAttend = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/why-attend');
+            const response = await api.get(`/api/why-attend?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -73,7 +75,7 @@ const WhyAttend = () => {
     const handleHeadingSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/why-attend/headings', {
+            const response = await api.post(`/api/why-attend/headings?website=${encodeURIComponent(website)}`, {
                 subheading: data.subheading,
                 heading: data.heading,
                 highlightText: data.highlightText
@@ -97,9 +99,9 @@ const WhyAttend = () => {
         try {
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/why-attend/cards/${isEditingCard}`, cardForm);
+                response = await api.put(`/api/why-attend/cards/${isEditingCard}?website=${encodeURIComponent(website)}`, cardForm);
             } else {
-                response = await api.post('/api/why-attend/cards', cardForm);
+                response = await api.post(`/api/why-attend/cards?website=${encodeURIComponent(website)}`, cardForm);
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingCard ? 'Card Updated!' : 'Card Added!', timer: 1500, showConfirmButton: false });
@@ -125,7 +127,7 @@ const WhyAttend = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/why-attend/cards/${cardId}`);
+            await api.delete(`/api/why-attend/cards/${cardId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -210,9 +212,17 @@ const WhyAttend = () => {
             </div>
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins">
                 {/* <PageHeader
-                title="WHY ATTEND MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - WHY ATTEND MANAGEMENT" : "WHY ATTEND MANAGEMENT"}
                 description="Manage section headings and Expo Highlights cards"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                     {/* LEFT: Headings + Card Form */}

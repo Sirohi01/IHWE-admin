@@ -6,6 +6,7 @@ import {
   Users, Globe, Building2, Mic, Handshake, Package, Sparkles, Camera, LayoutGrid, Hash
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
@@ -28,6 +29,7 @@ const IconComponent = ({ name, ...props }) => {
 };
 
 const Glimpse = () => {
+  const { website, isOrganic } = useWebsite();
   // Glimpse Data State
   const [glimpseData, setGlimpseData] = useState({
     subheading: "Event Glimpses",
@@ -73,7 +75,7 @@ const Glimpse = () => {
   const fetchGlimpseData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/glimpse");
+      const response = await api.get(`/api/glimpse?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setGlimpseData(response.data.data);
       }
@@ -93,7 +95,7 @@ const Glimpse = () => {
   const saveHeadings = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post("/api/glimpse/headings", {
+      const response = await api.post(`/api/glimpse/headings?website=${encodeURIComponent(website)}`, {
         subheading: glimpseData.subheading,
         heading: glimpseData.heading,
         highlightText: glimpseData.highlightText,
@@ -139,7 +141,7 @@ const Glimpse = () => {
 
     setUploading(true);
     try {
-      const response = await api.post("/api/glimpse/upload", formData, {
+      const response = await api.post(`/api/glimpse/upload?website=${encodeURIComponent(website)}`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
       if (response.data.success) {
@@ -165,9 +167,9 @@ const Glimpse = () => {
     try {
       let response;
       if (isEditingImage) {
-        response = await api.put(`/api/glimpse/images/${editingImageId}`, imageForm);
+        response = await api.put(`/api/glimpse/images/${editingImageId}?website=${encodeURIComponent(website)}`, imageForm);
       } else {
-        response = await api.post("/api/glimpse/images", imageForm);
+        response = await api.post(`/api/glimpse/images?website=${encodeURIComponent(website)}`, imageForm);
       }
 
       if (response.data.success) {
@@ -222,7 +224,7 @@ const Glimpse = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await api.delete(`/api/glimpse/images/${imageId}`);
+        const response = await api.delete(`/api/glimpse/images/${imageId}?website=${encodeURIComponent(website)}`);
         if (response.data.success) {
           Swal.fire("Deleted!", "Image has been removed.", "success");
           fetchGlimpseData();
@@ -247,9 +249,9 @@ const Glimpse = () => {
     try {
       let response;
       if (isEditingCounter) {
-        response = await api.put(`/api/glimpse/counters/${editingCounterId}`, counterForm);
+        response = await api.put(`/api/glimpse/counters/${editingCounterId}?website=${encodeURIComponent(website)}`, counterForm);
       } else {
-        response = await api.post("/api/glimpse/counters", counterForm);
+        response = await api.post(`/api/glimpse/counters?website=${encodeURIComponent(website)}`, counterForm);
       }
 
       if (response.data.success) {
@@ -302,7 +304,7 @@ const Glimpse = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await api.delete(`/api/glimpse/counters/${counterId}`);
+        const response = await api.delete(`/api/glimpse/counters/${counterId}?website=${encodeURIComponent(website)}`);
         if (response.data.success) {
           Swal.fire("Deleted!", "Counter has been removed.", "success");
           fetchGlimpseData();
@@ -318,9 +320,18 @@ const Glimpse = () => {
   return (
     <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
-        title="GLIMPSE EVENT MANAGEMENT"
-        description="Manage the gallery section: header content, glimpse images, and statistics counters"
+        title={isOrganic ? "ORGANIC CMS - GLIMPSE EVENT" : "GLIMPSE EVENT MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo section data` : "Manage the gallery section: header content, glimpse images, and statistics counters"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
         {/* Left Column: Heading Settings & Image Form */}

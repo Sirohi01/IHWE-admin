@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from "../components/PageHeader";
 
 const ICON_OPTIONS = [
@@ -25,6 +26,7 @@ const EMPTY_FORM = {
 };
 
 const StatsManage = () => {
+    const { website, isOrganic } = useWebsite();
     const [counters, setCounters] = useState([]);
     const [loading, setLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -38,7 +40,7 @@ const StatsManage = () => {
     const fetchCounters = async () => {
         setLoading(true);
         try {
-            const res = await api.get("/api/counters");
+            const res = await api.get(`/api/counters?website=${encodeURIComponent(website)}`);
             if (res.data.success) {
                 setCounters(res.data.data);
             }
@@ -77,9 +79,9 @@ const StatsManage = () => {
         try {
             let res;
             if (isEditing) {
-                res = await api.put(`/api/counters/${isEditing}`, formData);
+                res = await api.put(`/api/counters/${isEditing}?website=${encodeURIComponent(website)}`, formData);
             } else {
-                res = await api.post("/api/counters", formData);
+                res = await api.post(`/api/counters?website=${encodeURIComponent(website)}`, formData);
             }
 
             if (res.data.success) {
@@ -128,7 +130,7 @@ const StatsManage = () => {
         if (result.isConfirmed) {
             setLoading(true);
             try {
-                const res = await api.delete(`/api/counters/${id}`);
+                const res = await api.delete(`/api/counters/${id}?website=${encodeURIComponent(website)}`);
                 if (res.data.success) {
                     Swal.fire({ icon: "success", title: "Deleted!", timer: 1200, showConfirmButton: false });
                     fetchCounters();
@@ -154,7 +156,7 @@ const StatsManage = () => {
         if (result.isConfirmed) {
             setLoading(true);
             try {
-                const res = await api.get("/api/counters/cleanup");
+                const res = await api.get(`/api/counters/cleanup?website=${encodeURIComponent(website)}`);
                 if (res.data.success) {
                     Swal.fire({ icon: "success", title: "Cleanup Success!", text: res.data.message, timer: 1500, showConfirmButton: false });
                     fetchCounters();
@@ -237,8 +239,8 @@ const StatsManage = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen">
                 {/* <PageHeader 
-                title="COUNTERS MANAGEMENT" 
-                description="Manage statistics and achievement counters for home section" 
+                title={isOrganic ? "ORGANIC CMS - COUNTERS" : "COUNTERS MANAGEMENT"} 
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage statistics and achievement counters for home section"} 
             /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">

@@ -6,6 +6,7 @@ import {
     ChevronLeft, LayoutGrid, Camera, RefreshCw
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
+import { useWebsite } from "../../hooks/useWebsite";
 import PageHeader from '../../components/PageHeader';
 
 const EMPTY_FORM = {
@@ -15,6 +16,7 @@ const EMPTY_FORM = {
 };
 
 const ManageGalleryImages = () => {
+    const { website, isOrganic } = useWebsite();
     const location = useLocation();
     const navigate = useNavigate();
     const { categoryTitle, categoryId, categoryType } = location.state || {};
@@ -45,9 +47,9 @@ const ManageGalleryImages = () => {
             if (categoryId) {
                 // Fetch by galleryCategoryId
                 const cat = categoryType || 'gallery';
-                res = await api.get(`/api/gallery?category=${cat}&galleryCategoryId=${categoryId}`);
+                res = await api.get(`/api/gallery?category=${cat}&galleryCategoryId=${categoryId}&website=${encodeURIComponent(website)}`);
             } else {
-                res = await api.get(`/api/gallery?title=${encodeURIComponent(categoryTitle)}`);
+                res = await api.get(`/api/gallery?title=${encodeURIComponent(categoryTitle)}&website=${encodeURIComponent(website)}`);
             }
             if (res.data.success) {
                 setImages(res.data.data);
@@ -96,7 +98,7 @@ const ManageGalleryImages = () => {
 
         setIsLoading(true);
         try {
-            await api.delete(`/api/gallery/${id}`);
+            await api.delete(`/api/gallery/${id}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             if (isEditing && form._id === id) resetForm();
             fetchImages();
@@ -117,7 +119,7 @@ const ManageGalleryImages = () => {
             if (selectedFile) {
                 const formData = new FormData();
                 formData.append('file', selectedFile);
-                const uploadRes = await api.post('/api/gallery/upload', formData, {
+                const uploadRes = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
                 if (uploadRes.data.success) {
@@ -125,7 +127,7 @@ const ManageGalleryImages = () => {
                 }
             }
 
-            const res = await api.put(`/api/gallery/${form._id}`, {
+            const res = await api.put(`/api/gallery/${form._id}?website=${encodeURIComponent(website)}`, {
                 imageAlt: form.imageAlt,
                 image: imagePath
             });
@@ -154,7 +156,7 @@ const ManageGalleryImages = () => {
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="flex items-center justify-between mb-8">
                 <PageHeader
-                    title={`MANAGE IMAGES: ${categoryTitle}`}
+                    title={isOrganic ? `ORGANIC CMS - MANAGE IMAGES: ${categoryTitle}` : `MANAGE IMAGES: ${categoryTitle}`}
                     description={`Edit alt texts or delete individual images from this category`}
                 />
                 <button
@@ -164,6 +166,15 @@ const ManageGalleryImages = () => {
                     <ChevronLeft size={16} /> Back to Galleries
                 </button>
             </div>
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                 {/* LEFT: EDIT FORM */}

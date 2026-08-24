@@ -9,9 +9,11 @@ import DeleteConfirmToast from "../components/DeleteConfirmToast";
 import Table from "../components/table/Table";
 import PageHeader from '../components/PageHeader';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import Swal from "sweetalert2";
 
 const FloatingVideoManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [videos, setVideos] = useState([]);
     const [timer, setTimer] = useState(7);
     const [isLoading, setIsLoading] = useState(false);
@@ -37,7 +39,7 @@ const FloatingVideoManagement = () => {
     const fetchVideos = async () => {
         try {
             setIsLoading(true);
-            const response = await api.get('/api/floating-videos');
+            const response = await api.get(`/api/floating-videos?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setVideos(response.data.data);
             }
@@ -50,7 +52,7 @@ const FloatingVideoManagement = () => {
 
     const fetchSettings = async () => {
         try {
-            const response = await api.get('/api/floating-videos/settings');
+            const response = await api.get(`/api/floating-videos/settings?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setTimer(response.data.timer);
             }
@@ -78,7 +80,7 @@ const FloatingVideoManagement = () => {
     const handleTimerUpdate = async () => {
         try {
             setIsLoading(true);
-            const response = await api.put('/api/floating-videos/settings', { timer });
+            const response = await api.put(`/api/floating-videos/settings?website=${encodeURIComponent(website)}`, { timer });
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -118,9 +120,9 @@ const FloatingVideoManagement = () => {
             setIsLoading(true);
             let response;
             if (editId) {
-                response = await api.put(`/api/floating-videos/${editId}`, data);
+                response = await api.put(`/api/floating-videos/${editId}?website=${encodeURIComponent(website)}`, data);
             } else {
-                response = await api.post('/api/floating-videos', data);
+                response = await api.post(`/api/floating-videos?website=${encodeURIComponent(website)}`, data);
             }
 
             if (response.data.success) {
@@ -183,7 +185,7 @@ const FloatingVideoManagement = () => {
 
         try {
             setIsLoading(true);
-            const response = await api.delete(`/api/floating-videos/${id}`);
+            const response = await api.delete(`/api/floating-videos/${id}?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
                 fetchVideos();
@@ -198,9 +200,18 @@ const FloatingVideoManagement = () => {
     return (
         <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
             <PageHeader
-                title="FLOATING VIDEO MANAGEMENT"
-                description="Manage the floating videos that appear on the homepage"
+                title={isOrganic ? "ORGANIC CMS - FLOATING VIDEOS" : "FLOATING VIDEO MANAGEMENT"}
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage the floating videos that appear on the homepage"}
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             {/* TIMER SETTINGS - Premium Top Bar */}
             <div className="bg-white border-2 border-gray-200 p-6 shadow-sm mb-8 mt-6">

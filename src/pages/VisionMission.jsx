@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Save,
     Type,
@@ -19,6 +20,7 @@ const AVAILABLE_ICONS = [
 ];
 
 const VisionMission = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         mission: {
             title: 'Our Mission',
@@ -43,7 +45,7 @@ const VisionMission = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/vision-mission');
+            const response = await api.get(`/api/vision-mission?website=${encodeURIComponent(website)}`);
             if (response.data.success && response.data.data) {
                 setData(response.data.data);
             }
@@ -75,7 +77,7 @@ const VisionMission = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/vision-mission/update', data);
+            const response = await api.post(`/api/vision-mission/update?website=${encodeURIComponent(website)}`, data);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -175,9 +177,17 @@ const VisionMission = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins text-gray-800">
                 {/* <PageHeader
-                title="OUR VISION & MISSION MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - OUR VISION & MISSION MANAGEMENT" : "OUR VISION & MISSION MANAGEMENT"}
                 description="Manage the mission and vision statements of your organization"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
 

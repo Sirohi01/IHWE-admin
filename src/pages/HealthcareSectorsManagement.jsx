@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Image as ImageIcon, Plus, Trash2, Edit,
     ShieldCheck, Activity, Box, Monitor, Microscope, Leaf, Plane, Beaker,
@@ -45,6 +46,7 @@ const EMPTY_CARD = {
 };
 
 const HealthcareSectorsManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         heading: 'EXPLORE DIVERSE HEALTHCARE SECTORs',
         subtitle: 'One Platform. Every Healthcare Solution.',
@@ -62,7 +64,7 @@ const HealthcareSectorsManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/healthcare-sectors');
+            const response = await api.get(`/api/healthcare-sectors?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -76,7 +78,7 @@ const HealthcareSectorsManagement = () => {
     const handleHeadingSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/healthcare-sectors/headings', {
+            const response = await api.post(`/api/healthcare-sectors/headings?website=${encodeURIComponent(website)}`, {
                 heading: data.heading,
                 subtitle: data.subtitle
             });
@@ -113,7 +115,7 @@ const HealthcareSectorsManagement = () => {
         if (!imageFile) return cardForm.image;
         const formData = new FormData();
         formData.append('image', imageFile);
-        const res = await api.post('/api/healthcare-sectors/image', formData, {
+        const res = await api.post(`/api/healthcare-sectors/image?website=${encodeURIComponent(website)}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (res.data.success) return res.data.imageUrl;
@@ -134,9 +136,9 @@ const HealthcareSectorsManagement = () => {
             const payload = { ...cardForm, image: imageUrl };
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/healthcare-sectors/cards/${isEditingCard}`, payload);
+                response = await api.put(`/api/healthcare-sectors/cards/${isEditingCard}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post('/api/healthcare-sectors/cards', payload);
+                response = await api.post(`/api/healthcare-sectors/cards?website=${encodeURIComponent(website)}`, payload);
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingCard ? 'Card Updated!' : 'Card Added!', timer: 1500, showConfirmButton: false });
@@ -162,7 +164,7 @@ const HealthcareSectorsManagement = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/healthcare-sectors/cards/${cardId}`);
+            await api.delete(`/api/healthcare-sectors/cards/${cardId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -197,9 +199,18 @@ const HealthcareSectorsManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="HEALTHCARE SECTORS MANAGEMENT"
-                description="Manage sector headings and category cards"
+                title={isOrganic ? "ORGANIC CMS - HEALTHCARE SECTORS" : "HEALTHCARE SECTORS MANAGEMENT"}
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage sector headings and category cards"}
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                 <div className="lg:col-span-1 space-y-6">

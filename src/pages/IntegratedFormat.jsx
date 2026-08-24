@@ -7,6 +7,7 @@ import {
   Stethoscope, Landmark, GraduationCap, Package, Camera, ShieldCheck, UserCheck, Briefcase, Sparkles
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
@@ -37,6 +38,7 @@ const IconComponent = ({ name, ...props }) => {
 };
 
 const IntegratedFormat = () => {
+  const { website, isOrganic } = useWebsite();
   const [data, setData] = useState({
     subtitle: "",
     title: "",
@@ -60,7 +62,7 @@ const IntegratedFormat = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/integrated-format");
+      const response = await api.get(`/api/integrated-format?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setData(response.data.data);
       }
@@ -74,7 +76,7 @@ const IntegratedFormat = () => {
   const handleSettingsSave = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post("/api/integrated-format/settings", {
+      const response = await api.post(`/api/integrated-format/settings?website=${encodeURIComponent(website)}`, {
         subtitle: data.subtitle,
         title: data.title,
         description: data.description,
@@ -96,8 +98,8 @@ const IntegratedFormat = () => {
     setIsLoading(true);
     try {
       let res;
-      if (editingCardId) res = await api.put(`/api/integrated-format/cards/${editingCardId}`, cardForm);
-      else res = await api.post("/api/integrated-format/cards", cardForm);
+      if (editingCardId) res = await api.put(`/api/integrated-format/cards/${editingCardId}?website=${encodeURIComponent(website)}`, cardForm);
+      else res = await api.post(`/api/integrated-format/cards?website=${encodeURIComponent(website)}`, cardForm);
       
       if (res.data.success) {
         fetchData();
@@ -113,8 +115,8 @@ const IntegratedFormat = () => {
     setIsLoading(true);
     try {
       let res;
-      if (editingHighlightId) res = await api.put(`/api/integrated-format/highlights/${editingHighlightId}`, highlightForm);
-      else res = await api.post("/api/integrated-format/highlights", highlightForm);
+      if (editingHighlightId) res = await api.put(`/api/integrated-format/highlights/${editingHighlightId}?website=${encodeURIComponent(website)}`, highlightForm);
+      else res = await api.post(`/api/integrated-format/highlights?website=${encodeURIComponent(website)}`, highlightForm);
       
       if (res.data.success) {
         fetchData();
@@ -128,7 +130,7 @@ const IntegratedFormat = () => {
   const deleteItem = async (type, id) => {
     const res = await Swal.fire({ title: "Are you sure?", text: "This item will be deleted.", icon: "warning", showCancelButton: true });
     if (res.isConfirmed) {
-      await api.delete(`/api/integrated-format/${type}/${id}`);
+      await api.delete(`/api/integrated-format/${type}/${id}?website=${encodeURIComponent(website)}`);
       fetchData();
     }
   };
@@ -136,9 +138,18 @@ const IntegratedFormat = () => {
   return (
     <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-inter">
       <PageHeader
-        title="INTEGRATED FORMAT MANAGEMENT"
-        description="Manage the main layout, cards, and highlights of the Integrated Format section"
+        title={isOrganic ? "ORGANIC CMS - INTEGRATED FORMAT" : "INTEGRATED FORMAT MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo integrated format` : "Manage the main layout, cards, and highlights of the Integrated Format section"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
         {/* Left Column: Main Settings */}

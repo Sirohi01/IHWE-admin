@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { FRONTEND_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Save, Plus, Trash2, Edit, RefreshCw, Sliders,
     Users, Award, MessageSquare, Briefcase, Eye, EyeOff, Check
@@ -8,6 +9,7 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const EPromotionWebManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [activeTab, setActiveTab] = useState('packages');
     const [isLoading, setIsLoading] = useState(false);
 
@@ -63,10 +65,10 @@ const EPromotionWebManagement = () => {
         setIsLoading(true);
         try {
             const [pkgsRes, addonsRes, reachRes, testimonialsRes] = await Promise.all([
-                api.get('/api/e-promotion-packages/packages'),
-                api.get('/api/e-promotion-packages/addons'),
-                api.get('/api/e-promotion-packages/reach'),
-                api.get('/api/e-promotion-packages/testimonials')
+                api.get(`/api/e-promotion-packages/packages?website=${encodeURIComponent(website)}`),
+                api.get(`/api/e-promotion-packages/addons?website=${encodeURIComponent(website)}`),
+                api.get(`/api/e-promotion-packages/reach?website=${encodeURIComponent(website)}`),
+                api.get(`/api/e-promotion-packages/testimonials?website=${encodeURIComponent(website)}`)
             ]);
 
             if (pkgsRes.data.success) setPackages(pkgsRes.data.data);
@@ -96,7 +98,7 @@ const EPromotionWebManagement = () => {
 
         setIsLoading(true);
         try {
-            const response = await api.post('/api/e-promotion-packages/packages/seed-all');
+            const response = await api.post(`/api/e-promotion-packages/packages/seed-all?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -169,9 +171,9 @@ const EPromotionWebManagement = () => {
 
             let response;
             if (editingPackageId) {
-                response = await api.put(`/api/e-promotion-packages/packages/${editingPackageId}`, payload);
+                response = await api.put(`/api/e-promotion-packages/packages/${editingPackageId}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post('/api/e-promotion-packages/packages', payload);
+                response = await api.post(`/api/e-promotion-packages/packages?website=${encodeURIComponent(website)}`, payload);
             }
 
             if (response.data.success) {
@@ -226,7 +228,7 @@ const EPromotionWebManagement = () => {
 
         setIsLoading(true);
         try {
-            const response = await api.delete(`/api/e-promotion-packages/packages/${id}`);
+            const response = await api.delete(`/api/e-promotion-packages/packages/${id}?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
                 fetchAllData();
@@ -253,9 +255,9 @@ const EPromotionWebManagement = () => {
         try {
             let response;
             if (editingAddonId) {
-                response = await api.put(`/api/e-promotion-packages/addons/${editingAddonId}`, addonForm);
+                response = await api.put(`/api/e-promotion-packages/addons/${editingAddonId}?website=${encodeURIComponent(website)}`, addonForm);
             } else {
-                response = await api.post('/api/e-promotion-packages/addons', addonForm);
+                response = await api.post(`/api/e-promotion-packages/addons?website=${encodeURIComponent(website)}`, addonForm);
             }
 
             if (response.data.success) {
@@ -300,7 +302,7 @@ const EPromotionWebManagement = () => {
 
         setIsLoading(true);
         try {
-            const response = await api.delete(`/api/e-promotion-packages/addons/${id}`);
+            const response = await api.delete(`/api/e-promotion-packages/addons/${id}?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
                 fetchAllData();
@@ -320,7 +322,7 @@ const EPromotionWebManagement = () => {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await api.put('/api/e-promotion-packages/reach', reach);
+            const response = await api.put(`/api/e-promotion-packages/reach?website=${encodeURIComponent(website)}`, reach);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -353,9 +355,9 @@ const EPromotionWebManagement = () => {
         try {
             let response;
             if (editingTestimonialId) {
-                response = await api.put(`/api/e-promotion-packages/testimonials/${editingTestimonialId}`, testimonialForm);
+                response = await api.put(`/api/e-promotion-packages/testimonials/${editingTestimonialId}?website=${encodeURIComponent(website)}`, testimonialForm);
             } else {
-                response = await api.post('/api/e-promotion-packages/testimonials', testimonialForm);
+                response = await api.post(`/api/e-promotion-packages/testimonials?website=${encodeURIComponent(website)}`, testimonialForm);
             }
 
             if (response.data.success) {
@@ -400,7 +402,7 @@ const EPromotionWebManagement = () => {
 
         setIsLoading(true);
         try {
-            const response = await api.delete(`/api/e-promotion-packages/testimonials/${id}`);
+            const response = await api.delete(`/api/e-promotion-packages/testimonials/${id}?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
                 fetchAllData();
@@ -417,8 +419,8 @@ const EPromotionWebManagement = () => {
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <PageHeader
-                    title="E-PROMOTION WEB PAGE MANAGEMENT"
-                    description="Dynamically manage packages, addons, reach counters, and customer testimonials"
+                    title={isOrganic ? "ORGANIC CMS - E-PROMOTION WEB PAGE" : "E-PROMOTION WEB PAGE MANAGEMENT"}
+                    description={isOrganic ? `Managing Organic Expo section data` : "Dynamically manage packages, addons, reach counters, and customer testimonials"}
                 />
                 <button
                     onClick={handleResetDefaults}
@@ -429,6 +431,15 @@ const EPromotionWebManagement = () => {
                     Reset to Defaults
                 </button>
             </div>
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             {/* TAB SELECTOR */}
             <div className="flex flex-wrap border-b border-gray-200 mt-6 gap-2">

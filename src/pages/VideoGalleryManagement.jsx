@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Save, Play, Plus, Trash2, Edit,
     Video, Youtube, FileVideo, Layers, Instagram, Camera
@@ -19,6 +20,7 @@ const EMPTY_FORM = {
 };
 
 const VideoGalleryManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const location = useLocation();
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
@@ -65,7 +67,7 @@ const VideoGalleryManagement = () => {
 
     const fetchCategories = async () => {
         try {
-            const res = await api.get('/api/gallery-category?type=video');
+            const res = await api.get(`/api/gallery-category?type=video&website=${encodeURIComponent(website)}`);
             if (res.data.success) setCategories(res.data.data);
         } catch (err) {
             console.error('Failed to fetch video categories', err);
@@ -75,7 +77,7 @@ const VideoGalleryManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/gallery?category=video');
+            const response = await api.get(`/api/gallery?category=video&website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setItems(response.data.data);
             }
@@ -96,7 +98,7 @@ const VideoGalleryManagement = () => {
         if (!videoFile) return form.videoUrl;
         const formData = new FormData();
         formData.append('file', videoFile);
-        const res = await api.post('/api/gallery/upload', formData, {
+        const res = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (res.data.success) return res.data.url;
@@ -132,7 +134,7 @@ const VideoGalleryManagement = () => {
             if (coverImageFile) {
                 const formData = new FormData();
                 formData.append('file', coverImageFile);
-                const uploadRes = await api.post("/api/gallery/upload", formData, {
+                const uploadRes = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
                     headers: { "Content-Type": "multipart/form-data" }
                 });
                 imageUrl = uploadRes.data.url;
@@ -144,9 +146,9 @@ const VideoGalleryManagement = () => {
 
             let response;
             if (isEditing) {
-                response = await api.put(`/api/gallery/${isEditing}`, payload);
+                response = await api.put(`/api/gallery/${isEditing}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post('/api/gallery', payload);
+                response = await api.post(`/api/gallery?website=${encodeURIComponent(website)}`, payload);
             }
 
             if (response.data.success) {
@@ -179,7 +181,7 @@ const VideoGalleryManagement = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/gallery/${id}`);
+            await api.delete(`/api/gallery/${id}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -262,9 +264,18 @@ const VideoGalleryManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="VIDEO GALLERY MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - VIDEO GALLERY MANAGEMENT" : "VIDEO GALLERY MANAGEMENT"}
                 description="Upload video files or add YouTube links to your video gallery categories"
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                 {/* LEFT: Add/Edit Form */}

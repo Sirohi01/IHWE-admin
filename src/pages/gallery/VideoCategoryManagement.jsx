@@ -6,6 +6,7 @@ import {
     Layers, Video, Camera
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
+import { useWebsite } from "../../hooks/useWebsite";
 import PageHeader from '../../components/PageHeader';
 
 const EMPTY_FORM = {
@@ -16,6 +17,7 @@ const EMPTY_FORM = {
 };
 
 const VideoCategoryManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const navigate = useNavigate();
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -30,7 +32,7 @@ const VideoCategoryManagement = () => {
     const fetchCategories = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/gallery-category?type=video');
+            const res = await api.get(`/api/gallery-category?type=video&website=${encodeURIComponent(website)}`);
             if (res.data.success) setCategories(res.data.data);
         } catch (err) {
             console.error('Failed to fetch video categories', err);
@@ -63,11 +65,11 @@ const VideoCategoryManagement = () => {
 
             let res;
             if (isEditing) {
-                res = await api.put(`/api/gallery-category/${isEditing}`, formData, {
+                res = await api.put(`/api/gallery-category/${isEditing}?website=${encodeURIComponent(website)}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             } else {
-                res = await api.post('/api/gallery-category', formData, {
+                res = await api.post(`/api/gallery-category?website=${encodeURIComponent(website)}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
             }
@@ -101,7 +103,7 @@ const VideoCategoryManagement = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/gallery-category/${catId}`);
+            await api.delete(`/api/gallery-category/${catId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchCategories();
         } catch (err) {
@@ -135,9 +137,18 @@ const VideoCategoryManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="VIDEO CATEGORY MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - VIDEO CATEGORY MANAGEMENT" : "VIDEO CATEGORY MANAGEMENT"}
                 description="Create and manage categories for your video gallery"
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
 

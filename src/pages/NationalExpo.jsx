@@ -5,6 +5,7 @@ import {
   Type, ImageIcon, Globe, UserCheck, BookOpen, TrendingUp, CheckCircle
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
@@ -23,6 +24,7 @@ const IconComponent = ({ name, ...props }) => {
 };
 
 const NationalExpo = () => {
+  const { website, isOrganic } = useWebsite();
   const [data, setData] = useState({
     subtitle: "",
     title: "",
@@ -49,7 +51,7 @@ const NationalExpo = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/national-expo");
+      const response = await api.get(`/api/national-expo?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setData(response.data.data);
         if (response.data.data.bgImage) {
@@ -73,7 +75,7 @@ const NationalExpo = () => {
       formData.append('altText', data.altText);
       if (bgFile) formData.append('bgImage', bgFile);
 
-      const response = await api.post("/api/national-expo/settings", formData);
+      const response = await api.post(`/api/national-expo/settings?website=${encodeURIComponent(website)}`, formData);
       if (response.data.success) {
         Swal.fire({ icon: 'success', title: 'Settings Saved', timer: 1500, showConfirmButton: false });
         fetchData();
@@ -92,9 +94,9 @@ const NationalExpo = () => {
     try {
       let res;
       if (editingPoint) {
-        res = await api.put(`/api/national-expo/points/${editingPoint}`, pointForm);
+        res = await api.put(`/api/national-expo/points/${editingPoint}?website=${encodeURIComponent(website)}`, pointForm);
       } else {
-        res = await api.post("/api/national-expo/points", pointForm);
+        res = await api.post(`/api/national-expo/points?website=${encodeURIComponent(website)}`, pointForm);
       }
       if (res.data.success) {
         fetchData();
@@ -111,9 +113,9 @@ const NationalExpo = () => {
     try {
       let res;
       if (editingCard) {
-        res = await api.put(`/api/national-expo/cards/${editingCard}`, cardForm);
+        res = await api.put(`/api/national-expo/cards/${editingCard}?website=${encodeURIComponent(website)}`, cardForm);
       } else {
-        res = await api.post("/api/national-expo/cards", cardForm);
+        res = await api.post(`/api/national-expo/cards?website=${encodeURIComponent(website)}`, cardForm);
       }
       if (res.data.success) {
         fetchData();
@@ -127,7 +129,7 @@ const NationalExpo = () => {
   const deleteItem = async (type, id) => {
     const res = await Swal.fire({ title: "Delete?", showCancelButton: true });
     if (res.isConfirmed) {
-      await api.delete(`/api/national-expo/${type}/${id}`);
+      await api.delete(`/api/national-expo/${type}/${id}?website=${encodeURIComponent(website)}`);
       fetchData();
     }
   };
@@ -135,9 +137,18 @@ const NationalExpo = () => {
   return (
     <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
-        title="NATIONAL EXPO MANAGEMENT"
-        description="Manage the 'From India to the World' section content, points, and cards"
+        title={isOrganic ? "ORGANIC CMS - NATIONAL EXPO" : "NATIONAL EXPO MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo national expo content` : "Manage the 'From India to the World' section content, points, and cards"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6 font-inter">
 

@@ -5,6 +5,7 @@ import {
     Globe, Camera, X
 } from 'lucide-react';
 import api, { SERVER_URL } from '../../lib/api';
+import { useWebsite } from "../../hooks/useWebsite";
 import PageHeader from '../../components/PageHeader';
 
 const EMPTY_FORM = {
@@ -14,6 +15,7 @@ const EMPTY_FORM = {
 };
 
 const MediaCategoryManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [mediaList, setMediaList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [form, setForm] = useState({ ...EMPTY_FORM });
@@ -27,7 +29,7 @@ const MediaCategoryManagement = () => {
     const fetchMedia = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/gallery?category=press');
+            const res = await api.get(`/api/gallery?category=press&website=${encodeURIComponent(website)}`);
             if (res.data.success) setMediaList(res.data.data);
         } catch (err) {
             console.error('Failed to fetch media', err);
@@ -54,7 +56,7 @@ const MediaCategoryManagement = () => {
             if (imageFile) {
                 const formData = new FormData();
                 formData.append('file', imageFile);
-                const uploadRes = await api.post("/api/gallery/upload", formData, {
+                const uploadRes = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
                     headers: { "Content-Type": "multipart/form-data" }
                 });
                 imageUrl = uploadRes.data.url;
@@ -70,9 +72,9 @@ const MediaCategoryManagement = () => {
 
             let res;
             if (isEditing) {
-                res = await api.put(`/api/gallery/${isEditing}`, payload);
+                res = await api.put(`/api/gallery/${isEditing}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                res = await api.post('/api/gallery', payload);
+                res = await api.post(`/api/gallery?website=${encodeURIComponent(website)}`, payload);
             }
 
             if (res.data.success) {
@@ -104,7 +106,7 @@ const MediaCategoryManagement = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/gallery/${id}`);
+            await api.delete(`/api/gallery/${id}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchMedia();
         } catch (err) {
@@ -137,9 +139,18 @@ const MediaCategoryManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="MEDIA GALLERY MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - MEDIA GALLERY MANAGEMENT" : "MEDIA GALLERY MANAGEMENT"}
                 description="Upload and manage your press & media photos directly"
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
 
