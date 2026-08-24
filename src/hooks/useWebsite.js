@@ -1,7 +1,7 @@
 import { useLocation } from "react-router-dom";
 
 const WEBSITE_MAIN = "9th IHWE";
-const WEBSITE_ORGANIC = "Organicexpo";
+const WEBSITE_ORGANIC = "organicexpo";
 
 export const useWebsite = () => {
   const { pathname } = useLocation();

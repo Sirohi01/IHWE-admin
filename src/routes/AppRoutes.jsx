@@ -7,7 +7,6 @@ import Dashboard from "../pages/Dashboard";
 import CrmEventScopedRoute from "../components/CrmEventScopedRoute";
 const AdminUser = lazy(() => import("../layout/AdminUser"));
 const MyProfile = lazy(() => import("../pages/MyProfile"));
-const OrganicHomeSlider = lazy(() => import("../pages/organic/OrganicHomeSlider"));
 const HeroSlider = lazy(() => import("../pages/HomeSlider"));
 const EventHighlightsPage = lazy(() => import("../pages/EventHighlights"));
 const FestivalCarousel = lazy(() => import("../pages/FestivalCarousel"));
@@ -601,7 +600,7 @@ export default function AppRoutes() {
             <Route path="profiles" element={<IndividualProfile />} />
             <Route path="festival-carousels" element={<FestivalCarousel />} />
             <Route path="carousel" element={<HeroSlider />} />
-             <Route path="organic-carousel" element={<OrganicHomeSlider />} />
+             <Route path="organic-carousel" element={<HeroSlider />} />
             <Route path="event-highlights" element={<EventHighlightsPage />} />
             <Route path="enquiry-list" element={<EnquiryList />} />
             <Route path="remainder-list" element={<Remainder />} />
