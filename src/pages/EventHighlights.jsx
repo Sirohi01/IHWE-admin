@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from '../lib/api';
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 
 // ── Defined OUTSIDE the parent so React does not remount them on every render ──
@@ -35,6 +36,7 @@ const InputField = ({ label, name, value, placeholder, type = 'text', required =
 );
 
 const EventHighlightsPage = () => {
+    const { website, isOrganic } = useWebsite();
     const [formData, setFormData] = useState({
         subtitle: 'Mark Your Calendar',
         title: 'The Premier Healthcare Event of 2026',
@@ -71,7 +73,7 @@ const EventHighlightsPage = () => {
 
     const fetchData = async () => {
         try {
-            const response = await api.get('/api/event-highlights');
+            const response = await api.get(`/api/event-highlights?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 const data = response.data.data;
                 setFormData({
@@ -140,7 +142,7 @@ const EventHighlightsPage = () => {
     const handleSaveText = async () => {
         setIsSaving(true);
         try {
-            const response = await api.put('/api/event-highlights', formData);
+            const response = await api.put(`/api/event-highlights?website=${encodeURIComponent(website)}`, formData);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -171,7 +173,7 @@ const EventHighlightsPage = () => {
         try {
             const formDataImg = new FormData();
             formDataImg.append('image', imageFile);
-            const response = await api.post('/api/event-highlights/upload-image', formDataImg, {
+            const response = await api.post(`/api/event-highlights/upload-image?website=${encodeURIComponent(website)}`, formDataImg, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.data.success) {
@@ -199,7 +201,7 @@ const EventHighlightsPage = () => {
         try {
             const formDataPdf = new FormData();
             formDataPdf.append('pdf', pdfFile);
-            const response = await api.post('/api/event-highlights/upload-pdf', formDataPdf, {
+            const response = await api.post(`/api/event-highlights/upload-pdf?website=${encodeURIComponent(website)}`, formDataPdf, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (response.data.success) {

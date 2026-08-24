@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type,
     Save,
@@ -10,6 +11,7 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const MarqueeManage = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         text: 'Connecting Global Healthcare Innovators  •  Medical Technology  •  Wellness Solutions  •  Diagnostics  •  Pharma  •  Innovation  •  AI in Healthcare  •  ',
         bgColor: '#23471d'
@@ -23,7 +25,7 @@ const MarqueeManage = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/marquee');
+            const response = await api.get(`/api/marquee?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -37,7 +39,7 @@ const MarqueeManage = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/marquee', {
+            const response = await api.post(`/api/marquee?website=${encodeURIComponent(website)}`, {
                 text: data.text,
                 bgColor: data.bgColor
             });
@@ -119,8 +121,8 @@ const MarqueeManage = () => {
 
             <div className="bg-white shadow-md mt-6 p-6 min-h-screen font-poppins">
                 {/* <PageHeader
-                    title="MARQUEE TEXT MANAGEMENT"
-                    description="Manage the sliding marquee text and its background color"
+                    title={isOrganic ? "ORGANIC CMS - MARQUEE TEXT" : "MARQUEE TEXT MANAGEMENT"}
+                    description={isOrganic ? `Managing Organic Expo section data` : "Manage the sliding marquee text and its background color"}
                 /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">

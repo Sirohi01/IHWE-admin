@@ -8,7 +8,8 @@ import Dashboard from "../pages/Dashboard";
 import CrmEventScopedRoute from "../components/CrmEventScopedRoute";
 const AdminUser = lazy(() => import("../layout/AdminUser"));
 const MyProfile = lazy(() => import("../pages/MyProfile"));
-const Crosual = lazy(() => import("../pages/HomeSlider"));
+const OrganicHomeSlider = lazy(() => import("../pages/organic/OrganicHomeSlider"));
+const HeroSlider = lazy(() => import("../pages/HomeSlider"));
 const EventHighlightsPage = lazy(() => import("../pages/EventHighlights"));
 const FestivalCarousel = lazy(() => import("../pages/FestivalCarousel"));
 const EnquiryList = lazy(() => import("../pages/EnquiryList"));
@@ -424,6 +425,14 @@ export default function AppRoutes() {
             <Route path="why-attend" element={<WhyAttend />} />
             <Route path="target-audience" element={<TargetAudience />} />
             <Route path="organized-by" element={<OrganizedBy />} />
+            <Route path="/organic-global-platform" element={<GlobalPlatform />} />
+            <Route path="/organic-event-overview" element={<EventOverviewManagement />} />
+            <Route path="/organic-about-organizer" element={<AboutOrganizerManagement />} />
+            <Route path="/organic-our-journey" element={<OurJourneyManagement />} />
+            <Route path="/organic-vision-mission" element={<VisionMission />} />
+            <Route path="/organic-why-attend" element={<WhyAttend />} />
+            <Route path="/organic-target-audience" element={<TargetAudience />} />
+            <Route path="/organic-organized-by" element={<OrganizedBy />} />
             <Route path="why-exhibit-manage" element={<WhyExhibitManage />} />
             <Route path="sponsor-comparison-manage" element={<SponsorComparisonManage />} />
             <Route path="partner-categories" element={<PartnerCategories />} />
@@ -461,11 +470,34 @@ export default function AppRoutes() {
             <Route path="certificate-settings" element={<CertificateSettings />} />
             <Route path="/glimpse" element={<Glimpse />} />
             <Route path="/supported-by" element={<SupportedBy />} />
+            <Route path="/organic-supported-by" element={<SupportedBy />} />
             <Route path="/upcoming-brands" element={<UpcomingBrands />} />
+            <Route path="/organic-upcoming-brands" element={<UpcomingBrands />} />
             <Route path="/introduction" element={<Introduction />} />
+            <Route path="/organic-introduction" element={<Introduction />} />
             <Route path="/national-expo" element={<NationalExpo />} />
+            <Route path="/organic-national-expo" element={<NationalExpo />} />
             <Route path="/integrated-format" element={<IntegratedFormat />} />
+            <Route path="/organic-integrated-format" element={<IntegratedFormat />} />
             <Route path="/why-participate-manage" element={<WhyParticipateManagement />} />
+            <Route path="/organic-why-participate-manage" element={<WhyParticipateManagement />} />
+            <Route path="/organic-event-highlights" element={<EventHighlightsPage />} />
+            <Route path="/organic-about-us" element={<About />} />
+            <Route path="/organic-add-pdf" element={<AddPdf />} />
+            <Route path="/organic-marquee-text" element={<MarqueeManage />} />
+            <Route path="/organic-who-we-are" element={<WhoWeAre />} />
+            <Route path="/organic-featured-services" element={<Services />} />
+            <Route path="/organic-healthcare-sectors" element={<HealthcareSectorsManagement />} />
+            <Route path="/organic-epromotion" element={<EPromotionWebManagement />} />
+            <Route path="/organic-faq-manage" element={<FAQManage />} />
+            <Route path="/organic-glimpse" element={<Glimpse />} />
+            <Route path="/organic-clients" element={<Clients />} />
+            <Route path="/organic-parallax-manage" element={<ParallaxManage />} />
+            <Route path="/organic-testimonials-manage" element={<TestimonialsManage />} />
+            <Route path="/organic-new-testimonials-manage" element={<NewTestimonialsManagement />} />
+            <Route path="/organic-exhibitor-testimonials" element={<ExhibitorTestimonialsManagement />} />
+            <Route path="/organic-stats-manage" element={<StatsManage />} />
+            <Route path="/organic-floating-video-management" element={<FloatingVideoManagement />} />
             <Route path="parallax-manage" element={<ParallaxManage />} />
             <Route path="stats-manage" element={<StatsManage />} />
             <Route path="create-a-post" element={<Post />} />
@@ -611,7 +643,8 @@ export default function AppRoutes() {
             <Route path="gallery-media" element={<MediaGalleryManagement />} />
             <Route path="profiles" element={<IndividualProfile />} />
             <Route path="festival-carousels" element={<FestivalCarousel />} />
-            <Route path="carousel" element={<Crosual />} />
+            <Route path="carousel" element={<HeroSlider />} />
+             <Route path="organic-carousel" element={<OrganicHomeSlider />} />
             <Route path="event-highlights" element={<EventHighlightsPage />} />
             <Route path="enquiry-list" element={<EnquiryList />} />
             <Route path="remainder-list" element={<Remainder />} />
@@ -954,11 +987,15 @@ export default function AppRoutes() {
             <Route path="/expo-support-enquiries" element={<ExpoSupportEnquiries />} />
             <Route path="/sponsorship-enquiries" element={<SponsorshipEnquiries />} />
             <Route path="/media-registration-manage" element={<MediaRegistrationManage />} />
-            <Route path="/business-type" element={<TypeOfBusinessMaster />} />
-            <Route path="/type-of-business-master" element={<TypeOfBusinessMaster />} />
-            <Route path="/lead-type-of-business" element={<LeadTypeOfBusiness />} />
-            <Route path="/lead-industry" element={<LeadIndustry />} />
-            <Route path="/accessory-category" element={<AccessoryCategory />} />
+            <Route path="/organic-gallery-category" element={<GalleryCategory />} />
+            <Route path="/organic-add-gallery-images" element={<AddGalleryImages />} />
+            <Route path="/organic-gallery-list" element={<GalleryList />} />
+            <Route path="/organic-video-category" element={<VideoCategoryManagement />} />
+            <Route path="/organic-gallery-videos" element={<VideoGalleryManagement />} />
+            <Route path="/organic-video-list" element={<VideoList />} />
+            <Route path="/organic-media-category" element={<MediaCategoryManagement />} />
+            <Route path="/organic-gallery-media" element={<MediaGalleryManagement />} />
+            <Route path="/organic-media-registration-manage" element={<MediaRegistrationManage />} />
 
             <Route path="*" element={<NotFound />} />
             <Route path="/international-buyer-list" element={<InternationalBuyerList />} />

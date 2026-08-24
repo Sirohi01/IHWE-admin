@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Image as ImageIcon, Plus, Trash2, Edit,
     ShieldCheck, Activity, Box, Monitor, Microscope, Leaf, Plane, Beaker,
@@ -51,6 +52,7 @@ const EMPTY_CARD = {
 };
 
 const Services = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Specialized Pavilions',
         heading: 'Focused Industry Zones for Business',
@@ -73,7 +75,7 @@ const Services = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/featured-services');
+            const response = await api.get(`/api/featured-services?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -87,7 +89,7 @@ const Services = () => {
     const handleHeadingSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/featured-services/headings', {
+            const response = await api.post(`/api/featured-services/headings?website=${encodeURIComponent(website)}`, {
                 subheading: data.subheading,
                 heading: data.heading,
                 highlightText: data.highlightText,
@@ -130,7 +132,7 @@ const Services = () => {
         if (!imageFile) return cardForm.image;
         const formData = new FormData();
         formData.append('image', imageFile);
-        const res = await api.post('/api/featured-services/image', formData, {
+        const res = await api.post(`/api/featured-services/image?website=${encodeURIComponent(website)}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (res.data.success) return res.data.imageUrl;
@@ -155,9 +157,9 @@ const Services = () => {
             const payload = { ...cardForm, image: imageUrl };
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/featured-services/cards/${isEditingCard}`, payload);
+                response = await api.put(`/api/featured-services/cards/${isEditingCard}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post('/api/featured-services/cards', payload);
+                response = await api.post(`/api/featured-services/cards?website=${encodeURIComponent(website)}`, payload);
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingCard ? 'Card Updated!' : 'Card Added!', timer: 1500, showConfirmButton: false });
@@ -183,7 +185,7 @@ const Services = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/featured-services/cards/${cardId}`);
+            await api.delete(`/api/featured-services/cards/${cardId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -279,8 +281,8 @@ const Services = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen">
                 {/* <PageHeader
-                title="FEATURED SERVICES MANAGEMENT"
-                description="Manage section headings and industry zone service cards"
+                title={isOrganic ? "ORGANIC CMS - FEATURED SERVICES" : "FEATURED SERVICES MANAGEMENT"}
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage section headings and industry zone service cards"}
             /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">

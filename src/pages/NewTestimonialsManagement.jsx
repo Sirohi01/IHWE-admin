@@ -9,10 +9,12 @@ import {
   ChevronUp, ChevronDown
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
 const NewTestimonialsManagement = () => {
+  const { website, isOrganic } = useWebsite();
   const [activeTab, setActiveTab] = useState('general');
   const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState({
@@ -93,7 +95,7 @@ const NewTestimonialsManagement = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/new-testimonials");
+      const response = await api.get(`/api/new-testimonials?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setData({
           settings: response.data.data.settings,
@@ -151,7 +153,7 @@ const NewTestimonialsManagement = () => {
       });
       if (heroBgFile) formData.append('heroBgImage', heroBgFile);
 
-      const response = await api.post("/api/new-testimonials/settings", formData, {
+      const response = await api.post(`/api/new-testimonials/settings?website=${encodeURIComponent(website)}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -179,9 +181,9 @@ const NewTestimonialsManagement = () => {
 
       let response;
       if (editCardId) {
-        response = await api.put(`/api/new-testimonials/cards/${editCardId}`, formData);
+        response = await api.put(`/api/new-testimonials/cards/${editCardId}?website=${encodeURIComponent(website)}`, formData);
       } else {
-        response = await api.post("/api/new-testimonials/cards", formData);
+        response = await api.post(`/api/new-testimonials/cards?website=${encodeURIComponent(website)}`, formData);
       }
 
       if (response.data.success) {
@@ -227,7 +229,7 @@ const NewTestimonialsManagement = () => {
     const result = await Swal.fire({ title: "Are you sure?", icon: "warning", showCancelButton: true });
     if (result.isConfirmed) {
       try {
-        await api.delete(`/api/new-testimonials/cards/${id}`);
+        await api.delete(`/api/new-testimonials/cards/${id}?website=${encodeURIComponent(website)}`);
         fetchData();
       } catch (error) {
         Swal.fire("Error", "Delete failed", "error");
@@ -245,8 +247,8 @@ const NewTestimonialsManagement = () => {
 
     try {
       setIsLoading(true);
-      await api.put(`/api/new-testimonials/cards/${card._id}`, { order: targetCard.order || 0 });
-      await api.put(`/api/new-testimonials/cards/${targetCard._id}`, { order: card.order || 0 });
+      await api.put(`/api/new-testimonials/cards/${card._id}?website=${encodeURIComponent(website)}`, { order: targetCard.order || 0 });
+      await api.put(`/api/new-testimonials/cards/${targetCard._id}?website=${encodeURIComponent(website)}`, { order: card.order || 0 });
       fetchData();
     } catch (error) {
       Swal.fire("Error", "Failed to move position", "error");
@@ -273,11 +275,11 @@ const NewTestimonialsManagement = () => {
 
       let response;
       if (editVideoId) {
-        response = await api.put(`/api/new-testimonials/videos/${editVideoId}`, formData, {
+        response = await api.put(`/api/new-testimonials/videos/${editVideoId}?website=${encodeURIComponent(website)}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       } else {
-        response = await api.post("/api/new-testimonials/videos", formData, {
+        response = await api.post(`/api/new-testimonials/videos?website=${encodeURIComponent(website)}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
@@ -318,7 +320,7 @@ const NewTestimonialsManagement = () => {
     const result = await Swal.fire({ title: "Delete Video?", icon: "warning", showCancelButton: true });
     if (result.isConfirmed) {
       try {
-        await api.delete(`/api/new-testimonials/videos/${id}`);
+        await api.delete(`/api/new-testimonials/videos/${id}?website=${encodeURIComponent(website)}`);
         fetchData();
       } catch (error) {
         Swal.fire("Error", "Delete failed", "error");
@@ -339,9 +341,18 @@ const NewTestimonialsManagement = () => {
   return (
     <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
-        title="NEW TESTIMONIALS MANAGEMENT"
-        description="Manage the Testimonials section content, background patterns, and user voices"
+        title={isOrganic ? "ORGANIC CMS - TESTIMONIALS" : "NEW TESTIMONIALS MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo section data` : "Manage the Testimonials section content, background patterns, and user voices"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       {/* TABS NAVIGATION */}
       <div className="flex flex-wrap gap-2 mb-8 mt-6 border-b border-gray-100 pb-4">

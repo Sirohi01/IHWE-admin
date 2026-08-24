@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type,
     Save,
@@ -16,6 +17,7 @@ import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
 const GlobalPlatform = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'GLOBAL PLATFORM',
         title: "India's Impactful Health & Wellness Stage",
@@ -44,7 +46,7 @@ const GlobalPlatform = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/global-platform');
+            const response = await api.get(`/api/global-platform?website=${encodeURIComponent(website)}`);
             if (response.data.success && response.data.data) {
                 const fetched = response.data.data;
                 setData({
@@ -95,7 +97,7 @@ const GlobalPlatform = () => {
 
         try {
             setIsLoading(true);
-            const response = await api.post('/api/global-platform/image', formData, {
+            const response = await api.post(`/api/global-platform/image?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -113,7 +115,7 @@ const GlobalPlatform = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/global-platform/update', data);
+            const response = await api.post(`/api/global-platform/update?website=${encodeURIComponent(website)}`, data);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -191,9 +193,17 @@ const GlobalPlatform = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins">
                 {/* <PageHeader
-                title="GLOBAL PLATFORM MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - GLOBAL PLATFORM MANAGEMENT" : "GLOBAL PLATFORM MANAGEMENT"}
                 description="Manage the main about section of your website home page"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">
                     {/* Left Side: Text Inputs */}

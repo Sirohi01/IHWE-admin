@@ -5,10 +5,12 @@ import {
   FileText, Link as LinkIcon, Image as ImageLucide, Leaf, List
 } from "lucide-react";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
 
 const WhyParticipateManagement = () => {
+  const { website, isOrganic } = useWebsite();
   const [data, setData] = useState({
     subtitle: "WHY PARTICIPATE",
     heading: "Your Gateway to Growth",
@@ -36,7 +38,7 @@ const WhyParticipateManagement = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get("/api/why-participate");
+      const response = await api.get(`/api/why-participate?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         setData(response.data.data);
         if (response.data.data.image) {
@@ -113,7 +115,7 @@ const WhyParticipateManagement = () => {
         formData.append('brochure', brochureFile);
       }
 
-      const response = await api.post("/api/why-participate/settings", formData, {
+      const response = await api.post(`/api/why-participate/settings?website=${encodeURIComponent(website)}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -138,9 +140,18 @@ const WhyParticipateManagement = () => {
   return (
     <div className="bg-white shadow-md  p-6 min-h-screen">
       <PageHeader
-        title="WHY PARTICIPATE MANAGEMENT"
-        description="Manage the Why Participate section on the home page"
+        title={isOrganic ? "ORGANIC CMS - WHY PARTICIPATE" : "WHY PARTICIPATE MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo section data` : "Manage the Why Participate section on the home page"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-6">
         {/* Left Column: Main Content */}

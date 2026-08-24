@@ -3,10 +3,12 @@ import { Plus, Search, Eye, Trash2, Image as ImageIcon, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import api, { API_URL, SERVER_URL } from "../../lib/api";
+import { useWebsite } from "../../hooks/useWebsite";
 import Table from "../../components/table/Table";
 import Pagination from "../../components/Pagination";
 
 const GalleryList = () => {
+    const { website, isOrganic } = useWebsite();
     const [galleries, setGalleries] = useState([]);
     const [categories, setCategories] = useState([]); // New state for categories
     const [filteredGalleries, setFilteredGalleries] = useState([]);
@@ -28,10 +30,10 @@ const GalleryList = () => {
         try {
             // Fetch ALL categories (gallery + video + media) and ALL items
             const [catRes, galleryRes, videoRes, mediaRes] = await Promise.all([
-                api.get("/api/gallery-category"),         // all categories
-                api.get("/api/gallery?category=gallery"), // photo items
-                api.get("/api/gallery?category=video"),   // video items
-                api.get("/api/gallery?category=media"),   // media items
+                api.get(`/api/gallery-category?website=${encodeURIComponent(website)}`),         // all categories
+                api.get(`/api/gallery?category=gallery&website=${encodeURIComponent(website)}`), // photo items
+                api.get(`/api/gallery?category=video&website=${encodeURIComponent(website)}`),   // video items
+                api.get(`/api/gallery?category=media&website=${encodeURIComponent(website)}`),   // media items
             ]);
 
             let categoryMap = {};
@@ -124,7 +126,7 @@ const GalleryList = () => {
                 // Given the instruction "Use title as ID for now", we'll use `row.title` for deletion.
                 // This is a placeholder and might need refinement based on backend API.
                 const response = await api.delete(
-                    `/api/gallery/delete-by-title/${encodeURIComponent(row.title)}` // Encoded for special characters
+                    `/api/gallery/delete-by-title/${encodeURIComponent(row.title)}?website=${encodeURIComponent(website)}` // Encoded for special characters
                 );
                 if (response.data.success) {
                     Swal.fire("Deleted!", "Gallery has been deleted.", "success");
@@ -277,11 +279,20 @@ const GalleryList = () => {
     return (
         <div className="bg-white shadow-md p-6 mt-6 min-h-screen">
             <div className="w-full mb-6">
-                <h1 className="text-3xl font-bold text-[#1e3a8a]">GALLERY LISTINGS</h1>
+                <h1 className="text-3xl font-bold text-[#1e3a8a]">{isOrganic ? "ORGANIC CMS - GALLERY LISTINGS" : "GALLERY LISTINGS"}</h1>
                 <p className="text-gray-600 mt-2 text-lg">
                     Manage all your portfolio event galleries
                 </p>
             </div>
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="bg-white border-2 border-gray-200 p-6 mb-6 shadow-lg">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4">

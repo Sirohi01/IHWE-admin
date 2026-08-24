@@ -13,9 +13,11 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from '../lib/api';
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 
 const About = () => {
+  const { website, isOrganic } = useWebsite();
   // State management
   const [formData, setFormData] = useState({
     heading: "About The Expo",
@@ -49,7 +51,7 @@ const About = () => {
   const fetchAboutData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get('/api/about');
+      const response = await api.get(`/api/about?website=${encodeURIComponent(website)}`);
       if (response.data.success) {
         const data = response.data.data;
         setFormData({
@@ -97,7 +99,7 @@ const About = () => {
   const handleSaveText = async () => {
     setIsLoading(true);
     try {
-      const response = await api.put('/api/about', formData);
+      const response = await api.put(`/api/about?website=${encodeURIComponent(website)}`, formData);
       if (response.data.success) {
         Swal.fire({
           icon: 'success',
@@ -148,7 +150,7 @@ const About = () => {
         formDataImages.append(fieldName, file);
       });
 
-      const response = await api.post('/api/about/images', formDataImages, {
+      const response = await api.post(`/api/about/images?website=${encodeURIComponent(website)}`, formDataImages, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
 
@@ -250,8 +252,8 @@ const About = () => {
       <div className="bg-white shadow-md p-6 min-h-screen">
         <div className="w-full">
           {/* <PageHeader
-            title="ABOUT PAGE MANAGEMENT"
-            description="Manage your company's about page content"
+            title={isOrganic ? "ORGANIC CMS - ABOUT PAGE" : "ABOUT PAGE MANAGEMENT"}
+            description={isOrganic ? `Managing Organic Expo section data` : "Manage your company's about page content"}
           /> */}
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-6">

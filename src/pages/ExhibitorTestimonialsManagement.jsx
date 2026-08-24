@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Image as ImageIcon, Plus, Trash2, Edit,
     Quote, MapPin, Building, Package, ExternalLink
@@ -18,6 +19,7 @@ const EMPTY_CARD = {
 };
 
 const ExhibitorTestimonialsManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         heading: 'What Our Exhibitors Say',
         cards: []
@@ -34,7 +36,7 @@ const ExhibitorTestimonialsManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/exhibitor-testimonials');
+            const response = await api.get(`/api/exhibitor-testimonials?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -48,7 +50,7 @@ const ExhibitorTestimonialsManagement = () => {
     const handleHeadingSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/exhibitor-testimonials/headings', {
+            const response = await api.post(`/api/exhibitor-testimonials/headings?website=${encodeURIComponent(website)}`, {
                 heading: data.heading
             });
             if (response.data.success) {
@@ -84,7 +86,7 @@ const ExhibitorTestimonialsManagement = () => {
         if (!imageFile) return cardForm.image;
         const formData = new FormData();
         formData.append('image', imageFile);
-        const res = await api.post('/api/exhibitor-testimonials/image', formData, {
+        const res = await api.post(`/api/exhibitor-testimonials/image?website=${encodeURIComponent(website)}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (res.data.success) return res.data.imageUrl;
@@ -105,9 +107,9 @@ const ExhibitorTestimonialsManagement = () => {
             const payload = { ...cardForm, image: imageUrl };
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/exhibitor-testimonials/cards/${isEditingCard}`, payload);
+                response = await api.put(`/api/exhibitor-testimonials/cards/${isEditingCard}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post('/api/exhibitor-testimonials/cards', payload);
+                response = await api.post(`/api/exhibitor-testimonials/cards?website=${encodeURIComponent(website)}`, payload);
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingCard ? 'Testimonial Updated!' : 'Testimonial Added!', timer: 1500, showConfirmButton: false });
@@ -133,7 +135,7 @@ const ExhibitorTestimonialsManagement = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/exhibitor-testimonials/cards/${cardId}`);
+            await api.delete(`/api/exhibitor-testimonials/cards/${cardId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -170,9 +172,18 @@ const ExhibitorTestimonialsManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="EXHIBITOR TESTIMONIALS MANAGEMENT"
-                description="Manage exhibitor reviews and section headings for Why Exhibit page"
+                title={isOrganic ? "ORGANIC CMS - EXHIBITOR TESTIMONIALS" : "EXHIBITOR TESTIMONIALS MANAGEMENT"}
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage exhibitor reviews and section headings for Why Exhibit page"}
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                 <div className="lg:col-span-1 space-y-6">

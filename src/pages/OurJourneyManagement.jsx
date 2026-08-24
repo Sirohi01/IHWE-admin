@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Activity,
     Save,
@@ -15,6 +16,7 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const OurJourneyManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subtitle: 'OUR JOURNEY & FLAGSHIP EVENTS',
         mainTitle: 'A Legacy of Growth & Innovation',
@@ -36,7 +38,7 @@ const OurJourneyManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/our-journey');
+            const response = await api.get(`/api/our-journey?website=${encodeURIComponent(website)}`);
             if (response.data.success && response.data.data) {
                 setData(response.data.data);
             }
@@ -108,7 +110,7 @@ const OurJourneyManagement = () => {
     const handleSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/our-journey/update', data);
+            const response = await api.post(`/api/our-journey/update?website=${encodeURIComponent(website)}`, data);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -185,9 +187,17 @@ const OurJourneyManagement = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins text-[#1a2e1a]">
                 {/* <PageHeader
-                title="OUR JOURNEY & FLAGSHIP EVENTS"
+                title={isOrganic ? "ORGANIC CMS - OUR JOURNEY & FLAGSHIP EVENTS" : "OUR JOURNEY & FLAGSHIP EVENTS"}
                 description="Manage the journey timeline, core sectors, and flagship events lists"
             /> */}
+                {isLoading && (
+                    <div className="flex items-center justify-center py-8">
+                        <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="space-y-8 mt-6">
 

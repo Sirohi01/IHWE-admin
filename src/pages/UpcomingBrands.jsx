@@ -4,9 +4,11 @@ import { Plus, Edit2, Trash2, Save, BadgeHelp, Edit, List, Type, Image as ImageI
 import Cropper from "react-cropper";
 import "cropperjs/dist/cropper.css";
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import PageHeader from '../components/PageHeader';
 
 const UpcomingBrands = () => {
+  const { website, isOrganic } = useWebsite();
   const getImageUrl = (path) => {
     if (!path) return '';
     return `${SERVER_URL}${path}`;
@@ -48,7 +50,7 @@ const UpcomingBrands = () => {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const response = await api.get(`/api/upcoming-brands?page=${currentPage}&limit=${limit}&search=${search}`);
+      const response = await api.get(`/api/upcoming-brands?website=${encodeURIComponent(website)}&page=${currentPage}&limit=${limit}&search=${search}`);
       if (response.data.success) {
         setSettings(response.data.data);
         setTotalPages(response.data.data.totalPages || 1);
@@ -92,7 +94,7 @@ const UpcomingBrands = () => {
   const handleSettingsSave = async () => {
     setIsLoading(true);
     try {
-      const response = await api.post("/api/upcoming-brands/settings", {
+      const response = await api.post(`/api/upcoming-brands/settings?website=${encodeURIComponent(website)}`, {
         title: settings.title
       });
       if (response.data.success) {
@@ -156,11 +158,11 @@ const UpcomingBrands = () => {
     try {
       let response;
       if (isEditing) {
-        response = await api.put(`/api/upcoming-brands/items/${editingId}`, formData, {
+        response = await api.put(`/api/upcoming-brands/items/${editingId}?website=${encodeURIComponent(website)}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       } else {
-        response = await api.post("/api/upcoming-brands/items", formData, {
+        response = await api.post(`/api/upcoming-brands/items?website=${encodeURIComponent(website)}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
       }
@@ -212,7 +214,7 @@ const UpcomingBrands = () => {
     if (result.isConfirmed) {
       setIsLoading(true);
       try {
-        const response = await api.delete(`/api/upcoming-brands/items/${id}`);
+        const response = await api.delete(`/api/upcoming-brands/items/${id}?website=${encodeURIComponent(website)}`);
         if (response.data.success) {
           Swal.fire("Deleted!", "Brand removed.", "success");
           fetchData();
@@ -228,9 +230,18 @@ const UpcomingBrands = () => {
   return (
     <div className="bg-white shadow-md p-6 min-h-screen">
       <PageHeader
-        title="UPCOMING BRANDS MANAGEMENT"
-        description="Manage the upcoming leading brands logos and section heading"
+        title={isOrganic ? "ORGANIC CMS - UPCOMING BRANDS" : "UPCOMING BRANDS MANAGEMENT"}
+        description={isOrganic ? `Managing Organic Expo upcoming brands` : "Manage the upcoming leading brands logos and section heading"}
       />
+
+      {isLoading && (
+        <div className="flex items-center justify-center py-8">
+          <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+            <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+            <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
         {/* Left Column: Settings & Form */}

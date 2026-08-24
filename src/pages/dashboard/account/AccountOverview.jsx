@@ -41,7 +41,7 @@ const AccountOverview = () => {
 
   useEffect(() => {
     fetchAccountData();
-  }, [id, eventId, crmEventId]);
+  }, [id, eventId]);
 
   const fetchAccountData = async () => {
     try {

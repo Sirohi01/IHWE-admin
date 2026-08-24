@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Save, ImageIcon, Plus, Trash2, Edit,
     Package, Type, Globe, Search, UploadCloud, Camera, X
@@ -17,6 +18,7 @@ const EMPTY_FORM = {
 };
 
 const MediaGalleryManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [items, setItems] = useState([]);
     const [categories, setCategories] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -36,7 +38,7 @@ const MediaGalleryManagement = () => {
 
     const fetchCategories = async () => {
         try {
-            const response = await api.get('/api/gallery-category?type=media');
+            const response = await api.get(`/api/gallery-category?type=media&website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setCategories(response.data.data);
             }
@@ -48,7 +50,7 @@ const MediaGalleryManagement = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/gallery?category=press');
+            const response = await api.get(`/api/gallery?category=press&website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setItems(response.data.data);
             }
@@ -114,13 +116,13 @@ const MediaGalleryManagement = () => {
                 if (images.length > 0) {
                     const formData = new FormData();
                     formData.append('file', images[0]);
-                    const res = await api.post('/api/gallery/upload', formData, {
+                    const res = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
                         headers: { 'Content-Type': 'multipart/form-data' }
                     });
                     imageUrl = res.data.url;
                 }
                 const payload = { ...form, image: imageUrl, imageAlt: altTexts[0] || form.imageAlt };
-                const response = await api.put(`/api/gallery/${isEditing}`, payload);
+                const response = await api.put(`/api/gallery/${isEditing}?website=${encodeURIComponent(website)}`, payload);
                 if (response.data.success) {
                     Swal.fire({ icon: 'success', title: 'Photo Updated!', timer: 1500, showConfirmButton: false });
                     resetForm();
@@ -146,11 +148,11 @@ const MediaGalleryManagement = () => {
                 const uploadPromises = images.map(async (file, idx) => {
                     const formData = new FormData();
                     formData.append('file', file);
-                    const uploadRes = await api.post("/api/gallery/upload", formData, {
+                    const uploadRes = await api.post(`/api/gallery/upload?website=${encodeURIComponent(website)}`, formData, {
                         headers: { "Content-Type": "multipart/form-data" }
                     });
 
-                    return api.post('/api/gallery', {
+                    return api.post(`/api/gallery?website=${encodeURIComponent(website)}`, {
                         title: categoryTitle,
                         category: 'press',
                         galleryCategoryId: form.galleryCategoryId,
@@ -193,7 +195,7 @@ const MediaGalleryManagement = () => {
 
         setIsLoading(true);
         try {
-            await api.delete(`/api/gallery/${id}`);
+            await api.delete(`/api/gallery/${id}?website=${encodeURIComponent(website)}`);
             Swal.fire({
                 icon: 'success',
                 title: 'Deleted!',
@@ -236,9 +238,18 @@ const MediaGalleryManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="MEDIA PHOTO MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - MEDIA PHOTO MANAGEMENT" : "MEDIA PHOTO MANAGEMENT"}
                 description="Manage photos for the press & media section of your gallery"
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                 {/* LEFT: Add/Edit Form */}

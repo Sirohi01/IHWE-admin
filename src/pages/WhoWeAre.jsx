@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api, { API_URL, SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type,
     Save,
@@ -14,6 +15,7 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const WhoWeAre = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Who We Are',
         title: 'A Decade of Global Healthcare Leadership',
@@ -36,7 +38,7 @@ const WhoWeAre = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/who-we-are');
+            const response = await api.get(`/api/who-we-are?website=${encodeURIComponent(website)}`);
             if (response.data.success && response.data.data) {
                 const fetched = response.data.data;
                 // Ensure array structures are maintained
@@ -95,7 +97,7 @@ const WhoWeAre = () => {
 
         try {
             setIsLoading(true);
-            const response = await api.post('/api/who-we-are/image', formData, {
+            const response = await api.post(`/api/who-we-are/image?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
 
@@ -120,7 +122,7 @@ const WhoWeAre = () => {
 
         setIsLoading(true);
         try {
-            const response = await api.post('/api/who-we-are', data);
+            const response = await api.post(`/api/who-we-are?website=${encodeURIComponent(website)}`, data);
             if (response.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -205,8 +207,8 @@ const WhoWeAre = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen font-poppins">
                 {/* <PageHeader
-                    title="WHO WE ARE MANAGEMENT"
-                    description="Manage the main about section of your website home page"
+                    title={isOrganic ? "ORGANIC CMS - WHO WE ARE" : "WHO WE ARE MANAGEMENT"}
+                    description={isOrganic ? `Managing Organic Expo section data` : "Manage the main about section of your website home page"}
                 /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-6">

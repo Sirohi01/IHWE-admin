@@ -548,8 +548,8 @@ const ConfirmClientList = () => {
               </span>
             </td>
             <td className="min-w-[150px] px-2 py-2">
-              <div className="font-bold text-[10px] lowercase" style={{ color: '#15173D' }}>
-                {contactEmail}
+              <div className="font-bold text-[10px]" style={{ color: '#15173D' }}>
+                {toTitleCase(contactName)}
               </div>
               <div className="text-[9px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
                 <Phone size={9} className="text-blue-500 shrink-0" />

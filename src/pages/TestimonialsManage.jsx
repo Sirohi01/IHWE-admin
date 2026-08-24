@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Swal from 'sweetalert2';
 import api from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Plus, Trash2, Edit,
     MessageSquare, Quote, Star, Users, MessageSquareQuote
@@ -16,6 +17,7 @@ const EMPTY_CARD = {
 };
 
 const TestimonialsManage = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Testimonials',
         heading: 'What Global Leaders Are Saying',
@@ -32,7 +34,7 @@ const TestimonialsManage = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/testimonials');
+            const response = await api.get(`/api/testimonials?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
             }
@@ -46,7 +48,7 @@ const TestimonialsManage = () => {
     const handleHeadingSave = async () => {
         setIsLoading(true);
         try {
-            const response = await api.post('/api/testimonials/headings', {
+            const response = await api.post(`/api/testimonials/headings?website=${encodeURIComponent(website)}`, {
                 subheading: data.subheading,
                 heading: data.heading,
                 highlightText: data.highlightText,
@@ -71,9 +73,9 @@ const TestimonialsManage = () => {
         try {
             let response;
             if (isEditingCard) {
-                response = await api.put(`/api/testimonials/cards/${isEditingCard}`, cardForm);
+                response = await api.put(`/api/testimonials/cards/${isEditingCard}?website=${encodeURIComponent(website)}`, cardForm);
             } else {
-                response = await api.post('/api/testimonials/cards', cardForm);
+                response = await api.post(`/api/testimonials/cards?website=${encodeURIComponent(website)}`, cardForm);
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingCard ? 'Testimonial Updated!' : 'Testimonial Added!', timer: 1500, showConfirmButton: false });
@@ -99,7 +101,7 @@ const TestimonialsManage = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/testimonials/cards/${cardId}`);
+            await api.delete(`/api/testimonials/cards/${cardId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -187,8 +189,8 @@ const TestimonialsManage = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen">
                 {/* <PageHeader
-                title="TESTIMONIALS MANAGEMENT"
-                description="Manage section headings and customer testimonials"
+                title={isOrganic ? "ORGANIC CMS - TESTIMONIALS" : "TESTIMONIALS MANAGEMENT"}
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage section headings and customer testimonials"}
             /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Save, Plus, Trash2, Edit, Globe, Play, Image as ImageIcon,
     FileText, Download, User, Share2, Filter, Search, X, Check,
@@ -9,6 +10,7 @@ import {
 import PageHeader from '../components/PageHeader';
 
 const MediaRegistrationManagement = () => {
+    const { website, isOrganic } = useWebsite();
     const [activeTab, setActiveTab] = useState('coverage');
     const [isLoading, setIsLoading] = useState(false);
     const [items, setItems] = useState([]);
@@ -59,7 +61,7 @@ const MediaRegistrationManagement = () => {
                 case 'bannerSettings': endpoint = '/api/media-registration/banner-settings'; break;
                 case 'enquiries': endpoint = '/api/contact-enquiry'; break;
             }
-            const response = await api.get(endpoint);
+            const response = await api.get(`${endpoint}?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 if (activeTab === 'enquiries') {
                     const filtered = response.data.data.filter(e => e.source === 'Media Registration Page');
@@ -104,7 +106,7 @@ const MediaRegistrationManagement = () => {
         formData.append('file', file);
 
         try {
-            const res = await api.post('/api/media-registration/upload', formData, {
+            const res = await api.post(`/api/media-registration/upload?website=${encodeURIComponent(website)}`, formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
             if (res.data.success) {
@@ -145,7 +147,7 @@ const MediaRegistrationManagement = () => {
         }
         setIsLoading(true);
         try {
-            const res = await api.get('/api/media-registration/resources');
+            const res = await api.get(`/api/media-registration/resources?website=${encodeURIComponent(website)}`);
             const resources = res.data.data || [];
             const existingMain = resources.find(i => i.isMain);
 
@@ -161,9 +163,9 @@ const MediaRegistrationManagement = () => {
             };
 
             if (existingMain) {
-                await api.put(`/api/media-registration/resources/${existingMain._id}`, payload);
+                await api.put(`/api/media-registration/resources/${existingMain._id}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                await api.post('/api/media-registration/resources', payload);
+                await api.post(`/api/media-registration/resources?website=${encodeURIComponent(website)}`, payload);
             }
 
             Swal.fire({ icon: 'success', title: 'Media Kit Saved!', text: 'The "Download All" button is now linked to this file.', timer: 2000 });
@@ -217,11 +219,11 @@ const MediaRegistrationManagement = () => {
 
             let response;
             if (activeTab === 'bannerSettings') {
-                response = await api.put(endpoint, payload);
+                response = await api.put(`${endpoint}?website=${encodeURIComponent(website)}`, payload);
             } else if (isEditing) {
-                response = await api.put(`${endpoint}/${isEditing}`, payload);
+                response = await api.put(`${endpoint}/${isEditing}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post(endpoint, payload);
+                response = await api.post(`${endpoint}?website=${encodeURIComponent(website)}`, payload);
             }
 
             if (response.data.success) {
@@ -259,7 +261,7 @@ const MediaRegistrationManagement = () => {
                 case 'kit': endpoint = '/api/media-registration/resources'; break;
                 case 'banner': endpoint = '/api/media-registration/banner-logos'; break;
             }
-            await api.delete(`${endpoint}/${id}`);
+            await api.delete(`${endpoint}/${id}?website=${encodeURIComponent(website)}`);
             Swal.fire('Deleted!', 'Item has been deleted.', 'success');
             fetchData();
         } catch (error) {
@@ -309,9 +311,18 @@ const MediaRegistrationManagement = () => {
     return (
         <div className="bg-white shadow-md  p-6 min-h-screen">
             <PageHeader
-                title="MEDIA REGISTRATION MANAGEMENT"
+                title={isOrganic ? "ORGANIC CMS - MEDIA REGISTRATION MANAGEMENT" : "MEDIA REGISTRATION MANAGEMENT"}
                 description="Manage all dynamic content for the Media Registration portal"
             />
+
+            {isLoading && (
+                <div className="flex items-center justify-center py-8">
+                    <div className="flex items-center gap-3 px-6 py-3 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                        <div className="w-5 h-5 border-2 border-[#23471d] border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-sm font-bold text-gray-600">Loading {website} data...</span>
+                    </div>
+                </div>
+            )}
 
             {/* TAB NAVIGATION */}
             <div className="flex flex-wrap gap-2 mt-6 border-b border-gray-200 pb-px">

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Swal from 'sweetalert2';
 import api, { SERVER_URL } from "../lib/api";
+import { useWebsite } from "../hooks/useWebsite";
 import {
     Type, Save, Image as ImageIcon, Plus, Trash2, Edit, HelpCircle, Package
 } from 'lucide-react';
@@ -14,6 +15,7 @@ const EMPTY_ITEM = {
 };
 
 const FAQManage = () => {
+    const { website, isOrganic } = useWebsite();
     const [data, setData] = useState({
         subheading: 'Support & Info',
         heading: 'Frequently Asked Questions',
@@ -38,7 +40,7 @@ const FAQManage = () => {
     const fetchData = async () => {
         setIsLoading(true);
         try {
-            const response = await api.get('/api/faq');
+            const response = await api.get(`/api/faq?website=${encodeURIComponent(website)}`);
             if (response.data.success) {
                 setData(response.data.data);
                 if (response.data.data.defaultImage) {
@@ -59,13 +61,13 @@ const FAQManage = () => {
             if (defaultImageFile) {
                 const formData = new FormData();
                 formData.append('image', defaultImageFile);
-                const res = await api.post('/api/faq/image', formData, {
+                const res = await api.post(`/api/faq/image?website=${encodeURIComponent(website)}`, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
                 if (res.data.success) defaultImageUrl = res.data.imageUrl;
             }
 
-            const response = await api.post('/api/faq/headings', {
+            const response = await api.post(`/api/faq/headings?website=${encodeURIComponent(website)}`, {
                 subheading: data.subheading,
                 heading: data.heading,
                 highlightText: data.highlightText,
@@ -129,7 +131,7 @@ const FAQManage = () => {
         if (!imageFile) return itemForm.image;
         const formData = new FormData();
         formData.append('image', imageFile);
-        const res = await api.post('/api/faq/image', formData, {
+        const res = await api.post(`/api/faq/image?website=${encodeURIComponent(website)}`, formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
         if (res.data.success) return res.data.imageUrl;
@@ -154,9 +156,9 @@ const FAQManage = () => {
             const payload = { ...itemForm, image: imageUrl };
             let response;
             if (isEditingItem) {
-                response = await api.put(`/api/faq/items/${isEditingItem}`, payload);
+                response = await api.put(`/api/faq/items/${isEditingItem}?website=${encodeURIComponent(website)}`, payload);
             } else {
-                response = await api.post('/api/faq/items', payload);
+                response = await api.post(`/api/faq/items?website=${encodeURIComponent(website)}`, payload);
             }
             if (response.data.success) {
                 Swal.fire({ icon: 'success', title: isEditingItem ? 'FAQ Updated!' : 'FAQ Added!', timer: 1500, showConfirmButton: false });
@@ -182,7 +184,7 @@ const FAQManage = () => {
         if (!result.isConfirmed) return;
         setIsLoading(true);
         try {
-            await api.delete(`/api/faq/items/${itemId}`);
+            await api.delete(`/api/faq/items/${itemId}?website=${encodeURIComponent(website)}`);
             Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1200, showConfirmButton: false });
             fetchData();
         } catch (error) {
@@ -274,8 +276,8 @@ const FAQManage = () => {
 
             <div className="bg-white shadow-md p-6 min-h-screen">
                 {/* <PageHeader
-                title="FAQ MANAGEMENT"
-                description="Manage FAQ section headings and individual question & answer cards"
+                title={isOrganic ? "ORGANIC CMS - FAQ" : "FAQ MANAGEMENT"}
+                description={isOrganic ? `Managing Organic Expo section data` : "Manage FAQ section headings and individual question & answer cards"}
             /> */}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
