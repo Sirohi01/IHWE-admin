@@ -690,7 +690,7 @@ const Settings = () => {
                         className="py-2.5 px-4 bg-gray-50 border border-gray-300 text-gray-800 font-semibold rounded focus:outline-none focus:ring-2 focus:ring-[#23471d] cursor-pointer text-sm shadow-sm"
                     >
                         <option value="9th IHWE">9th IHWE</option>
-                        <option value="Organicexpo">Organicexpo</option>
+                        <option value="organicexpo">organicexpo</option>
                     </select>
                     <button
                         onClick={saveSystemSettings}

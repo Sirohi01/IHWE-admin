@@ -6,6 +6,7 @@ import Pagination from "../components/Pagination";
 import Table from '../components/table/Table';
 import PageHeader from '../components/PageHeader';
 import RichTextEditor from '../components/RichTextEditor';
+import { useWebsite } from '../hooks/useWebsite';
 
 
 // Timer Component
@@ -65,7 +66,8 @@ const TimeRemaining = ({ schedule }) => {
 };
 
 const HeroSlider = () => {
-  const [selectedWebsite, setSelectedWebsite] = useState('9th IHWE');
+  const { website } = useWebsite();
+  const [selectedWebsite, setSelectedWebsite] = useState(website);
   const [slides, setSlides] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
@@ -639,7 +641,7 @@ const HeroSlider = () => {
                   className="bg-transparent text-sm font-semibold text-gray-900 focus:outline-none cursor-pointer"
                 >
                   <option value="9th IHWE">9th IHWE</option>
-                  <option value="Organicexpo">Organicexpo</option>
+                  <option value="organicexpo">organicexpo</option>
                 </select>
               </div>
             </div>

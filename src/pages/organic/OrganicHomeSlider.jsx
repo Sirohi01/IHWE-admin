@@ -7,7 +7,7 @@ import Table from '../../components/table/Table';
 import PageHeader from '../../components/PageHeader';
 import RichTextEditor from '../../components/RichTextEditor';
 
-const WEBSITE = 'Organicexpo';
+const WEBSITE = 'organicexpo';
 
 const TimeRemaining = ({ schedule }) => {
   const [timeLeft, setTimeLeft] = useState('');
@@ -264,7 +264,7 @@ const OrganicHomeSlider = () => {
                 <h2 className="text-lg font-semibold text-gray-900">{editMode ? 'Edit Hero Slide' : 'Create New Hero Slide'}</h2>
               </div>
               <div className="flex items-center gap-2 border-2 border-green-600 rounded-lg px-3 py-1 bg-green-50">
-                <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Website: Organicexpo</span>
+                <span className="text-[10px] font-bold text-green-700 uppercase tracking-wider">Website: organicexpo</span>
               </div>
             </div>
 
