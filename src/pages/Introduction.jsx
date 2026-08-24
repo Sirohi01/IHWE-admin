@@ -48,6 +48,8 @@ const Introduction = () => {
     image: "",
     altText: "",
     bgColor: "#ffffff",
+    buttonText: "",
+    buttonUrl: "",
     features: []
   });
 
@@ -104,6 +106,8 @@ const Introduction = () => {
       formData.append('description', data.description);
       formData.append('altText', data.altText);
       formData.append('bgColor', data.bgColor);
+      formData.append('buttonText', data.buttonText);
+      formData.append('buttonUrl', data.buttonUrl);
       if (imageFile) {
         formData.append('image', imageFile);
       }
@@ -339,6 +343,31 @@ const Introduction = () => {
                   </div>
                 </div>
               </div>
+
+              {isOrganic && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Button Text</label>
+                    <input
+                      type="text"
+                      value={data.buttonText}
+                      onChange={(e) => setData({ ...data, buttonText: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                      placeholder="e.g. Register Now"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Button URL</label>
+                    <input
+                      type="text"
+                      value={data.buttonUrl}
+                      onChange={(e) => setData({ ...data, buttonUrl: e.target.value })}
+                      className="w-full px-4 py-2 border-2 border-gray-300 focus:border-[#23471d] outline-none shadow-sm text-sm"
+                      placeholder="e.g. /exhibition or https://..."
+                    />
+                  </div>
+                </div>
+              )}
 
               <button
                 onClick={handleSettingsSave}

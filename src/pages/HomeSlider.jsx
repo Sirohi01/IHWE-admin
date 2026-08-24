@@ -66,7 +66,7 @@ const TimeRemaining = ({ schedule }) => {
 };
 
 const HeroSlider = () => {
-  const { website } = useWebsite();
+  const { website, isOrganic } = useWebsite();
   const [selectedWebsite, setSelectedWebsite] = useState(website);
   const [slides, setSlides] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -79,6 +79,9 @@ const HeroSlider = () => {
     altText: "",
     subtitle: "",
     subtitleFontSize: "12",
+    tagline: "",
+    date: "",
+    address: "",
     title: "",
     titleFontSize: "45",
     title2: "",
@@ -179,6 +182,9 @@ const HeroSlider = () => {
       formDataToSend.append('altText', formData.altText);
       formDataToSend.append('subtitle', formData.subtitle);
       formDataToSend.append('subtitleFontSize', formData.subtitleFontSize);
+      formDataToSend.append('tagline', formData.tagline);
+      formDataToSend.append('date', formData.date);
+      formDataToSend.append('address', formData.address);
       formDataToSend.append('title', formData.title);
       formDataToSend.append('titleFontSize', formData.titleFontSize);
       formDataToSend.append('title2', formData.title2 || '');
@@ -240,6 +246,7 @@ const HeroSlider = () => {
       altText: "",
       subtitle: "",
       subtitleFontSize: "12",
+      tagline: "",
       title: "",
       titleFontSize: "45",
       title2: "",
@@ -377,6 +384,9 @@ const HeroSlider = () => {
         }
         formDataToSend.append('subtitle', formData.subtitle);
         formDataToSend.append('subtitleFontSize', formData.subtitleFontSize);
+        formDataToSend.append('tagline', formData.tagline);
+        formDataToSend.append('date', formData.date);
+        formDataToSend.append('address', formData.address);
         formDataToSend.append('title', formData.title);
         formDataToSend.append('titleFontSize', formData.titleFontSize);
         formDataToSend.append('title2', formData.title2 || '');
@@ -683,6 +693,50 @@ const HeroSlider = () => {
                   className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
                 />
               </div>
+
+              {isOrganic && (
+                <>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Tagline
+                    </label>
+                    <input
+                      type="text"
+                      name="tagline"
+                      value={formData.tagline}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Join the movement"
+                      className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Date
+                    </label>
+                    <input
+                      type="text"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      placeholder="e.g., 15-16 Oct 2026"
+                      className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-gray-700 mb-1">
+                      Address
+                    </label>
+                    <input
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="e.g., Mumbai, India"
+                      className="w-full px-3 py-2 border-2 border-gray-300 focus:outline-none focus:border-[#134698] transition-colors text-xs shadow-sm"
+                    />
+                  </div>
+                </>
+              )}
 
               <div>
                 <label className="block text-[11px] font-semibold text-gray-700 mb-1">
