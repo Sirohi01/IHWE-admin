@@ -49,7 +49,7 @@ import {
 
 export const menuItems = [
   {
-    type:   "item",
+    type: "item",
     label: "Sales Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
@@ -61,10 +61,6 @@ export const menuItems = [
     label: "Sales CRM",
   },
   {
-    // Every Event Configuration entry (Skill Technical, Medical Expo Data
-    // 2025, whatever gets created next — including IHWE Expo 2026 if it's
-    // added there) is injected here dynamically by Sidebar.jsx — see
-    // `dynamicEventItems`. Nothing hardcoded needed per event.
     type: "item",
     label: "Expo Master Data",
     icon: LibraryBig,
@@ -498,6 +494,42 @@ export const menuItems = [
     label: "MSME PMS Page",
     icon: Settings,
     path: "/msme-pms-scheme-config",
+  },
+
+  /* ================= ORGANIC WEBSITE CMS ================= */
+  {
+    type: "heading",
+    label: "Organic Website CMS",
+  },
+  {
+    type: "dropdown",
+    label: "Home Page",
+    icon: Globe,
+    children: [
+      { label: "Home Hero", path: "/organic/home-hero" },
+      { label: "Home Slider", path: "/carousel" },
+      { label: "Supported By", path: "/supported-by" },
+      { label: "Upcoming Brands", path: "/upcoming-brands" },
+      { label: "Introduction", path: "/introduction" },
+      { label: "National Expo", path: "/national-expo" },
+      { label: "Integrated Format", path: "/integrated-format" },
+      { label: "Why Participate", path: "/why-participate-manage" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "About Page",
+    icon: Info,
+    children: [
+      { label: "Global Platform", path: "/global-platform" },
+      { label: "Event Overview", path: "/event-overview" },
+      { label: "About Organizer", path: "/about-organizer" },
+      { label: "Our Journey", path: "/our-journey" },
+      { label: "Vision & Mission", path: "/vision-mission" },
+      { label: "Why Attend", path: "/why-attend" },
+      { label: "Target Audience", path: "/target-audience" },
+      { label: "Organized By", path: "/organized-by" },
+    ],
   },
 
   /* ================= ANALYTICS ================= */
