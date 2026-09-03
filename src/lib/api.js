@@ -303,16 +303,22 @@ export const pmsApi = {
     const payload = unwrapApiResponse(await api.get(`/api/msme-pms-scheme/${id}/edit`));
     return payload.success ? payload.data : null;
   },
-  uploadDocumentById: async (id, documentType, file) => {
+  uploadDocumentById: async (id, documentType, files, onProgress) => {
     const formData = new FormData();
-    formData.append('file', file);
-    const payload = unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/documents/${documentType}`, formData, {
+    const fileList = files instanceof FileList || Array.isArray(files) ? Array.from(files) : [files];
+    fileList.forEach((file) => formData.append('file', file));
+    const response = await api.post(`/api/msme-pms-scheme/${id}/documents/${documentType}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
-    }));
-    return payload.success ? payload.data : null;
+      onUploadProgress: onProgress
+        ? (event) => onProgress(event.total ? Math.round((event.loaded * 100) / event.total) : 0)
+        : undefined,
+    });
+    return unwrapApiResponse(response);
   },
-  deleteDocumentById: async (id, documentType) => {
-    const payload = unwrapApiResponse(await api.delete(`/api/msme-pms-scheme/${id}/documents/${documentType}`));
+  deleteDocumentById: async (id, documentType, documentId) => {
+    const payload = unwrapApiResponse(await api.delete(`/api/msme-pms-scheme/${id}/documents/${documentType}`, {
+      params: documentId ? { documentId } : undefined,
+    }));
     return payload.success ? payload.data : null;
   },
   submitById: async (id) => unwrapApiResponse(await api.post(`/api/msme-pms-scheme/${id}/submit`)),

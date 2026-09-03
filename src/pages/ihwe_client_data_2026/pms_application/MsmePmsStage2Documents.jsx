@@ -67,16 +67,23 @@ export default function MsmePmsStage2Documents({ data, handlers }) {
     const [declineRemark, setDeclineRemark] = useState('');
     const claimDocs = Array.isArray(data?.pmsClaimDocuments) && data.pmsClaimDocuments.length ? data.pmsClaimDocuments : [];
     const documents = Array.isArray(data?.documents) ? data.documents : [];
-    const docByType = new Map(documents.map((d) => [d.documentType, d]));
+    // A document type can now hold several files (e.g. multiple invoice
+    // pages) — group all entries for a type instead of keeping just one.
+    const docsByType = new Map();
+    documents.forEach((d) => {
+        const list = docsByType.get(d.documentType) || [];
+        list.push(d);
+        docsByType.set(d.documentType, list);
+    });
     const portal = data?.msmePortal || {};
     const actionRequired = data?.actionRequired;
     const hasOpenAction = actionRequired && actionRequired.resolved === false;
 
     let uploadedCount = 0, notApplicableCount = 0;
     claimDocs.forEach((cd) => {
-        const doc = docByType.get(cd.type);
-        if (doc?.path) uploadedCount += 1;
-        else if (doc?.notApplicable) notApplicableCount += 1;
+        const docs = docsByType.get(cd.type) || [];
+        if (docs.some((d) => d.path)) uploadedCount += 1;
+        else if (docs.some((d) => d.notApplicable)) notApplicableCount += 1;
     });
     const pendingCount = claimDocs.length - uploadedCount - notApplicableCount;
 
@@ -123,106 +130,116 @@ export default function MsmePmsStage2Documents({ data, handlers }) {
                     <p className="text-[10.5px] text-slate-500 -mt-1 mb-3">Upload all required documents as per PMS guidelines. Click on each card to upload or view document.</p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5">
                         {claimDocs.map((cd, i) => {
-                            const doc = docByType.get(cd.type);
-                            const uploaded = !!doc?.path;
-                            const notApplicable = !!doc?.notApplicable && !uploaded;
+                            const docs = docsByType.get(cd.type) || [];
+                            const uploadedDocs = docs.filter((d) => d.path);
+                            const uploaded = uploadedDocs.length > 0;
+                            const notApplicable = !uploaded && docs.some((d) => d.notApplicable);
                             const uploading = handlers.uploadingDocType === cd.type;
-                            const needsReview = uploaded && doc.status !== 'Verified';
-                            const settingStatus = handlers.settingDocStatusId === doc?._id;
+                            const uploadPercent = handlers.uploadProgress || 0;
+                            const uploadingLabel = uploadPercent >= 100 ? 'Verifying...' : `Uploading... ${uploadPercent}%`;
+                            const anyRejected = uploadedDocs.some((d) => d.status === 'Rejected');
+                            const anyPendingReview = uploadedDocs.some((d) => d.status !== 'Verified' && d.status !== 'Rejected');
+                            const fileInput = (label) => (
+                                <label className={`mt-1 flex items-center justify-center gap-1 rounded-md px-2 py-1 text-[9.5px] font-bold cursor-pointer ${uploading ? 'opacity-50 bg-slate-100 text-slate-400' : uploaded ? 'bg-blue-50 text-blue-700 hover:bg-blue-100' : 'bg-[#0D530E] text-white hover:bg-[#093a0a]'}`}>
+                                    {uploading ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
+                                    {uploading ? uploadingLabel : label}
+                                    <input
+                                        type="file"
+                                        accept="application/pdf,image/jpeg,image/png"
+                                        className="hidden"
+                                        multiple
+                                        disabled={uploading}
+                                        onChange={(e) => {
+                                            // e.target.files is a live FileList tied to the input -
+                                            // clearing e.target.value empties it in place, so it has
+                                            // to be snapshotted into a plain array first or the
+                                            // upload silently gets called with zero files.
+                                            const files = Array.from(e.target.files || []);
+                                            e.target.value = '';
+                                            if (files.length) handlers.onUploadDocument(cd.type, files);
+                                        }}
+                                    />
+                                </label>
+                            );
                             return (
                                 <div key={cd.type} className="rounded-lg border border-slate-200 p-2.5 flex flex-col gap-1.5">
                                     <div className="flex items-center justify-between">
                                         <span className="grid h-8 w-8 place-items-center rounded-md bg-blue-50 text-blue-600 text-[10px] font-bold">{i + 1}</span>
                                         <span className={`rounded-full px-2 py-0.5 text-[8.5px] font-bold ${
                                             !uploaded ? (notApplicable ? 'bg-slate-100 text-slate-500' : 'bg-amber-50 text-amber-600')
-                                                : doc.status === 'Rejected' ? 'bg-red-50 text-red-700'
-                                                    : needsReview ? 'bg-blue-50 text-blue-700'
+                                                : anyRejected ? 'bg-red-50 text-red-700'
+                                                    : anyPendingReview ? 'bg-blue-50 text-blue-700'
                                                         : 'bg-emerald-50 text-emerald-700'
                                         }`}>
                                             {!uploaded ? (notApplicable ? 'Not Applicable' : 'Pending')
-                                                : doc.status === 'Rejected' ? 'Declined'
-                                                    : needsReview ? 'Pending Review'
+                                                : anyRejected ? 'Declined'
+                                                    : anyPendingReview ? 'Pending Review'
                                                         : 'Accepted'}
+                                            {uploadedDocs.length > 1 ? ` (${uploadedDocs.length})` : ''}
                                         </span>
                                     </div>
                                     <strong className="text-[10.5px] font-bold text-slate-700 leading-tight min-h-[28px]">{cd.label}</strong>
                                     {uploaded ? (
                                         <>
-                                            <span className="text-[9px] text-slate-400">Uploaded on {fmtDateTime(doc.uploadedAt)}</span>
-                                            {doc.uploadedBy && <span className="text-[9px] text-slate-400">Uploaded by {doc.uploadedBy}</span>}
-                                            {doc.status === 'Rejected' && doc.reviewRemark && (
-                                                <p className="rounded-md bg-red-50 px-1.5 py-1 text-[9px] text-red-600">Reason: {doc.reviewRemark}</p>
-                                            )}
-                                            <a href={doc.path} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-1 rounded-md border border-slate-200 px-2 py-1 text-[9.5px] font-semibold text-slate-600 hover:bg-slate-50">
-                                                <Eye size={11} /> View
-                                            </a>
-                                            {needsReview ? (
-                                                <div className="flex gap-1.5">
-                                                    <button
-                                                        type="button"
-                                                        disabled={settingStatus}
-                                                        onClick={() => handlers.onSetDocumentStatus(doc._id, { status: 'Verified' })}
-                                                        className="flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[9.5px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
-                                                    >
-                                                        {settingStatus ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Accept
-                                                    </button>
-                                                    <button
-                                                        type="button"
-                                                        disabled={settingStatus}
-                                                        onClick={() => { setDeclineTarget({ documentId: doc._id, label: cd.label }); setDeclineRemark(''); }}
-                                                        className="flex flex-1 items-center justify-center gap-1 rounded-md border border-red-200 px-2 py-1 text-[9.5px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                                                    >
-                                                        <XCircle size={11} /> Decline
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="flex gap-1.5">
-                                                    <label className={`flex flex-1 items-center justify-center gap-1 rounded-md px-2 py-1 text-[9.5px] font-bold cursor-pointer ${uploading ? 'opacity-50 bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-700 hover:bg-blue-100'}`}>
-                                                        {uploading ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
-                                                        {uploading ? 'Uploading...' : 'Replace'}
-                                                        <input
-                                                            type="file"
-                                                            accept="application/pdf,image/jpeg,image/png"
-                                                            className="hidden"
-                                                            disabled={uploading}
-                                                            onChange={(e) => {
-                                                                const file = e.target.files?.[0];
-                                                                e.target.value = '';
-                                                                if (file) handlers.onUploadDocument(cd.type, file);
-                                                            }}
-                                                        />
-                                                    </label>
-                                                    <button
-                                                        type="button"
-                                                        disabled={uploading}
-                                                        onClick={() => handlers.onDeleteDocument(cd.type)}
-                                                        className="flex-1 rounded-md border border-red-200 px-2 py-1 text-[9.5px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            )}
+                                            <div className="flex flex-col gap-1.5">
+                                                {uploadedDocs.map((doc) => {
+                                                    const needsReview = doc.status !== 'Verified' && doc.status !== 'Rejected';
+                                                    const settingStatus = handlers.settingDocStatusId === doc._id;
+                                                    return (
+                                                        <div key={doc._id} className="rounded-md border border-slate-100 bg-slate-50 p-1.5 flex flex-col gap-1">
+                                                            <span className="text-[9px] font-semibold text-slate-600 truncate" title={doc.filename}>{doc.filename}</span>
+                                                            <span className="text-[8.5px] text-slate-400">
+                                                                Uploaded on {fmtDateTime(doc.uploadedAt)}{doc.uploadedBy ? ` by ${doc.uploadedBy}` : ''}
+                                                            </span>
+                                                            {doc.status === 'Rejected' && doc.reviewRemark && (
+                                                                <p className="rounded-md bg-red-50 px-1.5 py-1 text-[9px] text-red-600">Reason: {doc.reviewRemark}</p>
+                                                            )}
+                                                            <div className="flex gap-1.5">
+                                                                <a href={doc.path} target="_blank" rel="noreferrer" className="flex flex-1 items-center justify-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[9.5px] font-semibold text-slate-600 hover:bg-slate-50">
+                                                                    <Eye size={11} /> View
+                                                                </a>
+                                                                {needsReview ? (
+                                                                    <>
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={settingStatus}
+                                                                            onClick={() => handlers.onSetDocumentStatus(doc._id, { status: 'Verified' })}
+                                                                            className="flex flex-1 items-center justify-center gap-1 rounded-md bg-emerald-600 px-2 py-1 text-[9.5px] font-bold text-white hover:bg-emerald-700 disabled:opacity-50"
+                                                                        >
+                                                                            {settingStatus ? <Loader2 size={11} className="animate-spin" /> : <Check size={11} />} Accept
+                                                                        </button>
+                                                                        <button
+                                                                            type="button"
+                                                                            disabled={settingStatus}
+                                                                            onClick={() => { setDeclineTarget({ documentId: doc._id, label: cd.label }); setDeclineRemark(''); }}
+                                                                            className="flex flex-1 items-center justify-center gap-1 rounded-md border border-red-200 px-2 py-1 text-[9.5px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                                                        >
+                                                                            <XCircle size={11} /> Decline
+                                                                        </button>
+                                                                    </>
+                                                                ) : (
+                                                                    <button
+                                                                        type="button"
+                                                                        disabled={uploading}
+                                                                        onClick={() => handlers.onDeleteDocument(cd.type, doc._id)}
+                                                                        className="flex-1 rounded-md border border-red-200 bg-white px-2 py-1 text-[9.5px] font-bold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                                                                    >
+                                                                        Remove
+                                                                    </button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            {fileInput('Add More Files')}
                                         </>
                                     ) : notApplicable ? (
                                         <span className="text-[9px] text-slate-400">Not applicable for this exhibitor.</span>
                                     ) : (
                                         <>
                                             <span className="text-[9px] text-slate-400">Not Uploaded</span>
-                                            <label className={`mt-1 flex items-center justify-center gap-1 rounded-md px-2 py-1 text-[9.5px] font-bold cursor-pointer ${uploading ? 'opacity-50 bg-slate-100 text-slate-400' : 'bg-[#0D530E] text-white hover:bg-[#093a0a]'}`}>
-                                                {uploading ? <Loader2 size={11} className="animate-spin" /> : <Upload size={11} />}
-                                                {uploading ? 'Uploading...' : 'Upload Document'}
-                                                <input
-                                                    type="file"
-                                                    accept="application/pdf,image/jpeg,image/png"
-                                                    className="hidden"
-                                                    disabled={uploading}
-                                                    onChange={(e) => {
-                                                        const file = e.target.files?.[0];
-                                                        e.target.value = '';
-                                                        if (file) handlers.onUploadDocument(cd.type, file);
-                                                    }}
-                                                />
-                                            </label>
+                                            {fileInput('Upload Document')}
                                         </>
                                     )}
                                 </div>

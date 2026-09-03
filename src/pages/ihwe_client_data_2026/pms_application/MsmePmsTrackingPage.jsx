@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import MsmePmsTracking from './MsmePmsTracking';
 import api, { pmsApi } from '../../../lib/api';
+import { showSuccess, showWarning } from '../../../utils/toastMessage';
 
 export default function MsmePmsTrackingPage() {
     const { id } = useParams();
@@ -19,6 +20,7 @@ export default function MsmePmsTrackingPage() {
     const [savingAction, setSavingAction] = useState(false);
     const [runningScreening, setRunningScreening] = useState(false);
     const [uploadingDocType, setUploadingDocType] = useState('');
+    const [uploadProgress, setUploadProgress] = useState(0);
     const [settingDocStatusId, setSettingDocStatusId] = useState('');
 
     const fetchApplication = useCallback(async () => {
@@ -62,6 +64,7 @@ export default function MsmePmsTrackingPage() {
         savingOtp,
         savingAction,
         uploadingDocType,
+        uploadProgress,
         settingDocStatusId,
 
         onSaveStage: async (stage) => {
@@ -232,22 +235,35 @@ export default function MsmePmsTrackingPage() {
             }
         },
 
-        onUploadDocument: async (documentType, file) => {
+        onUploadDocument: async (documentType, files) => {
             setUploadingDocType(documentType);
+            setUploadProgress(0);
             try {
-                await pmsApi.uploadDocumentById(recordId, documentType, file);
+                // Upload finishing (100%) still leaves AI verification running
+                // server-side with no progress signal of its own, so the button
+                // stays on "Verifying..." rather than snapping back to idle and
+                // making it look like the click did nothing.
+                const result = await pmsApi.uploadDocumentById(recordId, documentType, files, setUploadProgress);
+                if (result?.rejected?.length) {
+                    showWarning(result.rejected.map((r) => `${r.filename}: ${r.message}`).join('\n'));
+                }
+                if (result?.success) {
+                    showSuccess(result.message || 'Document uploaded');
+                }
                 setData(await pmsApi.getById(recordId));
             } catch (err) {
                 console.error('Failed to upload document', err);
+                showWarning(err?.response?.data?.message || 'Failed to upload document');
             } finally {
                 setUploadingDocType('');
+                setUploadProgress(0);
             }
         },
 
-        onDeleteDocument: async (documentType) => {
+        onDeleteDocument: async (documentType, documentId) => {
             setUploadingDocType(documentType);
             try {
-                await pmsApi.deleteDocumentById(recordId, documentType);
+                await pmsApi.deleteDocumentById(recordId, documentType, documentId);
                 setData(await pmsApi.getById(recordId));
             } catch (err) {
                 console.error('Failed to remove document', err);

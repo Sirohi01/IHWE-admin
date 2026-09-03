@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
     CheckCircle2,
     ChevronRight,
@@ -27,6 +27,7 @@ const QUICK_ACTIONS = [
 ];
 
 export default function MsmePmsTracking({ data, handlers }) {
+    const navigate = useNavigate();
     const [showHowItWorks, setShowHowItWorks] = useState(false);
     const companyName = safe(data?.companyName || data?.exhibitorName);
     const stage = Number(data?.pmsStage) || 1;
@@ -108,7 +109,14 @@ export default function MsmePmsTracking({ data, handlers }) {
                         Save &amp; Next <ChevronRight size={12} />
                     </button>
                 ) : (
-                    <button type="button" onClick={() => handlers.onSaveStage(3)} className="rounded-md bg-[#0D530E] px-3.5 py-1.5 text-[10.5px] font-bold text-white hover:bg-[#093a0a]">
+                    <button
+                        type="button"
+                        onClick={async () => {
+                            await handlers.onSaveStage(3);
+                            navigate(`/client-overview/${data?.exhibitorId}?source=exhibitor`);
+                        }}
+                        className="rounded-md bg-[#0D530E] px-3.5 py-1.5 text-[10.5px] font-bold text-white hover:bg-[#093a0a]"
+                    >
                         Save
                     </button>
                 )}
