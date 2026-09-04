@@ -82,7 +82,7 @@ const CreditNotePreviewTemplate = ({ note, company, settings }) => {
                   <tr>
                     <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact Person</td>
                     <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
-                    <td style={{ border: 'none', padding: '1px 0' }}>{[c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ') || '-'}</td>
+                    <td style={{ border: 'none', padding: '1px 0' }}>{[c1.firstName, c1.surname].filter(Boolean).join(' ') || '-'}</td>
                   </tr>
                   <tr>
                     <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Contact No.</td>

@@ -564,6 +564,9 @@ const ClientOverview1 = () => {
   const [logoFile, setLogoFile] = useState(null);
   const [logoPreview, setLogoPreview] = useState("");
   const [logoVerification, setLogoVerification] = useState({ status: "idle", message: "" });
+  const [udyamCertFile, setUdyamCertFile] = useState(null);
+  const [udyamCertUrl, setUdyamCertUrl] = useState("");
+  const [isUploadingUdyamCert, setIsUploadingUdyamCert] = useState(false);
 
   const handleSendRegistration = async () => {
     const registrationId = company?.exhibitorRegistrationId || company?._id || id;
@@ -640,6 +643,8 @@ const ClientOverview1 = () => {
     setLogoFile(null);
     setLogoPreview(company?.companyLogoUrl || company?.companyLogo || "");
     setLogoVerification({ status: "idle", message: "" });
+    setUdyamCertFile(null);
+    setUdyamCertUrl(company?.msme?.udyamCertificateUrl || company?.udyamCertificateUrl || "");
     setIsEditProfileOpen(true);
 
     // GST may have only ever been entered directly on a Proforma/Estimate (never saved to the
@@ -778,8 +783,47 @@ const ClientOverview1 = () => {
         }
       }
 
+      // 1b. Upload Udyam certificate if any. For an exhibitor, run it through the same
+      // AI verify-and-extract used by the "Book a Stand" flow, so the extracted fields
+      // (enterprise name, category, etc.) get mapped onto the registration too — not
+      // just the file link. A CRM-only company (no linked ExhibitorRegistration) has
+      // nowhere to map extracted fields into, so it just stores the file.
+      let udyamCertUrlToSave = udyamCertUrl;
+      let udyamExtractedDetails = null;
+      let udyamRegNoFromAi = "";
+      if (udyamCertFile) {
+        setIsUploadingUdyamCert(true);
+        try {
+          if (exhibitorTargetId) {
+            const certFormData = new FormData();
+            certFormData.append("file", udyamCertFile);
+            const certRes = await api.post(`/api/msme-pms-scheme/verify-udyam-certificate`, certFormData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+            udyamCertUrlToSave = certRes.data?.data?.fileUrl || udyamCertUrlToSave;
+            udyamExtractedDetails = certRes.data?.data?.extractedDetails || null;
+            udyamRegNoFromAi = certRes.data?.data?.udyamRegNo || "";
+          } else if (crmTargetId) {
+            const certFormData = new FormData();
+            certFormData.append("udyamCertificate", udyamCertFile);
+            const certRes = await api.post(`/api/companies/${crmTargetId}/udyam-certificate`, certFormData, {
+              headers: { "Content-Type": "multipart/form-data" },
+            });
+            udyamCertUrlToSave = certRes.data?.data?.udyamCertificateUrl || udyamCertUrlToSave;
+          }
+        } catch (certErr) {
+          console.log("Error uploading Udyam certificate", certErr);
+          const message = certErr.response?.data?.message || "Udyam certificate could not be uploaded.";
+          Swal.fire("Certificate Rejected", message, "warning");
+          setIsUploadingUdyamCert(false);
+          setIsSavingProfile(false);
+          return;
+        }
+        setIsUploadingUdyamCert(false);
+      }
+
       // 2. Prepare CRM company payload
-      const crmDataToUpdate = { ...editProfileData, companyLogo: photoUrl };
+      const crmDataToUpdate = { ...editProfileData, companyLogo: photoUrl, udyamCertificateUrl: udyamCertUrlToSave };
 
       // 3. Update CRM company
       if (crmTargetId) {
@@ -807,8 +851,17 @@ const ClientOverview1 = () => {
           industrySector: editProfileData.businessNature,
           gstNo: editProfileData.gstNumber,
           panNo: editProfileData.panNo,
-          'msme.udyamRegNo': editProfileData.udyamNumber,
+          // Admin-typed Udyam number wins when present; otherwise fall back to what AI
+          // just read off the uploaded certificate (matches the MSME PMS convention).
+          'msme.udyamRegNo': editProfileData.udyamNumber || udyamRegNoFromAi,
+          'msme.udyamCertificateUrl': udyamCertUrlToSave,
         };
+        if (udyamExtractedDetails) {
+          exhibitorDataToUpdate['msme.udyamExtractedDetails'] = udyamExtractedDetails;
+          if (udyamExtractedDetails['Enterprise Name']) exhibitorDataToUpdate['msme.udyamEnterpriseName'] = udyamExtractedDetails['Enterprise Name'];
+          if (udyamExtractedDetails['Type of Enterprise (Micro/Small/Medium)']) exhibitorDataToUpdate['msme.udyamEnterpriseSize'] = udyamExtractedDetails['Type of Enterprise (Micro/Small/Medium)'];
+          if (udyamExtractedDetails['Major Activity (Manufacturing/Service/Trading)']) exhibitorDataToUpdate['msme.udyamMajorActivity'] = udyamExtractedDetails['Major Activity (Manufacturing/Service/Trading)'];
+        }
         await api.put(`/api/exhibitor-registration/${exhibitorTargetId}`, exhibitorDataToUpdate);
       }
 
@@ -1678,6 +1731,24 @@ const ClientOverview1 = () => {
                   <div>
                     <label className="block text-xs font-bold text-black mb-1">Udyam/MSME Number</label>
                     <input type="text" id="udyamNumber" value={editProfileData.udyamNumber} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-black mb-1">Udyam Certificate</label>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => setUdyamCertFile(e.target.files?.[0] || null)}
+                      className="w-full h-8.5 px-2 py-1 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-[11px] font-medium bg-white text-black"
+                    />
+                    {(udyamCertFile || udyamCertUrl) && (
+                      <div className="mt-1 flex items-center gap-2 text-[10px]">
+                        {udyamCertFile && <span className="text-slate-600 font-medium truncate">{udyamCertFile.name}</span>}
+                        {!udyamCertFile && udyamCertUrl && (
+                          <a href={getMediaUrl(udyamCertUrl)} target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline">View current certificate</a>
+                        )}
+                        {isUploadingUdyamCert && <span className="text-slate-400">Verifying…</span>}
+                      </div>
+                    )}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-black mb-1">Pincode</label>

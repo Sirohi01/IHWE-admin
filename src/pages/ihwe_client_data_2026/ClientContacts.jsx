@@ -73,6 +73,7 @@ const ClientContacts = () => {
     const [viewingMember, setViewingMember] = useState(null);
 
     const initialForm = {
+        title: "",
         name: "",
         designation: "",
         department: "",
@@ -462,7 +463,7 @@ const ClientContacts = () => {
                                         </div>
                                     </td>
                                     <td className="py-4 px-6">
-                                        <div className="font-semibold text-gray-900">{member.name || member.firstName}</div>
+                                        <div className="font-semibold text-gray-900">{member.title ? `${member.title} ` : ''}{member.name || member.firstName}</div>
 
                                     </td>
                                     <td className="py-4 px-6 text-gray-600">{member.designation || '-'}</td>
@@ -506,6 +507,7 @@ const ClientContacts = () => {
                                             </button>
                                             <button onClick={() => {
                                                 setForm({
+                                                    title: member.title || "",
                                                     name: member.name || member.firstName || "",
                                                     designation: member.designation || "",
                                                     department: member.department || "",
@@ -605,6 +607,18 @@ const ClientContacts = () => {
                         <div className="p-6 overflow-y-auto space-y-5 flex-1 text-sm font-medium">
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Title</label>
+                                    <select className="w-full rounded-xl border border-slate-200 p-2.5 outline-none focus:border-blue-500"
+                                        value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}>
+                                        <option value="">-</option>
+                                        <option value="Mr.">Mr.</option>
+                                        <option value="Ms.">Ms.</option>
+                                        <option value="Mrs.">Mrs.</option>
+                                        <option value="Dr.">Dr.</option>
+                                        <option value="M/s">M/s</option>
+                                    </select>
+                                </div>
                                 <div className="space-y-1">
                                     <label className="text-xs font-bold uppercase tracking-wider text-slate-400">Full Name</label>
                                     <input type="text" className="w-full rounded-xl border border-slate-200 p-2.5 outline-none focus:border-blue-500"
@@ -755,7 +769,7 @@ const ClientContacts = () => {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2">
-                                        <span className="font-bold text-slate-900 text-sm truncate">{viewingMember.name || viewingMember.firstName}</span>
+                                        <span className="font-bold text-slate-900 text-sm truncate">{viewingMember.title ? `${viewingMember.title} ` : ''}{viewingMember.name || viewingMember.firstName}</span>
                                         {viewingMember.isPrimary && (
                                             <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded-full text-[10px] font-bold shrink-0">Primary</span>
                                         )}

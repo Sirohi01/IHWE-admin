@@ -696,7 +696,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
     // The "Client Name & Address" box mirrors the PI creation form's own
     // "Company / Billing Details" card exactly — that saved snapshot wins
     // over the live Company profile, which can drift after the PI was issued.
-    const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
+    const titledContactPerson = [c1.firstName, c1.surname].filter(Boolean).join(' ');
     const rawClientContactPerson =
         matchedEstimate?.company_contact_person ||
         titledContactPerson ||
@@ -734,6 +734,11 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
         company?.gstNo ||
         company?.gst_no ||
         company?.gstin;
+
+    const clientUdyamNo =
+        company?.udyamNumber ||
+        company?.msme?.udyamRegNo ||
+        matchedEstimate?.udyam_no;
 
     const eventName =
         matchedEstimate?.event_name ||
@@ -815,7 +820,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                             Client Name &amp; Address
                         </th>
                         <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>
-                            Shipment Details
+                            Shipment/Venue Details
                         </th>
                         <th className="invoice-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>
                             Proforma Invoice Details
@@ -851,6 +856,13 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                             <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
                                             <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                             <td style={{ border: 'none', padding: '1px 0' }}>{clientGstNo}</td>
+                                        </tr>
+                                    )}
+                                    {clientUdyamNo && (
+                                        <tr>
+                                            <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Udyam Reg. No.</td>
+                                            <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                            <td style={{ border: 'none', padding: '1px 0' }}>{clientUdyamNo}</td>
                                         </tr>
                                     )}
                                 </tbody>

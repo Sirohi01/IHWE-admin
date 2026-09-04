@@ -957,21 +957,6 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
                             attachmentWarning = attachmentWarning || poAttachmentError.response?.data?.message || 'Invoice was created, but the PO file could not be uploaded.';
                         }
                     }
-                    if (createdInvoiceId && compactMode && (paymentStatusOption === 'received' || paymentStatusOption === 'partial') && Number(amountReceived) > 0) {
-                        try {
-                            await api.post('/api/payments', {
-                                invoice_id: createdInvoiceId,
-                                companyId: form.companyId || id,
-                                f_amount: String(finalAmount),
-                                amount_text: String(amountReceived),
-                                payment_date: new Date().toISOString().split('T')[0],
-                                payment_mode: 'Manual Entry',
-                                received_by: getCurrentUserName(),
-                            });
-                        } catch (paymentError) {
-                            attachmentWarning = attachmentWarning || paymentError.response?.data?.message || 'Invoice was created, but the payment receipt could not be recorded.';
-                        }
-                    }
                     await Swal.fire({
                         icon: attachmentWarning ? 'warning' : 'success',
                         title: 'Invoice Generated!',

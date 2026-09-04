@@ -654,9 +654,9 @@ const mergeChallanWithProforma = (challan = {}, estimate = {}) => {
         estimate.consignee_person,
         estimateCompany.contactPerson,
         estimateCompany.contact_person,
-        [c1.title, c1.firstName, c1.surname].filter(Boolean).join(" ")
+        [c1.firstName, c1.surname].filter(Boolean).join(" ")
       ),
-      [c1.title, c1.firstName, c1.surname].filter(Boolean).join(" ")
+      [c1.firstName, c1.surname].filter(Boolean).join(" ")
     ),
 
     contact_phone: getCleanValue(

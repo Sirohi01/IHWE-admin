@@ -400,7 +400,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
     const PROFORMA_EVENT_GST_NO = '07AAFCN9238F1Z6';
 
     const clientCompanyName = matchedInvoice?.company_name || form?.company_name || resolvedCompany?.companyName || resolvedCompany?.exhibitorName || '—';
-    const titledContactPerson = [c1.title, c1.firstName, c1.surname].filter(Boolean).join(' ');
+    const titledContactPerson = [c1.firstName, c1.surname].filter(Boolean).join(' ');
     const rawClientContactPerson = getFirstCleanValue(
         titledContactPerson,
         resolvedCompany?.contactPerson,
@@ -505,6 +505,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         .join(' - ');
     const clientLocationLine = joinAddressParts([clientCityPincode, clientState, clientCountry]);
     const clientGstNo = matchedInvoice?.company_gst_no || form?.company_gst_no || matchedInvoice?.gst_no || form?.gstin;
+    const clientUdyamNo = resolvedCompany?.udyamNumber || resolvedCompany?.msme?.udyamRegNo || matchedInvoice?.udyam_no || form?.udyam_no;
 
     const eventName = matchedInvoice?.event_name || form?.event_name || matchedInvoice?.consignee_name || form?.consignee_name || PROFORMA_EVENT_NAME;
     const eventPlaceOfSupply = joinAddressParts([
@@ -613,7 +614,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                 <thead>
                     <tr>
                         <th className="invoice-client-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
-                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
+                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment/Venue Details</th>
                         <th className="invoice-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
                     </tr>
                 </thead>
@@ -645,6 +646,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                             <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
                                             <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                             <td style={{ border: 'none', padding: '1px 0' }}>{clientGstNo}</td>
+                                        </tr>
+                                    )}
+                                    {clientUdyamNo && (
+                                        <tr>
+                                            <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Udyam Reg. No.</td>
+                                            <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                            <td style={{ border: 'none', padding: '1px 0' }}>{clientUdyamNo}</td>
                                         </tr>
                                     )}
                                 </tbody>
@@ -1294,7 +1302,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                 <thead>
                                     <tr>
                                         <th className="invoice-client-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Client Name &amp; Address</th>
-                                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment Details</th>
+                                        <th className="invoice-shipment-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '38%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}>Shipment/Venue Details</th>
                                         <th className="invoice-details-column" style={{ background: '#0d1f3c', color: '#fff', border: '1px solid #0d1f3c', padding: '3px 2px', width: '24%', textAlign: 'center', fontSize: 10, fontWeight: 'bold', textTransform: 'uppercase' }}> Invoice Details</th>
                                     </tr>
                                 </thead>
@@ -1328,6 +1336,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                                             <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>GSTIN.</td>
                                                             <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
                                                             <td style={{ border: 'none', padding: '1px 0' }}>{clientGstNo}</td>
+                                                        </tr>
+                                                    )}
+                                                    {clientUdyamNo && (
+                                                        <tr>
+                                                            <td style={{ whiteSpace: 'nowrap', padding: '1px 4px 1px 0', border: 'none', width: '1%' }}>Udyam Reg. No.</td>
+                                                            <td style={{ border: 'none', padding: '1px 4px 1px 0', width: '1%' }}>:</td>
+                                                            <td style={{ border: 'none', padding: '1px 0' }}>{clientUdyamNo}</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
@@ -1620,10 +1635,22 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                                     const paidOn = payment.payment_date ? new Date(payment.payment_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
                                                     return (
                                                         <div key={payment._id || index}>
-                                                            {index + 1}. {payment.receipt_no || 'Receipt'} – {paidOn} – ₹{fmtNum(payment.amount_text)} via {payment.payment_mode || '-'}{reference ? ` (Ref: ${reference})` : ''}
+                                                            {index + 1}. <strong>{payment.receipt_no || 'Receipt'}</strong> – {paidOn} – <strong>₹{fmtNum(payment.amount_text)}</strong> via {payment.payment_mode || '-'}{reference ? ` (Ref: ${reference})` : ''}
                                                         </div>
                                                     );
                                                 })}
+                                                {(() => {
+                                                    if (matchedInvoice?.show_payment_details === false || payments.length === 0) return null;
+                                                    const totalReceivedAmount = payments.reduce((sum, payment) => sum + (parseFloat(payment.amount_text) || 0), 0);
+                                                    const totalTds = payments.reduce((sum, payment) => sum + (parseFloat(payment.tds_text) || 0), 0);
+                                                    if (totalTds <= 0) return null;
+                                                    return (
+                                                        <>
+                                                            <div>TDS – ₹{fmtNum(totalTds)}</div>
+                                                            <div style={{ fontWeight: 700 }}>Total Amount (After TDS) – ₹{fmtNum(totalReceivedAmount + totalTds)}</div>
+                                                        </>
+                                                    );
+                                                })()}
                                                 {(() => {
                                                     const storedStatus = matchedInvoice?.payment_status;
                                                     const storedTerms = matchedInvoice?.payment_terms;

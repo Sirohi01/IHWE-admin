@@ -252,7 +252,7 @@ const CreditNotePrintTemplate = ({ note, company, settings, receiptSettings }) =
   const companyName = note.clientName || company?.companyName || company?.exhibitorName || '—';
   const address = [company?.address, company?.city, company?.pincode ? `- ${company.pincode}` : '', company?.state, company?.country]
     .filter(Boolean).join(', ');
-  const contactPersonName = [c1.title, c1.firstName, c1.surname || c1.lastName].filter(Boolean).join(' ');
+  const contactPersonName = [c1.firstName, c1.surname || c1.lastName].filter(Boolean).join(' ');
   const contactPersonDesignation = c1.designation || company?.designation;
   const contactPersonDisplay = [contactPersonName, contactPersonDesignation].filter(Boolean).join(' | ');
 

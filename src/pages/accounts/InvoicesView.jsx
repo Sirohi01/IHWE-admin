@@ -100,9 +100,8 @@ const dueDateNote = (row) => {
 
 const STATUS_STYLES = {
     'Paid': { badge: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
-    'Partially Paid': { badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
-    'Unpaid': { badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
-    'Overdue': { badge: 'bg-red-100 text-red-700', dot: 'bg-red-500' },
+    'Partial Paid': { badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-500' },
+    'Pending': { badge: 'bg-slate-100 text-slate-600', dot: 'bg-slate-400' },
 };
 
 const PAYMENT_TYPE_STYLES = {
@@ -324,9 +323,8 @@ const InvoicesView = () => {
                                     >
                                         <option value="">Invoice Status</option>
                                         <option value="Paid">Paid</option>
-                                        <option value="Partially Paid">Partially Paid</option>
-                                        <option value="Unpaid">Unpaid</option>
-                                        <option value="Overdue">Overdue</option>
+                                        <option value="Partial Paid">Partial Paid</option>
+                                        <option value="Pending">Pending</option>
                                     </select>
                                     <select
                                         value={inlinePaymentType}
