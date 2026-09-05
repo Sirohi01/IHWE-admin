@@ -1594,7 +1594,7 @@ const ClientOverview1 = () => {
       {isEditProfileOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[1050] flex items-center justify-center p-4">
           <div
-            className="bg-white rounded-xl w-full max-w-4xl overflow-hidden animate-fadeIn text-[#15173D]"
+            className="bg-white rounded-xl w-full max-w-6xl overflow-hidden animate-fadeIn text-[#15173D]"
             style={{
               fontFamily: 'Inter, sans-serif',
               boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px',
@@ -1602,12 +1602,12 @@ const ClientOverview1 = () => {
           >
             {/* Header */}
             <div className="flex items-center justify-between p-3.5 bg-slate-100 border-b border-slate-200">
-              <h2 className="text-[13px] font-bold text-[#15173D] tracking-tight uppercase">Edit Company Profile</h2>
+              <h2 className="text-[15px] font-bold text-[#15173D] tracking-tight uppercase">Edit Company Profile</h2>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsEditProfileOpen(false)}
-                  className="px-3.5 py-1.5 rounded-lg bg-red-600 text-white text-xs font-bold hover:bg-red-700 transition-colors shadow-xs"
+                  className="px-4 py-2 rounded-lg bg-red-600 text-white text-sm font-bold hover:bg-red-700 transition-colors shadow-xs"
                 >
                   Cancel
                 </button>
@@ -1615,7 +1615,7 @@ const ClientOverview1 = () => {
                   type="submit"
                   form="editCompanyProfileForm"
                   disabled={isSavingProfile || logoVerification.status === "scanning" || logoVerification.status === "invalid"}
-                  className="px-3.5 py-1.5 rounded-lg bg-green-600 text-white text-xs font-bold hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70 shadow-xs"
+                  className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-bold hover:bg-green-700 transition-colors flex items-center gap-2 disabled:opacity-70 shadow-xs"
                 >
                   {isSavingProfile ? "Saving..." : logoVerification.status === "scanning" ? "Scanning..." : "Save Changes"}
                 </button>
@@ -1623,37 +1623,37 @@ const ClientOverview1 = () => {
                   onClick={() => setIsEditProfileOpen(false)}
                   className="p-1 rounded-lg bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 transition-colors"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </button>
               </div>
             </div>
 
-            <form id="editCompanyProfileForm" onSubmit={handleSaveProfile} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto bg-slate-50/50">
+            <form id="editCompanyProfileForm" onSubmit={handleSaveProfile} className="p-5 space-y-4 max-h-[82vh] overflow-y-auto bg-slate-50/50">
               {/* SECTION 1: BASIC INFORMATION */}
-              <div className="bg-white p-4 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
-                <h3 className="text-[11px] font-bold text-[#15173D] uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 flex items-center gap-1.5">
-                  <Building2 size={14} className="text-[#133458]" /> Company Profile & Classification
+              <div className="bg-white p-5 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+                <h3 className="text-[13px] font-bold text-[#15173D] uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 flex items-center gap-1.5">
+                  <Building2 size={16} className="text-[#133458]" /> Company Profile & Classification
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Company Name <span className="text-red-500">*</span></label>
-                    <input type="text" id="companyName" value={editProfileData.companyName} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" required />
+                    <label className="block text-sm font-bold text-black mb-1.5">Company Name <span className="text-red-500">*</span></label>
+                    <input type="text" id="companyName" value={editProfileData.companyName} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" required />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Company Logo <span className="text-red-500">*</span></label>
+                    <label className="block text-sm font-bold text-black mb-1.5">Company Logo <span className="text-red-500">*</span></label>
                     <div className="flex items-center gap-3">
                       {logoPreview && (
-                        <img loading="lazy" decoding="async" src={getMediaUrl(logoPreview)} alt="Logo Preview" className="w-8.5 h-8.5 object-contain rounded-sm border border-slate-200 bg-slate-50 p-1" />
+                        <img loading="lazy" decoding="async" src={getMediaUrl(logoPreview)} alt="Logo Preview" className="w-10 h-10 object-contain rounded-sm border border-slate-200 bg-slate-50 p-1" />
                       )}
-                      <label className="flex-1 h-8.5 flex items-center justify-center gap-2 rounded-sm border border-dashed border-slate-300 hover:border-[#15173D] cursor-pointer text-xs font-semibold text-slate-500 hover:text-[#15173D] transition-colors bg-white">
+                      <label className="flex-1 h-10 flex items-center justify-center gap-2 rounded-sm border border-dashed border-slate-300 hover:border-[#15173D] cursor-pointer text-sm font-semibold text-slate-500 hover:text-[#15173D] transition-colors bg-white">
                         <input type="file" accept="image/*" onChange={handleLogoFileChange} className="hidden" />
                         📷 {logoFile ? logoFile.name : "Choose Logo Image"}
                       </label>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Type of Business</label>
-                    <select id="category" value={editProfileData.category} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black">
+                    <label className="block text-sm font-bold text-black mb-1.5">Type of Business</label>
+                    <select id="category" value={editProfileData.category} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black">
                       <option value="">Select Here</option>
                       {businessTypesOptions.map((opt, idx) => (
                         <option key={idx} value={opt}>{opt}</option>
@@ -1662,14 +1662,14 @@ const ClientOverview1 = () => {
                   </div>
                   {logoVerification.message && (
                     <div className="md:col-span-3 -mt-1">
-                      <p className={`text-xs font-bold ${logoVerification.status === "invalid" ? "text-red-500" : "text-emerald-600"}`}>
+                      <p className={`text-sm font-bold ${logoVerification.status === "invalid" ? "text-red-500" : "text-emerald-600"}`}>
                         {logoVerification.message}
                       </p>
                     </div>
                   )}
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Industry / Sector</label>
-                    <select id="businessNature" value={editProfileData.businessNature} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black">
+                    <label className="block text-sm font-bold text-black mb-1.5">Industry / Sector</label>
+                    <select id="businessNature" value={editProfileData.businessNature} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black">
                       <option value="">Select Here</option>
                       {industryOptions.map((opt, idx) => (
                         <option key={idx} value={opt}>{opt}</option>
@@ -1677,8 +1677,8 @@ const ClientOverview1 = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Source</label>
-                    <select id="dataSource" value={editProfileData.dataSource} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black">
+                    <label className="block text-sm font-bold text-black mb-1.5">Source</label>
+                    <select id="dataSource" value={editProfileData.dataSource} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black">
                       <option value="">Select Here</option>
                       <option>Direct Calling</option>
                       <option>Direct Website</option>
@@ -1694,54 +1694,54 @@ const ClientOverview1 = () => {
               </div>
 
               {/* SECTION 2: CONTACT INFORMATION */}
-              <div className="bg-white p-4 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
-                <h3 className="text-[11px] font-bold text-[#15173D] uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 flex items-center gap-1.5">
-                  <Mail size={14} className="text-[#133458]" /> Contact &amp; Digital Presence
+              <div className="bg-white p-5 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+                <h3 className="text-[13px] font-bold text-[#15173D] uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 flex items-center gap-1.5">
+                  <Mail size={16} className="text-[#133458]" /> Contact &amp; Digital Presence
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Company Email <span className="text-red-500">*</span></label>
-                    <input type="email" id="email" value={editProfileData.email} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" required />
+                    <label className="block text-sm font-bold text-black mb-1.5">Company Email <span className="text-red-500">*</span></label>
+                    <input type="email" id="email" value={editProfileData.email} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" required />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Landline</label>
-                    <input type="text" id="landline" value={editProfileData.landline} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" />
+                    <label className="block text-sm font-bold text-black mb-1.5">Landline</label>
+                    <input type="text" id="landline" value={editProfileData.landline} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Website <span className="text-red-500">*</span></label>
-                    <input type="text" id="website" value={editProfileData.website} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" required />
+                    <label className="block text-sm font-bold text-black mb-1.5">Website <span className="text-red-500">*</span></label>
+                    <input type="text" id="website" value={editProfileData.website} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" required />
                   </div>
                 </div>
               </div>
 
               {/* SECTION 3: STATUTORY & LOCATION */}
-              <div className="bg-white p-4 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
-                <h3 className="text-[11px] font-bold text-[#15173D] uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 flex items-center gap-1.5">
-                  <MapPin size={14} className="text-[#133458]" /> Statutory Numbers &amp; Address
+              <div className="bg-white p-5 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+                <h3 className="text-[13px] font-bold text-[#15173D] uppercase tracking-wider mb-3 pb-1.5 border-b border-slate-100 flex items-center gap-1.5">
+                  <MapPin size={16} className="text-[#133458]" /> Statutory Numbers &amp; Address
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">GST Number</label>
-                    <input type="text" id="gstNumber" value={editProfileData.gstNumber} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" />
+                    <label className="block text-sm font-bold text-black mb-1.5">GST Number</label>
+                    <input type="text" id="gstNumber" value={editProfileData.gstNumber} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">PAN Number</label>
-                    <input type="text" id="panNo" value={editProfileData.panNo} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" />
+                    <label className="block text-sm font-bold text-black mb-1.5">PAN Number</label>
+                    <input type="text" id="panNo" value={editProfileData.panNo} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Udyam/MSME Number</label>
-                    <input type="text" id="udyamNumber" value={editProfileData.udyamNumber} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" />
+                    <label className="block text-sm font-bold text-black mb-1.5">Udyam/MSME Number</label>
+                    <input type="text" id="udyamNumber" value={editProfileData.udyamNumber} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Udyam Certificate</label>
+                    <label className="block text-sm font-bold text-black mb-1.5">Udyam Certificate</label>
                     <input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => setUdyamCertFile(e.target.files?.[0] || null)}
-                      className="w-full h-8.5 px-2 py-1 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-[11px] font-medium bg-white text-black"
+                      className="w-full h-10 px-2.5 py-1.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-[13px] font-medium bg-white text-black"
                     />
                     {(udyamCertFile || udyamCertUrl) && (
-                      <div className="mt-1 flex items-center gap-2 text-[10px]">
+                      <div className="mt-1.5 flex items-center gap-2 text-xs">
                         {udyamCertFile && <span className="text-slate-600 font-medium truncate">{udyamCertFile.name}</span>}
                         {!udyamCertFile && udyamCertUrl && (
                           <a href={getMediaUrl(udyamCertUrl)} target="_blank" rel="noreferrer" className="text-blue-600 font-semibold hover:underline">View current certificate</a>
@@ -1751,11 +1751,11 @@ const ClientOverview1 = () => {
                     )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Pincode</label>
-                    <input type="text" id="pincode" maxLength={6} value={editProfileData.pincode} onChange={(e) => handleProfilePincodeChange(e.target.value)} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" placeholder="6-digit pincode" />
+                    <label className="block text-sm font-bold text-black mb-1.5">Pincode</label>
+                    <input type="text" id="pincode" maxLength={6} value={editProfileData.pincode} onChange={(e) => handleProfilePincodeChange(e.target.value)} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" placeholder="6-digit pincode" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">Country</label>
+                    <label className="block text-sm font-bold text-black mb-1.5">Country</label>
                     <SearchableDropdown
                       name="country"
                       value={editProfileData.country}
@@ -1765,24 +1765,24 @@ const ClientOverview1 = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">State</label>
-                    <input type="text" id="state" value={editProfileData.state} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" placeholder="Auto-filled from Pincode" />
+                    <label className="block text-sm font-bold text-black mb-1.5">State</label>
+                    <input type="text" id="state" value={editProfileData.state} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" placeholder="Auto-filled from Pincode" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-black mb-1">City</label>
-                    <input type="text" id="city" value={editProfileData.city} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" placeholder="Auto-filled from Pincode" />
+                    <label className="block text-sm font-bold text-black mb-1.5">City</label>
+                    <input type="text" id="city" value={editProfileData.city} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" placeholder="Auto-filled from Pincode" />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="block text-xs font-bold text-black mb-1">Address</label>
-                    <input type="text" id="address" value={editProfileData.address} onChange={handleProfileChange} className="w-full h-8.5 px-2.5 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-xs font-medium bg-white text-black" />
+                    <label className="block text-sm font-bold text-black mb-1.5">Address</label>
+                    <input type="text" id="address" value={editProfileData.address} onChange={handleProfileChange} className="w-full h-10 px-3 rounded-sm border border-slate-300 outline-none focus:border-[#15173D] text-sm font-medium bg-white text-black" />
                   </div>
                 </div>
               </div>
 
               {/* SECTION 4: COMPANY DESCRIPTION */}
-              <div className="bg-white p-4 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
-                <h3 className="text-[11px] font-bold text-[#15173D] uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-100 flex items-center gap-1.5">
-                  <FileText size={14} className="text-[#133458]" /> Company Description (About) <span className="text-red-500">*</span>
+              <div className="bg-white p-5 rounded-md border border-slate-200" style={{ boxShadow: 'rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px' }}>
+                <h3 className="text-[13px] font-bold text-[#15173D] uppercase tracking-wider mb-2.5 pb-1 border-b border-slate-100 flex items-center gap-1.5">
+                  <FileText size={16} className="text-[#133458]" /> Company Description (About) <span className="text-red-500">*</span>
                 </h3>
                 <textarea
                   id="companyDescription"
@@ -1793,11 +1793,11 @@ const ClientOverview1 = () => {
                   }))}
                   minLength={250}
                   required
-                  rows={4}
-                  className={`w-full p-3 rounded-sm border outline-none focus:border-[#15173D] resize-none text-xs font-medium bg-white ${(editProfileData.companyDescription.length > 0 && editProfileData.companyDescription.length < 250) || editProfileData.companyDescription.length > 300 ? "border-red-300" : "border-slate-300"}`}
+                  rows={5}
+                  className={`w-full p-3.5 rounded-sm border outline-none focus:border-[#15173D] resize-none text-sm font-medium bg-white ${(editProfileData.companyDescription.length > 0 && editProfileData.companyDescription.length < 250) || editProfileData.companyDescription.length > 300 ? "border-red-300" : "border-slate-300"}`}
                   placeholder="Enter concise company overview, vision, and core products/services (250–300 characters)..."
                 />
-                <div className="mt-1 text-xs font-bold text-red-600">
+                <div className="mt-1.5 text-sm font-bold text-red-600">
                   {editProfileData.companyDescription.length < 250 || editProfileData.companyDescription.length > 300
                     ? `Length must be 250 to 300 characters. (${editProfileData.companyDescription.length}/300)`
                     : `Character requirement met. (${editProfileData.companyDescription.length}/300)`}
