@@ -762,14 +762,14 @@ export const PerformaInvoices = () => {
                         ...prev,
                         estimateNo: existingEstimate ? estimateForPrefill.est_no : prev.estimateNo,
                         supplyDate: estimateForPrefill.supply_date || new Date().toISOString().split('T')[0],
-                        consigneeName: estimateForPrefill.company_name || (estimateForPrefill.consignee_name !== PROFORMA_EVENT_NAME ? estimateForPrefill.consignee_name : '') || companyInfo?.companyName || companyInfo?.exhibitorName || '',
+                        consigneeName: estimateForPrefill.company_name || companyInfo?.companyName || companyInfo?.exhibitorName || '',
                         consigneeAddress: useProfileFirst
-                            ? (companyInfo?.address || companyInfo?.companyAddress || estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || '')
-                            : (estimateForPrefill.company_addr || (estimateForPrefill.consignee_addr !== PROFORMA_PLACE_OF_SUPPLY ? estimateForPrefill.consignee_addr : '') || companyInfo?.address || companyInfo?.companyAddress || ''),
+                            ? (companyInfo?.address || companyInfo?.companyAddress || estimateForPrefill.company_addr || '')
+                            : (estimateForPrefill.company_addr || companyInfo?.address || companyInfo?.companyAddress || ''),
                         // The client's own contact — Company/Billing side.
-                        companyContactPerson: companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
-                        companyContactMobile: companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
-                        companyEmail: companyInfo?.email || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].email : '') || '',
+                        companyContactPerson: (existingEstimate && estimateForPrefill.company_contact_person) || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
+                        companyContactMobile: (existingEstimate && estimateForPrefill.company_contact_mobile) || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
+                        companyEmail: (existingEstimate && estimateForPrefill.company_email) || companyInfo?.email || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].email : '') || '',
                         // Consignee Person/Phone/Email is whoever is creating this PI (the
                         // logged-in admin/staff user), not the client's own contact — editing
                         // an already-issued PI still shows what was actually saved on it.
@@ -785,7 +785,7 @@ export const PerformaInvoices = () => {
                         consigneePincode: existingEstimate ? (estimateForPrefill.consignee_pincode || '110001') : prev.consigneePincode,
                         gstin: useProfileFirst
                             ? (companyInfo?.gstNumber || companyInfo?.gst || companyInfo?.gstNo || estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || '')
-                            : (estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || companyInfo?.gst || companyInfo?.gstNo || companyInfo?.gstNumber || ''),
+                            : (estimateForPrefill.company_gst_no || companyInfo?.gstNumber || companyInfo?.gst || companyInfo?.gstNo || estimateForPrefill.gst_no || ''),
                         country: useProfileFirst
                             ? (companyInfo?.country || estimateForPrefill.country || '')
                             : (estimateForPrefill.country || companyInfo?.country || ''),
