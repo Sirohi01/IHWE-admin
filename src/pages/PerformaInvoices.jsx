@@ -165,6 +165,14 @@ const STALL_TYPES = ['Raw Space', 'Shell Space'];
 const PROFORMA_EVENT_NAME = '9th Edition of International Health & Wellness Expo (IHWE Global Edition)';
 const PROFORMA_PLACE_OF_SUPPLY = 'Hall Nos. 12, Pragati Maidan, New Delhi - 110001, Bharat';
 const PROFORMA_EVENT_GST_NO = '09AAFCN9238F1Z6';
+const PLACEHOLDER_VALUES = new Set(['', '-', '--', 'na', 'n/a', 'nil', 'none', 'null', 'undefined']);
+const usable = (...values) => {
+    for (const value of values) {
+        const text = String(value == null ? '' : value).trim();
+        if (!PLACEHOLDER_VALUES.has(text.toLowerCase())) return text;
+    }
+    return '';
+};
 
 
 
@@ -752,20 +760,12 @@ export const PerformaInvoices = () => {
                         if (itemsMode === 'default') setItems(formattedItems);
                     }
 
-                    // Editing/viewing an already-issued PI (existingEstimate) must stay faithful to what
-                    // was actually issued, so its own saved GST/address/location win. A brand-new PI that's
-                    // only borrowing item/layout data from a past one (templateEstimate) should instead use
-                    // the client's current profile as the source of truth, falling back to the template only
-                    // when the profile itself has nothing set.
-                    const useProfileFirst = !existingEstimate;
                     setForm(prev => ({
                         ...prev,
                         estimateNo: existingEstimate ? estimateForPrefill.est_no : prev.estimateNo,
                         supplyDate: estimateForPrefill.supply_date || new Date().toISOString().split('T')[0],
-                        consigneeName: estimateForPrefill.company_name || companyInfo?.companyName || companyInfo?.exhibitorName || '',
-                        consigneeAddress: useProfileFirst
-                            ? (companyInfo?.address || companyInfo?.companyAddress || estimateForPrefill.company_addr || '')
-                            : (estimateForPrefill.company_addr || companyInfo?.address || companyInfo?.companyAddress || ''),
+                        consigneeName: usable(companyInfo?.companyName, companyInfo?.exhibitorName, estimateForPrefill.company_name),
+                        consigneeAddress: usable(companyInfo?.address, companyInfo?.companyAddress, estimateForPrefill.company_addr),
                         // The client's own contact — Company/Billing side.
                         companyContactPerson: (existingEstimate && estimateForPrefill.company_contact_person) || companyInfo?.contactPerson || (companyInfo?.contacts && companyInfo.contacts[0] ? [companyInfo.contacts[0].firstName, companyInfo.contacts[0].surname].filter(Boolean).join(' ') : '') || '',
                         companyContactMobile: (existingEstimate && estimateForPrefill.company_contact_mobile) || companyInfo?.mobile || (companyInfo?.contacts && companyInfo.contacts[0] ? companyInfo.contacts[0].mobile : '') || '',
@@ -783,21 +783,11 @@ export const PerformaInvoices = () => {
                         consigneeState: existingEstimate ? (estimateForPrefill.consignee_state || 'Delhi') : prev.consigneeState,
                         consigneeCity: existingEstimate ? (estimateForPrefill.consignee_city || 'New Delhi') : prev.consigneeCity,
                         consigneePincode: existingEstimate ? (estimateForPrefill.consignee_pincode || '110001') : prev.consigneePincode,
-                        gstin: useProfileFirst
-                            ? (companyInfo?.gstNumber || companyInfo?.gst || companyInfo?.gstNo || estimateForPrefill.company_gst_no || estimateForPrefill.gst_no || '')
-                            : (estimateForPrefill.company_gst_no || companyInfo?.gstNumber || companyInfo?.gst || companyInfo?.gstNo || estimateForPrefill.gst_no || ''),
-                        country: useProfileFirst
-                            ? (companyInfo?.country || estimateForPrefill.country || '')
-                            : (estimateForPrefill.country || companyInfo?.country || ''),
-                        state: useProfileFirst
-                            ? (companyInfo?.state || estimateForPrefill.state || '')
-                            : (estimateForPrefill.state || companyInfo?.state || ''),
-                        city: useProfileFirst
-                            ? (companyInfo?.city || estimateForPrefill.city || '')
-                            : (estimateForPrefill.city || companyInfo?.city || ''),
-                        pinCode: useProfileFirst
-                            ? (companyInfo?.pinCode || companyInfo?.pincode || estimateForPrefill.pincode || '')
-                            : (estimateForPrefill.pincode || companyInfo?.pinCode || companyInfo?.pincode || ''),
+                        gstin: usable(companyInfo?.gstNumber, companyInfo?.gst, companyInfo?.gstNo, estimateForPrefill.company_gst_no, estimateForPrefill.gst_no),
+                        country: usable(companyInfo?.country, estimateForPrefill.country),
+                        state: usable(companyInfo?.state, estimateForPrefill.state),
+                        city: usable(companyInfo?.city, estimateForPrefill.city),
+                        pinCode: usable(companyInfo?.pinCode, companyInfo?.pincode, estimateForPrefill.pincode),
                     }));
 
                     if (!existingEstimate) {
