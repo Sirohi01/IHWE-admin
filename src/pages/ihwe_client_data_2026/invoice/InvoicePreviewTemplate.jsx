@@ -353,10 +353,10 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
     const invoiceNo = matchedInvoice ? matchedInvoice.invoice_no : (form?.invoiceNo || '');
     const dateVal = matchedInvoice ? (matchedInvoice.invoice_date || matchedInvoice.supply_date) : form?.invoiceDate;
     const invoiceDate = dateVal ? new Date(dateVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '';
-    const addedVal = matchedInvoice ? matchedInvoice.added : null;
-    const createdDateTime = addedVal
-        ? new Date(addedVal).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
-        : new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    // Created Date mirrors Invoice Date in the Invoice Details box — they're
+    // meant to always read the same there, even for older invoices saved
+    // before invoice_date was pinned to the actual creation date.
+    const createdDateTime = invoiceDate || new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     const supplyDateTime = matchedInvoice?.supply_date || form?.supply_date
         ? new Date(matchedInvoice?.supply_date || form?.supply_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
         : '';
@@ -401,31 +401,34 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
 
     const clientCompanyName = matchedInvoice?.company_name || form?.company_name || resolvedCompany?.companyName || resolvedCompany?.exhibitorName || '—';
     const titledContactPerson = [c1.firstName, c1.surname].filter(Boolean).join(' ');
+    // Snapshot (this invoice's own saved value, or — for invoices created
+    // before that field existed — the linked estimate's own snapshot, or the
+    // pre-save form) wins over the live Company profile, which can drift
+    // after the invoice was issued. Mirrors EstimateFormDetail.jsx.
     const rawClientContactPerson = getFirstCleanValue(
+        matchedInvoice?.company_contact_person,
+        matchedEstimate?.company_contact_person,
+        form?.companyContactPerson,
         titledContactPerson,
         resolvedCompany?.contactPerson,
         resolvedCompany?.contact_person,
-        form?.contact_person,
-        form?.company_contact_person,
-        form?.consignee_person,
         matchedInvoice?.contact_person,
-        matchedInvoice?.company_contact_person,
-        matchedInvoice?.consignee_person
+        matchedInvoice?.consignee_person,
+        form?.consignee_person
     ) || '—';
     const clientContactPerson = normalizeContactName(rawClientContactPerson, titledContactPerson);
     const clientContactNo = getFirstCleanValue(
+        matchedInvoice?.company_contact_mobile,
+        matchedEstimate?.company_contact_mobile,
+        form?.companyContactMobile,
         c1.mobile,
         form?.contact_no,
         form?.contact_phone,
-        form?.company_contact_no,
-        form?.company_phone,
         form?.mobile,
         form?.phone,
         form?.consignee_phone,
         matchedInvoice?.contact_no,
         matchedInvoice?.contact_phone,
-        matchedInvoice?.company_contact_no,
-        matchedInvoice?.company_phone,
         matchedInvoice?.mobile,
         matchedInvoice?.phone,
         matchedInvoice?.consignee_phone,
@@ -433,11 +436,12 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         resolvedCompany?.mobile
     ) || '—';
     const clientEmail = getFirstCleanValue(
-        c1.email,
         matchedInvoice?.company_email,
+        matchedEstimate?.company_email,
+        form?.companyEmail,
+        c1.email,
         matchedInvoice?.contact_email,
         matchedInvoice?.email,
-        form?.company_email,
         form?.contact_email,
         form?.email,
         resolvedCompany?.companyEmail,
@@ -802,7 +806,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                 {itemsToRender.map((item, index) => {
                     const discountPercent = getDiscountPercent(item);
                     const isPlcItem = item?.category === 'PLC Charges';
-                    const isStallItem = !isPlcItem && item?.category !== 'Addon Product';
+                    const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom';
                     return (
                         <tr key={`${startIndex}-${index}`}>
                             <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{isPlcItem ? '' : startIndex + index + 1}</td>
@@ -1451,7 +1455,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                     {activeItems?.map((item, index) => {
                                         const discountPercent = getDiscountPercent(item);
                                         const isPlcItem = item?.category === 'PLC Charges';
-                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product';
+                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom';
                                         return (
                                             <tr key={index}>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{isPlcItem ? '' : index + 1}</td>

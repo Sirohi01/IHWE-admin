@@ -406,14 +406,23 @@ export const PerformaInvoices = () => {
     const [itemsMode, setItemsMode] = useState('default');
     const prefillItemsRef = useRef(null);
     const isFirstItemsModeRender = useRef(true);
+    // Set right before setItemsMode('custom') when restoring a saved Custom PI
+    // for editing, so this toggle effect doesn't stomp the just-loaded items
+    // with a blank row (it only applies to the user actually clicking the
+    // Default/Custom radio).
+    const suppressItemsModeResetRef = useRef(false);
 
     useEffect(() => {
         if (isFirstItemsModeRender.current) {
             isFirstItemsModeRender.current = false;
             return;
         }
+        if (suppressItemsModeResetRef.current) {
+            suppressItemsModeResetRef.current = false;
+            return;
+        }
         if (itemsMode === 'custom') {
-            setItems([newItem()]);
+            setItems([{ ...newItem(), category: 'Custom' }]);
         } else {
             setItems(prefillItemsRef.current?.length ? prefillItemsRef.current : [newItem()]);
         }
@@ -760,7 +769,15 @@ export const PerformaInvoices = () => {
                         });
 
                         prefillItemsRef.current = formattedItems;
-                        if (itemsMode === 'default') setItems(formattedItems);
+                        setItems(formattedItems);
+                        // A PI built in Custom mode has no other saved trace of that —
+                        // restore the toggle from the items themselves so editing one
+                        // doesn't fall back into Default mode's Stall/Addon Product
+                        // search-selects, which don't understand freeform custom rows.
+                        if (formattedItems.some((it) => it.category === 'Custom')) {
+                            suppressItemsModeResetRef.current = true;
+                            setItemsMode('custom');
+                        }
                     }
 
                     setForm(prev => ({
@@ -1216,7 +1233,7 @@ export const PerformaInvoices = () => {
         );
     }, [addonProductOptions]);
 
-    const addItem = () => setItems((p) => [...p, newItem()]);
+    const addItem = () => setItems((p) => [...p, itemsMode === 'custom' ? { ...newItem(), category: 'Custom' } : newItem()]);
     const removeItem = (id) => setItems((p) => p.filter((i) => i.id !== id));
 
     const setField = (k, v) => setForm((f) => ({ ...f, [k]: v }));
