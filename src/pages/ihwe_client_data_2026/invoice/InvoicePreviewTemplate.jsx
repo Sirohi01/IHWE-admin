@@ -447,63 +447,55 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         resolvedCompany?.companyEmail,
         resolvedCompany?.email
     ) || '—';
-    // The invoice's own billing_* snapshot (its actual billing address at
-    // creation time) wins over the generic company_addr/city/state/pincode
-    // fields and the live Company profile — those can hold stale or
-    // differently-sourced values (e.g. the live profile's city/state, which
-    // drift after the invoice was issued, same principle as the contact
-    // person snapshot above).
+    // Mirror the Client Overview page exactly (ClientOverview1.jsx's address
+    // block reads company.address/city/state/pincode/country, where
+    // `company` is the exhibitor registration merged over the CRM company —
+    // exhibitor's own field wins when set). Deliberately does NOT read the
+    // invoice's own billing_*/company_addr/city/state/pincode snapshot at
+    // all — those can go stale/wrong independent of the live client record,
+    // which is the actual source of truth here. `form.*` stays as the only
+    // pre-save fallback (before an invoice exists to have a linked exhibitor
+    // in the first place), sourced from the estimate/company, not a saved
+    // invoice document.
     const clientAddressLine = getFirstAddressValue(
-        matchedInvoice?.billing_address,
+        matchedInvoice?.exhibitor?.address,
+        resolvedCompany?.address,
         form?.billingAddress,
-        matchedInvoice?.company_addr,
-        matchedInvoice?.address,
         form?.company_addr,
         form?.address,
-        resolvedCompany?.address,
         resolvedCompany?.companyAddress,
         resolvedCompany?.company_addr
     );
     const clientCity = getFirstAddressValue(
-        matchedInvoice?.billing_city,
+        matchedInvoice?.exhibitor?.city,
+        resolvedCompany?.city,
         form?.billingCity,
-        matchedInvoice?.company_city,
-        matchedInvoice?.city,
         form?.company_city,
         form?.city,
-        resolvedCompany?.city,
         resolvedCompany?.district
     );
     const clientState = getFirstAddressValue(
-        matchedInvoice?.billing_state,
+        matchedInvoice?.exhibitor?.state,
+        resolvedCompany?.state,
         form?.billingState,
-        matchedInvoice?.company_state,
-        matchedInvoice?.state,
         form?.company_state,
-        form?.state,
-        resolvedCompany?.state
+        form?.state
     );
     const clientCountry = getFirstAddressValue(
-        matchedInvoice?.company_country,
-        matchedInvoice?.country,
+        matchedInvoice?.exhibitor?.country,
+        resolvedCompany?.country,
         form?.company_country,
-        form?.country,
-        resolvedCompany?.country
+        form?.country
     );
     const clientPincode = getFirstAddressValue(
-        matchedInvoice?.billing_pincode,
+        matchedInvoice?.exhibitor?.pincode,
+        resolvedCompany?.pincode,
         form?.billingPin,
-        matchedInvoice?.company_pincode,
-        matchedInvoice?.pincode,
-        matchedInvoice?.pin_code,
-        matchedInvoice?.postal_code,
-        matchedInvoice?.zip_code,
         form?.company_pincode,
         form?.pincode,
         form?.pin_code,
         form?.postal_code,
         form?.zip_code,
-        resolvedCompany?.pincode,
         resolvedCompany?.pinCode,
         resolvedCompany?.pin_code,
         resolvedCompany?.postalCode,
