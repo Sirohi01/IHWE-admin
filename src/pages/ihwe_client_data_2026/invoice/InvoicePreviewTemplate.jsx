@@ -447,7 +447,15 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         resolvedCompany?.companyEmail,
         resolvedCompany?.email
     ) || '—';
+    // The invoice's own billing_* snapshot (its actual billing address at
+    // creation time) wins over the generic company_addr/city/state/pincode
+    // fields and the live Company profile — those can hold stale or
+    // differently-sourced values (e.g. the live profile's city/state, which
+    // drift after the invoice was issued, same principle as the contact
+    // person snapshot above).
     const clientAddressLine = getFirstAddressValue(
+        matchedInvoice?.billing_address,
+        form?.billingAddress,
         matchedInvoice?.company_addr,
         matchedInvoice?.address,
         form?.company_addr,
@@ -457,6 +465,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         resolvedCompany?.company_addr
     );
     const clientCity = getFirstAddressValue(
+        matchedInvoice?.billing_city,
+        form?.billingCity,
         matchedInvoice?.company_city,
         matchedInvoice?.city,
         form?.company_city,
@@ -465,6 +475,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         resolvedCompany?.district
     );
     const clientState = getFirstAddressValue(
+        matchedInvoice?.billing_state,
+        form?.billingState,
         matchedInvoice?.company_state,
         matchedInvoice?.state,
         form?.company_state,
@@ -479,6 +491,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         resolvedCompany?.country
     );
     const clientPincode = getFirstAddressValue(
+        matchedInvoice?.billing_pincode,
+        form?.billingPin,
         matchedInvoice?.company_pincode,
         matchedInvoice?.pincode,
         matchedInvoice?.pin_code,
