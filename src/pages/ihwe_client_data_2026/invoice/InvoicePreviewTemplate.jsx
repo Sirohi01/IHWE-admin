@@ -500,10 +500,6 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
         clientState,
         clientCountry,
     ]);
-    const clientCityPincode = [cleanAddressPart(clientCity), cleanAddressPart(clientPincode)]
-        .filter(Boolean)
-        .join(' - ');
-    const clientLocationLine = joinAddressParts([clientCityPincode, clientState, clientCountry]);
     const clientGstNo = matchedInvoice?.company_gst_no || form?.company_gst_no || matchedInvoice?.gst_no || form?.gstin;
     const clientUdyamNo = resolvedCompany?.udyamNumber || resolvedCompany?.msme?.udyamRegNo || matchedInvoice?.udyam_no || form?.udyam_no;
 
@@ -622,8 +618,7 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                     <tr>
                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
-                            <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{cleanAddressPart(clientAddressLine) || '—'}</div>
-                            {clientLocationLine && <div style={{ textTransform: 'capitalize' }}>{clientLocationLine}</div>}
+                            <div style={{ marginTop: 2, textTransform: 'capitalize' }}>{clientCompanyAddress || '—'}</div>
                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                 <tbody>
                                     <tr>
@@ -1311,9 +1306,8 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                         <td style={{ border: '1px solid #ccc', padding: '4px 8px', verticalAlign: 'top', fontSize: 11, lineHeight: '1.2' }}>
                                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>{clientCompanyName}</div>
                                             <div style={{ marginTop: 2, textTransform: 'capitalize' }}>
-                                                {cleanAddressPart(clientAddressLine) || '—'}
+                                                {clientCompanyAddress || '—'}
                                             </div>
-                                            {clientLocationLine && <div style={{ textTransform: 'capitalize' }}>{clientLocationLine}</div>}
                                             <table style={{ borderCollapse: 'collapse', border: 'none', lineHeight: '1.3', width: '100%', marginTop: 4 }}>
                                                 <tbody>
                                                     <tr>

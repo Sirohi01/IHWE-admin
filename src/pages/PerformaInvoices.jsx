@@ -20,6 +20,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCountries } from "../features/add_by_admin/country/countrySlice";
 import { fetchStates } from "../features/state/stateSlice";
 import { fetchCities } from "../features/city/citySlice";
+import { fetchUnit } from "../features/add_by_admin/unit/UnitSlice";
 import SearchableDropdown from '../components/SearchableDropdown';
 import { getCurrentUserMobile } from '../utils/currentUser';
 
@@ -154,7 +155,6 @@ const newItem = () => ({
 
 const GST_OPTIONS = ['0% GST', '5% CGST+SGST', '12% CGST+SGST', '18% CGST+SGST', '28% CGST+SGST', '18% IGST', '12% IGST', '5% IGST'];
 const ESTIMATE_TYPES = ['Intrastate', 'Interstate Sale', 'Foreign Sale'];
-const UNITS = ['Nos', 'Sqm', 'Sqft', 'Mtrs', 'Kgs', 'Ltrs', 'Pcs'];
 const SIZE_BASED_UNITS = ['Sqm', 'Sqft'];
 // Internal values stay 'Stall' / 'Addon Product' (every category check in this
 // file compares against these) — only the displayed label changes.
@@ -339,6 +339,8 @@ export const PerformaInvoices = () => {
     const { countries: reduxCountries } = useSelector((state) => state.countries || { countries: [] });
     const { states: reduxStates } = useSelector((state) => state.states || { states: [] });
     const { cities: reduxCities } = useSelector((state) => state.cities || { cities: [] });
+    const { units: reduxUnits = [] } = useSelector((state) => state.unit || {});
+    const UNITS = reduxUnits.filter((u) => u?.status === 'Active').map((u) => u.unit).filter(Boolean);
 
 
     let currentUserName = localStorage.getItem('user_name') || sessionStorage.getItem('user_name') || '';
@@ -363,6 +365,7 @@ export const PerformaInvoices = () => {
         if (!reduxStates || reduxStates.length === 0) dispatch(fetchStates());
         const actualCities = reduxCities?.data || reduxCities || [];
         if (!actualCities || actualCities.length === 0) dispatch(fetchCities());
+        if (!reduxUnits || reduxUnits.length === 0) dispatch(fetchUnit());
     }, [dispatch]);
 
     // ── form state ──────────────────────────────────────────────────────────────

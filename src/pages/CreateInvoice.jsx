@@ -309,6 +309,7 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
                         invoiceType: inv.type_of_invoice || 'Select Invoice Type',
                         invoiceNo: inv.invoice_no || 'Auto-generated on save',
                         invoiceDate: inv.invoice_date ? new Date(inv.invoice_date).toISOString().split('T')[0] : f.invoiceDate,
+                        supply_date: inv.supply_date ? new Date(inv.supply_date).toISOString().split('T')[0] : f.supply_date,
                         ewayBillNo: inv.eway_bill_no || f.ewayBillNo,
                         poNo: inv.po_no || f.poNo,
                         currency: inv.currency || f.currency,
@@ -351,7 +352,6 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
                                 setForm(f => ({
                                     ...estimateToInvoiceForm(estimate, estimateCompany || {}, f),
                                     invoiceNo: 'Auto-generated on save',
-                                    invoiceDate: estimate.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : f.invoiceDate,
                                     gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
                                     invoiceType: estimate.est_type || f.invoiceType,
                                 }));
@@ -393,7 +393,6 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
                         setForm(f => ({
                             ...estimateToInvoiceForm(estimate, estimateCompany || {}, f),
                             invoiceNo: estimate.est_no || f.invoiceNo,
-                            invoiceDate: estimate.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : f.invoiceDate,
                             gstin: estimate.company_gst_no || estimate.gst_no || f.gstin,
                             invoiceType: estimate.est_type || f.invoiceType,
                         }));
@@ -441,6 +440,7 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
         invoiceType: 'Select Invoice Type',
         invoiceNo: 'Auto-generated on save',
         invoiceDate: new Date().toISOString().split('T')[0],
+        supply_date: '',
         ewayBillNo: '',
         poNo: '',
         currency: 'INR - Indian Rupee (₹)',
@@ -669,7 +669,6 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
                 companyContactPerson: est.company_contact_person || estimateCompany?.contactPerson || f.companyContactPerson,
                 companyContactMobile: est.company_contact_mobile || estimateCompany?.mobile || estimateCompany?.contact1?.mobile || f.companyContactMobile,
                 companyEmail: est.company_email || estimateCompany?.email || estimateCompany?.companyEmail || f.companyEmail,
-                invoiceDate: est.supply_date ? new Date(est.supply_date).toISOString().split('T')[0] : f.invoiceDate,
                 poNo: est.po_no || est.poNo || f.poNo,
                 currency: String(est.country || '').toLowerCase() === 'india' ? 'INR - Indian Rupee (₹)' : 'USD - US Dollar ($)',
             }));
@@ -781,7 +780,7 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
                 est_type: form.invoiceType,
                 gst_no: form.gstin,
                 company_gst_no: form.gstin,
-                supply_date: form.invoiceDate,
+                supply_date: form.supply_date || form.invoiceDate,
                 company_name: form.company_name || form.clientName,
                 company_addr: form.company_addr || form.billingAddress,
                 event_name: form.event_name || form.consignee_name,
@@ -858,7 +857,7 @@ const CreateInvoice = ({ hideReadonlyFields = false, compactMode = false } = {})
             company_gst_no: form.gstin,
             event_name: form.event_name || form.consignee_name,
             event_place_of_supply: form.consignee_addr || form.shippingAddress,
-            supply_date: form.invoiceDate,
+            supply_date: form.supply_date || form.invoiceDate,
             consignee_name: form.consignee_name || form.event_name || form.clientName,
             consignee_addr: form.sameAsBilling ? form.company_addr : (form.consignee_addr || form.shippingAddress),
             billing_address: form.company_addr || form.billingAddress,

@@ -8,6 +8,7 @@ import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
 import { fetchCountries } from "../../../features/add_by_admin/country/countrySlice";
 import { fetchStates } from "../../../features/state/stateSlice";
 import { fetchCities } from "../../../features/city/citySlice";
+import { fetchUnit } from "../../../features/add_by_admin/unit/UnitSlice";
 import { useNavigate, useParams } from "react-router-dom";
 import { showError, showSuccess } from "../../../utils/toastMessage";
 import { LayoutGrid, UserCheck, Upload, ChevronDown, ChevronLeft, X } from "lucide-react";
@@ -29,6 +30,7 @@ const EditEstimate = () => {
   const { countries } = useSelector((state) => state.countries);
   const { states } = useSelector((state) => state.states);
   const { cities } = useSelector((state) => state.cities);
+  const { units = [] } = useSelector((state) => state.unit || {});
 
   const [formData, setFormData] = useState({
     est_type: "",
@@ -67,32 +69,17 @@ const EditEstimate = () => {
   // `${eventId}|${currency}|${stallType}` -> StallRate doc ({ ratePerSqm, hsnCode, ... })
   const [stallRateMap, setStallRateMap] = useState({});
   const [addonProductOptions, setAddonProductOptions] = useState([]);
-  const unitOptions = [
-    "Inch",
-    "Feet",
-    "Sqft",
-    "Meter",
-    "Nos",
-    "%",
-    "L.S.",
-    "Rft.",
-    "Rmt.",
-    "Pcs.",
-    "Sqmtr.",
-    "Roll",
-    "Pkt",
-    "Mtr",
-    "Q.FT",
-    "RFT",
-    "RMT",
-    "l.s.",
-  ];
+  const unitOptions = units
+    .filter((u) => u?.status === "Active")
+    .map((u) => u.unit)
+    .filter(Boolean);
 
   useEffect(() => {
     dispatch(fetchEvents());
     dispatch(fetchCountries());
     dispatch(fetchStates());
     dispatch(fetchCities());
+    dispatch(fetchUnit());
   }, [dispatch]);
 
   // Effect to populate form when estimate data is available

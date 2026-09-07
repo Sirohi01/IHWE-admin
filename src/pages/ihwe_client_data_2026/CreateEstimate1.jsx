@@ -10,39 +10,10 @@ import { fetchCountries } from "../../features/add_by_admin/country/countrySlice
 import { fetchStates } from "../../features/state/stateSlice";
 import { fetchCities } from "../../features/city/citySlice";
 import { fetchCompanies } from "../../features/company/companySlice";
+import { fetchUnit } from "../../features/add_by_admin/unit/UnitSlice";
 import { showError, showSuccess } from "../../utils/toastMessage";
 import { Upload, LayoutGrid, UserCheck } from "lucide-react";
 import api from "../../lib/api";
-
-const unitOptions = [
-  "Inch",
-  "Feet",
-  "Sqft",
-  "Meter",
-  "Nos",
-  "%",
-  "L.S.",
-  "Rft.",
-  "Nos.",
-  "Rmt.",
-  "Sqft.",
-  "Pcs.",
-  "Sqmtr.",
-  "Roll",
-  "Pkt",
-  "Mtr",
-  "Q.FT",
-  "RFT",
-  "RMT",
-  "l.s.",
-  "%",
-  "meter",
-  "sqft",
-  "feet",
-  "inch",
-  "nos",
-  "inch",
-];
 
 // Internal values stay "Stall" / "Addon Product" — only the displayed label changes.
 const ITEM_CATEGORIES = ["Stall", "Addon Product"];
@@ -71,6 +42,12 @@ const CreateEstimate1 = () => {
   const statesState = useSelector((state) => state.states);
   const citiesState = useSelector((state) => state.cities);
   const { companies } = useSelector((state) => state.companies);
+  const { units: unitsState } = useSelector((state) => state.unit || {});
+
+  const unitOptions = getArrayFromSlice(unitsState, "units")
+    .filter((u) => u?.status === "Active")
+    .map((u) => u.unit)
+    .filter(Boolean);
 
   const countriesArray = getArrayFromSlice(countriesState, "countries")
     .slice()
@@ -88,6 +65,7 @@ const CreateEstimate1 = () => {
     dispatch(fetchCountries());
     dispatch(fetchStates());
     dispatch(fetchCities());
+    dispatch(fetchUnit());
     if (companies.length === 0) {
       dispatch(fetchCompanies());
     }

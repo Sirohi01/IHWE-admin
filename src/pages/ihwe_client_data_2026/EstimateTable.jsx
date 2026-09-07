@@ -325,30 +325,51 @@ const EstimateTable = ({ clientId }) => {
   };
   const getDocumentPrefix = (docNo) => String(docNo || "").split("/").slice(0, -1).join("/");
   const currentEstimateNos = new Set(currentEstimates.map((estimate) => estimate.est_no).filter(Boolean));
+
+  const getEstimateAmount = (estimate) =>
+    Number(estimate?.finalAmount) || (estimate?.items || []).reduce((total, item) => total + (parseFloat(item.finalAmount) || 0), 0);
+
+  // Attribute each invoice to exactly one estimate — the one it was actually
+  // created against — so it never shows up against more than one PI row.
+  // A strict identity match (source_estimate_id / estimate_no) always wins;
+  // the amount+sequence heuristic (for legacy invoices missing those fields)
+  // only runs when no strict match exists anywhere for that invoice, and
+  // even then picks just the single nearest-preceding estimate.
+  const invoiceToEstimateId = new Map();
+  invoices.forEach((inv) => {
+    const strictMatch = estimates.find((estimate) => {
+      if (inv.companyId && estimate.companyId && String(inv.companyId) !== String(estimate.companyId)) return false;
+      if (inv.estimate_no && inv.estimate_no === estimate.est_no) return true;
+      if (inv.source_estimate_id && String(inv.source_estimate_id) === String(estimate._id)) return true;
+      return false;
+    });
+    if (strictMatch) {
+      invoiceToEstimateId.set(inv._id, strictMatch._id);
+      return;
+    }
+
+    const invSeq = getDocumentSeq(inv.estimate_no);
+    if (invSeq === null) return;
+    let best = null;
+    estimates.forEach((estimate) => {
+      if (inv.companyId && estimate.companyId && String(inv.companyId) !== String(estimate.companyId)) return;
+      const baseSeq = getDocumentSeq(estimate.est_no);
+      if (baseSeq === null || invSeq < baseSeq) return;
+      if (getDocumentPrefix(estimate.est_no) !== getDocumentPrefix(inv.estimate_no)) return;
+      const sameAmount = Math.abs((Number(inv.finalAmount) || 0) - getEstimateAmount(estimate)) < 0.01;
+      if (!sameAmount) return;
+      if (!best || baseSeq > getDocumentSeq(best.est_no)) best = estimate;
+    });
+    if (best) invoiceToEstimateId.set(inv._id, best._id);
+  });
+
   const displayRows = currentEstimates.flatMap((estimate) => {
-    const baseSeq = getDocumentSeq(estimate.est_no);
-    const basePrefix = getDocumentPrefix(estimate.est_no);
-    // Prefer the estimate's own saved finalAmount — it's the actual grand
-    // total (includes PLC Charges + its GST, which aren't line items).
-    // Re-summing item.finalAmount here under-counts by exactly that PLC
-    // amount whenever one applies. Fall back to the item sum only for very
-    // old records that predate finalAmount being saved.
-    const estimateAmount = Number(estimate?.finalAmount) || (estimate?.items || []).reduce((total, item) => {
-      return total + (parseFloat(item.finalAmount) || 0);
-    }, 0);
     const matchingPerformaInvoices = perInvoices
       .filter((pi) => pi.est_no === estimate.est_no)
       .sort(buildSortLatestFirst);
 
     const matchingInvoices = invoices
-      .filter((inv) => {
-        if (inv.companyId && estimate.companyId && String(inv.companyId) !== String(estimate.companyId)) return false;
-        if (inv.estimate_no === estimate.est_no) return true;
-        if (inv.source_estimate_id && String(inv.source_estimate_id) === String(estimate._id)) return true;
-        const invSeq = getDocumentSeq(inv.estimate_no);
-        const sameAmount = Math.abs((Number(inv.finalAmount) || 0) - estimateAmount) < 0.01;
-        return baseSeq !== null && invSeq !== null && invSeq >= baseSeq && getDocumentPrefix(inv.estimate_no) === basePrefix && sameAmount;
-      })
+      .filter((inv) => invoiceToEstimateId.get(inv._id) === estimate._id)
       .sort(buildSortLatestFirst);
 
     const versionNos = Array.from(new Set([

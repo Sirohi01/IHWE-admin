@@ -173,6 +173,7 @@ export const estimateToInvoiceForm = (estimate, client, prev = {}) => {
     gstin: estimate?.company_gst_no || estimate?.gst_no || clientData.gst || prev.gstin,
     invoiceType: estimate?.est_type || prev.invoiceType || "Intrastate",
     invoiceDate: prev.invoiceDate,
+    supply_date: estimate?.supply_date ? new Date(estimate.supply_date).toISOString().split('T')[0] : prev.supply_date,
     billingAddress: companyAddress || prev.billingAddress,
     shippingAddress: eventAddress || prev.shippingAddress,
     company_name: companyName || prev.company_name,
