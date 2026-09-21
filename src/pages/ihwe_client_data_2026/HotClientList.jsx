@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 import api from "../../lib/api";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import { useEventContext } from "../../context/EventContext";
@@ -12,6 +11,7 @@ import {
 } from "lucide-react";
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
 import { getLeadScore } from "../../utils/leadScoring";
+import { getCurrentAdminUser, hasFullLeadAccess } from "../../utils/currentUser";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -69,9 +69,11 @@ const HotClientList = () => {
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
   const { currentEventId } = useEventContext();
 
-  // Auth State
-  const { user } = useSelector(state => state.auth);
-  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
+  // Auth State — Super Administrator and Sales Manager see every hot lead;
+  // everyone else only sees leads forwarded to them (enforced server-side
+  // via the username/role passed below).
+  const user = getCurrentAdminUser();
+  const isSuperAdmin = hasFullLeadAccess(user?.role);
 
   // Hot Lead = a PI/Estimate exists for this event and no payment has come
   // in yet — independent of the pipeline status field (a lead can sit in
@@ -112,7 +114,7 @@ const HotClientList = () => {
       .finally(() => { if (!cancelled) setIsLoading(false); });
     return () => { cancelled = true; };
   }, [currentEventId, user?.username, user?.role]);
-  const { statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId);
+  const { statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId, user);
   const filteredLeads = hotLeads.filter((c) => {
     if (filterSource && (c.dataSource || 'Website') !== filterSource) return false;
     if (filterIndustry && (c.businessNature || '') !== filterIndustry) return false;

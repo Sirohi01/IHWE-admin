@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 
-const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
+const useDashboardStats = (filterStatus, customData = null, eventId = '', authUser = null) => {
+  const username = authUser?.username;
+  const role = authUser?.role;
   const [stats, setStats] = useState({
     totalLeads: 0,
     todaysLeads: 0,
@@ -251,6 +253,8 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
             dashboard: 'true',
             ...(eventId && { eventId }),
             ...(filterStatus && { status: Array.isArray(filterStatus) ? filterStatus.join(',') : filterStatus }),
+            ...(username && { username }),
+            ...(role && { role }),
         });
 
         // The raw-doc fetch above is capped at 3000 rows (fine for the
@@ -263,6 +267,8 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
         const summaryParams = new URLSearchParams({
             ...(eventId && { eventId }),
             ...(filterStatus && { status: Array.isArray(filterStatus) ? filterStatus.join(',') : filterStatus }),
+            ...(username && { username }),
+            ...(role && { role }),
         });
         const statsSummaryPromise = api.get(`/api/companies/stats-summary?${summaryParams}`).catch(() => null);
 
@@ -287,7 +293,7 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '') => {
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filterStatus), customData, eventId]);
+  }, [JSON.stringify(filterStatus), customData, eventId, username, role]);
 
   return stats;
 };

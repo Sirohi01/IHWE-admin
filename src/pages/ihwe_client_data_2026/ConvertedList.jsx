@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Eye } from 'lucide-react';
 import { Link, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
+import { useDispatch } from "react-redux";
 import { createActivityLogThunk } from '../../features/activityLog/activityLogSlice';
 import api from "../../lib/api";
 import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
@@ -14,6 +14,7 @@ import {
   Users, DollarSign, Star, FileText, ChevronDown, TrendingUp, Ticket, ShieldCheck, X, Banknote, Clock, Package
 } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
+import { getCurrentAdminUser, hasFullLeadAccess } from "../../utils/currentUser";
 import {
   PieChart,
   Pie,
@@ -82,9 +83,11 @@ const ConvertedList = () => {
   // Currently selected event (global, from Navbar) — scopes the registrations fetch below.
   const { currentEventId } = useEventContext();
 
-  // Auth State
-  const { user } = useSelector(state => state.auth);
-  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
+  // Auth State — Converted/Booked deals are shown event-wide to everyone
+  // regardless of role; isSuperAdmin here only toggles the "Assigned To"
+  // column, kept consistent with the other lead-list pages.
+  const user = getCurrentAdminUser();
+  const isSuperAdmin = hasFullLeadAccess(user?.role);
 
   const [registrations, setRegistrations] = useState([]);
   const [masterCompanies, setMasterCompanies] = useState([]);

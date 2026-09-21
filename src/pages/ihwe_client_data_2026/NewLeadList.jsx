@@ -10,6 +10,7 @@ import {
 import { FaStar, FaRegStar, FaWhatsapp } from 'react-icons/fa';
 import { getLeadScore } from "../../utils/leadScoring";
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { getCurrentAdminUser, hasFullLeadAccess } from "../../utils/currentUser";
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -71,32 +72,18 @@ const NewLeadList = () => {
     ? `/crm-event/${currentEventId}/add-client`
     : "/ihweClientData2026/addNewClients";
 
-  // Auth State
-  const { user } = useSelector(state => state.auth);
-  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
+  // Auth State — Super Administrator and Sales Manager see every lead;
+  // everyone else only sees leads forwarded to them or added by them
+  // (enforced server-side once username/role are passed to fetchCompanies).
+  const user = getCurrentAdminUser();
+  const isSuperAdmin = hasFullLeadAccess(user?.role);
 
   // 🏢 Company redux data
   const companiesState = useSelector((state) => state.companies);
   const newLeadCompanies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
   const pagination = companiesState?.pagination;
   const isLoading = companiesState?.loading ?? false;
-  const userRole = user?.role?.trim();
 
-
-
-  const hasFullNewLeadAccess = [
-    "IHWE–Super Administrator",
-    "IHWE–Sales Manager",
-    "IHWE–Platform Administrator",
-  ].includes(userRole);
-
-  {
-    hasFullNewLeadAccess ? (
-      "All newly generated leads from different sources"
-    ) : (
-      "Leads assigned to you that are newly generated"
-    )
-  }
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
       dispatch(fetchCompanies({
@@ -110,11 +97,13 @@ const NewLeadList = () => {
         startDate,
         endDate,
         eventId: currentEventId,
+        username: user?.username,
+        role: user?.role,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo, currentEventId]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo, currentEventId, user?.username, user?.role]);
 
   const uniqueSources = [...new Set(newLeadCompanies.map(c => c.dataSource).filter(Boolean))];
   const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
@@ -153,7 +142,7 @@ const NewLeadList = () => {
     totalLeads, todaysLeads, thisWeekLeads, thisMonthLeads,
     pendingFollowUpsCount, followUps, sourceChartData,
     statusChartData, recentActivities, topExecutives
-  } = useDashboardStats('New Lead', null, currentEventId);
+  } = useDashboardStats('New Lead', null, currentEventId, user);
 
   function AnimatedStatCard({ icon, gradientTo, iconBg, iconClass, rawValue, displayValue, label, subLabel, subColor }) {
     const { ref, count } = useCountUp(rawValue);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
 import api from "../../lib/api";
+import { getCurrentAdminUser, hasFullLeadAccess } from "../../utils/currentUser";
 import {
   Search, RefreshCw, Download, FileText, Smartphone, Mail, Building2, Eye, User, ArrowLeft
 } from "lucide-react";
@@ -31,8 +31,11 @@ const ProposalSentList = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  const { user } = useSelector(state => state.auth);
-  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, '') === 'superadmin';
+  // Super Administrator and Sales Manager see every lead; everyone else
+  // only sees leads forwarded to them (enforced server-side via the
+  // username/role passed to /api/companies below).
+  const user = getCurrentAdminUser();
+  const isSuperAdmin = hasFullLeadAccess(user?.role);
 
   useEffect(() => {
     fetchHistory();

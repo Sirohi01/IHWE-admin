@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { FaStar, FaRegStar } from "react-icons/fa";
 import { getLeadScore } from "../../utils/leadScoring";
+import { getCurrentAdminUser, hasFullLeadAccess } from "../../utils/currentUser";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== "string") return str;
@@ -111,8 +112,11 @@ const AllLeadsList = () => {
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
   const { currentEventId } = useEventContext();
 
-  const { user } = useSelector((s) => s.auth);
-  const isSuperAdmin = user?.role?.toLowerCase().replace(/[^a-z]/g, "") === "superadmin";
+  // Super Administrator and Sales Manager see every lead; everyone else
+  // only sees leads forwarded to them or added by them (enforced
+  // server-side via the username/role passed below).
+  const user = getCurrentAdminUser();
+  const isSuperAdmin = hasFullLeadAccess(user?.role);
   const companiesState = useSelector((s) => s.companies);
   const companies = Array.isArray(companiesState?.companies) ? companiesState.companies : [];
   const pagination = companiesState?.pagination;
@@ -120,27 +124,27 @@ const AllLeadsList = () => {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      dispatch(fetchCompanies({ page, limit, search: searchTerm, source: filterSource, startDate, endDate, eventId: currentEventId }));
+      dispatch(fetchCompanies({
+        page, limit, search: searchTerm, source: filterSource, startDate, endDate,
+        eventId: currentEventId, username: user?.username, role: user?.role,
+      }));
     }, 400);
     return () => clearTimeout(t);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, currentEventId]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, currentEventId, user?.username, user?.role]);
 
   useEffect(() => {
     if (!currentEventId) { setConvertedCount(0); return; }
     let cancelled = false;
-    const stored = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
-    let currentUser = {};
-    try { currentUser = stored ? JSON.parse(stored) : (user || {}); } catch { currentUser = user || {}; }
     const params = new URLSearchParams({
       eventId: currentEventId,
-      ...(currentUser?.username && { username: currentUser.username }),
-      ...(currentUser?.role && { role: currentUser.role }),
+      ...(user?.username && { username: user.username }),
+      ...(user?.role && { role: user.role }),
     });
     api.get(`/api/companies/converted?${params}`)
       .then((res) => { if (!cancelled) setConvertedCount(Number(res.data?.total) || 0); })
       .catch(() => { if (!cancelled) setConvertedCount(0); });
     return () => { cancelled = true; };
-  }, [currentEventId, user]);
+  }, [currentEventId, user?.username, user?.role]);
 
   const filtered = filterStatus
     ? companies.filter((c) => (c.companyStatus || "").toLowerCase().includes(filterStatus.toLowerCase()))

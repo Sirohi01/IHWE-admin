@@ -11,6 +11,7 @@ import {
   CalendarDays, Trash2, Archive, UserPlus, Phone, Mail, PauseCircle, XCircle, Hourglass, BarChart3, ChevronDown
 } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
+import { getCurrentAdminUser } from "../../utils/currentUser";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -72,8 +73,10 @@ const ColdClientList = () => {
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
   const { currentEventId } = useEventContext();
 
-  // Auth State
-  const { user } = useSelector(state => state.auth);
+  // Auth State — Super Administrator and Sales Manager see every lead;
+  // everyone else only sees leads forwarded to them or added by them
+  // (enforced server-side via the username/role passed below).
+  const user = getCurrentAdminUser();
 
   // Redux data
   const companiesState = useSelector((state) => state.companies);
@@ -92,13 +95,15 @@ const ColdClientList = () => {
         source: filterSource,
         industry: filterIndustry,
         eventId: currentEventId,
+        username: user?.username,
+        role: user?.role,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId, user?.username, user?.role]);
 
-  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS, null, currentEventId);
+  const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS, null, currentEventId, user);
 
   const getStatusCount = (statusMatch) => {
     if (!statusStats) return 0;

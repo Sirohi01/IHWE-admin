@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp, FaStar, FaRegStar } from 'react-icons/fa';
 import { getLeadScore } from "../../utils/leadScoring";
+import { getCurrentAdminUser } from "../../utils/currentUser";
 
 // Hook: animate number from 0 to target when element enters viewport
 function useCountUp(target, duration = 1200) {
@@ -72,8 +73,10 @@ const WarmClientList = () => {
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
   const { currentEventId } = useEventContext();
 
-  // Auth State
-  const { user } = useSelector(state => state.auth);
+  // Auth State — Super Administrator and Sales Manager see every lead;
+  // everyone else only sees leads forwarded to them or added by them
+  // (enforced server-side via the username/role passed below).
+  const user = getCurrentAdminUser();
 
   // Redux data
   const companiesState = useSelector((state) => state.companies);
@@ -90,15 +93,17 @@ const WarmClientList = () => {
         status: filterStatus || FOLLOW_UP_STATUS_FILTER,
         source: filterSource,
         eventId: currentEventId,
+        username: user?.username,
+        role: user?.role,
       }));
     }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, currentEventId]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, currentEventId, user?.username, user?.role]);
 
   const {
     totalLeads: hookTotal, pendingFollowUpsCount, followUpsDueThisWeek, followUpsDueThisMonth,
     overviewData, overdueLeads
-  } = useDashboardStats(FOLLOW_UP_STATUSES, null, currentEventId);
+  } = useDashboardStats(FOLLOW_UP_STATUSES, null, currentEventId, user);
 
   const circumference = 2 * Math.PI * 32;
   const [mounted, setMounted] = useState(false);
