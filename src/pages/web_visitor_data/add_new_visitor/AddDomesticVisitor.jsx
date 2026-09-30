@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useScopedEvent } from "../../../lib/visitorEventScope";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -99,6 +100,7 @@ const getEventLabel = (event) =>
 const AddDomesticVisitor = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
+    const scopedEvent = useScopedEvent();
 
     const [visitorType, setVisitorType] = useState("corporate");
     const [formData, setFormData] = useState(getInitialFormData());
@@ -210,10 +212,10 @@ const AddDomesticVisitor = () => {
         if (!formData.registrationFor && eventOptions.length > 0) {
             setFormData((prev) => ({
                 ...prev,
-                registrationFor: eventOptions[0].label,
+                registrationFor: (scopedEvent && getEventLabel(scopedEvent)) || eventOptions[0].label,
             }));
         }
-    }, [eventOptions, formData.registrationFor]);
+    }, [eventOptions, formData.registrationFor, scopedEvent]);
 
     useEffect(() => {
         if (!formData.country) {
@@ -335,8 +337,12 @@ const AddDomesticVisitor = () => {
         return "";
     };
 
+    // Inside /visitor-event/:eventId the CrmEvent from Event Setup is the source of truth.
+    const eventForPayload = (scopedEvent && getEventLabel(scopedEvent)) || formData.registrationFor;
+
     const buildGeneralPayload = () => ({
-        registrationFor: formData.registrationFor,
+        registrationFor: eventForPayload,
+        eventName: eventForPayload,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -359,7 +365,8 @@ const AddDomesticVisitor = () => {
     });
 
     const buildCorporatePayload = () => ({
-        registrationFor: formData.registrationFor,
+        registrationFor: eventForPayload,
+        eventName: eventForPayload,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -383,7 +390,8 @@ const AddDomesticVisitor = () => {
     });
 
     const buildInternationalPayload = () => ({
-        registrationFor: formData.registrationFor,
+        registrationFor: eventForPayload,
+        eventName: eventForPayload,
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,

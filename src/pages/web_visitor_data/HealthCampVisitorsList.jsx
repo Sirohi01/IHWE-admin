@@ -8,6 +8,7 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 import { Search, MoreVertical, RefreshCw, Users, Clock, CalendarDays, CalendarCheck, CheckCircle } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
 import BulkUploadModal from "../../components/BulkUploadModal";
+import { shortEventLabel, useEventScopedVisitors, useScopedEvent } from "../../lib/visitorEventScope";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -63,9 +64,11 @@ const HealthCampVisitorsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const { healthCampVisitors, loading } = useSelector(
+  const { healthCampVisitors: allHealthCampVisitors, loading } = useSelector(
     (state) => state.healthCampVisitors,
   );
+  const healthCampVisitors = useEventScopedVisitors(allHealthCampVisitors);
+  const scopedEvent = useScopedEvent();
 
   useEffect(() => {
     dispatch(fetchHealthCampVisitors());
@@ -419,7 +422,7 @@ const HealthCampVisitorsList = () => {
         <ClientOverview client={selectedClient} onBack={() => setSelectedClient(null)} />
       ) : (
         <BaseLeadPage
-          title="Health Camp Visitors"
+          title={scopedEvent ? `Health Camp Visitors — ${shortEventLabel(scopedEvent)}` : "Health Camp Visitors"}
           subtitle="Manage all health camp registrations and visitors"
           cardsInRow={5}
           statCards={statCards}

@@ -8,9 +8,12 @@ import { fetchCountries } from "../../../features/add_by_admin/country/countrySl
 import { fetchStates } from "../../../features/state/stateSlice";
 import { fetchCities } from "../../../features/city/citySlice";
 import { fetchEvents } from "../../../features/crmEvent/crmEventSlice";
+import { useRegistrationEventName, useScopedEvent } from "../../../lib/visitorEventScope";
 
 const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hideTabs = false }) => {
   const dispatch = useDispatch();
+  const scopedEvent = useScopedEvent();
+  const registrationEventName = useRegistrationEventName();
   const [visitorType, setVisitorType] = useState(initialType);
 
   useEffect(() => {
@@ -83,7 +86,7 @@ const VisitorRegistration = ({ onNavigateToList, initialType = "corporate", hide
                 Add New Visitor
               </h2>
               <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] mt-0.5 font-bold">
-                International Health & Wellness Expo 2026
+                {scopedEvent ? registrationEventName : "International Health & Wellness Expo 2026"}
               </p>
             </div>
             <div className="">

@@ -4,6 +4,10 @@ import { menuItems } from "../data/menuItems";
 import api from "../lib/api";
 import { fetchEvents } from "../features/crmEvent/crmEventSlice";
 import { CalendarClock } from "lucide-react";
+import { shortEventLabel } from "../lib/visitorEventScope";
+
+// Only active events get a sidebar entry; a missing status counts as active.
+const isActiveEvent = (ev) => !ev.event_status || String(ev.event_status).toLowerCase() === "active";
 
 export function useSidebarMenu() {
   const dispatch = useDispatch();
@@ -117,6 +121,7 @@ export function useSidebarMenu() {
 
     const dynamicEventItems = (crmEvents || [])
       .filter((ev) => ev.event_name || ev.event_fullName)
+      .filter(isActiveEvent)
       .filter((ev) => isSuperAdmin || perms[ev.event_fullName || ev.event_name] === true)
       .slice()
       .sort((a, b) => new Date(b.event_fromDate || 0) - new Date(a.event_fromDate || 0))
@@ -147,6 +152,45 @@ export function useSidebarMenu() {
         const insertAt = masterDataIdx >= 0 ? masterDataIdx : salesCrmSection.children.length;
         salesCrmSection.children.splice(insertAt, 0, ...dynamicEventItems);
       }
+    }
+
+    // Visitor Management, split per event: the static dropdown is swapped for
+    // one dropdown per CrmEvent. Children keep their original labels so the
+    // existing role permissions (perms["Corporate Visitors"], ...) still gate
+    // them; the static dropdown stays as the fallback while no events exist.
+    const visitorEventPaths = {
+      "Add Visitor": "add-visitor",
+      "Corporate Visitors": "corporate",
+      "International Visitors": "international",
+      "General Visitors": "general",
+      "Health Camp Visitors": "health-camp",
+      "Visitor Reviews": "reviews",
+    };
+    const visitorEvents = (crmEvents || [])
+      .filter((ev) => ev.event_name || ev.event_fullName)
+      .filter(isActiveEvent)
+      .slice()
+      .sort((a, b) => new Date(b.event_fromDate || 0) - new Date(a.event_fromDate || 0));
+
+    if (visitorEvents.length > 0) {
+      results.forEach((section) => {
+        const list = section.type === "section" ? section.children : results;
+        const idx = list.findIndex((c) => c.type === "dropdown" && c.label === "Visitor Management");
+        if (idx < 0) return;
+        const visibleChildren = list[idx].children || [];
+        const perEvent = visitorEvents.map((ev) => ({
+          type: "dropdown",
+          label: `${shortEventLabel(ev)} Visitors`,
+          icon: list[idx].icon,
+          children: visibleChildren
+            .filter((child) => visitorEventPaths[child.label])
+            .map((child) => ({
+              label: child.label,
+              path: `/visitor-event/${ev._id}/${visitorEventPaths[child.label]}`,
+            })),
+        }));
+        list.splice(idx, 1, ...perEvent);
+      });
     }
 
     return results.filter(item => item.type !== "section" || item.children.length > 0);

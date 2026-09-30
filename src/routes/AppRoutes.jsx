@@ -690,6 +690,15 @@ export default function AppRoutes() {
             <Route path="crm-event/:eventId/all-leads" element={<CrmEventScopedRoute><AllLeadsList /></CrmEventScopedRoute>} />
             <Route path="crm-event/:eventId/referral-leads" element={<CrmEventReferralLeads />} />
 
+            {/* Visitor Management, split per CrmEvent — same scoping as the
+                crm-event routes above; the lists filter to the pinned event. */}
+            <Route path="visitor-event/:eventId/add-visitor" element={<CrmEventScopedRoute><VisitorRegistrationForm /></CrmEventScopedRoute>} />
+            <Route path="visitor-event/:eventId/corporate" element={<CrmEventScopedRoute><CorporateVisitorsList /></CrmEventScopedRoute>} />
+            <Route path="visitor-event/:eventId/international" element={<CrmEventScopedRoute><InternationalVisitorsList /></CrmEventScopedRoute>} />
+            <Route path="visitor-event/:eventId/general" element={<CrmEventScopedRoute><GeneralVisitorsList /></CrmEventScopedRoute>} />
+            <Route path="visitor-event/:eventId/health-camp" element={<CrmEventScopedRoute><HealthCampVisitorsList /></CrmEventScopedRoute>} />
+            <Route path="visitor-event/:eventId/reviews" element={<CrmEventScopedRoute><VisitorReviewLogs /></CrmEventScopedRoute>} />
+
             <Route
               path="ihweClientData2026/masterData"
               element={<MasterClientsList />}

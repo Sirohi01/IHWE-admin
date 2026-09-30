@@ -8,6 +8,7 @@ import BaseLeadPage from "../../layout/BaseLeadPage";
 import { Search, MoreVertical, RefreshCw, Users, Clock, CalendarDays, CalendarCheck, CheckCircle } from "lucide-react";
 import { FaWhatsapp } from 'react-icons/fa';
 import BulkUploadModal from "../../components/BulkUploadModal";
+import { shortEventLabel, useEventScopedVisitors, useScopedEvent } from "../../lib/visitorEventScope";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -63,9 +64,11 @@ const CorporateVisitorsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showUploadModal, setShowUploadModal] = useState(false);
 
-  const { corporateVisitors, loading } = useSelector(
+  const { corporateVisitors: allCorporateVisitors, loading } = useSelector(
     (state) => state.corporateVisitors,
   );
+  const corporateVisitors = useEventScopedVisitors(allCorporateVisitors);
+  const scopedEvent = useScopedEvent();
 
   useEffect(() => {
     dispatch(fetchCorporateVisitors());
@@ -431,7 +434,7 @@ const CorporateVisitorsList = () => {
         <ClientOverview client={selectedClient} onBack={() => setSelectedClient(null)} />
       ) : (
         <BaseLeadPage
-          title="Corporate Visitors"
+          title={scopedEvent ? `Corporate Visitors — ${shortEventLabel(scopedEvent)}` : "Corporate Visitors"}
           subtitle="Manage all corporate exhibition visitors and passes"
           cardsInRow={5}
           statCards={statCards}

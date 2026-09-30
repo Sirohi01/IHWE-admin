@@ -3,10 +3,14 @@ import { useNavigate } from "react-router-dom";
 import AddDomesticVisitor from "./AddDomesticVisitor";
 import VisitorRegistration from "./VisitorRegistration";
 import { Upload, LayoutGrid, UserCheck } from "lucide-react";
+import { shortEventLabel, useRegistrationEventName, useScopedEvent } from "../../../lib/visitorEventScope";
 
 const VisitorRegistrationForm = () => {
   const [visitorType, setVisitorType] = useState(null);
   const navigate = useNavigate();
+  const scopedEvent = useScopedEvent();
+  const registrationEventName = useRegistrationEventName();
+  const eventLabel = scopedEvent ? shortEventLabel(scopedEvent) : "IHWE 2026";
 
   if (visitorType === "domestic") {
     return (
@@ -40,7 +44,7 @@ const VisitorRegistrationForm = () => {
           </div>
           <div className="flex gap-6">
             <button
-              onClick={() => navigate("/ihweClientData2026/GeneralVisitorsList")}
+              onClick={() => navigate(scopedEvent ? `/visitor-event/${scopedEvent._id}/general` : "/ihweClientData2026/GeneralVisitorsList")}
               className="bg-[#23471d] text-white px-4 py-1.5 rounded-md"
             >
               Visitor Lists
@@ -69,7 +73,7 @@ const VisitorRegistrationForm = () => {
           </h2>
           <div className="flex gap-6">
             <button
-              onClick={() => navigate("/ihweClientData2026/CorporateVisitorsList")}
+              onClick={() => navigate(scopedEvent ? `/visitor-event/${scopedEvent._id}/corporate` : "/ihweClientData2026/CorporateVisitorsList")}
               className="bg-[#d26019] text-white px-4 py-1.5 rounded-md"
             >
               Visitor Lists
@@ -134,7 +138,7 @@ const VisitorRegistrationForm = () => {
               </div>
 
               <p className="text-white/80 text-[13px] md:text-sm leading-relaxed max-w-md mt-1">
-                Explore healthcare, wellness, AYUSH, organic products, and business opportunities at IHWE 2026.
+                Explore healthcare, wellness, AYUSH, organic products, and business opportunities at {eventLabel}.
               </p>
             </div>
           </div>
@@ -145,16 +149,18 @@ const VisitorRegistrationForm = () => {
             <div>
               <h2 className="text-[#1a4d1a] text-[15px] font-semibold leading-snug mb-2">
                 <span className="text-[#0D530E] text-[17px] font-medium">
-                  9th Edition of International Health & Wellness Expo 2026
+                  {scopedEvent ? registrationEventName : "9th Edition of International Health & Wellness Expo 2026"}
                 </span>{" "}
                 <br />
-                <span className="text-gray-900 text-[12px] font-medium">
-                  (IHWE Global Edition)
-                </span>
+                {!scopedEvent && (
+                  <span className="text-gray-900 text-[12px] font-medium">
+                    (IHWE Global Edition)
+                  </span>
+                )}
               </h2>
               <div className="w-8 h-[3px] bg-[#4a8f2f] rounded mb-3" />
               <p className="text-gray-600 text-[13px] leading-relaxed">
-                Welcome visitors to IHWE 2026 with a streamlined registration flow for domestic and international participation.
+                Welcome visitors to {eventLabel} with a streamlined registration flow for domestic and international participation.
               </p>
             </div>
           </div>

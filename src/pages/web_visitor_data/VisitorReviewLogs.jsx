@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Table from "../../components/table/Table";
 import Pagination from "../../components/Pagination";
 import PageHeader from "../../components/PageHeader";
 import api from "../../lib/api";
 import Swal from "sweetalert2";
 import { Search, Calendar, RefreshCw } from "lucide-react";
+import { reviewBelongsToEvent, useScopedEvent } from "../../lib/visitorEventScope";
 
 const VisitorReviewLogs = () => {
-  const [reviews, setReviews] = useState([]);
+  const [allReviews, setReviews] = useState([]);
+  const scopedEvent = useScopedEvent();
+  const reviews = useMemo(
+    () => allReviews.filter((r) => reviewBelongsToEvent(r, scopedEvent)),
+    [allReviews, scopedEvent],
+  );
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);

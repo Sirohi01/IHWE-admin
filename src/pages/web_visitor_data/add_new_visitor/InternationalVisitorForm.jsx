@@ -9,6 +9,7 @@ import { fetchNatures } from "../../../features/add_by_admin/nature/natureSlice"
 import { showError, showSuccess } from "../../../utils/toastMessage";
 import Swal from "sweetalert2";
 import { createActivityLogThunk } from "../../../features/activityLog/activityLogSlice";
+import { useScopedEvent } from "../../../lib/visitorEventScope";
 import { User, Building2, Globe, MapPin, CheckSquare, Send, Briefcase, Plane, Upload } from "lucide-react";
 
 const DOCUMENT_FIELDS = [
@@ -93,6 +94,9 @@ const InternationalVisitorForm = ({
   const { states: reduxStates } = useSelector((state) => state.states);
   const { cities: reduxCities } = useSelector((state) => state.cities);
   const { events: reduxEvents } = useSelector((state) => state.crmEvents);
+  // Inside /visitor-event/:eventId the CrmEvent from Event Setup is fixed.
+  const scopedEvent = useScopedEvent();
+  const scopedEventLabel = scopedEvent ? scopedEvent.event_fullName || scopedEvent.event_name : "";
   const { natures: reduxNatures } = useSelector((state) => state.natures);
 
   useEffect(() => {
@@ -188,7 +192,8 @@ const InternationalVisitorForm = ({
   };
 
   const validate = () => {
-    if (!corporateData.registrationFor || corporateData.registrationFor.includes("Select")) return showError("Please select Event");
+    const eventValue = scopedEventLabel || corporateData.registrationFor;
+    if (!eventValue || eventValue.includes("Select")) return showError("Please select Event");
     if (!corporateData.firstName.trim()) return showError("First Name is required");
     if (!corporateData.lastName.trim()) return showError("Last Name is required");
     if (!corporateData.gender || corporateData.gender.includes("Select")) return showError("Gender is required");
@@ -213,6 +218,10 @@ const InternationalVisitorForm = ({
           formData.append(key, value ?? "");
         }
       });
+      if (scopedEventLabel) {
+        formData.set("registrationFor", scopedEventLabel);
+        formData.set("eventName", scopedEventLabel);
+      }
       Object.entries(files).forEach(([key, file]) => {
         if (file) formData.append(key, file);
       });
@@ -263,10 +272,11 @@ const InternationalVisitorForm = ({
             <label className={labelClass}>Event Name <span className="text-red-500">*</span></label>
             <select
               className={inputClass}
-              value={corporateData.registrationFor}
+              value={scopedEventLabel || corporateData.registrationFor}
+              disabled={!!scopedEventLabel}
               onChange={(e) => setCorporateData({ ...corporateData, registrationFor: e.target.value })}
             >
-              {registrationOptions.map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
+              {(scopedEventLabel ? [scopedEventLabel] : registrationOptions).map((opt, i) => <option key={i} value={opt}>{opt}</option>)}
             </select>
           </div>
           <div>
