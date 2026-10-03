@@ -460,6 +460,10 @@ export const PerformaInvoices = () => {
     // plans already use), so Stall Type/Stall No. still work when this page is
     // reached without that query param (e.g. editing an existing PI).
     const [resolvedEventId, setResolvedEventId] = useState('');
+    // The CrmEvent (Event Setup) this PI is raised under — source of the consignee event name / venue.
+    const [crmEventInfo, setCrmEventInfo] = useState(null);
+    // The Event Setup record (Event) that CrmEvent is linked to via registrationEventId — name + venue live here.
+    const [eventSetupInfo, setEventSetupInfo] = useState(null);
 
     const [isWhatsAppLoading, setIsWhatsAppLoading] = useState(false);
     const [isEmailLoading, setIsEmailLoading] = useState(false);
@@ -580,11 +584,13 @@ export const PerformaInvoices = () => {
         (async () => {
             try {
                 const crmEventRes = await api.get(`/api/crm-events/${resolvedCrmEventId}`);
+                if (!cancelled) setCrmEventInfo(crmEventRes.data?.data || crmEventRes.data || null);
                 const registrationEventId = crmEventRes.data?.registrationEventId;
-                if (!registrationEventId) return;
+                if (!registrationEventId) { if (!cancelled) setEventSetupInfo({}); return; }
                 setResolvedEventId((prev) => prev || String(registrationEventId));
 
                 const eventRes = await api.get(`/api/events/${registrationEventId}`);
+                if (!cancelled) setEventSetupInfo(eventRes.data?.data || {});
                 const plans = eventRes.data?.data?.paymentPlans || [];
                 if (cancelled) return;
                 setPaymentPlans(plans);
@@ -597,11 +603,63 @@ export const PerformaInvoices = () => {
                 });
             } catch (error) {
                 console.error('Error loading payment plans for this event:', error);
+                if (!cancelled) setEventSetupInfo((prev) => prev || {});
             }
         })();
 
         return () => { cancelled = true; };
     }, [resolvedCrmEventId]);
+
+    // A new PI's Consignee (event name, venue address and its location) belongs to the event it is raised
+    // under — e.g. Bharat Organic Expo 2027 — instead of always showing the IHWE wording. The CrmEvent is
+    // matched to its Event Setup record (registrationEventId); Event Setup holds the official name and
+    // venue, the CrmEvent's own fields are only a fallback. IHWE events keep the standard IHWE text, and an
+    // already-issued PI being edited keeps whatever was saved on it.
+    useEffect(() => {
+        if (!crmEventInfo || existingEstimateId) return;
+        // Wait for the linked Event Setup record (eventSetupInfo is {} once there is nothing more to wait for).
+        if (crmEventInfo.registrationEventId && eventSetupInfo === null) return;
+
+        const setup = eventSetupInfo || {};
+        const name = setup.name || crmEventInfo.event_fullName || crmEventInfo.event_name || '';
+        const isIhwe = /ihwe|health\s*&\s*wellness/i.test(`${setup.name || ''} ${crmEventInfo.event_name || ''} ${crmEventInfo.event_fullName || ''}`);
+        if (!name || isIhwe) return;
+
+        const crmVenue = [
+            crmEventInfo.event_address,
+            [crmEventInfo.event_city, crmEventInfo.event_pincode ? `- ${crmEventInfo.event_pincode}` : ''].filter(Boolean).join(' '),
+            crmEventInfo.event_country,
+        ].filter(Boolean).join(', ');
+        const venue = (setup.location || '').trim() || crmVenue;
+
+        // Event Setup keeps the venue as one text line ("..., New Delhi - 110001,Delhi,India"): read the
+        // pincode / city / state / country out of it; the CrmEvent's structured fields are the fallback.
+        let loc = {};
+        if (setup.location) {
+            const parts = setup.location.split(',').map((x) => x.trim()).filter(Boolean);
+            const pin = (setup.location.match(/\b\d{6}\b/) || [])[0] || '';
+            const cityPart = parts.find((x) => pin && x.includes(pin));
+            loc = {
+                country: parts.length >= 3 ? parts[parts.length - 1] : '',
+                state: parts.length >= 3 ? parts[parts.length - 2] : '',
+                city: cityPart ? cityPart.replace(pin, '').replace(/[-–\s]+$/g, '').trim() : '',
+                pincode: pin,
+            };
+        } else {
+            loc = { country: crmEventInfo.event_country, state: crmEventInfo.event_state, city: crmEventInfo.event_city, pincode: crmEventInfo.event_pincode };
+        }
+
+        setForm((prev) => ({
+            ...prev,
+            consigneeEventName: name,
+            consigneeEventAddress: venue || prev.consigneeEventAddress,
+            consigneeCountry: loc.country || prev.consigneeCountry,
+            consigneeState: loc.state || prev.consigneeState,
+            consigneeCity: loc.city || prev.consigneeCity,
+            consigneePincode: loc.pincode || prev.consigneePincode,
+        }));
+        // companyData is a dependency so this re-applies after the company prefill sets its own defaults.
+    }, [crmEventInfo, eventSetupInfo, existingEstimateId, companyData]);
 
     // Performa Invoice Type follows the client's location relative to the
     // organizer (registered in Uttar Pradesh): same state → Intrastate, other
