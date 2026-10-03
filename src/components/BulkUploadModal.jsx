@@ -1,8 +1,15 @@
 import React, { useState, useRef } from "react";
 import { Upload, X, FileSpreadsheet, Loader2, Download } from "lucide-react";
 import api from "../lib/api";
+import { shortEventLabel, useScopedEvent } from "../lib/visitorEventScope";
+import { useActiveEvents } from "./BuyerEventTabs";
 
 const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSuccess }) => {
+  const scopedEvent = useScopedEvent();
+  const events = useActiveEvents();
+  // Every uploaded row is registered under this event; '' keeps the template's own value.
+  const [pickedEventId, setPickedEventId] = useState("");
+  const chosenEvent = scopedEvent || events.find((ev) => ev._id === pickedEventId) || null;
   const [file, setFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState(null);
@@ -36,6 +43,7 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
 
     const formData = new FormData();
     formData.append("file", file);
+    if (chosenEvent) formData.append("eventName", chosenEvent.event_fullName || chosenEvent.event_name);
 
     try {
       const response = await api.post(uploadUrl, formData, {
@@ -107,6 +115,20 @@ const BulkUploadModal = ({ isOpen, onClose, uploadUrl, templatePath, title, onSu
 
         {/* Body */}
         <div className="p-5 space-y-4">
+          <div className="flex items-center gap-2">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Event</label>
+            <select
+              value={chosenEvent?._id || ""}
+              disabled={!!scopedEvent || isUploading}
+              onChange={(e) => setPickedEventId(e.target.value)}
+              className="flex-1 rounded border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 focus:border-emerald-600 focus:outline-none disabled:bg-slate-50"
+            >
+              <option value="">As per Excel / default</option>
+              {events.map((ev) => (
+                <option key={ev._id} value={ev._id}>{shortEventLabel(ev)}</option>
+              ))}
+            </select>
+          </div>
           <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 flex items-start gap-3">
             <FileSpreadsheet className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
             <div className="text-xs text-blue-800">

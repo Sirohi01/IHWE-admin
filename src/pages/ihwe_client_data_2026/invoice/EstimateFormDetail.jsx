@@ -1288,7 +1288,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                         // bookings, so anything not explicitly an Addon Product (or the
                                         // synthesized PLC Charges row) is treated as a stall.
                                         const isPlcItem = item?.category === 'PLC Charges';
-                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom';
+                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom' && item?.category !== 'Buyer';
                                         // PLC Charges is a surcharge on the stall above it, not its own
                                         // billable line — it doesn't get its own S.No.
                                         if (!isPlcItem) serial += 1;
@@ -1303,7 +1303,7 @@ const EstimateFormDetail = ({ estimateId, id: propId, piCopy = 'ORIGINAL PROFORM
                                                 <td className="nowrap-cell" style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap' }}>{isPlcItem ? '' : serial}</td>
 
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, lineHeight: 1.15 }}>
-                                                    {!isPlcItem && (
+                                                    {!isPlcItem && item?.category !== 'Buyer' && (
                                                         <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
                                                             {isStallItem
                                                                 ? 'Exhibition Stall Charges'

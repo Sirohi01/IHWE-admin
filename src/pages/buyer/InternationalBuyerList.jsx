@@ -5,9 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import api, { SERVER_URL } from "../../lib/api";
 import Swal from 'sweetalert2';
 import Pagination from "../../components/Pagination";
+import { useEventScopedBuyers } from "../../lib/visitorEventScope";
 
 const InternationalBuyerList = () => {
-    const [registrations, setRegistrations] = useState([]);
+    const [allRegistrations, setRegistrations] = useState([]);
+    const registrations = useEventScopedBuyers(allRegistrations);
     const [filteredRegistrations, setFilteredRegistrations] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);

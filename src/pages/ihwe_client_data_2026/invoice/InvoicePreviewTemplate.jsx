@@ -812,13 +812,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                 {itemsToRender.map((item, index) => {
                     const discountPercent = getDiscountPercent(item);
                     const isPlcItem = item?.category === 'PLC Charges';
-                    const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom';
+                    const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom' && item?.category !== 'Buyer';
                     return (
                         <tr key={`${startIndex}-${index}`}>
                             <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{isPlcItem ? '' : startIndex + index + 1}</td>
                             <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                 <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-                                    {!isPlcItem && (
+                                    {!isPlcItem && item?.category !== 'Buyer' && (
                                         <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
                                             {isStallItem ? 'Exhibition Stall Charges' : (item?.category || 'Add-on Product')}
                                         </div>
@@ -1461,13 +1461,13 @@ const InvoicePreviewTemplate = ({ form, items, matchedInvoice, matchedEstimate, 
                                     {activeItems?.map((item, index) => {
                                         const discountPercent = getDiscountPercent(item);
                                         const isPlcItem = item?.category === 'PLC Charges';
-                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom';
+                                        const isStallItem = !isPlcItem && item?.category !== 'Addon Product' && item?.category !== 'Custom' && item?.category !== 'Buyer';
                                         return (
                                             <tr key={index}>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', textAlign: 'center', whiteSpace: 'nowrap', fontSize: 10, fontWeight: 500 }}>{isPlcItem ? '' : index + 1}</td>
                                                 <td style={{ border: '1px solid #ccc', padding: '4px 3px', fontSize: 10, fontWeight: 500, lineHeight: 1.15 }}>
                                                     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
-                                                        {!isPlcItem && (
+                                                        {!isPlcItem && item?.category !== 'Buyer' && (
                                                             <div style={{ fontWeight: 700, textTransform: 'uppercase' }}>
                                                                 {isStallItem ? 'Exhibition Stall Charges' : (item?.category || 'Add-on Product')}
                                                             </div>

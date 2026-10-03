@@ -130,8 +130,8 @@ export const buyerRegistrationApi = {
     });
     return unwrapApiResponse(response);
   },
-  getConfig: async () => {
-    const response = await api.get("/api/buyer-registration/config");
+  getConfig: async (eventId) => {
+    const response = await api.get("/api/buyer-registration/config", { params: eventId ? { eventId } : {} });
     return unwrapApiResponse(response);
   },
 };
@@ -154,8 +154,8 @@ export const internationalBuyerApi = {
     const response = await api.delete(`/api/international-buyer/${id}`);
     return unwrapApiResponse(response);
   },
-  getConfig: async () => {
-    const response = await api.get("/api/international-buyer/config");
+  getConfig: async (eventId) => {
+    const response = await api.get("/api/international-buyer/config", { params: eventId ? { eventId } : {} });
     return unwrapApiResponse(response);
   },
 };

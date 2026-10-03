@@ -406,7 +406,7 @@ const staticGroups = [
     { title: 'Professionals & Others', icon: <Briefcase size={14} />, items: ['Consultant / Advisor', 'Startup Founder', 'Student / Researcher', 'Other (Please Specify)'] }
 ];
 
-const BuyerRegistration = () => {
+const BuyerRegistration = ({ eventId = '', eventName = '' }) => {
     const navigate = useNavigate();
     const [config, setConfig] = useState(FALLBACK_CONFIG);
     const [heroData, setHeroData] = useState(null);
@@ -462,7 +462,7 @@ const BuyerRegistration = () => {
             const [heroResult, countryResult, configResult] = await Promise.allSettled([
                 heroBackgroundApi.getByPage("Registration / Buyer Registration"),
                 crmApi.getCountries(),
-                buyerRegistrationApi.getConfig(),
+                buyerRegistrationApi.getConfig(eventId),
             ]);
             if (heroResult.status === "fulfilled") setHeroData(heroResult.value);
             if (countryResult.status === "fulfilled") setCountries(Array.isArray(countryResult.value) ? countryResult.value : []);
@@ -473,7 +473,7 @@ const BuyerRegistration = () => {
             setLoadingPage(false);
         };
         fetchInitialData();
-    }, []);
+    }, [eventId]);
 
     useEffect(() => {
         const fetchStates = async () => {
@@ -739,6 +739,8 @@ const BuyerRegistration = () => {
         Object.entries(optionalFields).forEach(([key, value]) => {
             fd.append(key, value);
         });
+
+        if (eventName) fd.append("eventName", eventName);
 
         if (formData.paymentProof) {
             fd.append("paymentProof", formData.paymentProof);

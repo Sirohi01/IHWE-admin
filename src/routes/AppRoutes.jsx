@@ -218,6 +218,8 @@ const PreviousExhibitionList = lazy(() => import("../pages/admin_management/Prev
 const AddDomesticVisitor = lazy(() => import("../pages/web_visitor_data/add_new_visitor/AddDomesticVisitor"));
 const BuyerRegistration = lazy(() => import("../pages/buyer/BuyerRegistration"));
 const BuyerList = lazy(() => import("../pages/buyer/BuyerList"));
+const BuyerLeads = lazy(() => import("../pages/buyer/BuyerLeads"));
+const BuyerLeadOverview = lazy(() => import("../pages/buyer/BuyerLeadOverview"));
 const ManageAccessories = lazy(() => import("../pages/ManageAccessories"));
 const AccessoryOrders = lazy(() => import("../pages/AccessoryOrders"));
 const ExhibitorChat = lazy(() => import("../pages/ExhibitorChat"));
@@ -699,6 +701,13 @@ export default function AppRoutes() {
             <Route path="visitor-event/:eventId/health-camp" element={<CrmEventScopedRoute><HealthCampVisitorsList /></CrmEventScopedRoute>} />
             <Route path="visitor-event/:eventId/reviews" element={<CrmEventScopedRoute><VisitorReviewLogs /></CrmEventScopedRoute>} />
 
+            {/* Buyer Management, split per CrmEvent — lists filter to the pinned event. */}
+            <Route path="buyer-event/:eventId/registration" element={<CrmEventScopedRoute><BuyerRegistrationForm /></CrmEventScopedRoute>} />
+            <Route path="buyer-event/:eventId/leads/:stage" element={<CrmEventScopedRoute><BuyerLeads /></CrmEventScopedRoute>} />
+            <Route path="buyer-event/:eventId/lead/:kind/:id" element={<CrmEventScopedRoute><BuyerLeadOverview /></CrmEventScopedRoute>} />
+            <Route path="buyer-event/:eventId/domestic"element={<CrmEventScopedRoute><BuyerList /></CrmEventScopedRoute>} />
+            <Route path="buyer-event/:eventId/international" element={<CrmEventScopedRoute><InternationalBuyerList /></CrmEventScopedRoute>} />
+
             <Route
               path="ihweClientData2026/masterData"
               element={<MasterClientsList />}
@@ -921,6 +930,9 @@ export default function AppRoutes() {
             <Route path="manage-registrations" element={<ManageRegistrations />} />
             <Route path="bsm-management" element={<AdminBSM />} />
             <Route path="/buyer-list" element={<BuyerList />} />
+            <Route path="/buyer-leads" element={<BuyerLeads />} />
+            <Route path="/buyer-leads/:stage" element={<BuyerLeads />} />
+            <Route path="/buyer-lead/:kind/:id" element={<BuyerLeadOverview />} />
             <Route path="/stall-accessories" element={<ManageAccessories />} />
             <Route path="/accessory-orders" element={<AccessoryOrders />} />
             <Route path="/exhibitor-chat" element={<ExhibitorChat />} />

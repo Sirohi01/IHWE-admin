@@ -5,9 +5,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import api from "../../lib/api";
 import Swal from 'sweetalert2';
 import Pagination from "../../components/Pagination";
+import { useEventScopedBuyers } from "../../lib/visitorEventScope";
 
 const BuyerList = () => {
-    const [registrations, setRegistrations] = useState([]);
+    const [allRegistrations, setRegistrations] = useState([]);
+    const registrations = useEventScopedBuyers(allRegistrations);
     const [filteredRegistrations, setFilteredRegistrations] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(false);

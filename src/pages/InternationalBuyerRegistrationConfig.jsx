@@ -23,8 +23,12 @@ import {
 } from 'lucide-react';
 import api from '../lib/api';
 import Swal from 'sweetalert2';
+import BuyerEventTabs from '../components/BuyerEventTabs';
 
 const InternationalBuyerRegistrationConfig = () => {
+    // '' = the global default config; otherwise a CrmEvent _id.
+    const [eventId, setEventId] = useState('');
+    const eventParams = eventId ? { eventId } : {};
     const [config, setConfig] = useState({
         companyTypes: [],
         annualTurnoverRanges: [],
@@ -54,12 +58,12 @@ const InternationalBuyerRegistrationConfig = () => {
 
     useEffect(() => {
         fetchConfig();
-    }, []);
+    }, [eventId]);
 
     const fetchConfig = async () => {
         setIsLoading(true);
         try {
-            const res = await api.get('/api/international-buyer/config');
+            const res = await api.get('/api/international-buyer/config', { params: eventParams });
             if (res.data.success) {
 
                 const fetchedData = res.data.data;
@@ -83,7 +87,7 @@ const InternationalBuyerRegistrationConfig = () => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const res = await api.put('/api/international-buyer/config', config);
+            const res = await api.put('/api/international-buyer/config', config, { params: eventParams });
             if (res.data.success) {
                 Swal.fire({
                     icon: 'success',
@@ -206,10 +210,15 @@ const InternationalBuyerRegistrationConfig = () => {
         setConfig(prev => ({ ...prev, packages: newPackages }));
     };
 
+    const eventTabs = <BuyerEventTabs eventId={eventId} onChange={setEventId} />;
+
     if (isLoading) {
         return (
-            <div className="flex h-[80vh] items-center justify-center">
-                <Loader2 className="h-10 w-10 animate-spin text-[#23471d]" />
+            <div>
+                {eventTabs}
+                <div className="flex h-[70vh] items-center justify-center">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#23471d]" />
+                </div>
             </div>
         );
     }
@@ -278,6 +287,8 @@ const InternationalBuyerRegistrationConfig = () => {
                     Save Configuration
                 </button>
             </div>
+
+            {eventTabs}
 
             <div className="max-w-[1400px] mx-auto p-4">
                 <div className="flex gap-4 mb-4 border-b border-slate-200 pb-px font-inter">

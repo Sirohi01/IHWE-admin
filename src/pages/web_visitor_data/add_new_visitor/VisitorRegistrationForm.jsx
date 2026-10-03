@@ -4,13 +4,46 @@ import AddDomesticVisitor from "./AddDomesticVisitor";
 import VisitorRegistration from "./VisitorRegistration";
 import { Upload, LayoutGrid, UserCheck } from "lucide-react";
 import { shortEventLabel, useRegistrationEventName, useScopedEvent } from "../../../lib/visitorEventScope";
+import EventContext from "../../../context/EventContextObject";
+import { BuyerEventSelect, useActiveEvents } from "../../../components/BuyerEventTabs";
 
 const VisitorRegistrationForm = () => {
   const [visitorType, setVisitorType] = useState(null);
   const navigate = useNavigate();
-  const scopedEvent = useScopedEvent();
+  const routeEvent = useScopedEvent();
+  const events = useActiveEvents();
+  // On the un-scoped route the admin can pick the event here; it is then
+  // provided to the forms exactly like an event-scoped route would.
+  const [pickedEventId, setPickedEventId] = useState("");
+  const pickedEvent = events.find((ev) => ev._id === pickedEventId) || null;
+  const scopedEvent = routeEvent || pickedEvent;
   const registrationEventName = useRegistrationEventName();
   const eventLabel = scopedEvent ? shortEventLabel(scopedEvent) : "IHWE 2026";
+  const eventBar = (
+    <BuyerEventSelect
+      eventId={scopedEvent?._id || ""}
+      onChange={setPickedEventId}
+      locked={!!routeEvent}
+      defaultLabel="Select event (choose in form)"
+      hint="Visitor is registered under this event."
+    />
+  );
+  const withEvent = (node) =>
+    pickedEvent && !routeEvent ? (
+      <EventContext.Provider
+        value={{
+          events,
+          currentEventId: pickedEvent._id,
+          setCurrentEventId: () => {},
+          currentEvent: pickedEvent,
+          loading: false,
+        }}
+      >
+        {node}
+      </EventContext.Provider>
+    ) : (
+      node
+    );
 
   if (visitorType === "domestic") {
     return (
@@ -57,8 +90,9 @@ const VisitorRegistrationForm = () => {
             </button>
           </div>
         </div>
+        {eventBar}
         <div className="px-8 py-6 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
-          <AddDomesticVisitor />
+          {withEvent(<AddDomesticVisitor />)}
         </div>
       </div>
     );
@@ -86,8 +120,9 @@ const VisitorRegistrationForm = () => {
             </button>
           </div>
         </div>
+        {eventBar}
         <div className="px-8 py-6 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
-          <VisitorRegistration initialType="international" hideTabs={true} />
+          {withEvent(<VisitorRegistration initialType="international" hideTabs={true} />)}
         </div>
       </div>
     );
@@ -95,6 +130,7 @@ const VisitorRegistrationForm = () => {
 
   return (
     <div className="bg-[#f8fafc] shadow-md px-4 pt-4 pb-1 min-h-[calc(100vh-90px)] font-inter animate-fadeIn">
+      <div className="-mx-4 -mt-4 mb-3">{eventBar}</div>
       <div className="flex flex-col sm:flex-row justify-between items-center pb-3">
         <div>
           <h1 className="text-[22px] font-bold text-slate-900 capitalize tracking-tight leading-none font-inter">

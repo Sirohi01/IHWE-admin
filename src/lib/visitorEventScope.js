@@ -17,6 +17,24 @@ export const visitorBelongsToEvent = (visitor, event) => {
     .some((n) => n && names.includes(n));
 };
 
+// Buyers default to the short label ("IHWE 2026") when no event was chosen, so
+// match that alongside the CrmEvent's own names.
+export const buyerBelongsToEvent = (buyer, event) => {
+  if (!event) return true;
+  const names = [...eventNames(event), norm(shortEventLabel(event))];
+  return [buyer?.eventName, buyer?.registrationFor]
+    .map(norm)
+    .some((n) => n && names.includes(n));
+};
+
+export const useEventScopedBuyers = (buyers) => {
+  const event = useScopedEvent();
+  return useMemo(
+    () => (event ? (buyers || []).filter((b) => buyerBelongsToEvent(b, event)) : buyers || []),
+    [buyers, event],
+  );
+};
+
 // Visitor reviews store the CrmEvent _id (falling back to a name) in `visitor_event`.
 export const reviewBelongsToEvent = (review, event) => {
   if (!event) return true;
@@ -37,7 +55,7 @@ export const useEventScopedVisitors = (visitors) => {
   );
 };
 
-// Display-only short name for an event ("Organic Expo 2026" -> "BOE 2026",
+// Display-only short name for an event ("Organic Expo 2026" -> "BOE 2027",
 // "IHWE Expo 2026" -> "IHWE 2026"). Never used for matching, so stored
 // visitor `eventName` values keep lining up with the CrmEvent records.
 export const shortEventLabel = (event) =>

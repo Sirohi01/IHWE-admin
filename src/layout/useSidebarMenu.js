@@ -193,6 +193,52 @@ export function useSidebarMenu() {
       });
     }
 
+    // Buyer Management, split per event the same way. Buyer Configuration
+    // (form config + testimonials) isn't event data, so it stays a single
+    // dropdown. Labels are kept so role permissions still apply.
+    const buyerEventPaths = {
+      "Buyer Registration": "registration",
+      "Domestic Buyers": "domestic",
+      "International Buyers": "international",
+    };
+    if (visitorEvents.length > 0) {
+      results.forEach((section) => {
+        const list = section.type === "section" ? section.children : results;
+        const idx = list.findIndex((c) => c.type === "dropdown" && c.label === "Buyer Management");
+        if (idx < 0) return;
+        const visibleChildren = list[idx].children || [];
+        const perEvent = visitorEvents.map((ev) => ({
+          type: "dropdown",
+          label: `${shortEventLabel(ev)} Buyers`,
+          icon: list[idx].icon,
+          children: visibleChildren
+            .filter((child) => buyerEventPaths[child.label])
+            .map((child) => ({
+              label: child.label,
+              path: `/buyer-event/${ev._id}/${buyerEventPaths[child.label]}`,
+            })),
+        }));
+        list.splice(idx, 1, ...perEvent);
+      });
+
+      // Buyer Leads: one pipeline dropdown per event, like the exhibitor CRM ones.
+      results.forEach((section) => {
+        const list = section.type === "section" ? section.children : results;
+        const idx = list.findIndex((c) => c.type === "dropdown" && c.label === "Buyer Leads");
+        if (idx < 0) return;
+        const perEvent = visitorEvents.map((ev) => ({
+          type: "dropdown",
+          label: `${shortEventLabel(ev)} Buyer Leads`,
+          icon: list[idx].icon,
+          children: (list[idx].children || []).map((child) => ({
+            label: child.label,
+            path: child.path.replace("/buyer-leads/", `/buyer-event/${ev._id}/leads/`),
+          })),
+        }));
+        list.splice(idx, 1, ...perEvent);
+      });
+    }
+
     return results.filter(item => item.type !== "section" || item.children.length > 0);
   }, [currentUser, roleData, crmEvents]);
 

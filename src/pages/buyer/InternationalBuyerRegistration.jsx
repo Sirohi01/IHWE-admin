@@ -332,7 +332,7 @@ const PaymentMethodCard = ({ method, selected, onToggle }) => {
     );
 };
 
-const InternationalBuyerRegistration = () => {
+const InternationalBuyerRegistration = ({ eventId = '', eventName = '' }) => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState(INITIAL_FORM_STATE);
     const [errors, setErrors] = useState({});
@@ -361,7 +361,7 @@ const InternationalBuyerRegistration = () => {
                 const [heroRes, countryRes, configRes] = await Promise.allSettled([
                     heroBackgroundApi.getByPage("Registration / International Buyer Registration"),
                     crmApi.getCountries(),
-                    internationalBuyerApi.getConfig()
+                    internationalBuyerApi.getConfig(eventId)
                 ]);
                 if (heroRes.status === "fulfilled") setHeroData(heroRes.value);
                 if (countryRes.status === "fulfilled") setCountries(countryRes.value);
@@ -376,7 +376,7 @@ const InternationalBuyerRegistration = () => {
             }
         };
         fetchInitialData();
-    }, []);
+    }, [eventId]);
 
     const normalizedPackages = useMemo(() => {
         const pkgs = Array.isArray(config?.packages) ? config.packages : [];
@@ -514,6 +514,7 @@ const InternationalBuyerRegistration = () => {
 
             // Append payment mode
             finalFormData.append('paymentMode', selectedPaymentMethods.join(", "));
+            if (eventName) finalFormData.append('eventName', eventName);
 
             // Append files
             Object.keys(files).forEach(key => {

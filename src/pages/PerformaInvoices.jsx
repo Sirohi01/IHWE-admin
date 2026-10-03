@@ -326,6 +326,8 @@ export const PerformaInvoices = () => {
     const { id } = useParams();
     const editEstimateId = location.state?.editEstimateId;
     const [companyData, setCompanyData] = useState(null);
+    // Buyer PIs use this same page, minus the exhibitor-only parts (item categories, PLC / additional charges).
+    const isBuyerClient = companyData?._source === 'buyer';
     const [existingEstimateId, setExistingEstimateId] = useState(null);
     // Not-yet-booked stalls for this PI's event — [{ stallFor, dimension, stallSize, discount, eventId }]
     const [availableStallDetails, setAvailableStallDetails] = useState([]);
@@ -688,6 +690,9 @@ export const PerformaInvoices = () => {
 
                 const estimateForPrefill = existingEstimate || templateEstimate;
 
+                // Buyers have no stalls/add-ons: a new PI starts in Custom items mode.
+                if (companyInfo?._source === 'buyer' && !existingEstimate) setItemsMode('custom');
+
                 if (estimateForPrefill) {
                     setCompanyData(companyInfo);
                     setExistingEstimateId(existingEstimate?._id || null);
@@ -774,7 +779,7 @@ export const PerformaInvoices = () => {
                         // restore the toggle from the items themselves so editing one
                         // doesn't fall back into Default mode's Stall/Addon Product
                         // search-selects, which don't understand freeform custom rows.
-                        if (formattedItems.some((it) => it.category === 'Custom')) {
+                        if (formattedItems.some((it) => it.category === 'Custom' || it.category === 'Buyer')) {
                             suppressItemsModeResetRef.current = true;
                             setItemsMode('custom');
                         }
@@ -1363,7 +1368,7 @@ export const PerformaInvoices = () => {
             city: form.city,
             pincode: form.pinCode,
             items: items.map(i => ({
-                category: i.category,
+                category: isBuyerClient && i.category === 'Custom' ? 'Buyer' : i.category,
                 plScheme: i.plScheme || '',
                 stallType: i.stallType || '',
                 description: i.description + (i.subDesc ? `\n${i.subDesc}` : ''),
@@ -1704,6 +1709,7 @@ export const PerformaInvoices = () => {
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-4">
                         <div className="flex items-center justify-between mb-4">
                             <SectionHead num="2" label="Item & Pricing Details" />
+                            {!isBuyerClient && (
                             <div className="flex items-center gap-4">
                                 <label className="flex items-center gap-1.5 text-[12px] font-medium text-[#1a2b4b] cursor-pointer">
                                     <input
@@ -1728,6 +1734,7 @@ export const PerformaInvoices = () => {
                                     Custom
                                 </label>
                             </div>
+                            )}
                         </div>
 
                         {/* Table */}
@@ -1884,6 +1891,8 @@ export const PerformaInvoices = () => {
                         <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                             {/* LEFT – Additional Charges + TDS note */}
                             <div className="lg:col-span-2">
+                                {!isBuyerClient && (
+                                    <>
                                 <h4 className="text-[13px] font-semibold text-[#1a2b4b] mb-2">Additional Charges</h4>
                                 <div className="bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
                                     <Label>PLC Charges (₹)</Label>
@@ -1919,6 +1928,8 @@ export const PerformaInvoices = () => {
                                     </div>
                                     <p className="text-[10px] text-slate-400 mt-2">For: {primaryStallDetail?.plScheme || '—'}</p>
                                 </div>
+                                    </>
+                                )}
 
                                 <div className="mt-3 flex items-center gap-4">
                                     <span className="text-[12px] font-medium text-[#1a2b4b]">TDS Applicable<span className="text-red-500 ml-0.5">*</span></span>

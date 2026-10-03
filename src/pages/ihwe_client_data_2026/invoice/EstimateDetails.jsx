@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { MdOutlineModeEdit } from "react-icons/md";
 import { useReactToPrint } from "react-to-print";
@@ -8,6 +8,7 @@ import EstimateFormDetail from "./EstimateFormDetail";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Upload, UserCheck, LayoutGrid } from "lucide-react";
 import Swal from "sweetalert2";
+import api from "../../../lib/api";
 
 const EstimateDetails = () => {
   const { id } = useParams();
@@ -15,6 +16,18 @@ const EstimateDetails = () => {
   const sameRef = useRef();
   const [piCopies, setPiCopies] = useState(["ORIGINAL PROFORMA INVOICE"]);
   const [piMeta, setPiMeta] = useState({ companyId: "", cancelled: false });
+  // Buyer PIs (Buyer Leads > Account) use this same view; their list/edit live on the buyer's overview.
+  const [buyerKind, setBuyerKind] = useState("");
+
+  useEffect(() => {
+    setBuyerKind("");
+    if (!piMeta.companyId) return undefined;
+    let alive = true;
+    api.get(`/api/buyer-leads/resolve/${piMeta.companyId}`)
+      .then((res) => alive && setBuyerKind(res.data?.kind || ""))
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [piMeta.companyId]);
 
   const printPi = useReactToPrint({
     contentRef: sameRef,
@@ -148,11 +161,11 @@ const EstimateDetails = () => {
           <div className="flex flex-wrap justify-center lg:justify-end gap-2 w-full lg:w-auto">
             <button
               type="button"
-              onClick={() => navigate(`/performa-invoice-list/${piMeta.companyId}`)}
+              onClick={() => navigate(buyerKind ? `/buyer-lead/${buyerKind}/${piMeta.companyId}` : `/performa-invoice-list/${piMeta.companyId}`)}
               disabled={!piMeta.companyId}
               className="rounded border border-gray-300 bg-white px-3 py-1.5 text-[10px] font-bold uppercase text-gray-700 shadow-sm hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Proforma Invoice List
+              {buyerKind ? "Buyer Lead Account" : "Proforma Invoice List"}
             </button>
             {!piMeta.cancelled && (
               <button

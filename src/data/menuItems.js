@@ -164,6 +164,29 @@ export const menuItems = [
       { label: "Buyer Registration", path: "/buyer-registration-form" },
       { label: "Domestic Buyers", path: "/buyer-list" },
       { label: "International Buyers", path: "/international-buyer-list" },
+    ],
+  },
+  {
+    // Same pipeline as the exhibitor CRM; Sidebar builds one of these per event
+    // (see buyerLeadPaths in useSidebarMenu.js).
+    type: "dropdown",
+    label: "Buyer Leads",
+    icon: Target,
+    children: [
+      { label: "New Buyer Leads", path: "/buyer-leads/new-leads" },
+      { label: "Buyer Follow-Ups", path: "/buyer-leads/follow-ups" },
+      { label: "Buyer Proposal Sent", path: "/buyer-leads/proposal-sent" },
+      { label: "Hot Buyer Leads", path: "/buyer-leads/hot-leads" },
+      { label: "Converted Buyers", path: "/buyer-leads/converted" },
+      { label: "Lost Buyer Leads", path: "/buyer-leads/lost-leads" },
+      { label: "All Buyer Leads", path: "/buyer-leads/all-leads" },
+    ],
+  },
+  {
+    type: "dropdown",
+    label: "Buyer Configuration",
+    icon: Users,
+    children: [
       { label: "Domestic Buyer Config", path: "/buyer-registration-config" },
       { label: "International Buyer Config", path: "/international-buyer-registration-config" },
       { label: "BSM Testimonials", path: "/bsm-testimonial" },

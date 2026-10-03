@@ -2,10 +2,21 @@ import React, { useState } from 'react';
 import BuyerRegistration from './BuyerRegistration';
 import InternationalBuyerRegistration from './InternationalBuyerRegistration';
 import { useNavigate } from 'react-router-dom';
+import { useScopedEvent } from '../../lib/visitorEventScope';
+import { BuyerEventSelect, useActiveEvents } from '../../components/BuyerEventTabs';
 
 const BuyerRegistrationForm = () => {
     const [buyerType, setBuyerType] = useState(null); // 'domestic' | 'international'
     const navigate = useNavigate();
+    // Inside /buyer-event/:eventId the "Buyer Lists" buttons stay on that event.
+    const scopedEvent = useScopedEvent();
+    const events = useActiveEvents();
+    const [eventId, setEventId] = useState(scopedEvent?._id || '');
+    const selectedEvent = scopedEvent || events.find((ev) => ev._id === eventId) || null;
+    const eventName = selectedEvent ? (selectedEvent.event_fullName || selectedEvent.event_name) : '';
+    const eventBar = <BuyerEventSelect eventId={selectedEvent?._id || ''} onChange={setEventId} locked={!!scopedEvent} />;
+    const domesticListPath = scopedEvent ? `/buyer-event/${scopedEvent._id}/domestic` : "/buyer-list";
+    const internationalListPath = scopedEvent ? `/buyer-event/${scopedEvent._id}/international` : "/international-buyer-list";
 
     if (buyerType === 'domestic') {
         return (
@@ -14,15 +25,16 @@ const BuyerRegistrationForm = () => {
                     <h2 className="text-[16px] font-bold text-[#1a4d1a] tracking-tight ml-2">Domestic Buyer Registration</h2>
                     <div className='flex gap-6'>
                         <button
-                            onClick={() => navigate("/buyer-list")}
+                            onClick={() => navigate(domesticListPath)}
                             className='bg-[#23471d] text-white px-4 py-1.5 rounded-md'>Buyer Lists</button>
                         <button onClick={() => setBuyerType(null)} className="px-4 py-1.5 text-xs font-bold uppercase bg-[#fff5f5] text-red-500 border border-red-500/50 rounded hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2">
                             <span>&larr;</span> Back to Selection
                         </button>
                     </div>
                 </div>
+                {eventBar}
                 <div className="p-4 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
-                    <BuyerRegistration />
+                    <BuyerRegistration eventId={selectedEvent?._id || ''} eventName={eventName} />
                 </div>
             </div>
         );
@@ -35,15 +47,16 @@ const BuyerRegistrationForm = () => {
                     <h2 className="text-[16px] font-bold text-[#d26019] tracking-tight ml-2">International Buyer Registration</h2>
                     <div className='flex gap-6'>
                         <button
-                            onClick={() => navigate("/international-buyer-list")}
+                            onClick={() => navigate(internationalListPath)}
                             className='bg-[#d26019] text-white px-4 py-1.5 rounded-md'>Buyer Lists</button>
                         <button onClick={() => setBuyerType(null)} className="px-4 py-1.5 text-xs font-bold uppercase bg-[#fff5f5] text-red-500 border border-red-500/50 rounded hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center gap-2">
                             <span>&larr;</span> Back to Selection
                         </button>
                     </div>
                 </div>
+                {eventBar}
                 <div className="p-4 bg-[#f8fafc] min-h-[calc(100vh-60px)]">
-                    <InternationalBuyerRegistration />
+                    <InternationalBuyerRegistration eventId={selectedEvent?._id || ''} eventName={eventName} />
                 </div>
             </div>
         );
