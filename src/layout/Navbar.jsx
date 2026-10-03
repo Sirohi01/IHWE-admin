@@ -10,20 +10,12 @@ import { io } from "socket.io-client";
 import Swal from "sweetalert2";
 import api, { SERVER_URL } from "../lib/api";
 import { logout } from "../utils/auth";
-import { fetchCompanies } from "../features/company/companySlice";
 import { fetchEvents } from "../features/crmEvent/crmEventSlice";
 import { useSelector, useDispatch } from "react-redux";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import { menuItems } from "../data/menuItems";
 import { useEventContext } from "../context/EventContext";
 
-const getArrayFromSlice = (sliceState, fallbackKey = "companies") => {
-  if (Array.isArray(sliceState)) return sliceState;
-  if (sliceState && typeof sliceState === "object" && fallbackKey in sliceState && Array.isArray(sliceState[fallbackKey])) {
-    return sliceState[fallbackKey];
-  }
-  return [];
-};
 const NOTIF_CONFIG = {
   chat: {
     title: "New Message Received!",
@@ -162,7 +154,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   }, [location.pathname, location.search, location.state, crmEvents, fetchedEventName, currentEvent, currentEventId]);
 
   useEffect(() => {
-    dispatch(fetchCompanies());
     dispatch(fetchEvents());
   }, [dispatch]);
 
@@ -257,14 +248,21 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     return () => window.removeEventListener("open-admin-change-password", openChangePassword);
   }, []);
 
-  const companiesState = useSelector((state) => state.companies);
-  const companiesArray = getArrayFromSlice(companiesState, "companies");
-  const newLeadsCount = companiesArray.filter((c) => c.companyStatus === "New Lead").length;
+  // Header badges only need counts. They used to be computed from the full companies list that every
+  // page load downloaded (up to 3000 complete records, twice); one small aggregate gives the same numbers.
+  const [statusCounts, setStatusCounts] = useState({});
+  useEffect(() => {
+    let alive = true;
+    api.get("/api/companies/stats-summary")
+      .then((res) => { if (alive) setStatusCounts(res.data?.statusCounts || {}); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+  const newLeadsCount = statusCounts["New Lead"] || 0;
   const reminderCount = useMemo(() => {
-    if (!Array.isArray(companiesArray)) return 8;
-    const followUps = companiesArray.filter((c) => c.followUpDate || c.companyStatus === "Follow-up" || c.nextFollowUp);
-    return followUps.length > 0 ? followUps.length : 8;
-  }, [companiesArray]);
+    const followUps = (statusCounts["Follow-up"] || 0) + (statusCounts["Follow-Up"] || 0);
+    return followUps > 0 ? followUps : 8;
+  }, [statusCounts]);
 
   const [showDemoAlert, setShowDemoAlert] = useState(false);
   const [hasUnreadTaskAlert, setHasUnreadTaskAlert] = useState(false);
@@ -286,8 +284,6 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
       setShowDemoAlert(false);
     }
   }, [location.pathname]);
-
-  useEffect(() => { dispatch(fetchCompanies()); }, [dispatch]);
 
   useEffect(() => {
     const storedInfo = localStorage.getItem("adminInfo") || sessionStorage.getItem("adminInfo");
@@ -423,8 +419,22 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
     }
   };
 
-  // Resolve display name for the current notification, falling back to
-  // matching against the companies list when needed.
+  // Resolve display name for the current notification; when it only carries a client id, look that one
+  // company up instead of searching a full companies list.
+  const [lookedUpCompany, setLookedUpCompany] = useState({ id: null, name: "" });
+  useEffect(() => {
+    const id = latestDocument?.client_id;
+    const ownNameTypes = ["chat", "accessory", "profile", "activity"];
+    const needsLookup = id && !ownNameTypes.includes(latestDocument?.type)
+      && (!latestDocument.companyName || latestDocument.companyName === "Unknown Client");
+    if (!needsLookup) return undefined;
+    let alive = true;
+    api.get(`/api/companies/lookup/${id}`)
+      .then((res) => { if (alive) setLookedUpCompany({ id: String(id), name: res.data?.companyName || res.data?.exhibitorName || "" }); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [latestDocument]);
+
   const notifCompanyName = useMemo(() => {
     if (!latestDocument) return "";
     if (latestDocument.type === 'chat') return latestDocument.exhibitorName;
@@ -434,15 +444,10 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
 
     let compName = latestDocument.companyName;
     if (!compName || compName === 'Unknown Client') {
-      const c = companiesArray.find(co =>
-        String(co._id) === String(latestDocument.client_id) ||
-        String(co.id) === String(latestDocument.client_id) ||
-        String(co.clientId) === String(latestDocument.client_id)
-      );
-      compName = c ? c.companyName : 'A client';
+      compName = lookedUpCompany.id === String(latestDocument.client_id) && lookedUpCompany.name ? lookedUpCompany.name : 'A client';
     }
     return compName;
-  }, [latestDocument, companiesArray]);
+  }, [latestDocument, lookedUpCompany]);
 
   const notifConfig = latestDocument ? NOTIF_CONFIG[latestDocument.type] : null;
   const NotifIcon = notifConfig?.icon || FileText;

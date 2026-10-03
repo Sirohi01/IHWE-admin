@@ -5,6 +5,7 @@ import { useReactToPrint } from "react-to-print";
 import * as XLSX from "xlsx";
 import { useSelector, useDispatch } from "react-redux";
 import Swal from "sweetalert2";
+import api from "../../lib/api";
 import { fetchCompanies, fetchMatchingCompanyIds, deleteCompany } from "../../features/company/companySlice";
 import { fetchEvents } from "../../features/crmEvent/crmEventSlice";
 import { fetchAdmins } from "../../features/auth/userSlice";
@@ -68,7 +69,8 @@ const MasterClientsList = () => {
   }, [dispatch]);
 
   // --- STATS CALCULATION ---
-  const { totalLeads: hookTotal, statusStats } = useDashboardStats();
+  // Master Data only shows totals + per-status counts, so skip the 3000-company sample fetch.
+  const { totalLeads: hookTotal, statusStats } = useDashboardStats(undefined, null, '', null, true);
 
   const stats = useMemo(() => {
     let newLeads = 0;
@@ -116,6 +118,17 @@ const MasterClientsList = () => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+
+  // Dropdown options come from the whole collection (server-side distinct values), so every
+  // Source / Status / Industry / Handled By is available — not just those on the current page.
+  const [filterOptions, setFilterOptions] = useState({ sources: [], statuses: [], industries: [], handlers: [] });
+  useEffect(() => {
+    let alive = true;
+    api.get("/api/companies/filter-options")
+      .then((res) => { if (alive && res.data?.success) setFilterOptions(res.data); })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, [refreshKey]);
   const [selectedRows, setSelectedRows] = useState([]);
 
   // Load cities only for the selected State filter — keeps the page fast
@@ -140,11 +153,14 @@ const MasterClientsList = () => {
         industry: filters.industry,
         state: filters.state,
         city: filters.city,
+        forwardTo: filters.handledBy,
+        startDate: filters.startDate,
+        endDate: filters.endDate,
       }));
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, currentPage, pageSize, globalSearch, filters.status, filters.source, filters.industry, filters.state, filters.city, refreshKey]);
+  }, [dispatch, currentPage, pageSize, globalSearch, filters.status, filters.source, filters.industry, filters.state, filters.city, filters.handledBy, filters.startDate, filters.endDate, refreshKey]);
 
   // --- FILTERING LOGIC ---
   // Now handled by the backend, so we just use the array directly
@@ -186,6 +202,11 @@ const MasterClientsList = () => {
           status: filters.status,
           source: filters.source,
           industry: filters.industry,
+          state: filters.state,
+          city: filters.city,
+          forwardTo: filters.handledBy,
+          startDate: filters.startDate,
+          endDate: filters.endDate,
         })
       ).unwrap();
       setSelectedRows(ids);
@@ -211,30 +232,56 @@ const MasterClientsList = () => {
     setCurrentPage(1);
   };
 
-  const exportTableToExcel = () => {
-    const dataToExport = filteredRows.map((c, i) => {
-      const resolved = resolveStateCityDisplay(c.state, c.city);
-      return {
-        "#": i + 1,
-        "Company Name": c.companyName || "-",
-        "Source": c.dataSource || "-",
-        "Status": c.companyStatus || "-",
-        "Industry": c.businessNature || "-",
-        "City / State": `${resolved.city}, ${resolved.state}`,
-        "Handled By": c.forwardTo || "-",
-        "Lead Score": c.leadScore ?? getLeadScore(c.companyStatus),
-      };
-    });
-    const worksheet = XLSX.utils.json_to_sheet(dataToExport);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
-    XLSX.writeFile(workbook, "AllLeads.xlsx");
+  // Exports EVERY lead matching the current filters (fetched in chunks), not just the page on screen.
+  const exportTableToExcel = async () => {
+    const CHUNK = 1000;
+    const baseParams = {
+      search: globalSearch, status: filters.status, source: filters.source, industry: filters.industry,
+      state: filters.state, city: filters.city, forwardTo: filters.handledBy,
+      startDate: filters.startDate, endDate: filters.endDate, limit: CHUNK,
+    };
+    const toQuery = (extra) => new URLSearchParams(
+      Object.fromEntries(Object.entries({ ...baseParams, ...extra }).filter(([, v]) => v !== undefined && v !== null && v !== ""))
+    ).toString();
+    Swal.fire({ title: "Preparing export...", text: "Collecting all matching leads", allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+    try {
+      let rowsAll = [];
+      let page = 1;
+      let totalPagesAll = 1;
+      do {
+        const res = await api.get(`/api/companies?${toQuery({ page })}`);
+        rowsAll = rowsAll.concat(res.data?.data || []);
+        totalPagesAll = res.data?.pagination?.totalPages || 1;
+        page += 1;
+      } while (page <= totalPagesAll);
+
+      const dataToExport = rowsAll.map((c, i) => {
+        const resolved = resolveStateCityDisplay(c.state, c.city);
+        return {
+          "#": i + 1,
+          "Company Name": c.companyName || "-",
+          "Source": c.dataSource || "-",
+          "Status": c.companyStatus || "-",
+          "Industry": c.businessNature || "-",
+          "City / State": `${resolved.city}, ${resolved.state}`,
+          "Handled By": c.forwardTo || "-",
+          "Lead Score": c.leadScore ?? getLeadScore(c.companyStatus),
+        };
+      });
+      const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Leads");
+      XLSX.writeFile(workbook, "AllLeads.xlsx");
+      Swal.close();
+    } catch {
+      Swal.fire({ title: "Error", text: "Failed to export leads.", icon: "error", confirmButtonColor: "#23471d" });
+    }
   };
 
   // Extract unique options for dropdowns
-  const uniqueSources = [...new Set(companiesArray.map(c => c.dataSource).filter(Boolean))];
-  const uniqueStatuses = [...new Set(companiesArray.map(c => c.companyStatus).filter(Boolean))];
-  const uniqueIndustries = [...new Set(companiesArray.map(c => c.businessNature).filter(Boolean))];
+  const uniqueSources = filterOptions.sources;
+  const uniqueStatuses = filterOptions.statuses;
+  const uniqueIndustries = filterOptions.industries;
 
   // City filter options — fetched pre-scoped to the selected State (see the
   // fetchCitiesByState effect above), so this is already the right list.
@@ -380,9 +427,7 @@ const MasterClientsList = () => {
             <select className="bg-slate-50 border border-slate-200 text-slate-700 text-xs rounded py-1.5 px-3 outline-none"
               value={filters.handledBy} onChange={(e) => { setFilters({ ...filters, handledBy: e.target.value }); setCurrentPage(1); }}>
               <option value="">Handled By</option>
-              {/* Mocked handled by */}
-              <option value="Vijay Sharma">Vijay Sharma</option>
-              <option value="Rahul Verma">Rahul Verma</option>
+              {filterOptions.handlers.map((h) => <option key={h} value={h}>{h}</option>)}
             </select>
 
             <div className="w-40">

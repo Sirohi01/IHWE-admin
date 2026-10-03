@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
 
-const useDashboardStats = (filterStatus, customData = null, eventId = '', authUser = null) => {
+// summaryOnly: skip the capped raw-company sample (used for charts/activity lists) and fetch just the
+// aggregated totals + per-status counts — for pages like Master Data that only show those numbers.
+const useDashboardStats = (filterStatus, customData = null, eventId = '', authUser = null, summaryOnly = false) => {
   const username = authUser?.username;
   const role = authUser?.role;
   const [stats, setStats] = useState({
@@ -272,14 +274,15 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '', authUs
         });
         const statsSummaryPromise = api.get(`/api/companies/stats-summary?${summaryParams}`).catch(() => null);
 
-        Promise.all([api.get(`/api/companies?${params}`), statsSummaryPromise])
+        Promise.all([summaryOnly ? Promise.resolve(null) : api.get(`/api/companies?${params}`), statsSummaryPromise])
             .then(([res, summaryRes]) => {
-                calculateStats(res.data);
+                if (res) calculateStats(res.data);
                 if (summaryRes?.data?.success && isMounted) {
                     setStats(prev => ({
                         ...prev,
                         totalLeads: summaryRes.data.total,
                         statusStats: summaryRes.data.statusCounts,
+                        ...(summaryOnly ? { isLoadingStats: false } : {}),
                     }));
                 }
             })
@@ -293,7 +296,7 @@ const useDashboardStats = (filterStatus, customData = null, eventId = '', authUs
       isMounted = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(filterStatus), customData, eventId, username, role]);
+  }, [JSON.stringify(filterStatus), customData, eventId, username, role, summaryOnly]);
 
   return stats;
 };
