@@ -15,6 +15,7 @@ import SalesLeaderboard     from "./dashboard/SalesLeaderboard";
 import RemindersCard        from "./dashboard/RemindersCard";
 import NextActionPanel      from "./dashboard/NextActionPanel";
 import AccountDashboard     from "./dashboard/AccountDashboard";
+import { getPeriodRange } from "../utils/periodRange";
 
 // ─── Module-Level Cache for Instant Loading ───────────────────────────────────
 let _cachedCompanies = null;
@@ -22,6 +23,12 @@ let _cachedActivityLogs = null;
 let _cachedAllAdmins = null;
 let _cachedFullProfile = null;
 let _cachedTargets = null;
+
+// "Contacted" / "Follow-up…" leads are the ones that count as follow-ups (same rule as the Follow-Ups list).
+const isFollowUpStatus = (status) => {
+  const st = (status || "").trim().toLowerCase();
+  return st === "contacted" || /^follow[\s-]?up/.test(st);
+};
 
 const getTargetMonthForPeriod = (period) => {
   const now = new Date();
@@ -99,6 +106,7 @@ export default function Dashboard() {
 
   // ─── Fetch actual calls made from CallLogs ───────────────────────────────────
   const [actualCallsMade, setActualCallsMade] = useState(0);
+  const [actualInterested, setActualInterested] = useState(0);
   useEffect(() => {
     if (!currentUser) return;
     const fetchCalls = async () => {
@@ -107,7 +115,8 @@ export default function Dashboard() {
         const userId = fullProfile?._id || fullProfile?.id || currentUser?._id || currentUser?.id || "";
         const res = await api.get(`/api/user-targets/stats/dashboard?username=${encodeURIComponent(currentUser.username)}&userId=${encodeURIComponent(userId)}&period=${globalPeriod}`);
         if (res.data?.success) {
-          setActualCallsMade(res.data.completed.call || 0);
+          setActualCallsMade(res.data.completed.statusUpdate || 0);
+          setActualInterested(res.data.completed.interested || 0);
         }
       } catch (err) {
         console.error("Error fetching calls made", err);
@@ -159,36 +168,71 @@ export default function Dashboard() {
   const userLeads = useMemo(() => {
     if (!currentUser) return [];
     const u = currentUser.username.toLowerCase();
-    return companies.filter(c =>
-      c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u
-    );
+    const mine = (a) => a.forwardTo?.toLowerCase() === u;
+    return companies
+      .filter(c =>
+        c.forwardTo?.toLowerCase() === u || c.added_by?.toLowerCase() === u ||
+        (c.eventAssignments || []).some(mine)
+      )
+      .map(c => {
+        // Status / follow-up live on the user's event assignment; use the latest one.
+        const a = (c.eventAssignments || []).filter(mine)
+          .sort((x, y) => new Date(y.updatedAt || 0) - new Date(x.updatedAt || 0))[0];
+        if (!a) return c;
+        return {
+          ...c,
+          companyStatus: a.status || c.companyStatus,
+          reminder: a.reminder || a.followUpDate || c.reminder || c.followUpDate,
+          lastNote: a.lastRemark || c.lastNote,
+        };
+      });
   }, [companies, currentUser]);
+
+  // ─── Leads assigned to the user within the selected Duration ─────────────────
+  const periodLeads = useMemo(() => {
+    if (!currentUser) return [];
+    const u = currentUser.username.toLowerCase();
+    const { start, end } = getPeriodRange(globalPeriod);
+    return userLeads.filter(c => {
+      // Prefer the date this user was assigned the lead; fall back to when it was created.
+      const assigned = (c.eventAssignments || [])
+        .filter(a => a.forwardTo?.toLowerCase() === u && a.createdAt)
+        .map(a => new Date(a.createdAt).getTime());
+      const ts = assigned.length ? Math.max(...assigned) : new Date(c.createdAt).getTime();
+      return ts >= start.getTime() && ts < end.getTime();
+    });
+  }, [userLeads, currentUser, globalPeriod]);
 
   // ─── Stats metrics ───────────────────────────────────────────────────────────
   const statsMetrics = useMemo(() => {
-    const total     = userLeads.length;
-    const converted = userLeads.filter(c =>
+    const total     = periodLeads.length;
+    const converted = periodLeads.filter(c =>
       ["adc. recd", "inv. req.", "under pymt followups"].includes(c.companyStatus?.toLowerCase())
     ).length;
-    const warm      = userLeads.filter(c =>
-      ["warm client", "follow-up call", "sent details"].includes(c.companyStatus?.toLowerCase())
-    ).length;
-    const hot       = userLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent").length;
-    const cold      = userLeads.filter(c => c.companyStatus?.toLowerCase() === "not interested").length;
-    const newLeads  = userLeads.filter(c => c.companyStatus?.toLowerCase() === "new lead").length;
+    // Warm = warm-type statuses in this Duration, plus every lead currently in Contacted /
+    // Follow-up (pending follow-ups count as warm no matter when they were assigned).
+    const followUpLeads = userLeads.filter(c => isFollowUpStatus(c.companyStatus));
+    const warm      = new Set([
+      ...periodLeads.filter(c => ["warm client", "follow-up call", "sent details"].includes(c.companyStatus?.toLowerCase())),
+      ...followUpLeads,
+    ].map(c => c._id)).size;
+    const summaryTotal = new Set([...periodLeads, ...followUpLeads].map(c => c._id)).size;
+    const hot       = periodLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent").length;
+    const cold      = periodLeads.filter(c => c.companyStatus?.toLowerCase() === "not interested").length;
+    const newLeads  = periodLeads.filter(c => c.companyStatus?.toLowerCase() === "new lead").length;
 
     const callsMade = actualCallsMade;
 
     const revenue          = (actualRevenue / 100000).toFixed(2);
-    const pendingFollowups = userLeads.filter(c => c.reminder && new Date(c.reminder) > new Date()).length;
+    const pendingFollowups = userLeads.filter(c => isFollowUpStatus(c.companyStatus)).length;
     const collection       = (converted * 0.35).toFixed(2);
 
     return {
-      total, callsMade, interested: warm, meetings: hot,
+      total, summaryTotal, callsMade, interested: actualInterested, meetings: hot,
       closed: actualConvertedCount, revenue, pendingFollowups, collection,
       categories: { newLeads, hot, warm, cold, converted: actualConvertedCount },
     };
-  }, [userLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, globalPeriod]);
+  }, [userLeads, periodLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, actualInterested, globalPeriod]);
 
   // ─── Target metrics ──────────────────────────────────────────────────────────
   const targetMetrics = useMemo(() => {
@@ -201,10 +245,13 @@ export default function Dashboard() {
     
     let targetVal = 0;
     if (match) {
-      if (globalPeriod === "today") targetVal = Number(match.daily?.revenueTarget) || 0;
-      else if (globalPeriod === "this_week") targetVal = Number(match.weekly?.revenueTarget) || 0;
-      else if (globalPeriod === "this_month") targetVal = Number(match.monthly?.revenueTarget) || 0;
-      else if (globalPeriod === "this_year") targetVal = Number(match.yearly?.revenueTarget) || 0;
+      const bucket = {
+        today: "daily", yesterday: "daily",
+        this_week: "weekly", last_week: "weekly",
+        this_year: "yearly",
+      }[globalPeriod] || "monthly";
+      const multiplier = globalPeriod.endsWith("_quarter") ? 3 : 1;
+      targetVal = (Number(match[bucket]?.revenueTarget) || 0) * multiplier;
     }
     
     // Scale down the achieved revenue to Lakhs for display
@@ -222,9 +269,20 @@ export default function Dashboard() {
 
   // ─── Follow-ups list ─────────────────────────────────────────────────────────
   const followupsList = useMemo(() =>
-    userLeads.filter(c => c.reminder).slice(0, 5).map(c => {
+    userLeads
+      .filter(c => {
+        // Pending follow-ups: "Contacted" / "Follow-up" leads due up to the end of the selected
+        // Duration — so anything overdue from an earlier period still shows until it is dealt with.
+        if (!isFollowUpStatus(c.companyStatus)) return false;
+        if (!c.reminder) return true;
+        const { end } = getPeriodRange(globalPeriod);
+        return new Date(c.reminder) < end;
+      })
+      .sort((a, b) => (a.reminder ? new Date(a.reminder) : Infinity) - (b.reminder ? new Date(b.reminder) : Infinity))
+      .slice(0, 50).map(c => {
       const contact = c.contacts?.[0] || {};
-      const remDate = new Date(c.reminder);
+      const remDate = c.reminder ? new Date(c.reminder) : null;
+      const overdue = !!remDate && remDate < getPeriodRange("today").start;
       let priority = "Medium";
       let priorityColor = "bg-amber-50 text-amber-600 border border-amber-200";
       if (c.companyStatus === "Est./PI Sent") {
@@ -246,8 +304,9 @@ export default function Dashboard() {
         id:            c._id,
         name:          `${contact.firstName || "Client"} ${contact.surname || ""}`.trim(),
         company:       c.companyName || "Company Name",
-        time:          remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        date:          remDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }),
+        time:          remDate ? remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-",
+        date:          remDate ? remDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "No date",
+        overdue,
         priority, priorityColor,
         status:        c.companyStatus || "Follow-up",
         phone:         contact.mobile || "",
@@ -255,7 +314,7 @@ export default function Dashboard() {
         convTime,
       };
     }),
-  [userLeads]);
+  [userLeads, globalPeriod]);
 
   // ─── Donut segments ──────────────────────────────────────────────────────────
   const donutData = [
@@ -279,8 +338,8 @@ export default function Dashboard() {
 
       {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
-        <LeadSummaryCard donutData={donutData} totalLeads={statsMetrics.total} />
-        <FollowupsTable  followupsList={followupsList} loading={loading} />
+        <LeadSummaryCard donutData={donutData} totalLeads={statsMetrics.summaryTotal} />
+        <FollowupsTable  followupsList={followupsList} loading={loading} globalPeriod={globalPeriod} />
         <TargetGaugeCard targetMetrics={targetMetrics} />
       </div>
 

@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
+import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useStickyOptions from "../../hooks/useStickyOptions";
+import { fetchStatusOptions } from "../../features/add_by_admin/statusOption/statusOptionSlice";
 import api from "../../lib/api";
 import BaseLeadPage from "../../layout/BaseLeadPage";
 import { useEventContext } from "../../context/EventContext";
@@ -125,12 +128,12 @@ const AllLeadsList = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       dispatch(fetchCompanies({
-        page, limit, search: searchTerm, source: filterSource, startDate, endDate,
+        page, limit, search: searchTerm, source: filterSource, status: filterStatus, startDate, endDate,
         eventId: currentEventId, username: user?.username, role: user?.role,
       }));
     }, 400);
     return () => clearTimeout(t);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, currentEventId, user?.username, user?.role]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, currentEventId, user?.username, user?.role]);
 
   useEffect(() => {
     if (!currentEventId) { setConvertedCount(0); return; }
@@ -146,12 +149,17 @@ const AllLeadsList = () => {
     return () => { cancelled = true; };
   }, [currentEventId, user?.username, user?.role]);
 
-  const filtered = filterStatus
-    ? companies.filter((c) => (c.companyStatus || "").toLowerCase().includes(filterStatus.toLowerCase()))
-    : companies;
+  // Status filtering happens on the server (so totals and pages stay correct).
+  const filtered = companies;
 
-  const uniqueSources  = [...new Set(companies.map((c) => c.dataSource).filter(Boolean))];
-  const uniqueStatuses = [...new Set(companies.map((c) => c.companyStatus).filter(Boolean))];
+  const statusOptionsState = useSelector((s) => s.statusOptions?.statusOptions);
+  useEffect(() => { dispatch(fetchStatusOptions()); }, [dispatch]);
+  const uniqueSources  = useStickyOptions(companies.map((c) => c.dataSource));
+  const seenStatuses   = useStickyOptions(companies.map((c) => c.companyStatus));
+  const uniqueStatuses = [...new Set([
+    ...(Array.isArray(statusOptionsState) ? statusOptionsState.filter((o) => o.status === "active").map((o) => o.name) : []),
+    ...seenStatuses,
+  ])];
   const total = pagination?.total || 0;
 
   // ── Stat cards ──────────────────────────────────────────────────────────────
@@ -294,15 +302,15 @@ const AllLeadsList = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] font-medium whitespace-nowrap">
-                      {row.updatedAt ? (
+                      {(row.lastConversation?.at || row.updatedAt) ? (
                         <>
-                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                           <span className="text-slate-400">, </span>
-                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                         </>
                       ) : "—"}
                     </span>
-                    <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                    <LastConversationBy row={row} />
                   </div>
                 </div>
               </td>

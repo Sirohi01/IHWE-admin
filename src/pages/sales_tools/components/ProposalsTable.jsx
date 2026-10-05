@@ -1,3 +1,4 @@
+import { toTitleCase } from '../../../utils/toTitleCase';
 import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Filter, FileText, Eye, Download, MoreVertical, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import axios from 'axios';
@@ -161,7 +162,7 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
             >
               <option value="All">All Executives</option>
               {uniqueExecutives.map((exec, idx) => (
-                <option key={idx} value={exec}>{exec}</option>
+                <option key={idx} value={exec}>{toTitleCase(exec)}</option>
               ))}
             </select>
             <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
@@ -215,7 +216,7 @@ export default function ProposalsTable({ data = [], parentLoading = false }) {
                         {item.companyName || item.company_name || item.consignee_name}
                       </div>
                     </td>
-                    <td className="px-2 py-2 font-bold text-blue-600">{item.added_by || 'Unassigned'}</td>
+                    <td className="px-2 py-2 font-bold text-blue-600">{toTitleCase(item.added_by || 'Unassigned')}</td>
                     <td className="px-2 py-2 text-center font-medium">{new Date(item.added).toLocaleDateString('en-GB')}</td>
                     <td className="px-2 py-2 text-right font-bold text-emerald-700">₹ {item.finalAmount || 0}</td>
                     <td className="px-2 py-2 text-center">

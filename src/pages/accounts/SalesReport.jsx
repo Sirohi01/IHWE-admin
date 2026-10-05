@@ -1,3 +1,4 @@
+import { toTitleCase } from '../../utils/toTitleCase';
 import React, { useState } from "react";
 import {
   Search,
@@ -967,7 +968,7 @@ const SalesReport = () => {
                         />
 
                         <span className="text-[13px] font-medium text-[#0F172A]">
-                          {item.name}
+                          {toTitleCase(item.name)}
                         </span>
 
                       </div>
@@ -1116,7 +1117,7 @@ const SalesReport = () => {
                         </div>
 
                         <span className="text-[13px] font-medium">
-                          {item.name}
+                          {toTitleCase(item.name)}
                         </span>
 
                       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
 import useDashboardStats from "../../hooks/useDashboardStats";
@@ -423,15 +424,15 @@ const HotClientList = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-[10px] font-medium whitespace-nowrap">
-                    {row.updatedAt ? (
+                    {(row.lastConversation?.at || row.updatedAt) ? (
                       <>
-                        <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                        <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                         <span className="text-slate-400">, </span>
-                        <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                        <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                       </>
                     ) : "-"}
                   </span>
-                  <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                  <LastConversationBy row={row} />
                 </div>
               </div>
             </td>

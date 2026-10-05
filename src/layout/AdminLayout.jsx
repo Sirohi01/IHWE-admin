@@ -3,11 +3,14 @@ import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { useState } from "react";
 import Sidebar from "./Sidebar";
+import { useSidebarMenu } from "./useSidebarMenu";
 import GlobalReminderPopup from "../components/GlobalReminderPopup";
 
 export default function AdminLayout({ onLogout }) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // One menu instance shared by the sidebar and the navbar breadcrumb.
+  const menu = useSidebarMenu();
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-100 relative">
@@ -16,6 +19,7 @@ export default function AdminLayout({ onLogout }) {
 
       {/* NAVBAR (fixed height = 64px / 4rem) */}
       <Navbar
+        sidebarMenu={menu.groupedMenuItems}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
         handleLogout={onLogout}
@@ -31,6 +35,7 @@ export default function AdminLayout({ onLogout }) {
       <div className="flex pt-[42px] flex-1 ">
         {/* SIDEBAR (fixed position) */}
         <Sidebar
+          menu={menu}
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
           mobileMenuOpen={mobileMenuOpen}

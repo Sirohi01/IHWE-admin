@@ -1,3 +1,4 @@
+import { toTitleCase } from '../../utils/toTitleCase';
 import { Link, useNavigate } from "react-router-dom";
 
 // Phone icon SVG
@@ -24,7 +25,15 @@ const CalIcon = () => (
   </svg>
 );
 
-export default function FollowupsTable({ followupsList, loading }) {
+const PERIOD_TITLES = {
+  today: "Today's", yesterday: "Yesterday's",
+  this_week: "This Week's", last_week: "Last Week's",
+  this_month: "This Month's", last_month: "Last Month's",
+  this_quarter: "This Quarter's", last_quarter: "Last Quarter's",
+  this_year: "This Year's",
+};
+
+export default function FollowupsTable({ followupsList, loading, globalPeriod = "today" }) {
   const navigate = useNavigate();
 
   // Skeleton rows for loading state
@@ -54,7 +63,7 @@ export default function FollowupsTable({ followupsList, loading }) {
     <div className="bg-white rounded-lg border border-gray-100 lg:col-span-6 col-span-1 flex flex-col justify-start overflow-hidden" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
       {/* Header */}
       <div className="flex justify-between items-center mb-0 flex-shrink-0 px-3 pt-2.5 pb-2.5 bg-slate-100 border-b border-slate-200">
-        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Today's Follow-ups</h3>
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">{PERIOD_TITLES[globalPeriod] || "Today's"} Follow-ups</h3>
         <Link to="/ihweClientData2026/warmClientList" className="text-[10px] font-bold text-blue-500 hover:underline">
           View All
         </Link>
@@ -79,7 +88,7 @@ export default function FollowupsTable({ followupsList, loading }) {
               ) : followupsList.length === 0 ? (
                 <tr>
                   <td colSpan="6" className="py-4 text-center text-slate-400 italic text-sm">
-                    No scheduled follow-ups for today
+                    No pending follow-ups
                   </td>
                 </tr>
               ) : (
@@ -91,7 +100,7 @@ export default function FollowupsTable({ followupsList, loading }) {
                   >
                     {/* Client Name */}
                     <td className="py-2 pl-3 pr-3">
-                      <span className="text-[10px] font-bold text-blue-600">{item.name}</span>
+                      <span className="text-[10px] font-bold text-blue-600">{toTitleCase(item.name)}</span>
                     </td>
 
                     {/* Company */}
@@ -101,7 +110,8 @@ export default function FollowupsTable({ followupsList, loading }) {
 
                     {/* Time */}
                     <td className="py-2 pr-3">
-                      <span className="text-[10px] font-bold" style={{ color: '#016B61' }}>{item.time}</span>
+                      <span className="text-[10px] font-bold block" style={{ color: '#016B61' }}>{item.time}</span>
+                      <span className={`text-[9px] font-bold block ${item.overdue ? 'text-red-600' : 'text-slate-500'}`}>{item.date}{item.overdue ? ' · Overdue' : ''}</span>
                     </td>
 
                     {/* Priority badge */}

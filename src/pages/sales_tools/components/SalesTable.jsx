@@ -1,3 +1,4 @@
+import { toTitleCase } from '../../../utils/toTitleCase';
 import React from 'react';
 import { Search, ChevronDown, Filter, FileText, Eye, Download, MoreVertical, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 
@@ -84,7 +85,7 @@ export default function SalesTable() {
                   </div>
                 </td>
                 <td className="px-4 py-2 text-sm font-semibold text-slate-900">{item.client}</td>
-                <td className="px-4 py-2 text-sm text-slate-600 capitalize">{item.exec}</td>
+                <td className="px-4 py-2 text-sm text-slate-600 ">{toTitleCase(item.exec)}</td>
                 <td className="px-4 py-2 text-sm text-slate-600">{item.date}</td>
                 <td className="px-4 py-2 text-sm text-slate-600">{item.valid}</td>
                 <td className="px-4 py-2 text-sm font-semibold text-slate-900">{item.amount}</td>

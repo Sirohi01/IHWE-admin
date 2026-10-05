@@ -48,17 +48,16 @@ import {
 
 
 export const menuItems = [
-  {
-    type:   "item",
-    label: "Sales Dashboard",
-    icon: LayoutDashboard,
-    path: "/dashboard",
-  },
-
   /* ================= SALES CRM ================= */
   {
     type: "heading",
     label: "Sales CRM",
+  },
+  {
+    type: "item",
+    label: "My Dashboard",
+    icon: LayoutDashboard,
+    path: "/dashboard",
   },
   {
     // Every Event Configuration entry (Skill Technical, Medical Expo Data

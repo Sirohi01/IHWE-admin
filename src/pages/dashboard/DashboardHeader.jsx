@@ -34,13 +34,13 @@ export default function DashboardHeader({ fullProfile, currentUser, loading, glo
             className="text-[11px] bg-white border border-slate-200 px-2 py-1 font-bold rounded-md text-[#111844] shadow-sm outline-none cursor-pointer"
           >
             <option value="today">Today</option>
-            <option value="this_week">Yesterday</option>
-            <option value="this_month">This Week</option>
-            <option value="this_year">Last Week</option>
-            <option value="today">This Month</option>
-            <option value="this_week">Last Month</option>
-            <option value="this_month">This Quarter</option>
-            <option value="this_year">Last Quarter</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="this_week">This Week</option>
+            <option value="last_week">Last Week</option>
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="this_quarter">This Quarter</option>
+            <option value="last_quarter">Last Quarter</option>
             <option value="this_year">This Year</option>
           </select>
         </div>

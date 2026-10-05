@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useStickyOptions from "../../hooks/useStickyOptions";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -156,8 +157,8 @@ const ColdClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
-  const uniqueIndustries = [...new Set(allCompanies.map(r => r.businessNature).filter(Boolean))];
+  const uniqueSources = useStickyOptions(allCompanies.map(r => r.dataSource));
+  const uniqueIndustries = useStickyOptions(allCompanies.map(r => r.businessNature));
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -266,8 +267,7 @@ const ColdClientList = () => {
       </div>
       <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Status</option>
-        <option value="On Hold">On Hold</option>
-        <option value="Lost">Lost</option>
+        {[...new Set(FILTER_STATUS)].filter(s => s !== 'Hold').map(s => <option key={s} value={s}>{s}</option>)}
       </select>
       <select value={filterReason} onChange={e => { setFilterReason(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Reason</option>

@@ -1,3 +1,4 @@
+import { toTitleCase } from '../../utils/toTitleCase';
 export default function SalesLeaderboard({ leaderboard, currentUser }) {
   return (
     <div className="bg-white rounded-lg border border-gray-100 p-2 lg:col-span-3 col-span-1 flex flex-col justify-start" style={{ boxShadow: 'rgba(67, 71, 85, 0.27) 0px 0px 0.25em, rgba(90, 125, 188, 0.05) 0px 0.25em 1em', fontFamily: 'Inter, sans-serif' }}>
@@ -30,7 +31,7 @@ export default function SalesLeaderboard({ leaderboard, currentUser }) {
                     <span className="text-[10px] font-bold uppercase">{item.name?.[0] || 'S'}</span>
                   )}
                 </div>
-                <span className="text-[11px] font-bold text-slate-800 truncate max-w-[90px]">{item.name}</span>
+                <span className="text-[11px] font-bold text-slate-800 truncate max-w-[90px]">{toTitleCase(item.name)}</span>
               </div>
               <span className="text-[10px] font-black text-[#0D530E]">₹ {(item.revenue / 100000).toFixed(2)} L</span>
             </div>

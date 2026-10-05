@@ -74,7 +74,25 @@ const NOTIF_CONFIG = {
   },
 };
 
-export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen }) {
+// Walks the real sidebar tree (section heading → dropdown(s) → item) and returns the labels
+// leading to the entry whose path best matches the current URL, e.g.
+// ["Sales CRM", "Organic Expo 2027", "New Leads"]. Null when the page isn't in the menu.
+const findMenuTrail = (nodes, pathname) => {
+  let best = null;
+  const walk = (items, trail) => {
+    for (const item of items || []) {
+      const next = [...trail, item.label];
+      if (item.path && item.path !== "/" && (pathname === item.path || pathname.startsWith(item.path + "/"))) {
+        if (!best || item.path.length > best.len) best = { len: item.path.length, trail: next };
+      }
+      if (item.children) walk(item.children, next);
+    }
+  };
+  walk(nodes, []);
+  return best?.trail || null;
+};
+
+export default function Navbar({ sidebarMenu, sidebarOpen, mobileMenuOpen, setMobileMenuOpen }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,6 +101,23 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
   const [fetchedEventName, setFetchedEventName] = useState("");
 
   const { events, currentEventId, setCurrentEventId, currentEvent } = useEventContext();
+
+  const menuBreadcrumb = useMemo(() => {
+    const path = location.pathname;
+    const direct = findMenuTrail(sidebarMenu, path);
+    if (direct) return direct;
+
+    // Client Overview isn't a sidebar entry itself — hang it under the event it belongs to.
+    const m = path.match(/^\/crm-event\/([^/]+)\/client\//);
+    if (m) {
+      const eventTrail = findMenuTrail(sidebarMenu, `/crm-event/${m[1]}/new-leads`);
+      if (eventTrail) {
+        const from = location.state?.fromPageLabel;
+        return [...eventTrail.slice(0, -1), ...(from ? [from] : []), "Client Overview"];
+      }
+    }
+    return null;
+  }, [sidebarMenu, location.pathname, location.state]);
 
   const crmEventBreadcrumb = useMemo(() => {
     const isCrmEvent = location.pathname.startsWith('/crm-event/');
@@ -471,15 +506,15 @@ export default function Navbar({ sidebarOpen, mobileMenuOpen, setMobileMenuOpen 
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
         </button>
         <div className="flex items-center gap-2 text-[14px]">
-          {crmEventBreadcrumb ? (
-            crmEventBreadcrumb.map((item, idx) => (
+          {(menuBreadcrumb || crmEventBreadcrumb) ? (
+            (menuBreadcrumb || crmEventBreadcrumb).map((item, idx, arr) => (
               <div key={idx} className="flex items-center gap-2">
                 {idx > 0 && <span className="text-white/60 text-[13px] font-semibold">/</span>}
                 <span
                   className={
                     idx === 0
                       ? "text-white font-bold uppercase tracking-tight text-[14px]"
-                      : idx === crmEventBreadcrumb.length - 1
+                      : idx === arr.length - 1
                       ? "text-yellow-300 font-semibold tracking-normal text-[14px]"
                       : "text-white/95 font-medium tracking-normal text-[14px]"
                   }

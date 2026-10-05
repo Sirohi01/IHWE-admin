@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useStickyOptions from "../../hooks/useStickyOptions";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import { useEventContext } from "../../context/EventContext";
 import {
@@ -105,10 +107,10 @@ const NewLeadList = () => {
     return () => clearTimeout(delayDebounceFn);
   }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo, currentEventId, user?.username, user?.role]);
 
-  const uniqueSources = [...new Set(newLeadCompanies.map(c => c.dataSource).filter(Boolean))];
+  const uniqueSources = useStickyOptions(newLeadCompanies.map(c => c.dataSource));
   const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
-  const uniqueIndustries = [...new Set(newLeadCompanies.map(c => c.businessNature).filter(Boolean))];
-  const uniqueAssignedTo = [...new Set(newLeadCompanies.map(c => c.forwardTo).filter(Boolean))];
+  const uniqueIndustries = useStickyOptions(newLeadCompanies.map(c => c.businessNature));
+  const uniqueAssignedTo = useStickyOptions(newLeadCompanies.map(c => c.forwardTo));
 
   const getStatusStyle = (status) => {
     const s = (status || "").toLowerCase();
@@ -234,13 +236,13 @@ const NewLeadList = () => {
           placeholder="Search lead by name, company, email, mobile..."
           className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 w-64"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
         />
       </div>
 
       <select
         value={filterSource}
-        onChange={(e) => setFilterSource(e.target.value)}
+        onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
         className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
       >
         <option value="">Source</option>
@@ -251,7 +253,7 @@ const NewLeadList = () => {
 
       <select
         value={filterStatus}
-        onChange={(e) => setFilterStatus(e.target.value)}
+        onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
         className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
       >
         <option value="">Status</option>
@@ -262,7 +264,7 @@ const NewLeadList = () => {
 
       <select
         value={filterIndustry}
-        onChange={(e) => setFilterIndustry(e.target.value)}
+        onChange={(e) => { setFilterIndustry(e.target.value); setPage(1); }}
         className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
       >
         <option value="">Industry</option>
@@ -274,7 +276,7 @@ const NewLeadList = () => {
       {isSuperAdmin && (
         <select
           value={filterAssignedTo}
-          onChange={(e) => setFilterAssignedTo(e.target.value)}
+          onChange={(e) => { setFilterAssignedTo(e.target.value); setPage(1); }}
           className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
         >
           <option value="">Assigned To</option>
@@ -292,7 +294,7 @@ const NewLeadList = () => {
       <th className="px-2 py-2 font-medium">Source</th>
       <th className="px-2 py-2 font-medium">Industry</th>
       <th className="px-2 py-2 font-medium text-center">Status</th>
-      {isSuperAdmin && <th className="px-2 py-2 font-medium">Assigned To</th>}
+      <th className="px-2 py-2 font-medium">Assigned To</th>
       <th className="px-2 py-2 font-medium">Lead Score</th>
       <th className="px-2 py-2 font-medium">Last Conversation / Handled By</th>
       <th className="px-2 py-2 w-10"></th>
@@ -308,7 +310,7 @@ const NewLeadList = () => {
             <td className="px-2 py-3"><div className="h-4 w-16 bg-slate-200 rounded-full"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>
             <td className="px-2 py-3 text-center"><div className="h-4 w-16 bg-slate-200 rounded-full mx-auto"></div></td>
-            {isSuperAdmin && <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>}
+            <td className="px-2 py-3"><div className="h-3 w-20 bg-slate-200 rounded"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-16 bg-slate-200 rounded"></div></td>
             <td className="px-2 py-3"><div className="h-3 w-24 bg-slate-200 rounded"></div></td>
             <td className="px-2 py-3"></td>
@@ -351,11 +353,9 @@ const NewLeadList = () => {
                   {toTitleCase(status)}
                 </span>
               </td>
-              {isSuperAdmin && (
-                <td className="px-2 py-1.5 text-slate-800 font-semibold text-[10px]">
-                  {toTitleCase(row.forwardTo) || "Unassigned"}
-                </td>
-              )}
+              <td className="px-2 py-1.5 text-slate-800 font-semibold text-[10px]">
+                {toTitleCase(row.forwardTo) || "Unassigned"}
+              </td>
               <td className="px-2 py-1.5">
                 {(() => {
                   const score = row.leadScore ?? getLeadScore(row.companyStatus);
@@ -377,15 +377,15 @@ const NewLeadList = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] font-medium whitespace-nowrap">
-                      {row.updatedAt ? (
+                      {(row.lastConversation?.at || row.updatedAt) ? (
                         <>
-                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                           <span className="text-slate-400">, </span>
-                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                         </>
                       ) : "-"}
                     </span>
-                    <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                    <LastConversationBy row={row} />
                   </div>
                 </div>
               </td>

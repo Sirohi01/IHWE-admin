@@ -130,7 +130,6 @@ export function useSidebarMenu() {
         label: ev.event_fullName || ev.event_name,
         icon: CalendarClock,
         children: [
-          { label: "Sales Tools", path: `/crm-event/${ev._id}/sales-tools` },
           { label: "New Leads", path: `/crm-event/${ev._id}/new-leads` },
           { label: "Follow-Ups", path: `/crm-event/${ev._id}/follow-ups` },
           { label: "Proposal Sent", path: `/crm-event/${ev._id}/proposal-sent` },
@@ -140,6 +139,7 @@ export function useSidebarMenu() {
           { label: "Exhibitor List", path: `/crm-event/${ev._id}/converted-leads` },
           { label: "All Leads", path: `/crm-event/${ev._id}/all-leads` },
           { label: "Referral Leads", path: `/crm-event/${ev._id}/referral-leads` },
+          { label: "Sales Tools", path: `/crm-event/${ev._id}/sales-tools` },
           // { label: "Payment Mail", path: `/crm-event/${ev._id}/payment-mail` },
           // { label: "Send Mail", path: `/crm-event/${ev._id}/send-mail` },
         ],

@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
+import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
+import useStickyOptions from "../../hooks/useStickyOptions";
 import useDashboardStats from "../../hooks/useDashboardStats";
 import { useEventContext } from "../../context/EventContext";
 import BaseLeadPage from "../../layout/BaseLeadPage";
@@ -48,6 +50,29 @@ function useCountUp(target, duration = 1200) {
   return { ref, count };
 }
 
+// Defined at module level so the card keeps its state (and count-up) across parent re-renders.
+function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
+  const { ref, count } = useCountUp(rawValue);
+  return (
+    <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
+      <div className="relative z-10">
+        <div className="flex items-center gap-2.5 mb-2">
+          <div className={`w-9 h-9 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
+            {icon}
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
+              {displayValue(count)}
+            </span>
+            <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
+          </div>
+        </div>
+        <div style={{ fontSize: '9.5px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{subLabel}</div>
+      </div>
+    </div>
+  );
+}
+
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
   return str.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
@@ -68,6 +93,9 @@ const WarmClientList = () => {
   const [limit, setLimit] = useState(10);
   const [filterSource, setFilterSource] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [followUpFrom, setFollowUpFrom] = useState('');
+  const [followUpTo, setFollowUpTo] = useState('');
+  const [ownerMe, setOwnerMe] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
@@ -92,13 +120,16 @@ const WarmClientList = () => {
         search: searchTerm,
         status: filterStatus || FOLLOW_UP_STATUS_FILTER,
         source: filterSource,
+        followUpFrom,
+        followUpTo,
+        forwardTo: ownerMe ? user?.username : undefined,
         eventId: currentEventId,
         username: user?.username,
         role: user?.role,
       }));
     }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, currentEventId, user?.username, user?.role]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, followUpFrom, followUpTo, ownerMe, currentEventId, user?.username, user?.role]);
 
   const {
     totalLeads: hookTotal, pendingFollowUpsCount, followUpsDueThisWeek, followUpsDueThisMonth,
@@ -141,8 +172,9 @@ const WarmClientList = () => {
     setSelectedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
-  const uniqueSources = [...new Set(allCompanies.map(r => r.dataSource).filter(Boolean))];
-  const uniqueStatuses = [...new Set(allCompanies.map(r => r.companyStatus).filter(Boolean))];
+  // Keep every source seen so far, so picking one doesn't wipe the other options.
+  const uniqueSources = useStickyOptions(allCompanies.map(r => r.dataSource));
+  const uniqueStatuses = FOLLOW_UP_STATUSES;
 
   const getSourceStyle = (source) => {
     const s = (source || "").toLowerCase();
@@ -183,34 +215,13 @@ const WarmClientList = () => {
   const dueTodayCount = overviewData?.[0]?.value || 0;
   const overdueCount = overviewData?.[3]?.value || 0;
 
-  function AnimatedStatCard({ icon, gradientTo, iconBg, rawValue, displayValue, label, subLabel, subColor }) {
-    const { ref, count } = useCountUp(rawValue);
-    return (
-      <div ref={ref} className={`group cursor-pointer relative bg-gradient-to-br from-white ${gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}>
-        <div className="relative z-10">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className={`w-9 h-9 ${iconBg} rounded-full flex items-center justify-center shrink-0`}>
-              {icon}
-            </div>
-            <div className="flex flex-col min-w-0">
-              <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1, marginBottom: '4px', display: 'block', fontFamily: 'Inter, sans-serif' }}>
-                {displayValue(count)}
-              </span>
-              <span style={{ fontSize: '8.5px', fontWeight: 800, color: '#334155', lineHeight: 1.2, display: 'block', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{label}</span>
-            </div>
-          </div>
-          <div style={{ fontSize: '9.5px', fontWeight: 700, color: subColor, textAlign: 'center', fontFamily: 'Inter, sans-serif', whiteSpace: 'nowrap' }}>{subLabel}</div>
-        </div>
-      </div>
-    );
-  }
 
   const statCards = (
     <>
       <AnimatedStatCard
         icon={<CalendarDays className="w-5 h-5 text-emerald-600" strokeWidth={2.5} />}
         gradientTo="to-emerald-50" iconBg="bg-emerald-100"
-        rawValue={pendingFollowUpsCount}
+        rawValue={totalLeads}
         displayValue={(c) => Math.round(c)}
         label="TOTAL FOLLOW-UPS"
         subLabel="Pending" subColor="#059669"
@@ -263,9 +274,12 @@ const WarmClientList = () => {
           className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
         />
       </div>
-      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
-        Follow-Up Date <CalendarDays size={10} className="text-slate-500" />
-      </button>
+      <div className="flex items-center gap-1 shrink-0 text-[9px] font-medium text-slate-800">
+        <CalendarDays size={10} className="text-slate-500" />
+        <input type="date" value={followUpFrom} max={followUpTo || undefined} onChange={e => { setFollowUpFrom(e.target.value); setPage(1); }} className="py-0.5 px-1 bg-white border border-slate-200 rounded text-[9px] focus:outline-none focus:border-emerald-500" title="Follow-up from" />
+        <span>to</span>
+        <input type="date" value={followUpTo} min={followUpFrom || undefined} onChange={e => { setFollowUpTo(e.target.value); setPage(1); }} className="py-0.5 px-1 bg-white border border-slate-200 rounded text-[9px] focus:outline-none focus:border-emerald-500" title="Follow-up to" />
+      </div>
       <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
         <option value="">Status</option>
         {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
@@ -274,8 +288,12 @@ const WarmClientList = () => {
         <option value="">Source</option>
         {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
       </select>
-      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
-        Lead Owner: Me <ChevronDown size={10} className="text-slate-500" />
+      <button
+        type="button"
+        onClick={() => { setOwnerMe(v => !v); setPage(1); }}
+        className={`flex items-center gap-1 py-1 px-1.5 border rounded text-[9px] font-medium shrink-0 ${ownerMe ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
+      >
+        Lead Owner: {ownerMe ? 'Me' : 'All'}
       </button>
       <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
         <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
@@ -371,15 +389,22 @@ const WarmClientList = () => {
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] font-medium whitespace-nowrap">
-                      {row.updatedAt ? (
+                      {(row.lastConversation?.at || row.updatedAt) ? (
                         <>
-                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.updatedAt))}</span>
+                          <span style={{ color: '#111844', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                           <span className="text-slate-400">, </span>
-                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(row.updatedAt))}</span>
+                          <span style={{ color: '#810B38', fontWeight: 'bold' }}>{new Intl.DateTimeFormat('en-GB', { hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date((row.lastConversation?.at || row.updatedAt)))}</span>
                         </>
                       ) : "-"}
                     </span>
-                    <span className="text-[9px] font-bold mt-0.5" style={{ color: '#0D530E' }}>(WhatsApp)</span>
+                    {(() => {
+                      const c = row.contacts?.[0] || {};
+                      const person = (c.name || `${c.firstName || ''} ${c.surname || ''}`).trim();
+                      return person ? (
+                        <span className="text-[10px] font-bold mt-0.5 text-slate-700">{toTitleCase(person)}</span>
+                      ) : null;
+                    })()}
+                    <LastConversationBy row={row} />
                   </div>
                 </div>
               </td>
@@ -634,6 +659,9 @@ const WarmClientList = () => {
         setSearchTerm('');
         setFilterSource('');
         setFilterStatus('');
+        setFollowUpFrom('');
+        setFollowUpTo('');
+        setOwnerMe(false);
         setPage(1);
         setSelectedIds([]);
       }}

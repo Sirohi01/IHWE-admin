@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import SocialSidebar from "../components/SocialSidebar";
-import { useSidebarMenu } from "./useSidebarMenu";
 import SidebarProfileFooter from "./SidebarProfileFooter";
 import SidebarHeader from "./SidebarHeader";
 import SidebarMenu from "./SidebarMenu";
@@ -22,6 +21,7 @@ const DEFAULT_THEME = {
 const BORDER_COLOR = "#23471d";
 
 export default function Sidebar({
+  menu,
   sidebarOpen,
   setSidebarOpen,
   mobileMenuOpen,
@@ -33,7 +33,7 @@ export default function Sidebar({
   const [openSections, setOpenSections] = useState({});
   const [theme] = useState(DEFAULT_THEME);
 
-  const { currentUser, fullProfile, myRank, groupedMenuItems } = useSidebarMenu();
+  const { currentUser, fullProfile, myRank, groupedMenuItems } = menu;
   const showFooterProfile = false;
 
   // Lock body scroll when mobile menu is open
