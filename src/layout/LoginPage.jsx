@@ -1,3 +1,4 @@
+import { isCurrentUserSuperAdmin } from "../utils/roles";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
@@ -21,6 +22,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import adminLogo from "../assets/adminlogonew.webp";
+
+// Super Administrator lands on the Sales Team Dashboard first; everyone else on their own dashboard.
+const landingPath = () => (isCurrentUserSuperAdmin() ? "/sales-team-dashboard" : "/dashboard");
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -59,7 +63,7 @@ export default function LoginPage() {
       try {
         const response = await api.get("/api/verify-token");
         if (response.data.success) {
-          navigate("/dashboard", { replace: true });
+          navigate(landingPath(), { replace: true });
         } else {
           // Invalid token, clear it
           localStorage.removeItem("adminToken");
@@ -137,7 +141,7 @@ export default function LoginPage() {
           confirmButtonColor: "#23471d",
         });
 
-        navigate("/dashboard", { replace: true });
+        navigate(landingPath(), { replace: true });
       } else {
         showAlert("error", "Login Failed", response.data.message || "Invalid username or password!");
       }

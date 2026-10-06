@@ -55,6 +55,12 @@ export const menuItems = [
   },
   {
     type: "item",
+    label: "Sales Team Dashboard",
+    icon: Users,
+    path: "/sales-team-dashboard",
+  },
+  {
+    type: "item",
     label: "My Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",

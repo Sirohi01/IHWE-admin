@@ -5,6 +5,10 @@ import { X } from "lucide-react";
 import LoginPage from "../layout/LoginPage";
 import AdminLayout from "../layout/AdminLayout";
 import Dashboard from "../pages/Dashboard";
+import SuperAdminRoute from "./SuperAdminRoute";
+import { isCurrentUserSuperAdmin } from "../utils/roles";
+const SalesTeamDashboard = lazy(() => import("../pages/SalesTeamDashboard"));
+const SalesMemberDetails = lazy(() => import("../pages/SalesMemberDetails"));
 import CrmEventScopedRoute from "../components/CrmEventScopedRoute";
 const AdminUser = lazy(() => import("../layout/AdminUser"));
 const MyProfile = lazy(() => import("../pages/MyProfile"));
@@ -393,9 +397,11 @@ export default function AppRoutes() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/" element={<AdminLayout />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route index element={<Navigate to={isCurrentUserSuperAdmin() ? "sales-team-dashboard" : "dashboard"} replace />} />
             <Route path="role-permissions" element={<RolePermissions />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="sales-team-dashboard" element={<SuperAdminRoute><SalesTeamDashboard /></SuperAdminRoute>} />
+            <Route path="sales-team-dashboard/member/:username" element={<SuperAdminRoute><SalesMemberDetails /></SuperAdminRoute>} />
             <Route path="certificate" element={<Certificate />} />
             <Route path="dashboard/add-payment" element={<AddPayment />} />
             <Route path="dashboard/account/AddPayment/:id" element={<AddPayment />} />
