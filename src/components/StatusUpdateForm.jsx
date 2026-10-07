@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import Swal from 'sweetalert2';
+import { isFollowUpRequired } from '../utils/followUpRule';
+import { toIsoDateTime } from '../utils/dateTimeInput';
+import { MIN_REMARK_LENGTH, isRemarkValid } from '../utils/remarkRule';
 import { Bell, MessageSquare, Trash2, UserCircle } from 'lucide-react';
 import api from '../lib/api';
 import { fetchStatusOptions } from '../features/add_by_admin/statusOption/statusOptionSlice';
@@ -164,6 +167,26 @@ const StatusUpdateForm = ({ targetId, currentStatus, onSuccess, updateType = 'ms
       return;
     }
 
+    if (isFollowUpRequired(payloadToSend.status_short) && !payloadToSend.reminder_dt) {
+      Swal.fire({
+        title: 'Follow-up date required',
+        text: `Please select the next reminder / follow-up date for status "${payloadToSend.status_short}".`,
+        icon: 'warning',
+        confirmButtonColor: '#23471d',
+      });
+      return;
+    }
+
+    if (payloadToSend.re_msg && !isRemarkValid(payloadToSend.re_msg)) {
+      Swal.fire({
+        title: 'Remark too short',
+        text: `Please write at least ${MIN_REMARK_LENGTH} characters in the remark (currently ${String(payloadToSend.re_msg).trim().length}).`,
+        icon: 'warning',
+        confirmButtonColor: '#23471d',
+      });
+      return;
+    }
+
     if (!payloadToSend.status_short || !payloadToSend.evnt_id || !payloadToSend.re_msg) {
       Swal.fire({
         title: 'Incomplete Data',
@@ -211,7 +234,7 @@ const StatusUpdateForm = ({ targetId, currentStatus, onSuccess, updateType = 'ms
                 // gstNumber: applicationData.gstNumber || existingCompany.gstNumber,
                 companyStatus: payloadToSend.status_short,
                 eventName: payloadToSend.event_name || existingCompany.eventName,
-                reminder: payloadToSend.reminder_dt || existingCompany.reminder,
+                reminder: toIsoDateTime(payloadToSend.reminder_dt) || existingCompany.reminder,
                 forwardTo: payloadToSend.forward_to || existingCompany.forwardTo,
                 contacts: [
                   {
@@ -235,7 +258,7 @@ const StatusUpdateForm = ({ targetId, currentStatus, onSuccess, updateType = 'ms
                 udyamNumber: applicationData.udyamNumber,
                 gstNumber: applicationData.gstNumber,
                 eventName: payloadToSend.event_name || '',
-                reminder: payloadToSend.reminder_dt || '',
+                reminder: toIsoDateTime(payloadToSend.reminder_dt) || '',
                 forwardTo: payloadToSend.forward_to || '',
                 companyStatus: payloadToSend.status_short,
                 contacts: [
@@ -314,8 +337,7 @@ const StatusUpdateForm = ({ targetId, currentStatus, onSuccess, updateType = 'ms
                   value={reviewData.status_short}
                   onChange={(e) => {
                     const value = e.target.value;
-                    const hideFor = ['Not Interested'];
-                    setFlip(!hideFor.includes(value));
+                    setFlip(isFollowUpRequired(value));
                     handleChange(e);
                   }}
                   className="w-full h-9 text-[12px] border border-slate-300 rounded px-2 outline-none focus:border-[#23471d] bg-white"
@@ -406,7 +428,7 @@ const StatusUpdateForm = ({ targetId, currentStatus, onSuccess, updateType = 'ms
             <div className="flex gap-4 items-end">
               <div className="flex-grow">
                 <label className="text-[12px] font-semibold text-slate-600 mb-1 block">
-                  Any Remark <span className="text-red-500">*</span>
+                  Any Remark <span className="text-red-500">*</span> <span className={`font-medium ${String(reviewData.re_msg || '').trim().length >= MIN_REMARK_LENGTH ? 'text-emerald-600' : 'text-slate-400'}`}>({String(reviewData.re_msg || '').trim().length}/{MIN_REMARK_LENGTH})</span>
                 </label>
                 <textarea
                   id="Remark"

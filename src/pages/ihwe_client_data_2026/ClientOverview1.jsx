@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Swal from "sweetalert2";
+import { isFollowUpRequired } from "../../utils/followUpRule";
+import { toIsoDateTime } from "../../utils/dateTimeInput";
+import { MIN_REMARK_LENGTH, isRemarkValid } from "../../utils/remarkRule";
 import {
   Building2,
   Phone,
@@ -422,9 +425,17 @@ const ClientOverview1 = () => {
   const handleAddReview = async (e) => {
     e.preventDefault();
 
-    // A remark is mandatory for every status update.
-    if (!String(reviewData.re_msg || "").trim()) {
-      Swal.fire({ icon: "warning", title: "Remark required", text: "Please write a remark before updating the status.", confirmButtonColor: "#23471d" });
+    // A remark of at least MIN_REMARK_LENGTH characters is mandatory for every status update.
+    if (!isRemarkValid(reviewData.re_msg)) {
+      const typed = String(reviewData.re_msg || "").trim().length;
+      Swal.fire({ icon: "warning", title: "Remark too short", text: `Please write at least ${MIN_REMARK_LENGTH} characters in the remark (currently ${typed}).`, confirmButtonColor: "#23471d" });
+      return;
+    }
+
+    // Follow-up date is mandatory for every status except Completed / On Hold / Not Interested.
+    const statusForCheck = reviewData.status_short || company?.companyStatus || "";
+    if (isFollowUpRequired(statusForCheck) && !(reviewData.follow_up_date || reviewData.reminder_dt)) {
+      Swal.fire({ icon: "warning", title: "Follow-up date required", text: `Please select a follow-up date for status "${statusForCheck}".`, confirmButtonColor: "#23471d" });
       return;
     }
 
@@ -469,14 +480,19 @@ const ClientOverview1 = () => {
         follow_up_date: followUpDate,
         re_msg: finalReMsg,
         updated_by: currentUserName,
+        // Name of the event this update was made under (not the client's old company-level event name).
+        event_name: (() => {
+          const ev = selectedEventId ? events.find((e) => String(e._id) === String(selectedEventId)) : null;
+          return ev ? (ev.event_fullName || ev.event_name || ev.name || reviewData.event_name) : reviewData.event_name;
+        })(),
       })).unwrap();
 
       const companyUpdates = {
         companyStatus: statusToSave,
       };
       if (followUpDate) {
-        companyUpdates.reminder = followUpDate;
-        companyUpdates.followUpDate = followUpDate;
+        companyUpdates.reminder = toIsoDateTime(followUpDate);
+        companyUpdates.followUpDate = toIsoDateTime(followUpDate);
       }
       if (assigneeChanged) {
         companyUpdates.forwardTo = newAssignee;
@@ -490,8 +506,8 @@ const ClientOverview1 = () => {
           status: reviewData.status_short || company.companyStatus,
           ...(assigneeChanged ? { forwardTo: newAssignee } : {}),
           lastRemark: finalReMsg,
-          reminder: reviewData.reminder_dt || null,
-          followUpDate: reviewData.follow_up_date || null,
+          reminder: toIsoDateTime(reviewData.reminder_dt) || null,
+          followUpDate: toIsoDateTime(reviewData.follow_up_date) || null,
           ...(exhibitorRegId ? { exhibitorRegistrationId: exhibitorRegId } : {}),
           ...(regEventId ? { registrationEventId: regEventId } : {}),
         });
@@ -1498,7 +1514,7 @@ const ClientOverview1 = () => {
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Follow Up Date</label>
+                  <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Follow Up Date{isFollowUpRequired(reviewData.status_short || company?.companyStatus) && <span className="text-red-500"> *</span>}</label>
                   <input
                     type="datetime-local"
                     value={reviewData.follow_up_date}
@@ -1510,13 +1526,13 @@ const ClientOverview1 = () => {
 
                 <div className="col-span-2 xl:col-span-4 flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Remark <span className="text-red-500">*</span></label>
+                    <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Remark <span className="text-red-500">*</span> <span className={`font-medium ${String(reviewData.re_msg || "").trim().length >= MIN_REMARK_LENGTH ? "text-emerald-600" : "text-slate-400"}`}>({String(reviewData.re_msg || "").trim().length}/{MIN_REMARK_LENGTH})</span></label>
                     <textarea
                       id="Remark"
                       value={reviewData.re_msg}
                       onChange={handleChange}
                       className="w-full h-[36px] rounded border border-slate-200 p-2 outline-none resize-none text-[11px] font-semibold text-[#0A2947] focus:border-emerald-500"
-                      placeholder="Write your remark here..."
+                      placeholder={`Write your remark here (minimum ${MIN_REMARK_LENGTH} characters)...`}
                     />
                   </div>
                   <button

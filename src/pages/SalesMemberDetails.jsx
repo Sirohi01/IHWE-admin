@@ -355,7 +355,9 @@ export default function SalesMemberDetails() {
                 <h3 className={cardTitle}>Recent Leads ({periodLabel})</h3>
                 <button onClick={() => setTab("leads")} className="text-[10px] font-bold text-[#08775e] hover:underline">View All</button>
               </div>
-              <LeadsTable list={data.rows} limit={5} />
+              <div className="max-h-[420px] overflow-y-auto">
+                <LeadsTable list={data.rows} />
+              </div>
             </div>
             <div className="lg:col-span-4 bg-white rounded-lg border border-gray-100 p-3" style={CARD}>
               <div className={cardHead}>

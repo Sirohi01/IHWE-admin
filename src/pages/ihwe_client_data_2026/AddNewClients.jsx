@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { toIsoDateTime } from "../../utils/dateTimeInput";
 import { useLocation, useNavigate, useParams, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -482,6 +483,8 @@ const AddNewClients = () => {
                     events: [currentEventId],
                 } : {}),
                 updated_by: userName || formData.updated_by,
+                reminder: toIsoDateTime(formData.reminder),
+                followUpDate: toIsoDateTime(formData.followUpDate),
             };
             if (id) {
                 await dispatch(updateCompany({ id, data: dataToSave })).unwrap();

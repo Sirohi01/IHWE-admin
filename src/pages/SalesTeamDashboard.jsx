@@ -109,6 +109,21 @@ export default function SalesTeamDashboard() {
         const ts = (c.eventAssignments || []).filter((x) => mine(x) && (x.assignedAt || x.createdAt)).map((x) => new Date(x.assignedAt || x.createdAt).getTime());
         return ts.length ? Math.max(...ts) : c.createdAt;
       };
+      // This member's follow-up date for a lead: their own event assignment's, else the company's.
+      const followUpDateOf = (c) => {
+        const a = (c.eventAssignments || []).filter(mine)
+          .sort((x, y) => new Date(y.updatedAt || 0) - new Date(x.updatedAt || 0))[0];
+        return a?.reminder || a?.followUpDate || c.reminder || c.followUpDate || null;
+      };
+      // Follow-ups in a Duration = leads in Contacted / Follow-up status whose follow-up date falls in it
+      // (the same "due today / this week..." idea as the Follow-Ups page), not leads assigned in it.
+      const followUpsDue = (key) => {
+        const r = getPeriodRange(key);
+        return leads.filter((c) => {
+          const when = followUpDateOf(c);
+          return isFollowUp(statusOf(c)) && when && inRange(when, r);
+        }).length;
+      };
       const within = (key) => { const r = getPeriodRange(key); return leads.filter((c) => inRange(assignedAt(c), r)); };
       // Hot lead = one of this member's leads that had a PI (estimate) made in the Duration.
       const myIds = new Set(leads.map((c) => String(c._id)));
@@ -122,7 +137,7 @@ export default function SalesTeamDashboard() {
       const stats = (ls, key) => ({
         leads: ls.length,
         hot: hotOf(key),
-        followups: ls.filter((c) => isFollowUp(statusOf(c))).length,
+        followups: followUpsDue(key),
         conversions: conv[key]?.[u] || 0,
       });
       const buckets = Object.fromEntries(COLUMNS.map((c) => [c.key, { ...stats(within(c.key), c.key), revenue: revenue[c.key]?.[u] || 0 }]));

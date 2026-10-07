@@ -523,7 +523,7 @@ export default function Dashboard() {
           rows={followUpRows}
           columns={[
             { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
-            { key: "eventName", label: "Event", render: (r) => r.eventName || eventNameOf(r.eventId) || "-" },
+            { key: "eventName", label: "Event", render: (r) => eventNameOf(r.eventId) || r.eventName || "-" },
             { key: "status", label: "Status" },
             { key: "followUpDate", label: "Next Follow-Up", render: (r) => (r.followUpDate ? fmtDateTime(r.followUpDate) : "-") },
             { key: "remark", label: "Remark", render: (r) => remarkOnly(r.remark) || "-" },
@@ -577,7 +577,7 @@ export default function Dashboard() {
             { key: "status", label: "Status Set" },
             { key: "remark", label: "Remark", render: (r) => remarkOnly(r.remark) || "-" },
             { key: "forwardTo", label: "Forwarded To", render: (r) => <span className="capitalize">{r.forwardTo || "-"}</span> },
-            { key: "eventName", label: "Event", render: (r) => r.eventName || eventNameOf(r.eventId) || "-" },
+            { key: "eventName", label: "Event", render: (r) => eventNameOf(r.eventId) || r.eventName || "-" },
             { key: "by", label: "Updated By", render: (r) => <span className="capitalize">{r.by || "-"}</span> },
             { key: "at", label: "When", render: (r) => fmtDateTime(r.at) },
           ]}
