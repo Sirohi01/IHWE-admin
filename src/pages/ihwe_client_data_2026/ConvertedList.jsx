@@ -8,6 +8,7 @@ import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
 import { useEventContext } from '../../context/EventContext';
 
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2,
@@ -78,6 +79,14 @@ const ConvertedList = () => {
   const [filterSource, setFilterSource] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterStage, setFilterStage] = useState('');
+  const [filterCompany, setFilterCompany] = useState('');
+  const [filterContact, setFilterContact] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterStall, setFilterStall] = useState('');
+  const [filterBookingDate, setFilterBookingDate] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [filterRevenue, setFilterRevenue] = useState('');
+  const [filterUpdated, setFilterUpdated] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Currently selected event (global, from Navbar) — scopes the registrations fetch below.
@@ -149,9 +158,31 @@ const ConvertedList = () => {
 
   // Frontend filtering and pagination
   const filteredRegs = registrations.filter(r => {
-    if (filterStage && filterStage !== 'Converted' && (r.status || 'Converted') !== filterStage) return false;
-    if (filterSource && (r.referredBy || 'Direct') !== filterSource) return false;
-    if (filterIndustry && (r.natureOfBusiness || r.industrySector || r.typeOfBusiness) !== filterIndustry) return false;
+    const has = (value, needle) => String(value || '').toLowerCase().includes(needle.trim().toLowerCase());
+    const sameDay = (value, day) => {
+      const [y, m, d] = day.split('-').map(Number);
+      const at = new Date(value);
+      return at >= new Date(y, m - 1, d) && at < new Date(y, m - 1, d + 1);
+    };
+    const PAYMENT_LABELS = { paid: 'Paid (Full)', confirmed: 'Confirmed', approved: 'Approved', 'advance-paid': 'Installment', rejected: 'Rejected', 'payment-failed': 'Failed' };
+    if (filterCompany && !has(`${r.exhibitorName || ''} ${r.companyName || ''}`, filterCompany)) return false;
+    if (filterIndustry && !has(r.natureOfBusiness || r.industrySector || r.typeOfBusiness, filterIndustry)) return false;
+    if (filterContact) {
+      const member = r.teamMembers?.find((m) => m.isPrimary || /primary contact/i.test(m.roleAtExhibition || '')) || r.teamMembers?.[0];
+      const cc = r.contacts?.find((c) => c.isPrimary) || r.contacts?.[0];
+      const contactText = [r.contact1?.name, r.contact1?.firstName, r.contact1?.email, r.contact1?.mobile, r.contact1?.phone, member?.name, member?.email, member?.mobile, cc?.name, cc?.email, cc?.mobile, r.companyEmail, r.email, r.mobile, r.phone].filter(Boolean).join(' ');
+      if (!has(contactText, filterContact)) return false;
+    }
+    if (filterCategory && !has(r.participation?.stallCategory || r.exhibitorCategory || r.msme?.msmeCategory, filterCategory)) return false;
+    // Source: the table shows `referredBy || "Direct"`.
+    if (filterSource && !has(r.referredBy || 'Direct', filterSource)) return false;
+    if (filterStall && !has(`${r.stallNumber || r.participation?.stallFor || r.stallNo || r.stall_no || ''} ${r.participation?.stallSize || r.stallSize || ''}`, filterStall)) return false;
+    if (filterBookingDate && !sameDay(r.createdAt || r.updatedAt, filterBookingDate)) return false;
+    if (filterLocation && !has(`${r.city || r.address?.city || r.companyCity || ''} ${r.state || r.address?.state || r.companyState || ''}`, filterLocation)) return false;
+    if (filterRevenue && !has(r.amountPaid || r.financeBreakdown?.netPayable || r.participation?.total || 0, filterRevenue.replace(/[,₹$\s]/g, ''))) return false;
+    // Payment status: matches the raw status or the label shown in the table.
+    if (filterStage && !has(r.status, filterStage) && !has(PAYMENT_LABELS[r.status], filterStage)) return false;
+    if (filterUpdated && !sameDay(r.updatedAt, filterUpdated)) return false;
     if (searchTerm) {
       const searchStr = `${r.exhibitorName} ${r.contact1?.email} ${r.contact1?.mobile}`.toLowerCase();
       if (!searchStr.includes(searchTerm.toLowerCase())) return false;
@@ -360,49 +391,6 @@ const ConvertedList = () => {
         />
       </div>
 
-      <select
-        value={filterIndustry}
-        onChange={(e) => setFilterIndustry(e.target.value)}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
-      >
-        <option value="">Industry</option>
-        {uniqueIndustries.map(ind => (
-          <option key={ind} value={ind}>{ind}</option>
-        ))}
-      </select>
-
-      <select
-        value={filterSource}
-        onChange={(e) => setFilterSource(e.target.value)}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
-      >
-        <option value="">Source</option>
-        {uniqueSources.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
-      <div className="relative">
-        <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-        <input
-          type="text"
-          placeholder="Converted Date"
-          className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-emerald-500 w-36 cursor-pointer text-slate-600"
-          readOnly
-        />
-      </div>
-
-      <select
-        value={filterStage}
-        onChange={(e) => setFilterStage(e.target.value)}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
-      >
-        <option value="">Sales Stage</option>
-        {uniqueStages.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
 
       {/* <button
         className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
@@ -415,6 +403,24 @@ const ConvertedList = () => {
       >
         <RefreshCw size={14} />
       </button> */}
+    </>
+  );
+
+  // Column-wise filters (shown in the filter bar next to the search)
+  const T = (value, setter, placeholder) => <ColFilterText value={value} onChange={(v) => { setter(v); setPage(1); }} placeholder={placeholder} />;
+  const columnFilters = (
+    <>
+      {T(filterCompany, setFilterCompany, "Company Name")}
+      {T(filterIndustry, setFilterIndustry, "Industry")}
+      {T(filterContact, setFilterContact, "Contact Details")}
+      {T(filterCategory, setFilterCategory, "Category")}
+      {T(filterSource, setFilterSource, "Source")}
+      {T(filterStall, setFilterStall, "Stall Info")}
+      <ColFilterDate value={filterBookingDate} onChange={(v) => { setFilterBookingDate(v); setPage(1); }} label="Booking Date" />
+      {T(filterLocation, setFilterLocation, "Location")}
+      {T(filterRevenue, setFilterRevenue, "Revenue")}
+      {T(filterStage, setFilterStage, "Payment Status")}
+      <ColFilterDate value={filterUpdated} onChange={(v) => { setFilterUpdated(v); setPage(1); }} label="Updated" />
     </>
   );
 
@@ -753,6 +759,8 @@ const ConvertedList = () => {
       }
       statCards={statCards}
       filterBar={filters}
+      columnFilters={columnFilters}
+      wrapFilters
       tableHeaders={tableHeaders}
       tableBody={tableBody}
 
@@ -764,6 +772,14 @@ const ConvertedList = () => {
         setFilterSource('');
         setFilterIndustry('');
         setFilterStage('');
+        setFilterCompany('');
+        setFilterContact('');
+        setFilterCategory('');
+        setFilterStall('');
+        setFilterBookingDate('');
+        setFilterLocation('');
+        setFilterRevenue('');
+        setFilterUpdated('');
         setPage(1);
         setSelectedIds([]);
       }}

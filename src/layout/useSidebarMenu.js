@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { menuItems } from "../data/menuItems";
 import api from "../lib/api";
 import { fetchEvents } from "../features/crmEvent/crmEventSlice";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, FolderKanban } from "lucide-react";
 import { shortEventLabel } from "../lib/visitorEventScope";
 
 // Only active events get a sidebar entry; a missing status counts as active.
@@ -150,7 +150,13 @@ export function useSidebarMenu() {
       if (salesCrmSection) {
         const masterDataIdx = salesCrmSection.children.findIndex((c) => c.label === "Expo Master Data");
         const insertAt = masterDataIdx >= 0 ? masterDataIdx : salesCrmSection.children.length;
-        salesCrmSection.children.splice(insertAt, 0, ...dynamicEventItems);
+        // Events live under one "Projects" dropdown inside Sales CRM.
+        salesCrmSection.children.splice(insertAt, 0, {
+          type: "dropdown",
+          label: "Projects",
+          icon: FolderKanban,
+          children: dynamicEventItems,
+        });
       }
     }
 

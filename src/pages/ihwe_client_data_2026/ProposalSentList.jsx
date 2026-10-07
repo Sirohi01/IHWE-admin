@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { FaWhatsapp, FaEnvelope, FaFilePdf, FaImage, FaVideo, FaLink, FaFilePowerpoint, FaFileAlt } from 'react-icons/fa';
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { ColFilterCell, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 
 const toTitleCase = (str) => {
   if (!str || typeof str !== 'string') return str;
@@ -29,7 +30,6 @@ const ProposalSentList = () => {
   const [filterMaterial, setFilterMaterial] = useState("");
   const [filterIndustry, setFilterIndustry] = useState("");
   const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
 
   // Super Administrator and Sales Manager see every lead; everyone else
   // only sees leads forwarded to them (enforced server-side via the
@@ -103,19 +103,19 @@ const ProposalSentList = () => {
 
     if (search && !cName.includes(search) && !cEmail.includes(search) && !cMobile.includes(search)) return false;
     
-    if (filterSentVia && item.sentVia !== filterSentVia) return false;
-    
-    if (filterMaterial && !item.materials?.some(m => m.category === filterMaterial || m.title === filterMaterial)) return false;
+    const has = (value, needle) => String(value || "").toLowerCase().includes(needle.trim().toLowerCase());
 
-    const compIndustry = item.cmpny_id?.category || "General";
-    if (filterIndustry && compIndustry !== filterIndustry) return false;
+    if (filterSentVia && !has(item.sentVia, filterSentVia)) return false;
 
-    if (startDate && new Date(item.createdAt) < new Date(startDate)) return false;
-    
-    if (endDate) {
-      const endD = new Date(endDate);
-      endD.setHours(23, 59, 59, 999);
-      if (new Date(item.createdAt) > endD) return false;
+    if (filterMaterial && !item.materials?.some(m => has(m.category, filterMaterial) || has(m.title, filterMaterial))) return false;
+
+    if (filterIndustry && !has(item.cmpny_id?.category || "General", filterIndustry)) return false;
+
+    // Single date: the share/update happened on that (local) day.
+    if (startDate) {
+      const [y, m, d] = startDate.split("-").map(Number);
+      const at = new Date(item.createdAt);
+      if (at < new Date(y, m - 1, d) || at >= new Date(y, m - 1, d + 1)) return false;
     }
 
     return true;
@@ -253,7 +253,6 @@ const ProposalSentList = () => {
     setFilterMaterial("");
     setFilterIndustry("");
     setStartDate("");
-    setEndDate("");
     setSelectedCompanyId(null);
     setPage(1);
   };
@@ -280,49 +279,18 @@ const ProposalSentList = () => {
         />
       </div>
 
-      <select 
-        value={filterIndustry} 
-        onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} 
-        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[100px]"
-      >
-        <option value="">Industry</option>
-        {uniqueIndustries.map((ind, i) => <option key={i} value={ind}>{ind}</option>)}
-      </select>
+    </>
+  );
 
-      <select 
-        value={filterSentVia} 
-        onChange={e => { setFilterSentVia(e.target.value); setPage(1); }} 
-        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[100px]"
-      >
-        <option value="">Source</option>
-        <option value="WhatsApp">WhatsApp</option>
-        <option value="Email">Email</option>
-      </select>
-      
-      <select 
-        value={filterMaterial} 
-        onChange={e => { setFilterMaterial(e.target.value); setPage(1); }} 
-        className="py-1.5 px-2 border rounded text-[10px] font-medium outline-none cursor-pointer bg-white border-slate-200 text-slate-700 min-w-[100px]"
-      >
-        <option value="">Material</option>
-        {uniqueMaterials.map((m, i) => <option key={i} value={m}>{m}</option>)}
-      </select>
-
-      <div className="flex items-center gap-1.5 py-1 px-2 border rounded text-[10px] font-medium bg-white border-slate-200">
-        <input 
-          type="date" 
-          value={startDate} 
-          onChange={(e) => { setStartDate(e.target.value); setPage(1); }} 
-          className="bg-transparent text-[10px] py-0.5 outline-none w-[85px] cursor-pointer text-slate-700" 
-        />
-        <span className="text-slate-400">-</span>
-        <input 
-          type="date" 
-          value={endDate} 
-          onChange={(e) => { setEndDate(e.target.value); setPage(1); }} 
-          className="bg-transparent text-[10px] py-0.5 outline-none w-[85px] cursor-pointer text-slate-700" 
-        />
-      </div>
+  // Column-wise filters (shown in the filter bar next to the search)
+  const columnFilters = (
+    <>
+      <ColFilterCell />
+      <ColFilterCell />
+      <ColFilterText value={filterSentVia} onChange={(v) => { setFilterSentVia(v); setPage(1); }} placeholder="Sent Via" />
+      <ColFilterText value={filterMaterial} onChange={(v) => { setFilterMaterial(v); setPage(1); }} placeholder="Documents" />
+      <ColFilterDate value={startDate} onChange={(v) => { setStartDate(v); setPage(1); }} />
+      <ColFilterText value={filterIndustry} onChange={(v) => { setFilterIndustry(v); setPage(1); }} placeholder="Industry" />
     </>
   );
 
@@ -522,6 +490,7 @@ const ProposalSentList = () => {
       cardsInRow={6}
       statCards={statCards}
       filterBar={filterBar}
+      columnFilters={columnFilters}
       tableHeaders={tableHeadersComponent}
       tableBody={tableBodyContent}
       pagination={paginationBar}

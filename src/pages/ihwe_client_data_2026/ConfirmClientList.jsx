@@ -8,6 +8,7 @@ import { handleStatusUpdate } from '../../utils/statusUpdateHelper';
 import { useEventContext } from '../../context/EventContext';
 
 import BaseLeadPage from "../../layout/BaseLeadPage";
+import { ColFilterCell, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import {
   Search, Download, Plus, Upload, MessageCircle, Phone, Mail, MoreVertical,
   Calendar, CalendarDays, ArrowRight, RefreshCw, Flame, MessageSquare, Send, CheckCircle2,
@@ -84,6 +85,15 @@ const ConfirmClientList = () => {
   const [filterSource, setFilterSource] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterStage, setFilterStage] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterLocation, setFilterLocation] = useState('');
+  const [filterBookingDate, setFilterBookingDate] = useState('');
+  const [filterCompany, setFilterCompany] = useState('');
+  const [filterEventName, setFilterEventName] = useState('');
+  const [filterContact, setFilterContact] = useState('');
+  const [filterStall, setFilterStall] = useState('');
+  const [filterRevenue, setFilterRevenue] = useState('');
+  const [filterUpdated, setFilterUpdated] = useState('');
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Currently selected event (global, from Navbar, or pinned to the URL's
@@ -183,9 +193,36 @@ const ConfirmClientList = () => {
 
   // Frontend filtering and pagination — same pattern as ConvertedList.jsx
   const filteredRegs = registrations.filter(r => {
-    if (filterStage && filterStage !== 'Booked' && (r.status || 'Booked') !== filterStage) return false;
-    if (filterSource && (r.referredBy || r.dataSource || 'Direct') !== filterSource) return false;
-    if (filterIndustry && (r.natureOfBusiness || r.industrySector || r.typeOfBusiness) !== filterIndustry) return false;
+    const has = (value, needle) => String(value || '').toLowerCase().includes(needle.trim().toLowerCase());
+    const PAYMENT_LABELS = { paid: 'Paid (Full)', confirmed: 'Confirmed', approved: 'Approved', 'advance-paid': 'Installment', rejected: 'Rejected', 'payment-failed': 'Failed' };
+    // Payment status: matches the raw status or the label shown in the table.
+    if (filterStage && !has(r.status, filterStage) && !has(PAYMENT_LABELS[r.status], filterStage)) return false;
+    // Source: the table shows `referredBy || "Direct"`; dataSource is the older field.
+    if (filterSource && !has(`${r.referredBy || ''} ${r.dataSource || ''} ${(r.referredBy || r.dataSource) ? '' : 'Direct'}`, filterSource)) return false;
+    if (filterIndustry && !has(r.natureOfBusiness || r.industrySector || r.typeOfBusiness, filterIndustry)) return false;
+    if (filterCategory && !has(r.participation?.stallCategory || r.exhibitorCategory || r.msme?.msmeCategory, filterCategory)) return false;
+    if (filterLocation && !has(`${r.city || r.address?.city || r.companyCity || ''} ${r.state || r.address?.state || r.companyState || ''}`, filterLocation)) return false;
+    if (filterCompany && !has(`${r.exhibitorName || ''} ${r.companyName || ''}`, filterCompany)) return false;
+    if (filterEventName && !has(r.eventId?.name || currentEvent?.event_name || currentEvent?.event_fullName || currentEvent?.name, filterEventName)) return false;
+    if (filterContact) {
+      const member = r.teamMembers?.find((m) => m.isPrimary || /primary contact/i.test(m.roleAtExhibition || '')) || r.teamMembers?.[0];
+      const cc = r.contacts?.find((c) => c.isPrimary) || r.contacts?.[0];
+      const contactText = [r.contact1?.name, r.contact1?.firstName, r.contact1?.email, r.contact1?.mobile, r.contact1?.phone, member?.name, member?.email, member?.mobile, cc?.name, cc?.email, cc?.mobile, r.companyEmail, r.email, r.mobile, r.phone].filter(Boolean).join(' ');
+      if (!has(contactText, filterContact)) return false;
+    }
+    if (filterStall && !has(`${r.stallNumber || r.participation?.stallFor || r.stallNo || r.stall_no || ''} ${r.participation?.stallSize || r.stallSize || ''}`, filterStall)) return false;
+    if (filterRevenue && !has(r.amountPaid || r.financeBreakdown?.netPayable || r.participation?.total || 0, filterRevenue.replace(/[,₹$\s]/g, ''))) return false;
+    if (filterUpdated) {
+      const [y, m, d] = filterUpdated.split('-').map(Number);
+      const at = new Date(r.updatedAt);
+      if (!(at >= new Date(y, m - 1, d) && at < new Date(y, m - 1, d + 1))) return false;
+    }
+    // Single booking date (local day), same date the Booking Date column shows.
+    if (filterBookingDate) {
+      const [y, m, d] = filterBookingDate.split('-').map(Number);
+      const at = new Date(r.createdAt || r.updatedAt);
+      if (!(at >= new Date(y, m - 1, d) && at < new Date(y, m - 1, d + 1))) return false;
+    }
     if (searchTerm) {
       const searchStr = `${r.exhibitorName} ${r.companyName} ${r.contact1?.email} ${r.contact1?.mobile}`.toLowerCase();
       if (!searchStr.includes(searchTerm.toLowerCase())) return false;
@@ -395,49 +432,6 @@ const ConfirmClientList = () => {
         />
       </div>
 
-      <select
-        value={filterIndustry}
-        onChange={(e) => { setFilterIndustry(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
-      >
-        <option value="">Industry</option>
-        {uniqueIndustries.map(ind => (
-          <option key={ind} value={ind}>{ind}</option>
-        ))}
-      </select>
-
-      <select
-        value={filterSource}
-        onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
-      >
-        <option value="">Source</option>
-        {uniqueSources.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
-      <div className="relative">
-        <CalendarDays className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-        <input
-          type="text"
-          placeholder="Converted Date"
-          className="pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-emerald-500 w-36 cursor-pointer text-slate-600"
-          readOnly
-        />
-      </div>
-
-      <select
-        value={filterStage}
-        onChange={(e) => { setFilterStage(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-emerald-500"
-      >
-        <option value="">Sales Stage</option>
-        {uniqueStages.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
 
       {/* <button
         className="p-2 bg-white border border-slate-200 rounded-lg text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-colors"
@@ -450,6 +444,24 @@ const ConfirmClientList = () => {
       >
         <RefreshCw size={14} />
       </button> */}
+    </>
+  );
+
+  // Column-wise filters (shown in the filter bar next to the search)
+  const columnFilters = (
+    <>
+      <ColFilterText value={filterCompany} onChange={(v) => { setFilterCompany(v); setPage(1); }} placeholder="Company Name" />
+      <ColFilterText value={filterIndustry} onChange={(v) => { setFilterIndustry(v); setPage(1); }} placeholder="Industry" />
+      <ColFilterText value={filterEventName} onChange={(v) => { setFilterEventName(v); setPage(1); }} placeholder="Expo / Event" />
+      <ColFilterText value={filterContact} onChange={(v) => { setFilterContact(v); setPage(1); }} placeholder="Contact Details" />
+      <ColFilterText value={filterCategory} onChange={(v) => { setFilterCategory(v); setPage(1); }} placeholder="Category" />
+      <ColFilterText value={filterSource} onChange={(v) => { setFilterSource(v); setPage(1); }} placeholder="Source" />
+      <ColFilterText value={filterStall} onChange={(v) => { setFilterStall(v); setPage(1); }} placeholder="Stall Info" />
+      <ColFilterDate value={filterBookingDate} onChange={(v) => { setFilterBookingDate(v); setPage(1); }} label="Booking Date" />
+      <ColFilterText value={filterLocation} onChange={(v) => { setFilterLocation(v); setPage(1); }} placeholder="Location" />
+      <ColFilterText value={filterRevenue} onChange={(v) => { setFilterRevenue(v); setPage(1); }} placeholder="Revenue" />
+      <ColFilterText value={filterStage} onChange={(v) => { setFilterStage(v); setPage(1); }} placeholder="Payment Status" />
+      <ColFilterDate value={filterUpdated} onChange={(v) => { setFilterUpdated(v); setPage(1); }} label="Updated" />
     </>
   );
 
@@ -811,6 +823,8 @@ const ConfirmClientList = () => {
       }
       statCards={statCards}
       filterBar={filters}
+      columnFilters={columnFilters}
+      wrapFilters
       tableHeaders={tableHeaders}
       tableBody={tableBody}
 
@@ -822,6 +836,15 @@ const ConfirmClientList = () => {
         setFilterSource('');
         setFilterIndustry('');
         setFilterStage('');
+        setFilterCategory('');
+        setFilterLocation('');
+        setFilterBookingDate('');
+        setFilterCompany('');
+        setFilterEventName('');
+        setFilterContact('');
+        setFilterStall('');
+        setFilterRevenue('');
+        setFilterUpdated('');
         setPage(1);
         setSelectedIds([]);
       }}

@@ -38,7 +38,10 @@ const AnimatedNumber = ({ value, isCurrency = false }) => {
   return <>{Math.floor(count)}</>;
 };
 
-export default function DashboardStatsGrid({ statsMetrics }) {
+// Cards with a detail modal; onCardClick(label) is called when one is clicked.
+const CLICKABLE = new Set(["TOTAL LEADS", "CALLS MADE", "INTERESTED", "STALL BOOKED", "REVENUE", "FOLLOW-UPS", "PAYMENTS DUE"]);
+
+export default function DashboardStatsGrid({ statsMetrics, onCardClick }) {
   const stats = [
     {
       label: "TOTAL LEADS",
@@ -102,7 +105,7 @@ export default function DashboardStatsGrid({ statsMetrics }) {
     },
     {
       label: "FOLLOW-UPS",
-      value: statsMetrics.pendingFollowups,
+      value: statsMetrics.followUpsMade,
       isCurrency: false,
       icon: <Clock size={16} strokeWidth={2.5} />,
       iconColor: "text-pink-600",
@@ -127,6 +130,8 @@ export default function DashboardStatsGrid({ statsMetrics }) {
       {stats.map((s, i) => (
         <div
           key={i}
+          onClick={CLICKABLE.has(s.label) && onCardClick ? () => onCardClick(s.label) : undefined}
+          title={CLICKABLE.has(s.label) ? "Click to view details" : undefined}
           className={`group cursor-pointer relative bg-gradient-to-br from-slate-50 from-50% ${s.gradientTo} p-3 border border-slate-200 rounded-2xl transition-all duration-500 shadow-[rgba(0,0,0,0.05)_0px_1px_2px_0px] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] hover:-translate-y-1 overflow-hidden`}
         >
           <div className="relative z-10">

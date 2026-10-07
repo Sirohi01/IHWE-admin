@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ColFilterCell, ColFilterSelect, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -64,6 +65,8 @@ const NewLeadList = () => {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [filterSource, setFilterSource] = useState('');
+  const [filterLastConv, setFilterLastConv] = useState('');
+  const [filterHandledBy, setFilterHandledBy] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterAssignedTo, setFilterAssignedTo] = useState('');
@@ -94,8 +97,9 @@ const NewLeadList = () => {
         search: searchTerm,
         status: filterStatus || 'New Lead',
         source: filterSource,
+        lastConversation: filterLastConv, handledBy: filterHandledBy, tzOffset: filterLastConv ? new Date().getTimezoneOffset() : undefined,
         industry: filterIndustry,
-        forwardTo: filterAssignedTo,
+        assignedSearch: filterAssignedTo,
         startDate,
         endDate,
         eventId: currentEventId,
@@ -105,7 +109,7 @@ const NewLeadList = () => {
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, filterIndustry, filterAssignedTo, currentEventId, user?.username, user?.role]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterLastConv, filterHandledBy, filterStatus, filterIndustry, filterAssignedTo, currentEventId, user?.username, user?.role]);
 
   const uniqueSources = useStickyOptions(newLeadCompanies.map(c => c.dataSource));
   const uniqueStatuses = [...new Set(newLeadCompanies.map(c => c.companyStatus).filter(Boolean))];
@@ -239,52 +243,21 @@ const NewLeadList = () => {
           onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
         />
       </div>
+    </>
+  );
 
-      <select
-        value={filterSource}
-        onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
-      >
-        <option value="">Source</option>
-        {uniqueSources.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
-      <select
-        value={filterStatus}
-        onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
-      >
-        <option value="">Status</option>
-        {uniqueStatuses.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
-      <select
-        value={filterIndustry}
-        onChange={(e) => { setFilterIndustry(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
-      >
-        <option value="">Industry</option>
-        {uniqueIndustries.map(s => (
-          <option key={s} value={s}>{s}</option>
-        ))}
-      </select>
-
-      {isSuperAdmin && (
-        <select
-          value={filterAssignedTo}
-          onChange={(e) => { setFilterAssignedTo(e.target.value); setPage(1); }}
-          className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 font-medium focus:outline-none focus:border-emerald-500 shrink-0"
-        >
-          <option value="">Assigned To</option>
-          {uniqueAssignedTo.map(s => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-      )}
+  // Column-wise filters (row above the table header; same order as the headers)
+  const columnFilters = (
+    <>
+      <ColFilterCell />
+      <ColFilterText value={filterSource} onChange={(v) => { setFilterSource(v); setPage(1); }} placeholder="Source" />
+      <ColFilterText value={filterIndustry} onChange={(v) => { setFilterIndustry(v); setPage(1); }} placeholder="Industry" />
+      <ColFilterSelect placeholder="Status" value={filterStatus} onChange={(v) => { setFilterStatus(v); setPage(1); }} options={uniqueStatuses} />
+      {isSuperAdmin ? <ColFilterText value={filterAssignedTo} onChange={(v) => { setFilterAssignedTo(v); setPage(1); }} placeholder="Assigned To" /> : <ColFilterCell />}
+      <ColFilterCell />
+      <ColFilterDate value={filterLastConv} onChange={(v) => { setFilterLastConv(v); setPage(1); }} />
+      <ColFilterText value={filterHandledBy} onChange={(v) => { setFilterHandledBy(v); setPage(1); }} placeholder="Handled By" />
+      <ColFilterCell />
     </>
   );
 
@@ -355,6 +328,7 @@ const NewLeadList = () => {
               </td>
               <td className="px-2 py-1.5 text-slate-800 font-semibold text-[10px]">
                 {toTitleCase(row.forwardTo) || "Unassigned"}
+                {row.assignedAt && <span className="block text-[9px] font-semibold text-slate-500">{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.assignedAt))}</span>}
               </td>
               <td className="px-2 py-1.5">
                 {(() => {
@@ -630,12 +604,13 @@ const NewLeadList = () => {
       statCards={statCards}
       filterBar={filterBar}
       tableHeaders={tableHeadersComponent}
+      columnFilters={columnFilters}
       tableBody={tableBodyContent}
       rightSidebar={rightSidebarContent}
       pagination={paginationBar}
       onReset={() => {
         setSearchTerm('');
-        setFilterSource('');
+        setFilterSource(''); setFilterLastConv(''); setFilterHandledBy('');
         setFilterIndustry('');
         setFilterStatus('');
         setFilterAssignedTo('');

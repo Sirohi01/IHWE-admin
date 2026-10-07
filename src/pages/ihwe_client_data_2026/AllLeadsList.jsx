@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ColFilterCell, ColFilterSelect, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -109,6 +110,8 @@ const AllLeadsList = () => {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [filterSource, setFilterSource] = useState("");
+  const [filterLastConv, setFilterLastConv] = useState('');
+  const [filterHandledBy, setFilterHandledBy] = useState('');
   const [filterStatus, setFilterStatus] = useState("");
   const [convertedCount, setConvertedCount] = useState(0);
 
@@ -128,12 +131,12 @@ const AllLeadsList = () => {
   useEffect(() => {
     const t = setTimeout(() => {
       dispatch(fetchCompanies({
-        page, limit, search: searchTerm, source: filterSource, status: filterStatus, startDate, endDate,
+        page, limit, search: searchTerm, source: filterSource, lastConversation: filterLastConv, handledBy: filterHandledBy, tzOffset: filterLastConv ? new Date().getTimezoneOffset() : undefined, status: filterStatus, startDate, endDate,
         eventId: currentEventId, username: user?.username, role: user?.role,
       }));
     }, 400);
     return () => clearTimeout(t);
-  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterStatus, currentEventId, user?.username, user?.role]);
+  }, [dispatch, page, limit, searchTerm, startDate, endDate, filterSource, filterLastConv, filterHandledBy, filterStatus, currentEventId, user?.username, user?.role]);
 
   useEffect(() => {
     if (!currentEventId) { setConvertedCount(0); return; }
@@ -182,16 +185,7 @@ const AllLeadsList = () => {
         <input type="text" placeholder="Search lead..." value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setPage(1); }}
           className="w-full sm:w-56 pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-blue-500" />
       </div>
-      <select value={filterSource} onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-blue-500">
-        <option value="">Source</option>
-        {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <select value={filterStatus} onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-        className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:border-blue-500">
-        <option value="">All Statuses</option>
-        {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
+
       <div className="flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs">
         <CalendarDays size={13} className="text-slate-400" />
         <input type="date" value={startDate} onChange={(e) => { setStartDate(e.target.value); setPage(1); }} className="outline-none bg-transparent text-xs w-[88px] cursor-pointer text-slate-600" />
@@ -202,6 +196,22 @@ const AllLeadsList = () => {
   );
 
   // ── Table headers ─────────────────────────────────────────────────────────────
+  // Column-wise filters (row above the table header; same order as the headers)
+  const columnFilters = (
+    <>
+      <ColFilterCell />
+      <ColFilterCell />
+      <ColFilterCell />
+      <ColFilterText value={filterSource} onChange={(v) => { setFilterSource(v); setPage(1); }} placeholder="Source" />
+      <ColFilterSelect placeholder="Status" value={filterStatus} onChange={(v) => { setFilterStatus(v); setPage(1); }} options={uniqueStatuses} />
+      {isSuperAdmin && <ColFilterCell />}
+      <ColFilterCell />
+      <ColFilterDate value={filterLastConv} onChange={(v) => { setFilterLastConv(v); setPage(1); }} />
+      <ColFilterText value={filterHandledBy} onChange={(v) => { setFilterHandledBy(v); setPage(1); }} placeholder="Handled By" />
+      <ColFilterCell />
+    </>
+  );
+
   const tableHeaders = (
     <>
       <th className="px-2 py-2 font-medium">Company Name</th>
@@ -280,7 +290,8 @@ const AllLeadsList = () => {
                   <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />{label}
                 </span>
               </td>
-              {isSuperAdmin && <td className="px-2 py-2 font-bold text-blue-600 text-[10px]">{toTitleCase(row.forwardTo) || "Unassigned"}</td>}
+              {isSuperAdmin && <td className="px-2 py-2 font-bold text-blue-600 text-[10px]">{toTitleCase(row.forwardTo) || "Unassigned"}
+                {row.assignedAt && <span className="block text-[9px] font-semibold text-slate-500">{new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(row.assignedAt))}</span>}</td>}
               <td className="px-2 py-2">
                 {(() => {
                   const score = row.leadScore ?? getLeadScore(row.companyStatus);
@@ -397,11 +408,12 @@ const AllLeadsList = () => {
       statCards={statCards}
       filterBar={filters}
       tableHeaders={tableHeaders}
+      columnFilters={columnFilters}
       tableBody={tableBody}
       pagination={paginationBar}
       isAllSelected={false}
       onSelectAll={() => {}}
-      onReset={() => { setSearchTerm(""); setFilterSource(""); setFilterStatus(""); setStartDate(""); setEndDate(""); setPage(1); }}
+      onReset={() => { setSearchTerm(""); setFilterSource(""); setFilterLastConv(''); setFilterHandledBy(''); setFilterStatus(""); setStartDate(""); setEndDate(""); setPage(1); }}
     />
   );
 };

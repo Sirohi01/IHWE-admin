@@ -11,6 +11,8 @@ import { Download, RefreshCw } from "lucide-react";
  * @param {React.ReactNode} props.statCards - Statistics cards (grid)
  * @param {React.ReactNode} props.filterBar - Filter bar content
  * @param {React.ReactNode} props.tableHeaders - Table header TR component
+ * @param {React.ReactNode} props.columnFilters - <th> cells (one per header column) shown in the filter bar next to the global filters
+ * @param {boolean} props.wrapFilters - let the filter bar wrap onto more rows instead of scrolling sideways
  * @param {React.ReactNode} props.tableBody - Table body content
  * @param {React.ReactNode} props.rightSidebar - Right sidebar widgets
  * @param {Function} props.onReset - Reset filter callback
@@ -25,6 +27,8 @@ const BaseLeadPage = ({
   statCards,
   filterBar,
   tableHeaders,
+  columnFilters,
+  wrapFilters = false,
   tableBody,
   rightSidebar,
   onReset,
@@ -95,9 +99,10 @@ const BaseLeadPage = ({
 
             {/* Filter Bar */}
             {filterBar && (
-              <div className="px-3 pt-4 pb-3 border-b border-slate-100 flex items-center gap-2 bg-white overflow-x-auto">
-                <div className="flex items-center gap-2 flex-nowrap min-w-0">
+              <div className={`px-3 pt-4 pb-3 border-b border-slate-100 flex gap-2 bg-white ${wrapFilters ? 'items-start' : 'items-center overflow-x-auto'}`}>
+                <div className={`flex items-center gap-2 min-w-0 ${wrapFilters ? 'flex-wrap' : 'flex-nowrap'}`}>
                   {filterBar}
+                  {columnFilters}
                 </div>
                 <div className="flex items-center gap-2 ml-auto shrink-0">
                   {onReset && (

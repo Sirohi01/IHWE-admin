@@ -49,6 +49,7 @@ export default function Sidebar({
   useEffect(() => {
     let activeSection = null;
     let activeDropdown = null;
+    let activeNested = null;
 
     groupedMenuItems.forEach((group) => {
       if (group.type === "section") {
@@ -56,6 +57,11 @@ export default function Sidebar({
         group.children.forEach((child) => {
           if (child.type === "dropdown" && child.children?.some((c) => location.pathname === c.path)) {
             activeDropdown = child.label;
+            hasActive = true;
+          } else if (child.type === "dropdown" && child.children?.some((c) => c.type === "dropdown" && c.children?.some((g) => location.pathname === g.path))) {
+            // Dropdown inside a dropdown (Projects → event → page): open both levels.
+            activeDropdown = child.label;
+            activeNested = child.children.find((c) => c.type === "dropdown" && c.children?.some((g) => location.pathname === g.path))?.label || null;
             hasActive = true;
           } else if (child.path === location.pathname) {
             hasActive = true;
@@ -69,6 +75,7 @@ export default function Sidebar({
 
     if (activeSection) setOpenSections({ [activeSection]: true });
     if (activeDropdown) setOpenDropdown(activeDropdown);
+    if (activeNested) setOpenNestedDropdown(activeNested);
   }, [location.pathname, groupedMenuItems]);
 
   const cssVars = {

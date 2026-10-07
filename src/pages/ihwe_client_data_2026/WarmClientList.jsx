@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ColFilterCell, ColFilterSelect, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -92,10 +93,10 @@ const WarmClientList = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filterSource, setFilterSource] = useState('');
+  const [filterLastConv, setFilterLastConv] = useState('');
+  const [filterHandledBy, setFilterHandledBy] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [followUpFrom, setFollowUpFrom] = useState('');
-  const [followUpTo, setFollowUpTo] = useState('');
-  const [ownerMe, setOwnerMe] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
 
   // Currently selected event (global, from Navbar) — scopes the leads fetch below.
@@ -120,16 +121,16 @@ const WarmClientList = () => {
         search: searchTerm,
         status: filterStatus || FOLLOW_UP_STATUS_FILTER,
         source: filterSource,
+        lastConversation: filterLastConv, handledBy: filterHandledBy, tzOffset: filterLastConv ? new Date().getTimezoneOffset() : undefined,
         followUpFrom,
-        followUpTo,
-        forwardTo: ownerMe ? user?.username : undefined,
+        followUpTo: followUpFrom,
         eventId: currentEventId,
         username: user?.username,
         role: user?.role,
       }));
     }, 400);
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, followUpFrom, followUpTo, ownerMe, currentEventId, user?.username, user?.role]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterLastConv, filterHandledBy, filterStatus, followUpFrom, currentEventId, user?.username, user?.role]);
 
   const {
     totalLeads: hookTotal, pendingFollowUpsCount, followUpsDueThisWeek, followUpsDueThisMonth,
@@ -274,34 +275,25 @@ const WarmClientList = () => {
           className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
         />
       </div>
-      <div className="flex items-center gap-1 shrink-0 text-[9px] font-medium text-slate-800">
-        <CalendarDays size={10} className="text-slate-500" />
-        <input type="date" value={followUpFrom} max={followUpTo || undefined} onChange={e => { setFollowUpFrom(e.target.value); setPage(1); }} className="py-0.5 px-1 bg-white border border-slate-200 rounded text-[9px] focus:outline-none focus:border-emerald-500" title="Follow-up from" />
-        <span>to</span>
-        <input type="date" value={followUpTo} min={followUpFrom || undefined} onChange={e => { setFollowUpTo(e.target.value); setPage(1); }} className="py-0.5 px-1 bg-white border border-slate-200 rounded text-[9px] focus:outline-none focus:border-emerald-500" title="Follow-up to" />
-      </div>
-      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Status</option>
-        {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Source</option>
-        {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <button
-        type="button"
-        onClick={() => { setOwnerMe(v => !v); setPage(1); }}
-        className={`flex items-center gap-1 py-1 px-1.5 border rounded text-[9px] font-medium shrink-0 ${ownerMe ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-200 text-slate-800'}`}
-      >
-        Lead Owner: {ownerMe ? 'Me' : 'All'}
-      </button>
-      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
-        <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
-      </button>
+
     </>
   );
 
   // Table Headers
+  // Column-wise filters (row above the table header; same order as the headers)
+  const columnFilters = (
+    <>
+      <ColFilterCell />
+      <ColFilterText value={filterSource} onChange={(v) => { setFilterSource(v); setPage(1); }} placeholder="Source" />
+      <ColFilterCell />
+      <ColFilterSelect placeholder="Status" value={filterStatus} onChange={(v) => { setFilterStatus(v); setPage(1); }} options={uniqueStatuses} />
+      <ColFilterDate label="Follow-Up" value={followUpFrom} onChange={(v) => { setFollowUpFrom(v); setPage(1); }} />
+      <ColFilterDate value={filterLastConv} onChange={(v) => { setFilterLastConv(v); setPage(1); }} />
+      <ColFilterText value={filterHandledBy} onChange={(v) => { setFilterHandledBy(v); setPage(1); }} placeholder="Handled By" />
+      <ColFilterCell />
+    </>
+  );
+
   const tableHeaders = (
     <>
       <th className="px-2 py-2 font-medium">Company Name</th>
@@ -649,6 +641,7 @@ const WarmClientList = () => {
       statCards={statCards}
       filterBar={filterBar}
       tableHeaders={tableHeaders}
+      columnFilters={columnFilters}
       tableBody={tableBody}
       rightSidebar={rightSidebar}
       pagination={paginationBar}
@@ -657,11 +650,9 @@ const WarmClientList = () => {
       cardsInRow={5}
       onReset={() => {
         setSearchTerm('');
-        setFilterSource('');
+        setFilterSource(''); setFilterLastConv(''); setFilterHandledBy('');
         setFilterStatus('');
         setFollowUpFrom('');
-        setFollowUpTo('');
-        setOwnerMe(false);
         setPage(1);
         setSelectedIds([]);
       }}

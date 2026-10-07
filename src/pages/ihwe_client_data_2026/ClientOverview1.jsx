@@ -49,6 +49,7 @@ import api, { SERVER_URL, aiVerificationSettingsApi } from "../../lib/api";
 import CommunicationPanel from "./communication/CommunicationPanel";
 import WhatsAppModal from "./communication/WhatsAppModal";
 import EmailModal from "./communication/EmailModal";
+import AssignmentHistory from "../../components/AssignmentHistory";
 import CallLogModal from "./communication/CallLogModal";
 import SearchableDropdown from "../../components/SearchableDropdown";
 const getArrayFromSlice = (sliceState, fallbackKey) => {
@@ -420,6 +421,12 @@ const ClientOverview1 = () => {
 
   const handleAddReview = async (e) => {
     e.preventDefault();
+
+    // A remark is mandatory for every status update.
+    if (!String(reviewData.re_msg || "").trim()) {
+      Swal.fire({ icon: "warning", title: "Remark required", text: "Please write a remark before updating the status.", confirmButtonColor: "#23471d" });
+      return;
+    }
 
     try {
       const previousAssignee = isExhibitor ? (company.spokenWith || "") : (company.forwardTo || "");
@@ -1487,6 +1494,7 @@ const ClientOverview1 = () => {
                     disabled={typeof reviewData.status_short === 'string' && reviewData.status_short.toLowerCase() === "not interested"}
                     name="AssignedTo"
                   />
+                  <AssignmentHistory history={company?.assignmentHistory} />
                 </div>
 
                 <div>
@@ -1502,7 +1510,7 @@ const ClientOverview1 = () => {
 
                 <div className="col-span-2 xl:col-span-4 flex items-center gap-3">
                   <div className="flex-1">
-                    <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Remark</label>
+                    <label className="text-[10px] font-semibold text-gray-500 mb-1 block">Remark <span className="text-red-500">*</span></label>
                     <textarea
                       id="Remark"
                       value={reviewData.re_msg}

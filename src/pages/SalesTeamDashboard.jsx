@@ -25,7 +25,7 @@ export default function SalesTeamDashboard() {
   const [estimates, setEstimates] = useState([]); // Proforma Invoices (PI)
   const [revenue, setRevenue] = useState({}); // { periodKey: { username: revenue } }
   const [conv, setConv] = useState({}); // { periodKey: { username: clients who paid in that period } }
-  const [period, setPeriod] = useState("this_month");
+  const [period, setPeriod] = useState("today");
   const [teamFilter, setTeamFilter] = useState("all");
   const [query, setQuery] = useState("");
   const [hiddenCols, setHiddenCols] = useState([]);
@@ -106,7 +106,7 @@ export default function SalesTeamDashboard() {
       };
       // A lead counts in a Duration by the date it was assigned to this member (falls back to creation date).
       const assignedAt = (c) => {
-        const ts = (c.eventAssignments || []).filter((x) => mine(x) && x.createdAt).map((x) => new Date(x.createdAt).getTime());
+        const ts = (c.eventAssignments || []).filter((x) => mine(x) && (x.assignedAt || x.createdAt)).map((x) => new Date(x.assignedAt || x.createdAt).getTime());
         return ts.length ? Math.max(...ts) : c.createdAt;
       };
       const within = (key) => { const r = getPeriodRange(key); return leads.filter((c) => inRange(assignedAt(c), r)); };

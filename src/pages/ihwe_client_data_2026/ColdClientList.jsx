@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ColFilterCell, ColFilterSelect, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchCompanies } from "../../features/company/companySlice";
@@ -66,6 +67,8 @@ const ColdClientList = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filterSource, setFilterSource] = useState('');
+  const [filterLastConv, setFilterLastConv] = useState('');
+  const [filterHandledBy, setFilterHandledBy] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterReason, setFilterReason] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -94,6 +97,7 @@ const ColdClientList = () => {
         search: searchTerm,
         status: filterStatus || FILTER_STATUS_STRING,
         source: filterSource,
+        lastConversation: filterLastConv, handledBy: filterHandledBy, tzOffset: filterLastConv ? new Date().getTimezoneOffset() : undefined,
         industry: filterIndustry,
         eventId: currentEventId,
         username: user?.username,
@@ -102,7 +106,7 @@ const ColdClientList = () => {
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [dispatch, page, limit, searchTerm, filterSource, filterStatus, filterIndustry, currentEventId, user?.username, user?.role]);
+  }, [dispatch, page, limit, searchTerm, filterSource, filterLastConv, filterHandledBy, filterStatus, filterIndustry, currentEventId, user?.username, user?.role]);
 
   const { totalLeads: hookTotal, statusStats, holdReasonsData, lostReasonsData } = useDashboardStats(FILTER_STATUS, null, currentEventId, user);
 
@@ -265,31 +269,25 @@ const ColdClientList = () => {
           className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
         />
       </div>
-      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Status</option>
-        {[...new Set(FILTER_STATUS)].filter(s => s !== 'Hold').map(s => <option key={s} value={s}>{s}</option>)}
-      </select>
-      <select value={filterReason} onChange={e => { setFilterReason(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Reason</option>
-        <option value="Budget">Budget</option>
-        <option value="Competitor">Competitor</option>
-        <option value="Not interested">Not interested</option>
-      </select>
-      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Source</option>
-        {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Industry</option>
-        {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
-        <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
-      </button>
     </>
   );
 
   // Table Headers
+  // Column-wise filters (row above the table header; same order as the headers)
+  const columnFilters = (
+    <>
+      <ColFilterCell />
+      <ColFilterText value={filterSource} onChange={(v) => { setFilterSource(v); setPage(1); }} placeholder="Source" />
+      <ColFilterText value={filterIndustry} onChange={(v) => { setFilterIndustry(v); setPage(1); }} placeholder="Industry" />
+      <ColFilterSelect placeholder="Status" value={filterStatus} onChange={(v) => { setFilterStatus(v); setPage(1); }} options={[...new Set(FILTER_STATUS)].filter(s => s !== 'Hold')} />
+      <ColFilterText value={filterReason} onChange={(v) => { setFilterReason(v); setPage(1); }} placeholder="Reason" />
+      <ColFilterDate value={filterLastConv} onChange={(v) => { setFilterLastConv(v); setPage(1); }} />
+      <ColFilterText value={filterHandledBy} onChange={(v) => { setFilterHandledBy(v); setPage(1); }} placeholder="Handled By" />
+      <ColFilterCell />
+      <ColFilterCell />
+    </>
+  );
+
   const tableHeaders = (
     <>
       <th className="px-2 py-2 font-medium">Company Name</th>
@@ -601,6 +599,7 @@ const ColdClientList = () => {
       statCards={statCards}
       filterBar={filterBar}
       tableHeaders={tableHeaders}
+      columnFilters={columnFilters}
       tableBody={tableBody}
       rightSidebar={rightSidebar}
       pagination={paginationBar}
@@ -608,7 +607,7 @@ const ColdClientList = () => {
       onSelectAll={onSelectAll}
       onReset={() => {
         setSearchTerm('');
-        setFilterSource('');
+        setFilterSource(''); setFilterLastConv(''); setFilterHandledBy('');
         setFilterIndustry('');
         setFilterReason('');
         setFilterStatus('');

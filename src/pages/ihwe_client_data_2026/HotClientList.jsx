@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { ColFilterCell, ColFilterSelect, ColFilterText, ColFilterDate } from "../../components/ColumnFilters";
 import LastConversationBy from "../../components/LastConversationBy";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../lib/api";
@@ -62,6 +63,8 @@ const HotClientList = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [filterSource, setFilterSource] = useState('');
+  const [filterLastConv, setFilterLastConv] = useState('');
+  const [filterHandledBy, setFilterHandledBy] = useState('');
   const [filterIndustry, setFilterIndustry] = useState('');
   const [filterLeadScore, setFilterLeadScore] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -117,9 +120,16 @@ const HotClientList = () => {
   }, [currentEventId, user?.username, user?.role]);
   const { statusStats } = useDashboardStats('Est./PI Sent', null, currentEventId, user);
   const filteredLeads = hotLeads.filter((c) => {
-    if (filterSource && (c.dataSource || 'Website') !== filterSource) return false;
-    if (filterIndustry && (c.businessNature || '') !== filterIndustry) return false;
+    if (filterSource && !(c.dataSource || 'Website').toLowerCase().includes(filterSource.trim().toLowerCase())) return false;
+    if (filterIndustry && !(c.businessNature || '').toLowerCase().includes(filterIndustry.trim().toLowerCase())) return false;
     if (filterStatus && (c.companyStatus || '') !== filterStatus) return false;
+    if (filterLastConv) {
+      const atRaw = c.lastConversation?.at || c.updatedAt;
+      const at = atRaw ? new Date(atRaw) : null;
+      const [y, m, day] = filterLastConv.split('-').map(Number);
+      if (!at || at < new Date(y, m - 1, day) || at >= new Date(y, m - 1, day + 1)) return false;
+    }
+    if (filterHandledBy && !(c.lastConversation?.by || c.updated_by || '').toLowerCase().includes(filterHandledBy.trim().toLowerCase())) return false;
     if (filterLeadScore) {
       const score = c.leadScore ?? getLeadScore(c.companyStatus);
       if (filterLeadScore === '90' && score < 90) return false;
@@ -320,31 +330,24 @@ const HotClientList = () => {
           className="w-full pl-6 pr-2 py-1 bg-white border border-slate-200 rounded text-[9px] text-slate-800 font-medium placeholder:text-slate-500 focus:outline-none focus:border-emerald-500"
         />
       </div>
-      <select value={filterSource} onChange={e => { setFilterSource(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Source</option>
-        {uniqueSources.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <select value={filterIndustry} onChange={e => { setFilterIndustry(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Industry</option>
-        {uniqueIndustries.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <select value={filterLeadScore} onChange={e => { setFilterLeadScore(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Lead Score</option>
-        <option value="90">90 - 100</option>
-        <option value="80">80 - 89</option>
-        <option value="70">70 - 79</option>
-      </select>
-      <select value={filterStatus} onChange={e => { setFilterStatus(e.target.value); setPage(1); }} className="py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 shrink-0 cursor-pointer">
-        <option value="">Status</option>
-        {uniqueStatuses.map((s, i) => <option key={i} value={s}>{s}</option>)}
-      </select>
-      <button className="flex items-center gap-1 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 shrink-0">
-        <Filter size={10} /> More Filters <ChevronDown size={10} className="text-slate-500" />
-      </button>
     </>
   );
 
   // Table Headers
+  // Column-wise filters (row above the table header; same order as the headers)
+  const columnFilters = (
+    <>
+      <ColFilterCell />
+      <ColFilterText value={filterSource} onChange={(v) => { setFilterSource(v); setPage(1); }} placeholder="Source" />
+      <ColFilterText value={filterIndustry} onChange={(v) => { setFilterIndustry(v); setPage(1); }} placeholder="Industry" />
+      <ColFilterSelect placeholder="Status" value={filterStatus} onChange={(v) => { setFilterStatus(v); setPage(1); }} options={uniqueStatuses} />
+      <ColFilterCell><select value={filterLeadScore} onChange={e => { setFilterLeadScore(e.target.value); setPage(1); }} className="w-[110px] shrink-0 py-1 px-1.5 bg-white border border-slate-200 rounded text-[9px] font-medium text-slate-800 focus:outline-none focus:border-emerald-500 cursor-pointer"><option value="">Lead Score</option><option value="90">90 - 100</option><option value="80">80 - 89</option><option value="70">70 - 79</option></select></ColFilterCell>
+      <ColFilterDate value={filterLastConv} onChange={(v) => { setFilterLastConv(v); setPage(1); }} />
+      <ColFilterText value={filterHandledBy} onChange={(v) => { setFilterHandledBy(v); setPage(1); }} placeholder="Handled By" />
+      <ColFilterCell />
+    </>
+  );
+
   const tableHeaders = (
     <>
       <th className="px-2 py-2 font-medium">Company Name</th>
@@ -676,6 +679,7 @@ const HotClientList = () => {
       statCards={statCards}
       filterBar={filterBar}
       tableHeaders={tableHeaders}
+      columnFilters={columnFilters}
       tableBody={tableBody}
       rightSidebar={rightSidebar}
       pagination={paginationBar}
@@ -684,6 +688,7 @@ const HotClientList = () => {
       onReset={() => {
         setSearchTerm('');
         setFilterSource('');
+        setFilterLastConv(''); setFilterHandledBy('');
         setFilterIndustry('');
         setFilterLeadScore('');
         setFilterStatus('');

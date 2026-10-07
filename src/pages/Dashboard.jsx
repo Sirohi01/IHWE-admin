@@ -15,6 +15,8 @@ import SalesLeaderboard     from "./dashboard/SalesLeaderboard";
 import RemindersCard        from "./dashboard/RemindersCard";
 import NextActionPanel      from "./dashboard/NextActionPanel";
 import AccountDashboard     from "./dashboard/AccountDashboard";
+import DashboardDetailModal from "./dashboard/DashboardDetailModal";
+import { useSelector } from "react-redux";
 import { getPeriodRange } from "../utils/periodRange";
 
 // ─── Module-Level Cache for Instant Loading ───────────────────────────────────
@@ -23,6 +25,21 @@ let _cachedActivityLogs = null;
 let _cachedAllAdmins = null;
 let _cachedFullProfile = null;
 let _cachedTargets = null;
+
+const PERIOD_LABELS = { today: "Today", yesterday: "Yesterday", this_week: "This Week", last_week: "Last Week", this_month: "This Month", last_month: "Last Month", this_quarter: "This Quarter", last_quarter: "Last Quarter", this_year: "This Year" };
+
+// Lead Summary buckets, by the lead's current status (status master + the older legacy names).
+const LEAD_SUMMARY_BUCKETS = {
+  newLeads: ["new lead"],
+  hot: ["hot lead", "est./pi sent"],
+  warm: ["contacted", "follow-up", "follow up", "follow-up call", "warm client", "sent details", "proposal sent", "negotiation"],
+  cold: ["not interested", "on hold", "hold"],
+  converted: ["booking confirmed", "payment pending", "completed", "booked", "adc. recd", "inv. req.", "under pymt followups"],
+};
+const leadSummaryBucket = (status) => {
+  const st = (status || "").trim().toLowerCase();
+  return Object.keys(LEAD_SUMMARY_BUCKETS).find((k) => LEAD_SUMMARY_BUCKETS[k].includes(st)) || "other";
+};
 
 // "Contacted" / "Follow-up…" leads are the ones that count as follow-ups (same rule as the Follow-Ups list).
 const isFollowUpStatus = (status) => {
@@ -51,8 +68,11 @@ export default function Dashboard() {
   
   const [actualRevenue, setActualRevenue] = useState(0);
   const [actualConvertedCount, setActualConvertedCount] = useState(0);
+  const [bookedRegistrations, setBookedRegistrations] = useState([]);
+  const [dueRows, setDueRows] = useState([]);
+  const [dueTotal, setDueTotal] = useState(0);
   const [actualLeaderboard, setActualLeaderboard] = useState([]);
-  const [globalPeriod, setGlobalPeriod] = useState("this_month");
+  const [globalPeriod, setGlobalPeriod] = useState("today");
 
   // ─── Init: user context + targets ───────────────────────────────────────────
   useEffect(() => {
@@ -79,6 +99,7 @@ export default function Dashboard() {
   // ─── Fetch real revenue and leaderboard based on period ─────────────────────
   useEffect(() => {
     if (!currentUser) return;
+    let cancelled = false;
     
     const fetchRevenueAndLeaderboard = async () => {
       try {
@@ -88,9 +109,13 @@ export default function Dashboard() {
           api.get(`/api/companies/leaderboard?period=${globalPeriod}`)
         ]);
         
+        if (cancelled) return;
         if (revenueRes.data?.success) {
           setActualRevenue(revenueRes.data.revenue || 0);
           setActualConvertedCount(revenueRes.data.convertedCount || 0);
+          setBookedRegistrations(revenueRes.data.registrations || []);
+          setDueRows(revenueRes.data.dues || []);
+          setDueTotal(revenueRes.data.dueTotal || 0);
         }
         
         if (leaderboardRes.data?.success) {
@@ -102,27 +127,33 @@ export default function Dashboard() {
     };
     
     fetchRevenueAndLeaderboard();
+    return () => { cancelled = true; };
   }, [currentUser, globalPeriod]);
 
   // ─── Fetch actual calls made from CallLogs ───────────────────────────────────
   const [actualCallsMade, setActualCallsMade] = useState(0);
   const [actualInterested, setActualInterested] = useState(0);
+  const [actualFollowUps, setActualFollowUps] = useState(0);
   useEffect(() => {
     if (!currentUser) return;
+    // A slower response for an older Duration must not overwrite the current one.
+    let cancelled = false;
     const fetchCalls = async () => {
       try {
         // Find user ID (from fullProfile if available, else fallback to currentUser._id)
         const userId = fullProfile?._id || fullProfile?.id || currentUser?._id || currentUser?.id || "";
         const res = await api.get(`/api/user-targets/stats/dashboard?username=${encodeURIComponent(currentUser.username)}&userId=${encodeURIComponent(userId)}&period=${globalPeriod}`);
-        if (res.data?.success) {
+        if (!cancelled && res.data?.success) {
           setActualCallsMade(res.data.completed.statusUpdate || 0);
           setActualInterested(res.data.completed.interested || 0);
+          setActualFollowUps(res.data.completed.followUp || 0);
         }
       } catch (err) {
         console.error("Error fetching calls made", err);
       }
     };
     fetchCalls();
+    return () => { cancelled = true; };
   }, [currentUser, fullProfile, globalPeriod]);
 
   // ─── Fetch dashboard data ────────────────────────────────────────────────────
@@ -164,6 +195,17 @@ export default function Dashboard() {
     fetchData();
   }, [currentUser]);
 
+  // When this lead was (last) assigned to the user: the newest of their event assignments' assigned date
+  // and the assignment history entries made out to them; falls back to when the lead was created.
+  const assignedAtOf = (c, username) => {
+    const u = username.toLowerCase();
+    const times = [
+      ...(c.eventAssignments || []).filter((a) => a.forwardTo?.toLowerCase() === u).map((a) => a.assignedAt || a.createdAt),
+      ...(c.assignmentHistory || []).filter((h) => h.forwardTo?.toLowerCase() === u).map((h) => h.assignedAt),
+    ].filter(Boolean).map((t) => new Date(t).getTime());
+    return times.length ? Math.max(...times) : new Date(c.createdAt).getTime();
+  };
+
   // ─── Scoped leads for active user ────────────────────────────────────────────
   const userLeads = useMemo(() => {
     if (!currentUser) return [];
@@ -194,11 +236,7 @@ export default function Dashboard() {
     const u = currentUser.username.toLowerCase();
     const { start, end } = getPeriodRange(globalPeriod);
     return userLeads.filter(c => {
-      // Prefer the date this user was assigned the lead; fall back to when it was created.
-      const assigned = (c.eventAssignments || [])
-        .filter(a => a.forwardTo?.toLowerCase() === u && a.createdAt)
-        .map(a => new Date(a.createdAt).getTime());
-      const ts = assigned.length ? Math.max(...assigned) : new Date(c.createdAt).getTime();
+      const ts = assignedAtOf(c, currentUser.username);
       return ts >= start.getTime() && ts < end.getTime();
     });
   }, [userLeads, currentUser, globalPeriod]);
@@ -216,7 +254,11 @@ export default function Dashboard() {
       ...periodLeads.filter(c => ["warm client", "follow-up call", "sent details"].includes(c.companyStatus?.toLowerCase())),
       ...followUpLeads,
     ].map(c => c._id)).size;
-    const summaryTotal = new Set([...periodLeads, ...followUpLeads].map(c => c._id)).size;
+    // Lead Summary: leads assigned in this Duration, each counted once by its current status,
+    // so the buckets always add up to the total.
+    const summary = { newLeads: 0, hot: 0, warm: 0, cold: 0, converted: 0, other: 0 };
+    periodLeads.forEach((c) => { summary[leadSummaryBucket(c.companyStatus)] += 1; });
+    const summaryTotal = periodLeads.length;
     const hot       = periodLeads.filter(c => c.companyStatus?.toLowerCase() === "est./pi sent").length;
     const cold      = periodLeads.filter(c => c.companyStatus?.toLowerCase() === "not interested").length;
     const newLeads  = periodLeads.filter(c => c.companyStatus?.toLowerCase() === "new lead").length;
@@ -225,14 +267,14 @@ export default function Dashboard() {
 
     const revenue          = (actualRevenue / 100000).toFixed(2);
     const pendingFollowups = userLeads.filter(c => isFollowUpStatus(c.companyStatus)).length;
-    const collection       = (converted * 0.35).toFixed(2);
+    const collection       = (dueTotal / 100000).toFixed(2);
 
     return {
       total, summaryTotal, callsMade, interested: actualInterested, meetings: hot,
-      closed: actualConvertedCount, revenue, pendingFollowups, collection,
-      categories: { newLeads, hot, warm, cold, converted: actualConvertedCount },
+      closed: actualConvertedCount, revenue, pendingFollowups, followUpsMade: actualFollowUps, collection,
+      categories: summary,
     };
-  }, [userLeads, periodLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, actualInterested, globalPeriod]);
+  }, [userLeads, periodLeads, activityLogs, currentUser, actualConvertedCount, actualRevenue, actualInterested, actualCallsMade, actualFollowUps, dueTotal, globalPeriod]);
 
   // ─── Target metrics ──────────────────────────────────────────────────────────
   const targetMetrics = useMemo(() => {
@@ -268,53 +310,7 @@ export default function Dashboard() {
   }, [currentUser, targets, actualRevenue, globalPeriod]);
 
   // ─── Follow-ups list ─────────────────────────────────────────────────────────
-  const followupsList = useMemo(() =>
-    userLeads
-      .filter(c => {
-        // Pending follow-ups: "Contacted" / "Follow-up" leads due up to the end of the selected
-        // Duration — so anything overdue from an earlier period still shows until it is dealt with.
-        if (!isFollowUpStatus(c.companyStatus)) return false;
-        if (!c.reminder) return true;
-        const { end } = getPeriodRange(globalPeriod);
-        return new Date(c.reminder) < end;
-      })
-      .sort((a, b) => (a.reminder ? new Date(a.reminder) : Infinity) - (b.reminder ? new Date(b.reminder) : Infinity))
-      .slice(0, 50).map(c => {
-      const contact = c.contacts?.[0] || {};
-      const remDate = c.reminder ? new Date(c.reminder) : null;
-      const overdue = !!remDate && remDate < getPeriodRange("today").start;
-      let priority = "Medium";
-      let priorityColor = "bg-amber-50 text-amber-600 border border-amber-200";
-      if (c.companyStatus === "Est./PI Sent") {
-        priority = "High"; priorityColor = "bg-rose-50 text-rose-600 border border-rose-200";
-      } else if (c.companyStatus === "Not Interested") {
-        priority = "Low";  priorityColor = "bg-emerald-50 text-emerald-600 border border-emerald-200";
-      }
-      const lastConv = c.lastNote || c.companyStatus || "Follow-up scheduled";
-      const convTime = c.updatedAt
-        ? (() => {
-            const diff = Math.floor((Date.now() - new Date(c.updatedAt)) / 86400000);
-            if (diff === 0) return "Today";
-            if (diff === 1) return "Yesterday";
-            return `${diff} days ago`;
-          })()
-        : "";
 
-      return {
-        id:            c._id,
-        name:          `${contact.firstName || "Client"} ${contact.surname || ""}`.trim(),
-        company:       c.companyName || "Company Name",
-        time:          remDate ? remDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "-",
-        date:          remDate ? remDate.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "No date",
-        overdue,
-        priority, priorityColor,
-        status:        c.companyStatus || "Follow-up",
-        phone:         contact.mobile || "",
-        lastConv,
-        convTime,
-      };
-    }),
-  [userLeads, globalPeriod]);
 
   // ─── Donut segments ──────────────────────────────────────────────────────────
   const donutData = [
@@ -322,8 +318,114 @@ export default function Dashboard() {
     { name: "Hot Leads", value: statsMetrics.categories?.hot       || 0, color: "#f24259" },
     { name: "Warm Leads",value: statsMetrics.categories?.warm      || 0, color: "#ffa800" },
     { name: "Cold Leads", value: statsMetrics.categories?.cold     || 0, color: "#00a499" },
-    { name: "Converted",  value: actualConvertedCount              || 0, color: "#845ef7" },
+    { name: "Converted",  value: statsMetrics.categories?.converted || 0, color: "#845ef7" },
+    ...((statsMetrics.categories?.other || 0) > 0 ? [{ name: "Other", value: statsMetrics.categories.other, color: "#94a3b8" }] : []),
   ];
+
+  // ─── Stat card detail modals (Total Leads / Calls Made) ───────────────────────
+  // Lead assignments point at CRM events (the ones in the sidebar's Projects menu).
+  const eventList = useSelector((state) => state.crmEvents?.events) || [];
+  const [detailModal, setDetailModal] = useState(null); // "TOTAL LEADS" | "CALLS MADE" | null
+  const [statusUpdates, setStatusUpdates] = useState([]);
+  const [statusUpdatesLoading, setStatusUpdatesLoading] = useState(false);
+  const [interestedClients, setInterestedClients] = useState([]);
+  const [interestedLoading, setInterestedLoading] = useState(false);
+
+  const eventNameOf = (id) => {
+    const ev = eventList.find((e) => String(e._id) === String(id));
+    return ev ? (ev.event_fullName || ev.event_name || "") : "";
+  };
+  const fmtDateTime = (d) => (d ? new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", hour12: true }).format(new Date(d)) : "-");
+  // Status updates are stored as "[Status Update] Changes by X • Next action: Y • Remark: text".
+  // Only the user's remark is shown; system-generated notes (no "Remark:" part) stay blank.
+  const remarkOnly = (msg) => {
+    const m = String(msg || "").match(/Remark:\s*([\s\S]*)$/i);
+    return m ? m[1].trim() : "";
+  };
+  const periodLabel = (PERIOD_LABELS[globalPeriod] || globalPeriod);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+    setStatusUpdatesLoading(true);
+    api.get(`/api/user-targets/stats/status-updates?username=${encodeURIComponent(currentUser.username)}&period=${globalPeriod}`)
+      .then((res) => { if (!cancelled) setStatusUpdates(res.data?.success ? res.data.data : []); })
+      .catch(() => { if (!cancelled) setStatusUpdates([]); })
+      .finally(() => { if (!cancelled) setStatusUpdatesLoading(false); });
+    return () => { cancelled = true; };
+  }, [currentUser, globalPeriod]);
+
+  useEffect(() => {
+    if (detailModal !== "INTERESTED" || !currentUser) return;
+    let cancelled = false;
+    setInterestedLoading(true);
+    api.get(`/api/user-targets/stats/interested-clients?username=${encodeURIComponent(currentUser.username)}&period=${globalPeriod}`)
+      .then((res) => { if (!cancelled) setInterestedClients(res.data?.success ? res.data.data : []); })
+      .catch(() => { if (!cancelled) setInterestedClients([]); })
+      .finally(() => { if (!cancelled) setInterestedLoading(false); });
+    return () => { cancelled = true; };
+  }, [detailModal, currentUser, globalPeriod]);
+
+  // Follow-up status updates in this Duration (same statuses the FOLLOW-UPS card counts).
+  const followUpRows = useMemo(
+    () => statusUpdates.filter((u) => /^\s*(follow[\s-]?up|contacted)/i.test(u.status || "")),
+    [statusUpdates],
+  );
+
+  // "<Period>'s Follow-ups" table: the Contacted / Follow-up status updates made in this Duration
+  // (the same ones the FOLLOW-UPS card counts), one row per client with their latest update.
+  const followupsList = useMemo(() => {
+    const todayStart = getPeriodRange("today").start;
+    const seen = new Set();
+    return followUpRows
+      .filter((u) => {
+        const key = String(u.companyId || u._id);
+        if (seen.has(key)) return false; // rows arrive newest first
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 50)
+      .map((u) => {
+        const lead = companies.find((c) => String(c._id) === String(u.companyId));
+        const contact = lead?.contacts?.[0] || {};
+        const nextDate = u.followUpDate ? new Date(u.followUpDate) : null;
+        const validNext = nextDate && !isNaN(nextDate) ? nextDate : null;
+        const diff = Math.floor((Date.now() - new Date(u.at)) / 86400000);
+        return {
+          id: u._id,
+          name: `${contact.firstName || ""} ${contact.surname || ""}`.trim() || "-",
+          company: u.companyName || lead?.companyName || "-",
+          time: validNext ? validNext.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "-",
+          date: validNext ? validNext.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "No date",
+          overdue: !!validNext && validNext < todayStart,
+          priority: "Medium",
+          priorityColor: "bg-amber-50 text-amber-600 border border-amber-200",
+          status: u.status || "Follow-up",
+          phone: contact.mobile || "",
+          lastConv: remarkOnly(u.remark) || u.status || "Follow-up scheduled",
+          convTime: diff <= 0 ? "Today" : diff === 1 ? "Yesterday" : `${diff} days ago`,
+        };
+      });
+  }, [followUpRows, companies]);
+
+  // One row per lead assigned in this duration: to whom, when, by whom, for which event.
+  const assignedLeadRows = useMemo(() => {
+    if (!currentUser) return [];
+    const u = currentUser.username.toLowerCase();
+    return periodLeads.map((c) => {
+      const a = (c.eventAssignments || []).filter((x) => x.forwardTo?.toLowerCase() === u)
+        .sort((x, y) => new Date(y.assignedAt || y.createdAt || 0) - new Date(x.assignedAt || x.createdAt || 0))[0];
+      return {
+        _id: c._id,
+        companyName: c.companyName,
+        assignedTo: a?.forwardTo || c.forwardTo || currentUser.username,
+        assignedOn: assignedAtOf(c, currentUser.username),
+        assignedBy: a?.assignedBy || c.added_by || "",
+        eventName: eventNameOf(a?.eventId || c.eventId || c.events?.[0]),
+        status: c.companyStatus || "",
+      };
+    }).sort((x, y) => new Date(y.assignedOn || 0) - new Date(x.assignedOn || 0));
+  }, [periodLeads, currentUser, eventList]);
 
   const isAccountRole = currentUser?.role?.toLowerCase() === "ihwe-account manager" || currentUser?.role?.toLowerCase() === "ihwe-accounts executive";
  
@@ -334,7 +436,7 @@ export default function Dashboard() {
       <DashboardHeader fullProfile={fullProfile} currentUser={currentUser} loading={loading} globalPeriod={globalPeriod} setGlobalPeriod={setGlobalPeriod} />
 
       {/* Row 1 — 8 Stat Cards */}
-      <DashboardStatsGrid statsMetrics={statsMetrics} />
+      <DashboardStatsGrid statsMetrics={statsMetrics} onCardClick={setDetailModal} />
 
       {/* Row 2 — Lead Summary | Follow-ups | Target Gauge */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-2 mb-1.5">
@@ -358,6 +460,130 @@ export default function Dashboard() {
         <NextActionPanel />
       </div>
 
+
+      {detailModal === "TOTAL LEADS" && (
+        <DashboardDetailModal
+          title="Total Leads - Assigned Leads"
+          subtitle={`Leads assigned to ${currentUser?.username || "you"} - ${periodLabel}`}
+          rows={assignedLeadRows}
+          columns={[
+            { key: "companyName", label: "Company" },
+            { key: "assignedTo", label: "Assigned To", render: (r) => <span className="font-semibold capitalize">{r.assignedTo}</span> },
+            { key: "assignedOn", label: "Assigned On", render: (r) => fmtDateTime(r.assignedOn) },
+            { key: "assignedBy", label: "Assigned By", render: (r) => <span className="capitalize">{r.assignedBy || "-"}</span> },
+            { key: "eventName", label: "Event" },
+            { key: "status", label: "Status" },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
+      {detailModal === "INTERESTED" && (
+        <DashboardDetailModal
+          title="Interested - Hot Lead Clients"
+          subtitle={`Clients with a Proforma Invoice raised - ${periodLabel}`}
+          loading={interestedLoading}
+          rows={interestedClients}
+          columns={[
+            { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
+            { key: "piNo", label: "Last PI No", render: (r) => <span className="font-semibold whitespace-nowrap">{r.piNo || "-"}</span> },
+            { key: "piDate", label: "PI Date", render: (r) => fmtDateTime(r.piDate) },
+            { key: "piAmount", label: "PI Amount", render: (r) => <span className="font-semibold whitespace-nowrap">{"\u20B9 " + Number(r.piAmount || 0).toLocaleString("en-IN")}</span> },
+            { key: "eventName", label: "Event", render: (r) => r.eventName || "-" },
+            { key: "status", label: "Status" },
+            { key: "remark", label: "Remark", render: (r) => r.remark || "-" },
+            { key: "handledBy", label: "Handled By", render: (r) => <span className="capitalize">{r.handledBy || "-"}</span> },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
+      {detailModal === "PAYMENTS DUE" && (
+        <DashboardDetailModal
+          title="Payments Due - Outstanding"
+          subtitle={`Total due ₹ ${dueRows.reduce((sum, r) => sum + Number(r.due || 0), 0).toLocaleString("en-IN")} from ${dueRows.length} client${dueRows.length === 1 ? "" : "s"}`}
+          rows={dueRows}
+          emptyText="No payments due"
+          columns={[
+            { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
+            { key: "eventName", label: "Event", render: (r) => r.eventName || "-" },
+            { key: "total", label: "Total Payable", render: (r) => <span className="whitespace-nowrap">{"₹ " + Number(r.total || 0).toLocaleString("en-IN")}</span> },
+            { key: "paid", label: "Paid", render: (r) => <span className="whitespace-nowrap">{"₹ " + Number(r.paid || 0).toLocaleString("en-IN")}</span> },
+            { key: "due", label: "Due", render: (r) => <span className="font-semibold text-red-600 whitespace-nowrap">{"₹ " + Number(r.due || 0).toLocaleString("en-IN")}</span> },
+            { key: "nextDueDate", label: "Next Due Date", render: (r) => r.nextDueDate ? <span className={`whitespace-nowrap ${new Date(r.nextDueDate) < new Date() ? "text-red-600 font-semibold" : ""}`}>{fmtDateTime(r.nextDueDate)}{new Date(r.nextDueDate) < new Date() ? " (overdue)" : ""}</span> : "-" },
+            { key: "status", label: "Payment Status", render: (r) => ({ confirmed: "Confirmed", approved: "Approved", "advance-paid": "Installment" }[r.status] || r.status || "-") },
+            { key: "handledBy", label: "Handled By", render: (r) => <span className="capitalize">{r.handledBy || "-"}</span> },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
+      {detailModal === "FOLLOW-UPS" && (
+        <DashboardDetailModal
+          title="Follow-Ups - Status Updates"
+          subtitle={`Contacted / Follow-up status updates - ${periodLabel}`}
+          loading={statusUpdatesLoading}
+          rows={followUpRows}
+          columns={[
+            { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
+            { key: "eventName", label: "Event", render: (r) => r.eventName || eventNameOf(r.eventId) || "-" },
+            { key: "status", label: "Status" },
+            { key: "followUpDate", label: "Next Follow-Up", render: (r) => (r.followUpDate ? fmtDateTime(r.followUpDate) : "-") },
+            { key: "remark", label: "Remark", render: (r) => remarkOnly(r.remark) || "-" },
+            { key: "by", label: "Updated By", render: (r) => <span className="capitalize">{r.by || "-"}</span> },
+            { key: "at", label: "When", render: (r) => fmtDateTime(r.at) },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
+      {detailModal === "REVENUE" && (
+        <DashboardDetailModal
+          title="Revenue - Client Wise"
+          subtitle={`Total ₹ ${bookedRegistrations.reduce((sum, r) => sum + Number(r.amount || 0), 0).toLocaleString("en-IN")} from ${bookedRegistrations.length} client${bookedRegistrations.length === 1 ? "" : "s"} - ${periodLabel}`}
+          rows={bookedRegistrations}
+          columns={[
+            { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
+            { key: "eventName", label: "Event", render: (r) => r.eventName || "-" },
+            { key: "amount", label: "Revenue", render: (r) => <span className="font-semibold whitespace-nowrap">{"₹ " + Number(r.amount || 0).toLocaleString("en-IN")}</span> },
+            { key: "status", label: "Payment Status", render: (r) => ({ paid: "Paid (Full)", confirmed: "Confirmed", "advance-paid": "Installment" }[r.status] || r.status || "-") },
+            { key: "bookedOn", label: "Booked On", render: (r) => fmtDateTime(r.bookedOn) },
+            { key: "handledBy", label: "Handled By", render: (r) => <span className="capitalize">{r.handledBy || "-"}</span> },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
+      {detailModal === "STALL BOOKED" && (
+        <DashboardDetailModal
+          title="Stall Booked - Converted Clients"
+          subtitle={`Clients who booked a stall - ${periodLabel}`}
+          rows={bookedRegistrations}
+          columns={[
+            { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
+            { key: "eventName", label: "Event", render: (r) => r.eventName || "-" },
+            { key: "stallNo", label: "Stall", render: (r) => [r.stallNo, r.stallSize ? `${r.stallSize} sqm` : ""].filter(Boolean).join(" - ") || "-" },
+            { key: "amount", label: "Amount", render: (r) => <span className="font-semibold whitespace-nowrap">{"₹ " + Number(r.amount || 0).toLocaleString("en-IN")}</span> },
+            { key: "status", label: "Payment Status", render: (r) => ({ paid: "Paid (Full)", confirmed: "Confirmed", "advance-paid": "Installment" }[r.status] || r.status || "-") },
+            { key: "bookedOn", label: "Booked On", render: (r) => fmtDateTime(r.bookedOn) },
+            { key: "handledBy", label: "Handled By", render: (r) => <span className="capitalize">{r.handledBy || "-"}</span> },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
+      {detailModal === "CALLS MADE" && (
+        <DashboardDetailModal
+          title="Calls Made - Status Updates"
+          subtitle={`Which status was set on which client - ${periodLabel}`}
+          loading={statusUpdatesLoading}
+          rows={statusUpdates}
+          columns={[
+            { key: "companyName", label: "Client", render: (r) => r.companyName || "-" },
+            { key: "status", label: "Status Set" },
+            { key: "remark", label: "Remark", render: (r) => remarkOnly(r.remark) || "-" },
+            { key: "forwardTo", label: "Forwarded To", render: (r) => <span className="capitalize">{r.forwardTo || "-"}</span> },
+            { key: "eventName", label: "Event", render: (r) => r.eventName || eventNameOf(r.eventId) || "-" },
+            { key: "by", label: "Updated By", render: (r) => <span className="capitalize">{r.by || "-"}</span> },
+            { key: "at", label: "When", render: (r) => fmtDateTime(r.at) },
+          ]}
+          onClose={() => setDetailModal(null)}
+        />
+      )}
     </div>
   );
 }
